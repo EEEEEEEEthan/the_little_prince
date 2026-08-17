@@ -36,6 +36,7 @@ stretch = true
 
 [node name="GameViewport" type="SubViewport" parent="GameView" unique_id=877318439]
 handle_input_locally = true
+canvas_item_default_texture_filter = 0
 size = Vector2i(256, 224)
 render_target_update_mode = 4
 
