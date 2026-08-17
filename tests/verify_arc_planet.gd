@@ -1,9 +1,21 @@
 extends SceneTree
-## 头无模式验证：2D 圆弧星球常量、角度 wrap、侧视贴图、无旧伪 3D 残留、
-## 场景结构 / 地物数量 / Surface.rotation ≈ -player_angle / 玩家在弧顶 / InputMap。
+## 头无模式验证：256×224 SubViewport 像素视口、静态 assets、圆弧力学、无旧伪 3D 残留。
 ## 用法：
 ##   /workspace/.engine/.engine --headless --path /workspace \
 ##     --script res://tests/verify_arc_planet.gd
+
+const VIEWPORT_PATH := "GameView/GameViewport"
+const PLANET_PATH := "GameView/GameViewport/Planet"
+const PLAYER_PATH := "GameView/GameViewport/Player"
+
+const REQUIRED_ASSETS: Array[String] = [
+	"res://assets/sprites/prince.png",
+	"res://assets/sprites/rose.png",
+	"res://assets/sprites/volcano.png",
+	"res://assets/sprites/baobab.png",
+	"res://assets/planet/body.png",
+	"res://assets/bg/starfield.png",
+]
 
 func _init() -> void:
 	call_deferred("_run_tests")
@@ -12,7 +24,8 @@ func _run_tests() -> void:
 	var failed := 0
 	failed += _check_constants()
 	failed += _check_angle_wrap()
-	failed += _check_pixel_art()
+	failed += _check_static_assets()
+	failed += _check_pixel_art_export_api()
 	failed += _check_no_legacy()
 	failed += _check_input_map()
 	failed += await _check_scene_and_mechanics()
@@ -25,6 +38,12 @@ func _run_tests() -> void:
 
 func _check_constants() -> int:
 	var failed := 0
+	if WorldConstants.INTERNAL_WIDTH != 256 or WorldConstants.INTERNAL_HEIGHT != 224:
+		printerr(
+			"内部视口应为 256×224，实际 %dx%d"
+			% [WorldConstants.INTERNAL_WIDTH, WorldConstants.INTERNAL_HEIGHT]
+		)
+		failed += 1
 	if WorldConstants.VOLCANO_COUNT != 3:
 		printerr("VOLCANO_COUNT 应为 3，实际 %d" % WorldConstants.VOLCANO_COUNT)
 		failed += 1
@@ -34,34 +53,33 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	# 相对旧大圆（720）必须明显缩小，落在小星球目标区间
-	const OLD_PLANET_RADIUS := 720.0
-	if WorldConstants.PLANET_RADIUS >= OLD_PLANET_RADIUS * 0.5:
+	# 内部坐标系半径：大于旧等比缩放约 51，落在建议区间 78~90
+	if WorldConstants.PLANET_RADIUS < 78.0 or WorldConstants.PLANET_RADIUS > 90.0:
 		printerr(
-			"PLANET_RADIUS 应远小于旧值 %.0f，实际 %s"
-			% [OLD_PLANET_RADIUS, WorldConstants.PLANET_RADIUS]
+			"PLANET_RADIUS 应在 78~90（内部 256×224）：%s"
+			% WorldConstants.PLANET_RADIUS
 		)
 		failed += 1
-	if WorldConstants.PLANET_RADIUS < 100.0 or WorldConstants.PLANET_RADIUS > 280.0:
-		printerr("PLANET_RADIUS 应约在 200~240（允许 100~280）：%s" % WorldConstants.PLANET_RADIUS)
-		failed += 1
-	# 弧顶须偏下，屏幕底部只露浅弧
+	# 弧顶须偏下，屏幕底部只露浅弧（地面不往上移）
 	if WorldConstants.APEX_Y_RATIO < 0.80 or WorldConstants.APEX_Y_RATIO >= 1.0:
 		printerr("APEX_Y_RATIO 应偏下（约 0.85~0.92）：%s" % WorldConstants.APEX_Y_RATIO)
 		failed += 1
-	# 地物/玩家精灵须明显大于旧大圆时代的尺寸
-	if WorldConstants.SPRITE_VOLCANO <= 64:
-		printerr("SPRITE_VOLCANO 应明显大于旧值 64，实际 %d" % WorldConstants.SPRITE_VOLCANO)
+	# 像素风精灵尺寸相对半径 ~80 应协调（不宜再是 120/96）
+	if WorldConstants.SPRITE_VOLCANO < 28 or WorldConstants.SPRITE_VOLCANO > 48:
+		printerr("SPRITE_VOLCANO 应约 32~40，实际 %d" % WorldConstants.SPRITE_VOLCANO)
 		failed += 1
-	if WorldConstants.SPRITE_BAOBAB <= 48:
-		printerr("SPRITE_BAOBAB 应明显大于旧值 48，实际 %d" % WorldConstants.SPRITE_BAOBAB)
+	if WorldConstants.SPRITE_BAOBAB < 24 or WorldConstants.SPRITE_BAOBAB > 40:
+		printerr("SPRITE_BAOBAB 应约 28~36，实际 %d" % WorldConstants.SPRITE_BAOBAB)
 		failed += 1
-	if WorldConstants.SPRITE_ROSE <= 32:
-		printerr("SPRITE_ROSE 应明显大于旧值 32，实际 %d" % WorldConstants.SPRITE_ROSE)
+	if WorldConstants.SPRITE_ROSE < 14 or WorldConstants.SPRITE_ROSE > 26:
+		printerr("SPRITE_ROSE 应约 16~22，实际 %d" % WorldConstants.SPRITE_ROSE)
 		failed += 1
-	if WorldConstants.SPRITE_PLAYER_W <= 22 or WorldConstants.SPRITE_PLAYER_H <= 32:
+	if (
+		WorldConstants.SPRITE_PLAYER_W < 10 or WorldConstants.SPRITE_PLAYER_W > 16
+		or WorldConstants.SPRITE_PLAYER_H < 14 or WorldConstants.SPRITE_PLAYER_H > 24
+	):
 		printerr(
-			"SPRITE_PLAYER 应明显加大，实际 %dx%d"
+			"SPRITE_PLAYER 应约 12×18，实际 %dx%d"
 			% [WorldConstants.SPRITE_PLAYER_W, WorldConstants.SPRITE_PLAYER_H]
 		)
 		failed += 1
@@ -74,7 +92,7 @@ func _check_constants() -> int:
 		if const_src.find(legacy) >= 0:
 			printerr("world_constants.gd 仍含旧符号：%s" % legacy)
 			failed += 1
-	print("  常量检查 OK（小半径 / 弧顶偏下 / 大地物精灵 / 地物数量）")
+	print("  常量检查 OK（内部视口 / 半径 78~90 / 弧顶偏下 / 像素精灵）")
 	return failed
 
 func _check_angle_wrap() -> int:
@@ -94,31 +112,96 @@ func _check_angle_wrap() -> int:
 	print("  角度 fposmod wrap OK")
 	return failed
 
-func _check_pixel_art() -> int:
+func _check_static_assets() -> int:
 	var failed := 0
-	var sand := PixelArt.make_sand_tile(16)
-	if sand.get_width() != 16 or sand.get_height() != 16:
-		printerr("沙地贴图像素尺寸错误")
+	for path in REQUIRED_ASSETS:
+		if not FileAccess.file_exists(path):
+			printerr("缺少静态资源：%s" % path)
+			failed += 1
+			continue
+		var tex: Texture2D = load(path) as Texture2D
+		if tex == null:
+			printerr("无法加载贴图：%s" % path)
+			failed += 1
+			continue
+		if tex.get_width() < 8 or tex.get_height() < 8:
+			printerr("贴图尺寸过小：%s（%dx%d）" % [path, tex.get_width(), tex.get_height()])
+			failed += 1
+	# 星野应对齐内部分辨率
+	var star: Texture2D = load("res://assets/bg/starfield.png") as Texture2D
+	if star != null:
+		if star.get_width() != WorldConstants.INTERNAL_WIDTH or star.get_height() != WorldConstants.INTERNAL_HEIGHT:
+			printerr(
+				"starfield 应为 %dx%d，实际 %dx%d"
+				% [
+					WorldConstants.INTERNAL_WIDTH, WorldConstants.INTERNAL_HEIGHT,
+					star.get_width(), star.get_height(),
+				]
+			)
+			failed += 1
+	# 星球圆盘直径应约等于 2 * PLANET_RADIUS
+	var body: Texture2D = load("res://assets/planet/body.png") as Texture2D
+	if body != null:
+		var expected_d: int = int(ceil(WorldConstants.PLANET_RADIUS)) * 2
+		if body.get_width() != expected_d or body.get_height() != expected_d:
+			printerr(
+				"body.png 应为 %dx%d，实际 %dx%d"
+				% [expected_d, expected_d, body.get_width(), body.get_height()]
+			)
+			failed += 1
+	# 精灵尺寸应对齐常量
+	var checks: Array = [
+		["res://assets/sprites/volcano.png", WorldConstants.SPRITE_VOLCANO, WorldConstants.SPRITE_VOLCANO],
+		["res://assets/sprites/baobab.png", WorldConstants.SPRITE_BAOBAB, WorldConstants.SPRITE_BAOBAB],
+		["res://assets/sprites/rose.png", WorldConstants.SPRITE_ROSE, WorldConstants.SPRITE_ROSE],
+		["res://assets/sprites/prince.png", WorldConstants.SPRITE_PLAYER_W, WorldConstants.SPRITE_PLAYER_H],
+	]
+	for item in checks:
+		var t: Texture2D = load(item[0]) as Texture2D
+		if t == null:
+			continue
+		if t.get_width() != int(item[1]) or t.get_height() != int(item[2]):
+			printerr(
+				"%s 尺寸应为 %dx%d，实际 %dx%d"
+				% [item[0], item[1], item[2], t.get_width(), t.get_height()]
+			)
+			failed += 1
+	print("  静态 assets PNG 可加载 OK")
+	return failed
+
+func _check_pixel_art_export_api() -> int:
+	var failed := 0
+	# 导出用 API 仍可用（运行时不依赖）
+	var sand := PixelArt.build_sand_tile(16)
+	if sand == null or sand.get_width() != 16:
+		printerr("build_sand_tile 失败")
 		failed += 1
-	var volcano := PixelArt.make_volcano_sprite(WorldConstants.SPRITE_VOLCANO)
-	var baobab := PixelArt.make_baobab_sprite(WorldConstants.SPRITE_BAOBAB)
-	var rose := PixelArt.make_rose_sprite(WorldConstants.SPRITE_ROSE)
-	var prince := PixelArt.make_player_sprite(
+	var volcano := PixelArt.build_volcano_sprite(WorldConstants.SPRITE_VOLCANO)
+	var baobab := PixelArt.build_baobab_sprite(WorldConstants.SPRITE_BAOBAB)
+	var rose := PixelArt.build_rose_sprite(WorldConstants.SPRITE_ROSE)
+	var prince := PixelArt.build_player_sprite(
 		WorldConstants.SPRITE_PLAYER_W, WorldConstants.SPRITE_PLAYER_H
 	)
 	if volcano == null or baobab == null or rose == null or prince == null:
-		printerr("程序生成贴图失败")
+		printerr("PixelArt build_* 失败")
 		failed += 1
-	if volcano.get_width() < 16 or baobab.get_width() < 16 or rose.get_width() < 8:
-		printerr("侧视贴图尺寸过小")
-		failed += 1
-	# 旧 stacked 切片 API 不得存在
 	var art_src := FileAccess.get_file_as_string("res://scripts/pixel_art.gd")
 	for forbidden in ["make_volcano_layers", "make_baobab_layers", "make_rose_layers"]:
 		if art_src.find(forbidden) >= 0:
 			printerr("PixelArt 仍含 %s" % forbidden)
 			failed += 1
-	print("  程序生成侧视贴图 OK")
+	# 运行时脚本不应再调用 PixelArt.make_*
+	for runtime_path in [
+		"res://scripts/player.gd",
+		"res://scripts/surface_prop.gd",
+		"res://scripts/planet_body.gd",
+		"res://scripts/starfield.gd",
+	]:
+		var src := FileAccess.get_file_as_string(runtime_path)
+		if src.find("PixelArt.make_") >= 0 or src.find("PixelArt.build_") >= 0:
+			printerr("运行时脚本仍依赖 PixelArt 生成：%s" % runtime_path)
+			failed += 1
+	print("  PixelArt 导出 API / 运行时不依赖生成 OK")
 	return failed
 
 func _check_no_legacy() -> int:
@@ -173,21 +256,41 @@ func _check_scene_and_mechanics() -> int:
 			printerr("场景加载后缺少 InputMap 动作：%s" % action)
 			failed += 1
 
-	# 不得再有 SubViewport / PlanetView / ShaderMaterial
+	# 禁止旧 WorldHost / PlanetView / 鱼眼；允许新的像素 SubViewport
 	if scene.get_node_or_null("WorldHost") != null:
-		printerr("旧 WorldHost/SubViewport 结构仍存在")
+		printerr("旧 WorldHost 结构仍存在")
 		failed += 1
 	if scene.get_node_or_null("PlanetView") != null:
 		printerr("旧 PlanetView ColorRect 仍存在")
 		failed += 1
 
-	var planet: Planet = scene.get_node_or_null("Planet") as Planet
-	var player: Player = scene.get_node_or_null("Player") as Player
+	var game_view: SubViewportContainer = scene.get_node_or_null("GameView") as SubViewportContainer
+	var game_viewport: SubViewport = scene.get_node_or_null(VIEWPORT_PATH) as SubViewport
+	if game_view == null:
+		printerr("找不到 SubViewportContainer GameView")
+		failed += 1
+	else:
+		if not game_view.stretch:
+			printerr("GameView.stretch 应为 true")
+			failed += 1
+		if game_view.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
+			printerr("GameView 应为 Nearest 过滤")
+			failed += 1
+	if game_viewport == null:
+		printerr("找不到 SubViewport GameViewport")
+		failed += 1
+	else:
+		if game_viewport.size != Vector2i(256, 224):
+			printerr("GameViewport.size 应为 (256, 224)，实际 %s" % game_viewport.size)
+			failed += 1
+
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
 	if planet == null:
-		printerr("找不到 Planet")
+		printerr("找不到 Planet（路径 %s）" % PLANET_PATH)
 		failed += 1
 	if player == null:
-		printerr("找不到 Player")
+		printerr("找不到 Player（路径 %s）" % PLAYER_PATH)
 		failed += 1
 
 	if planet != null:
@@ -216,12 +319,10 @@ func _check_scene_and_mechanics() -> int:
 				% [expected_props, planet.surface_props.size()]
 			)
 			failed += 1
-		var surface: Node2D = planet.get_node_or_null("Surface") as Node2D
-		if surface == null:
+		if planet.get_node_or_null("Surface") == null:
 			printerr("找不到 Surface")
 			failed += 1
-		var body: Node2D = planet.get_node_or_null("Body") as Node2D
-		if body == null:
+		if planet.get_node_or_null("Body") == null:
 			printerr("找不到 Body")
 			failed += 1
 
@@ -229,7 +330,6 @@ func _check_scene_and_mechanics() -> int:
 		player.planet = planet
 		# 改角后立刻同步：Body / Surface.rotation == -player_angle，玩家在弧顶
 		player.set_angle_and_sync(0.75)
-		# 同帧即可断言，无需等下一帧
 		var surface2: Node2D = planet.get_node("Surface") as Node2D
 		var body2: Node2D = planet.get_node("Body") as Node2D
 		if not is_equal_approx(surface2.rotation, -player.angle):
@@ -278,7 +378,7 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 
-		# 精灵随半径相对基准缩放，并计入 PLAYER_SCALE / PROP_SCALE
+		# 精灵随半径相对基准缩放
 		var expected_player: float = (
 			planet.planet_radius / WorldConstants.PLANET_RADIUS * WorldConstants.PLAYER_SCALE
 		)
@@ -300,20 +400,19 @@ func _check_scene_and_mechanics() -> int:
 				)
 				failed += 1
 
-		# 弧顶偏下：相对视口应靠近底部（浅露地表）
-		var vp_h: float = scene.get_viewport_rect().size.y
-		if vp_h > 1.0:
-			var apex_ratio: float = apex.y / vp_h
-			if apex_ratio < 0.75:
-				printerr("弧顶 Y 比例应偏下（≥0.75），实际 %s" % apex_ratio)
-				failed += 1
-			# 球心应在屏幕底边之外或极近底边，只露浅弧
-			if planet.global_position.y < vp_h * 0.95:
-				printerr(
-					"球心应靠近/低于屏幕底边以浅露弧面，实际 y=%s / vh=%s"
-					% [planet.global_position.y, vp_h]
-				)
-				failed += 1
+		# 弧顶偏下：相对内部视口高度（256×224）
+		var vp_h: float = float(WorldConstants.INTERNAL_HEIGHT)
+		var apex_ratio: float = apex.y / vp_h
+		if apex_ratio < 0.75:
+			printerr("弧顶 Y 比例应偏下（≥0.75），实际 %s" % apex_ratio)
+			failed += 1
+		# 球心应在视口底边之外或极近底边，只露浅弧
+		if planet.global_position.y < vp_h * 0.95:
+			printerr(
+				"球心应靠近/低于视口底边以浅露弧面，实际 y=%s / vh=%s"
+				% [planet.global_position.y, vp_h]
+			)
+			failed += 1
 
 		# 模拟缩小半径后比例仍正确
 		var half_r: float = WorldConstants.PLANET_RADIUS * 0.5

@@ -6,19 +6,45 @@
 [ext_resource type="Script" path="res://scripts/planet_body.gd" id="4_body"]
 [ext_resource type="Script" path="res://scripts/player.gd" id="5_player"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_main")
 
-[node name="Starfield" type="Node2D" parent="."]
+[node name="GameView" type="SubViewportContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+texture_filter = 0
+
+[node name="GameViewport" type="SubViewport" parent="GameView"]
+handle_input_locally = true
+size = Vector2i(256, 224)
+render_target_update_mode = 4
+
+[node name="Starfield" type="Sprite2D" parent="GameView/GameViewport"]
+z_index = -100
+centered = false
+texture_filter = 0
 script = ExtResource("2_starfield")
 
-[node name="Planet" type="Node2D" parent="."]
+[node name="Planet" type="Node2D" parent="GameView/GameViewport"]
 script = ExtResource("3_planet")
 
-[node name="Body" type="Node2D" parent="Planet"]
+[node name="Body" type="Sprite2D" parent="GameView/GameViewport/Planet"]
+centered = true
+texture_filter = 0
 script = ExtResource("4_body")
 
-[node name="Surface" type="Node2D" parent="Planet"]
+[node name="Surface" type="Node2D" parent="GameView/GameViewport/Planet"]
 
-[node name="Player" type="Node2D" parent="."]
+[node name="Player" type="Node2D" parent="GameView/GameViewport"]
 script = ExtResource("5_player")

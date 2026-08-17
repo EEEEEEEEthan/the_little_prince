@@ -1,10 +1,11 @@
 class_name PixelArt
 extends RefCounted
-## 纯代码程序化像素画生成器。
+## 程序化像素画生成器（导出工具用）。
 ##
-## 项目不依赖任何外部美术资源：所有贴图（地表、火山、猴面包树、
-## 玫瑰、小王子本人）均由本类在运行时用 Image 逐像素绘制并封装为
-## ImageTexture。侧视单图，供 2D 圆弧星球上的 SurfaceProp / Player 使用。
+## 游戏运行时贴图已静态化到 assets/（见 WorldConstants.ASSET_*），
+## 由 SurfaceProp / Player / PlanetBody / Starfield preload 加载。
+## 本类保留算法，供 scripts/tools/export_static_assets.gd 生成 PNG；
+## 运行时路径不应再调用 make_*。
 
 ## ---------- 基础绘制工具 ----------
 
@@ -46,10 +47,13 @@ static func _stroke_line(img: Image, from: Vector2, to: Vector2, width: float, c
 		var p: Vector2 = from.lerp(to, float(i) / float(steps))
 		_fill_ellipse(img, p, width * 0.5, width * 0.5, color)
 
-## ---------- 地表贴图（星球 Body 绘制时可选用） ----------
+static func _to_texture(img: Image) -> ImageTexture:
+	return ImageTexture.create_from_image(img)
 
-## 沙地：暖黄色基调 + 细颗粒噪点（小王子星球的沙漠地表）
-static func make_sand_tile(size: int) -> ImageTexture:
+## ---------- 地表 / 星球 / 星野 Image（导出用） ----------
+
+## 沙地：暖黄色基调 + 细颗粒噪点
+static func build_sand_tile(size: int) -> Image:
 	var img := _new_image(size)
 	var base := Color(0.86, 0.72, 0.42)
 	for y in size:
@@ -61,10 +65,10 @@ static func make_sand_tile(size: int) -> ImageTexture:
 			c.b += (n - 0.5) * 0.05
 			c.a = 1.0
 			img.set_pixel(x, y, c)
-	return ImageTexture.create_from_image(img)
+	return img
 
-## 岩地：冷灰褐色基调 + 粗颗粒噪点，用作裸露岩石地带
-static func make_rock_tile(size: int) -> ImageTexture:
+## 岩地：冷灰褐色基调 + 粗颗粒噪点
+static func build_rock_tile(size: int) -> Image:
 	var img := _new_image(size)
 	var base := Color(0.5, 0.46, 0.43)
 	for y in size:
@@ -76,12 +80,85 @@ static func make_rock_tile(size: int) -> ImageTexture:
 			c.b += (n - 0.5) * 0.12
 			c.a = 1.0
 			img.set_pixel(x, y, c)
-	return ImageTexture.create_from_image(img)
+	return img
 
-## ---------- 地物贴图（侧视单图） ----------
+## 完整星球圆盘：沙色填充 + 岩边 + 噪点斑块（替代 PlanetBody 逐帧 _draw）
+static func build_planet_body(radius: float) -> Image:
+	var r: int = max(1, int(ceil(radius)))
+	var size: int = r * 2
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var cx: float = float(r) - 0.5
+	var cy: float = float(r) - 0.5
+	var sand := Color(0.86, 0.72, 0.42)
+	var rim := Color(0.55, 0.42, 0.30)
+	var rim_w: float = max(2.0, float(r) * 0.018)
+	var rf: float = float(r)
 
-## 火山：锥形山体 + 火山口 + 岩浆微光 + 一缕青烟
-static func make_volcano_sprite(size: int) -> ImageTexture:
+	for y in size:
+		for x in size:
+			var dx: float = (x + 0.5) - cx
+			var dy: float = (y + 0.5) - cy
+			var dist: float = sqrt(dx * dx + dy * dy)
+			if dist > rf:
+				continue
+			var c := sand
+			# 岩边环
+			if dist >= rf - rim_w:
+				c = rim
+			else:
+				# 确定性噪点
+				var n: float = _hash(x, y, 7)
+				c.r += (n - 0.5) * 0.06
+				c.g += (n - 0.5) * 0.05
+				c.b += (n - 0.5) * 0.04
+				# 内部浅阴影增强体积感
+				var shade_dx: float = (x + 0.5) - (cx + rf * 0.12)
+				var shade_dy: float = (y + 0.5) - (cy + rf * 0.18)
+				var shade_d: float = sqrt(shade_dx * shade_dx + shade_dy * shade_dy)
+				if shade_d < rf * 0.72:
+					c = c.lerp(Color(0.62, 0.48, 0.28), 0.18)
+			c.a = 1.0
+			img.set_pixel(x, y, c)
+
+	# 额外斑块（与旧 _draw 观感接近）
+	var spots: int = int(rf * 0.35)
+	for i in spots:
+		var h1: float = _hash(i, 0, 7)
+		var h2: float = _hash(i, 1, 19)
+		var h3: float = _hash(i, 2, 31)
+		var ang: float = h1 * TAU
+		var dist: float = sqrt(h2) * (rf - rim_w * 2.0)
+		var px: int = int(round(cx + cos(ang) * dist))
+		var py: int = int(round(cy + sin(ang) * dist))
+		var spot_r: float = lerpf(1.0, 3.0, h3)
+		var spot_c := sand.darkened(lerpf(0.04, 0.14, h3))
+		spot_c.a = 0.55
+		_fill_ellipse(img, Vector2(px, py), spot_r, spot_r, spot_c)
+	return img
+
+## 深空星野：固定内部分辨率底图
+static func build_starfield(width: int, height: int) -> Image:
+	var img := Image.create(width, height, false, Image.FORMAT_RGBA8)
+	var bg := Color(0.015, 0.018, 0.055)
+	img.fill(bg)
+	var count: int = int(clampf(float(width * height) / 2800.0, 80.0, 260.0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 424242
+	for i in count:
+		var sx: int = int(rng.randf() * float(width))
+		var sy: int = int(rng.randf() * float(height))
+		var b: float = rng.randf_range(0.35, 1.0)
+		var c := Color(0.85 * b, 0.88 * b, 1.0 * b, 0.9)
+		_set_px(img, sx, sy, c)
+		# 略亮的星多画一像素，接近旧 1.5×1.5 点
+		if b > 0.7:
+			_set_px(img, sx + 1, sy, c)
+	return img
+
+## ---------- 地物 Image（导出用） ----------
+
+static func build_volcano_sprite(size: int) -> Image:
 	var img := _new_image(size)
 	var cx: float = size * 0.5
 	var top_y: float = size * 0.22
@@ -116,10 +193,9 @@ static func make_volcano_sprite(size: int) -> ImageTexture:
 	)
 	_fill_ellipse(img, Vector2(cx - 1.0, top_y - 3.0), size * 0.09, size * 0.06, Color(0.75, 0.78, 0.8, 0.35))
 	_fill_ellipse(img, Vector2(cx + 2.0, top_y - 6.0), size * 0.07, size * 0.05, Color(0.8, 0.82, 0.85, 0.22))
-	return ImageTexture.create_from_image(img)
+	return img
 
-## 猴面包树：极粗的树干 + 顶端稀疏树冠（《小王子》里标志性的「胖树」造型）
-static func make_baobab_sprite(size: int) -> ImageTexture:
+static func build_baobab_sprite(size: int) -> Image:
 	var img := _new_image(size)
 	var cx: float = size * 0.5
 	var trunk_top: float = size * 0.42
@@ -150,10 +226,9 @@ static func make_baobab_sprite(size: int) -> ImageTexture:
 		_stroke_line(img, Vector2(cx, trunk_top), tip, size * 0.06, Color(0.35, 0.24, 0.14))
 		_fill_ellipse(img, tip, size * 0.13, size * 0.1, Color(0.18, 0.35, 0.16))
 		_fill_ellipse(img, tip + Vector2(0, -size * 0.03), size * 0.08, size * 0.06, Color(0.24, 0.42, 0.2))
-	return ImageTexture.create_from_image(img)
+	return img
 
-## 玫瑰：唯一的一朵，六片花瓣环绕花心 + 细茎与两片小叶
-static func make_rose_sprite(size: int) -> ImageTexture:
+static func build_rose_sprite(size: int) -> Image:
 	var img := _new_image(size)
 	var cx: float = size * 0.5
 	var stem_top: float = size * 0.42
@@ -172,10 +247,9 @@ static func make_rose_sprite(size: int) -> ImageTexture:
 		_fill_ellipse(img, petal_pos, petal_r, petal_r * 0.8, petal_color)
 	_fill_ellipse(img, bloom_center, size * 0.09, size * 0.09, Color(0.6, 0.08, 0.18))
 	_fill_ellipse(img, bloom_center - Vector2(0, size * 0.02), size * 0.04, size * 0.04, Color(0.98, 0.75, 0.35))
-	return ImageTexture.create_from_image(img)
+	return img
 
-## 小王子：金色卷发 + 绿色大衣剪影，简洁可辨认
-static func make_player_sprite(width: int, height: int) -> ImageTexture:
+static func build_player_sprite(width: int, height: int) -> Image:
 	var img := Image.create(width, height, false, Image.FORMAT_RGBA8)
 	var cx: float = width * 0.5
 	var skin := Color(0.96, 0.8, 0.64)
@@ -200,4 +274,30 @@ static func make_player_sprite(width: int, height: int) -> ImageTexture:
 	_fill_ellipse(img, Vector2(cx, coat_top + 1.0), width * 0.2, height * 0.035, scarf)
 	_fill_ellipse(img, Vector2(cx - width * 0.12, coat_bottom - 1.0), width * 0.08, height * 0.03, Color(0.22, 0.18, 0.14))
 	_fill_ellipse(img, Vector2(cx + width * 0.12, coat_bottom - 1.0), width * 0.08, height * 0.03, Color(0.22, 0.18, 0.14))
-	return ImageTexture.create_from_image(img)
+	return img
+
+## ---------- Texture 包装（仅导出脚本 / 可选测试；运行时勿用） ----------
+
+static func make_sand_tile(size: int) -> ImageTexture:
+	return _to_texture(build_sand_tile(size))
+
+static func make_rock_tile(size: int) -> ImageTexture:
+	return _to_texture(build_rock_tile(size))
+
+static func make_volcano_sprite(size: int) -> ImageTexture:
+	return _to_texture(build_volcano_sprite(size))
+
+static func make_baobab_sprite(size: int) -> ImageTexture:
+	return _to_texture(build_baobab_sprite(size))
+
+static func make_rose_sprite(size: int) -> ImageTexture:
+	return _to_texture(build_rose_sprite(size))
+
+static func make_player_sprite(width: int, height: int) -> ImageTexture:
+	return _to_texture(build_player_sprite(width, height))
+
+static func make_planet_body(radius: float) -> ImageTexture:
+	return _to_texture(build_planet_body(radius))
+
+static func make_starfield(width: int, height: int) -> ImageTexture:
+	return _to_texture(build_starfield(width, height))

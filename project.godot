@@ -16,10 +16,14 @@ config/features=PackedStringArray("4.8")
 
 [display]
 
-window/size/viewport_width=960
-window/size/viewport_height=960
+; 逻辑分辨率 256×224；窗口覆盖 960×960，由 canvas_items 放大
+; SubViewportContainer.stretch 在此逻辑尺寸下可保持子视口 256×224
+window/size/viewport_width=256
+window/size/viewport_height=224
+window/size/window_width_override=960
+window/size/window_height_override=960
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/stretch/aspect="keep"
 
 [editor_plugins]
 

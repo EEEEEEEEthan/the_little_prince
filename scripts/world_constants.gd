@@ -1,16 +1,19 @@
 class_name WorldConstants
 extends RefCounted
-## 全局世界常量：2D 圆弧星球的布局与地物规格集中管理。
+## 全局世界常量：固定 256×224 像素视口内的圆弧星球布局与地物规格。
 
-## ---------- 星球几何（相对 960×960 参考分辨率，运行时按窗口缩放） ----------
-## 参考分辨率下的星球半径（像素）；刻意做小，营造「小星球」剪影
-## 球心在屏幕下方外，底部只露出浅浅一段弧面
-const PLANET_RADIUS: float = 220.0
-## 弧顶（小王子站立处）相对视口高度的比例（0=顶，1=底）
-## 大幅偏下，使可见地表贴在屏幕底部
+## ---------- 内部像素视口（SubViewport 原生分辨率） ----------
+const INTERNAL_WIDTH: int = 256
+const INTERNAL_HEIGHT: int = 224
+
+## ---------- 星球几何（直接在 256×224 坐标系中定义） ----------
+## 半径刻意大于「960 参考窗等比缩到 224 高」的约 51px，让可见弧面更宽
+const PLANET_RADIUS: float = 84.0
+## 弧顶（小王子站立处）相对内部视口高度的比例（0=顶，1=底）
+## 保持偏下，使地面/弧顶 Y 不往上移
 const APEX_Y_RATIO: float = 0.88
-## 参考视口短边，用于把 PLANET_RADIUS 缩放到实际窗口
-const REFERENCE_VIEWPORT: float = 960.0
+## 内部视口短边；分辨率固定后 visual_scale 恒为 1，仅作兼容引用
+const REFERENCE_VIEWPORT: float = float(INTERNAL_HEIGHT)
 
 ## ---------- 可见半弧与深度排序 ----------
 ## 相对弧顶超过此角的地物视为背面（隐藏或淡化）
@@ -39,17 +42,25 @@ const BAOBAB_MIN_ANGLE: float = 0.10
 const PROP_CLEARANCE: float = 0.15
 
 ## 玩家沿线速度（像素/秒）；角速度 = PLAYER_SPEED / planet_radius
-const PLAYER_SPEED: float = 140.0
+## 相对半径 84 微调，使角速度接近旧 960 窗下 140/220 的手感
+const PLAYER_SPEED: float = 56.0
 
-## ---------- 侧视精灵像素尺寸（小星球 + 大地物：相对半径应明显高于旧大圆） ----------
-## 贴图像素边长；运行时再乘 visual_scale（≈1 @ 参考窗），故「变大」主要靠这些常量
-const SPRITE_VOLCANO: int = 120
-const SPRITE_BAOBAB: int = 96
-const SPRITE_ROSE: int = 60
-const SPRITE_PLAYER_W: int = 40
-const SPRITE_PLAYER_H: int = 58
+## ---------- 侧视精灵像素尺寸（相对半径 ~84 的像素风比例） ----------
+## 静态 PNG 真实像素边长；运行时 preload，不再每次生成
+const SPRITE_VOLCANO: int = 36
+const SPRITE_BAOBAB: int = 32
+const SPRITE_ROSE: int = 20
+const SPRITE_PLAYER_W: int = 12
+const SPRITE_PLAYER_H: int = 18
 
-## 地物 / 玩家相对 visual_scale 的额外乘数（保持 ≈1 时仅靠 SPRITE_* 定绝对大小）
-## 需要微调观感时改这里，避免把窗口缩放逻辑搅糊
+## 地物 / 玩家相对 visual_scale 的额外乘数（内部固定分辨率下通常为 1）
 const PROP_SCALE: float = 1.0
 const PLAYER_SCALE: float = 1.0
+
+## ---------- 静态资源路径（由导出脚本写入，运行时 preload） ----------
+const ASSET_PRINCE := "res://assets/sprites/prince.png"
+const ASSET_ROSE := "res://assets/sprites/rose.png"
+const ASSET_VOLCANO := "res://assets/sprites/volcano.png"
+const ASSET_BAOBAB := "res://assets/sprites/baobab.png"
+const ASSET_PLANET_BODY := "res://assets/planet/body.png"
+const ASSET_STARFIELD := "res://assets/bg/starfield.png"

@@ -9,7 +9,7 @@ extends Node2D
 
 ## 当前玩家角（由 Player 改角后立刻写入，同帧一致）
 var player_angle: float = 0.0
-## 实际半径（窗口缩放后）
+## 实际半径（内部 256×224 下通常等于常量）
 var planet_radius: float = WorldConstants.PLANET_RADIUS
 
 ## 生成结果（供测试断言）
@@ -24,11 +24,12 @@ var _occupied_angles: Array[float] = []
 
 func _ready() -> void:
 	_rng.seed = WorldConstants.WORLD_SEED
-	body.radius = planet_radius
+	if body != null:
+		body.set_radius(planet_radius)
 	_generate_surface()
 	_apply_radius(planet_radius)
 
-## 窗口 resize 时由 Main 调用：更新球心位置与半径
+## 由 Main 调用：更新球心位置与半径（内部视口固定后半径通常不变）
 func apply_layout(center: Vector2, radius: float) -> void:
 	global_position = center
 	_apply_radius(radius)
@@ -36,8 +37,7 @@ func apply_layout(center: Vector2, radius: float) -> void:
 func _apply_radius(radius: float) -> void:
 	planet_radius = radius
 	if body != null:
-		body.radius = radius
-		body.queue_redraw()
+		body.set_radius(radius)
 	for prop in surface_props:
 		prop.set_planet_radius(radius)
 	_sync_planet_rotation()
@@ -116,7 +116,6 @@ func _place_baobabs() -> void:
 		attempts += 1
 		var a: float = _rng.randf() * TAU
 		# 相对玫瑰/火山用 PROP_CLEARANCE；树彼此用更紧的 BAOBAB_MIN_ANGLE
-		# （避免把 PROP_CLEARANCE 套到树-树上导致放不满）
 		if _angular_distance(a, rose_angle) < WorldConstants.PROP_CLEARANCE:
 			continue
 		var blocked := false
