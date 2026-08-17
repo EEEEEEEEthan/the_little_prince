@@ -27,7 +27,7 @@ func update_visibility(player_angle: float) -> void:
 	z_index = int(cos(relative_angle) * 100.0)
 
 func _apply_texture() -> void:
-	# 贴图底部到脚底之间的透明留白比例（与 PixelArt 生成器一致），据此让脚底贴住圆周。
+	# 贴图底部到脚底之间的透明留白比例，据此让脚底贴住圆周。
 	var base_fraction := 1.0
 	match kind:
 		Kind.ROSE:

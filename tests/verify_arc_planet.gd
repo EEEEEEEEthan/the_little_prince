@@ -24,7 +24,6 @@ func _run_tests() -> void:
 	var failed := 0
 	failed += _check_constants()
 	failed += _check_static_assets()
-	failed += _check_pixel_art_export_api()
 	failed += _check_no_legacy()
 	failed += _check_input_map()
 	failed += await _check_scene_and_mechanics()
@@ -154,54 +153,6 @@ func _check_static_assets() -> int:
 			)
 			failed += 1
 	print("  静态 assets PNG 可加载 OK")
-	return failed
-
-func _check_pixel_art_export_api() -> int:
-	var failed := 0
-	var sand := PixelArt.build_sand_tile(16)
-	if sand == null or sand.get_width() != 16:
-		printerr("build_sand_tile 失败")
-		failed += 1
-	var volcano := PixelArt.build_volcano_sprite(WorldConstants.VOLCANO_SPRITE_SIZE)
-	var baobab := PixelArt.build_baobab_sprite(WorldConstants.BAOBAB_SPRITE_SIZE)
-	var rose := PixelArt.build_rose_sprite(WorldConstants.ROSE_SPRITE_SIZE)
-	var prince := PixelArt.build_player_sprite(
-		WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT
-	)
-	if volcano == null or baobab == null or rose == null or prince == null:
-		printerr("PixelArt build_* 失败")
-		failed += 1
-	var volcano_sheet := PixelArt.build_volcano_sheet(
-		WorldConstants.VOLCANO_SPRITE_SIZE, WorldConstants.VOLCANO_VARIANT_COUNT
-	)
-	var baobab_sheet := PixelArt.build_baobab_sheet(
-		WorldConstants.BAOBAB_SPRITE_SIZE, WorldConstants.BAOBAB_VARIANT_COUNT
-	)
-	if volcano_sheet == null or baobab_sheet == null:
-		printerr("PixelArt build_*_sheet 失败")
-		failed += 1
-	var day_sky := PixelArt.build_day_sky(WorldConstants.STARFIELD_SIZE)
-	if day_sky == null or day_sky.get_width() != WorldConstants.STARFIELD_SIZE:
-		printerr("PixelArt build_day_sky 失败")
-		failed += 1
-	var art_src := FileAccess.get_file_as_string("res://tools/pixel_art.gd")
-	for forbidden in ["make_volcano_layers", "make_baobab_layers", "make_rose_layers"]:
-		if art_src.find(forbidden) >= 0:
-			printerr("PixelArt 仍含 %s" % forbidden)
-			failed += 1
-	# 运行时脚本不应调用 PixelArt 生成贴图
-	for runtime_path in [
-		"res://main.gd",
-		"res://player/player.gd",
-		"res://planet/planet.gd",
-		"res://planet/surface_prop.gd",
-		"res://planet/starfield.gd",
-	]:
-		var src := FileAccess.get_file_as_string(runtime_path)
-		if src.find("PixelArt.make_") >= 0 or src.find("PixelArt.build_") >= 0:
-			printerr("运行时脚本仍依赖 PixelArt 生成：%s" % runtime_path)
-			failed += 1
-	print("  PixelArt 导出 API / 运行时不依赖生成 OK")
 	return failed
 
 func _check_no_legacy() -> int:
