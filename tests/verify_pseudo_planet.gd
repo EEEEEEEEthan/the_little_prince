@@ -128,12 +128,15 @@ func _assert_layers(layers: Array[Texture2D], expected: int, label: String) -> i
 	return 0
 
 func _check_stacked_orientation() -> int:
-	## 经典 stacking：切片不旋转，只沿 outward 做位置偏移（倾斜堆叠）
+	## 经典 stacking：不旋转；lean 随距离 0→1；偏移 = outward * pitch * i * lean
 	var failed := 0
 	var prop := StackedProp.new()
 	prop.world_pixel_size = float(WorldConstants.WORLD_PIXELS)
-	var layers: Array[Texture2D] = PixelArt.make_rose_layers(12, 3)
-	prop.configure(layers, 1.0, Vector2.ZERO, Vector2(100, 200), float(WorldConstants.WORLD_PIXELS))
+	var pitch := 1.0
+	var layer_n := 3
+	var layers: Array[Texture2D] = PixelArt.make_rose_layers(12, layer_n)
+	var anchor := Vector2(200, 200)
+	prop.configure(layers, pitch, Vector2.ZERO, anchor, float(WorldConstants.WORLD_PIXELS))
 
 	if prop._wrap_roots.size() != 9:
 		printerr("环绕副本数应为 9，实际 %d" % prop._wrap_roots.size())
@@ -141,14 +144,39 @@ func _check_stacked_orientation() -> int:
 		prop.free()
 		return failed
 
-	# --- 下方视角：outward≈+Y，高层 position.y > 低层，且 rotation≈0 ---
-	var player_below := Vector2(100, 100)
-	var anchor := Vector2(100, 200)
-	var delta := prop.torus_delta(anchor, player_below)
-	if delta.y <= 0.0 or absf(delta.x) > 1.0:
-		printerr("torus_delta 下方方向错误：%s" % delta)
+	var full := WorldConstants.STACK_LEAN_FULL_DISTANCE
+	var top_i := layer_n - 1
+
+	# --- 1) 球心：玩家几乎在地物上 → lean=0，顶层偏移 ≈ 0 ---
+	prop.update_toward(anchor)
+	var top: Sprite2D = prop._wrap_layers[4][top_i]
+	if top.position.length() > 0.05:
+		printerr("球心处顶层偏移应≈0，实际 %s" % top.position)
+		failed += 1
+	if not is_zero_approx(top.rotation):
+		printerr("球心切片不应旋转：%s" % top.rotation)
 		failed += 1
 
+	# --- 2) 满 lean：dist >= FULL → 顶层 ≈ outward * pitch * (n-1) ---
+	var player_far_below := Vector2(anchor.x, anchor.y - full - 10.0)
+	prop.update_toward(player_far_below)
+	var delta_far := prop.torus_delta(anchor, player_far_below)
+	var outward_far := delta_far.normalized()
+	var expected_far := outward_far * pitch * float(top_i)
+	top = prop._wrap_layers[4][top_i]
+	if top.position.distance_to(expected_far) > 0.1:
+		printerr("满 lean 顶层偏移错误：实际 %s，期望 %s" % [top.position, expected_far])
+		failed += 1
+
+	# --- 3) 下方视角（乘 lean）：高层 y 递增，rotation≈0 ---
+	var dist_below := full * 0.7
+	var player_below := Vector2(anchor.x, anchor.y - dist_below)
+	var delta_b := prop.torus_delta(anchor, player_below)
+	if delta_b.y <= 0.0 or absf(delta_b.x) > 1.0:
+		printerr("torus_delta 下方方向错误：%s" % delta_b)
+		failed += 1
+	var t_b := clampf(dist_below / full, 0.0, 1.0)
+	var lean_b := t_b * t_b * (3.0 - 2.0 * t_b)
 	prop.update_toward(player_below)
 	var main_root: Node2D = prop._wrap_roots[4]
 	if not is_zero_approx(main_root.rotation):
@@ -156,7 +184,7 @@ func _check_stacked_orientation() -> int:
 		failed += 1
 	var bot: Sprite2D = prop._wrap_layers[4][0]
 	var mid: Sprite2D = prop._wrap_layers[4][1]
-	var top: Sprite2D = prop._wrap_layers[4][2]
+	top = prop._wrap_layers[4][2]
 	for spr in [bot, mid, top]:
 		if not is_zero_approx(spr.rotation):
 			printerr("切片不应旋转：%s" % spr.rotation)
@@ -168,9 +196,16 @@ func _check_stacked_orientation() -> int:
 			% [bot.position, mid.position, top.position]
 		)
 		failed += 1
+	var expected_top_y := lean_b * pitch * float(top_i)
+	if absf(top.position.y - expected_top_y) > 0.15:
+		printerr("下方 lean 偏移量错误：实际 y=%s，期望 %s" % [top.position.y, expected_top_y])
+		failed += 1
 
-	# --- 右侧视角：outward≈+X，高层 position.x > 低层 ---
-	var player_left := Vector2(50, 200)
+	# --- 4) 右侧视角（乘 lean）：高层 x 递增 ---
+	var dist_right := full * 0.7
+	var player_left := Vector2(anchor.x - dist_right, anchor.y)
+	var t_r := clampf(dist_right / full, 0.0, 1.0)
+	var lean_r := t_r * t_r * (3.0 - 2.0 * t_r)
 	prop.update_toward(player_left)
 	bot = prop._wrap_layers[4][0]
 	mid = prop._wrap_layers[4][1]
@@ -186,10 +221,14 @@ func _check_stacked_orientation() -> int:
 			% [bot.position, mid.position, top.position]
 		)
 		failed += 1
+	var expected_top_x := lean_r * pitch * float(top_i)
+	if absf(top.position.x - expected_top_x) > 0.15:
+		printerr("右侧 lean 偏移量错误：实际 x=%s，期望 %s" % [top.position.x, expected_top_x])
+		failed += 1
 
 	prop.free()
 	if failed == 0:
-		print("  StackedProp 倾斜堆叠 / 不旋转 OK")
+		print("  StackedProp lean 堆叠 / 不旋转 OK")
 	return failed
 
 func _check_input_map() -> int:

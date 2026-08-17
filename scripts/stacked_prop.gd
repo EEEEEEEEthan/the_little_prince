@@ -4,10 +4,10 @@ extends Node2D
 ##
 ## 原理（配合 sphere_fisheye 球心=玩家）：
 ## - 切片 Sprite2D 始终 rotation=0（贴图正立）
-## - 各层沿环面最短向量 outward（地物相对玩家）做位置偏移：position = outward * pitch * i
-## - 球下方 outward≈+Y → 高层往下偏，看起来头朝下/向下凸
-## - 球边缘 → 高层沿径向外偏，体积凸出
-## - 靠近玩家时 |delta| 极小，fallback 为 (0,-1)，近乎直立微弱堆叠
+## - 各层沿环面最短向量 outward（地物相对玩家）做位置偏移
+## - lean 随环面距离从 0→1：球心俯视几乎重合，边缘满偏移凸出
+##   position = outward * pitch * i * lean
+## - 靠近玩家时 |delta| 极小 → lean=0，严格无倾斜
 ##
 ## 结构：本节点下 3×3 环绕副本（各一份层叠），seam 与旧 Sprite wrap 一致。
 
@@ -77,18 +77,25 @@ func update_toward(player_world_pos: Vector2) -> void:
 			root.rotation = 0.0
 
 			var delta := _torus_delta_to_nearest_player(anchor, player_base, world)
+			var dist := delta.length()
 			var outward: Vector2
-			if delta.length() < WorldConstants.STACK_OUTWARD_EPSILON:
+			var lean: float
+			if dist < WorldConstants.STACK_OUTWARD_EPSILON:
+				# 球心俯视：方向无所谓，lean 必须为 0
 				outward = Vector2(0, -1)
+				lean = 0.0
 			else:
-				outward = delta.normalized()
+				outward = delta / dist
+				lean = clampf(dist / WorldConstants.STACK_LEAN_FULL_DISTANCE, 0.0, 1.0)
+				# smoothstep：中心更平、边缘更满
+				lean = lean * lean * (3.0 - 2.0 * lean)
 
 			var layers: Array = _wrap_layers[wi]
 			for i in layers.size():
 				var sprite: Sprite2D = layers[i]
-				# 切片保持正立；仅沿视角径向偏移，堆叠呈倾斜体积
+				# 切片保持正立；偏移量随 lean 从 0（球心）到满 pitch（边缘）
 				sprite.rotation = 0.0
-				sprite.position = outward * pitch * float(i)
+				sprite.position = outward * pitch * float(i) * lean
 				sprite.z_index = i
 			wi += 1
 

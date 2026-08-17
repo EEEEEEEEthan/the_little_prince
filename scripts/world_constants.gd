@@ -39,5 +39,8 @@ const ROSE_PITCH: float = 1.0
 const BAOBAB_PITCH: float = 1.2
 const VOLCANO_PITCH: float = 1.5
 
-## 与玩家几乎重合时，|delta| 低于此阈值则用地物默认朝上 Vector2(0,-1)
+## 与玩家几乎重合时，|delta| 低于此阈值则 lean=0，方向 fallback 为 (0,-1)
 const STACK_OUTWARD_EPSILON: float = 0.5
+## 环面距离达到此值时 lean=1（满倾斜）。与球面可视半跨度量级一致：
+## WORLD_PIXELS * view_span * 0.45 ≈ 512 * 0.48 * 0.45 ≈ 110.6
+const STACK_LEAN_FULL_DISTANCE: float = float(WORLD_PIXELS) * 0.48 * 0.45
