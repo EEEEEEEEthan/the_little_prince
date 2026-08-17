@@ -105,7 +105,7 @@ func _check_static_assets() -> int:
 				]
 			)
 			failed += 1
-	# 白天天空应与星野同尺寸同中心
+	# 白天天空应与星野同尺寸同中心，且为黑红渐变（红通道=高度坐标，供 shader 换色）
 	var day_sky: Texture2D = load("res://planet/day_sky.png") as Texture2D
 	if day_sky != null:
 		if day_sky.get_width() != WorldConstants.STARFIELD_SIZE or day_sky.get_height() != WorldConstants.STARFIELD_SIZE:
@@ -116,6 +116,17 @@ func _check_static_assets() -> int:
 					day_sky.get_width(), day_sky.get_height(),
 				]
 			)
+			failed += 1
+		var sky_image := day_sky.get_image()
+		var top_color := sky_image.get_pixel(sky_image.get_width() / 2, 0)
+		var bottom_color := sky_image.get_pixel(
+			sky_image.get_width() / 2, sky_image.get_height() - 1
+		)
+		if top_color.r < 0.95 or top_color.g > 0.02 or top_color.b > 0.02:
+			printerr("day_sky 顶部应为纯红（天顶坐标 1），实际 %s" % top_color.to_html(false))
+			failed += 1
+		if bottom_color.r > 0.05 or bottom_color.g > 0.02 or bottom_color.b > 0.02:
+			printerr("day_sky 底部应为纯黑（地平线坐标 0），实际 %s" % bottom_color.to_html(false))
 			failed += 1
 	# 星球圆盘直径应约等于 2 * PLANET_RADIUS
 	var body: Texture2D = load("res://planet/body.png") as Texture2D
@@ -331,6 +342,35 @@ func _check_scene_and_mechanics() -> int:
 				% [expected_night_alpha, starfield.night_sky.modulate.a]
 			)
 			failed += 1
+
+		# 白天天空 shader：按星空相对角度在时段关键色间插值换色
+		var day_sky_sprite: Sprite2D = planet.get_node("Starfield/DaySky") as Sprite2D
+		var sky_material := day_sky_sprite.material as ShaderMaterial
+		if sky_material == null or sky_material.shader == null:
+			printerr("DaySky 应挂载天空换色 ShaderMaterial")
+			failed += 1
+		else:
+			starfield.rotation = 0.0
+			starfield._update_daylight()
+			var noon_zenith: Color = sky_material.get_shader_parameter("zenith_color")
+			if not noon_zenith.is_equal_approx(Starfield.DAY_PHASE_ZENITH_COLORS[0]):
+				printerr(
+					"正午天顶色应为 %s，实际 %s"
+					% [Starfield.DAY_PHASE_ZENITH_COLORS[0], noon_zenith]
+				)
+				failed += 1
+			starfield.rotation = PI * 0.25
+			starfield._update_daylight()
+			var expected_mid_zenith := Starfield.DAY_PHASE_ZENITH_COLORS[0].lerp(
+				Starfield.DAY_PHASE_ZENITH_COLORS[1], 0.5
+			)
+			var mid_zenith: Color = sky_material.get_shader_parameter("zenith_color")
+			if not mid_zenith.is_equal_approx(expected_mid_zenith):
+				printerr(
+					"正午->夕阳中途天顶色应为 %s，实际 %s"
+					% [expected_mid_zenith, mid_zenith]
+				)
+				failed += 1
 
 		var apex := planet.apex_global_position()
 		if player.global_position.distance_to(apex) > 0.5:

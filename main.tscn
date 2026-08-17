@@ -1,15 +1,21 @@
 [gd_scene format=3 uid="uid://cojn20gna51qe"]
 
-[ext_resource type="Script" path="res://main.gd" id="1_main"]
-[ext_resource type="Script" path="res://planet/planet.gd" id="2_planet"]
-[ext_resource type="Script" path="res://planet/starfield.gd" id="3_starfield"]
-[ext_resource type="Script" path="res://player/player.gd" id="4_player"]
-[ext_resource type="Texture2D" path="res://planet/starfield.png" id="5_starfield"]
-[ext_resource type="Texture2D" path="res://planet/body.png" id="6_body"]
-[ext_resource type="Texture2D" path="res://player/prince.png" id="7_prince"]
-[ext_resource type="Texture2D" path="res://planet/day_sky.png" id="8_day_sky"]
+[ext_resource type="Script" uid="uid://cyh14kfr3hytu" path="res://main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bkphckiepbgmj" path="res://planet/planet.gd" id="2_planet"]
+[ext_resource type="Script" uid="uid://blpnkbllpbace" path="res://planet/starfield.gd" id="3_starfield"]
+[ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://player/player.gd" id="4_player"]
+[ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
+[ext_resource type="Texture2D" uid="uid://o6opelwgjkao" path="res://planet/body.png" id="6_body"]
+[ext_resource type="Texture2D" uid="uid://mybv7igebkcb" path="res://player/prince.png" id="7_prince"]
+[ext_resource type="Texture2D" uid="uid://c8rnueqnsb6jk" path="res://planet/day_sky.png" id="8_day_sky"]
+[ext_resource type="Shader" uid="uid://77ilermcmh3b" path="res://planet/day_sky.gdshader" id="9_day_sky_shader"]
 
-[node name="Main" type="Control"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_day_sky"]
+shader = ExtResource("9_day_sky_shader")
+shader_parameter/zenith_color = Color(0.36, 0.62, 0.88, 1)
+shader_parameter/horizon_color = Color(0.92, 0.86, 0.66, 1)
+
+[node name="Main" type="Control" unique_id=134579991]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,7 +24,8 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
 
-[node name="GameView" type="SubViewportContainer" parent="."]
+[node name="GameView" type="SubViewportContainer" parent="." unique_id=1849713084]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -26,41 +33,37 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
-texture_filter = 1
 
-[node name="GameViewport" type="SubViewport" parent="GameView"]
+[node name="GameViewport" type="SubViewport" parent="GameView" unique_id=877318439]
 handle_input_locally = true
 size = Vector2i(256, 224)
 render_target_update_mode = 4
 
-[node name="Planet" type="Node2D" parent="GameView/GameViewport"]
+[node name="Planet" type="Node2D" parent="GameView/GameViewport" unique_id=387248352]
 unique_name_in_owner = true
 script = ExtResource("2_planet")
 
-[node name="Starfield" type="Node2D" parent="GameView/GameViewport/Planet"]
+[node name="Starfield" type="Node2D" parent="GameView/GameViewport/Planet" unique_id=796524152]
 z_index = -100
 script = ExtResource("3_starfield")
 
-[node name="DaySky" type="Sprite2D" parent="GameView/GameViewport/Planet/Starfield"]
+[node name="DaySky" type="Sprite2D" parent="GameView/GameViewport/Planet/Starfield" unique_id=1426795328]
+texture_filter = 1
+material = SubResource("ShaderMaterial_day_sky")
 texture = ExtResource("8_day_sky")
-centered = true
-texture_filter = 1
 
-[node name="NightSky" type="Sprite2D" parent="GameView/GameViewport/Planet/Starfield"]
+[node name="NightSky" type="Sprite2D" parent="GameView/GameViewport/Planet/Starfield" unique_id=1196337522]
+texture_filter = 1
 texture = ExtResource("5_starfield")
-centered = true
-texture_filter = 1
 
-[node name="Body" type="Sprite2D" parent="GameView/GameViewport/Planet"]
+[node name="Body" type="Sprite2D" parent="GameView/GameViewport/Planet" unique_id=2040388304]
+texture_filter = 1
 texture = ExtResource("6_body")
-centered = true
-texture_filter = 1
 
-[node name="Surface" type="Node2D" parent="GameView/GameViewport/Planet"]
+[node name="Surface" type="Node2D" parent="GameView/GameViewport/Planet" unique_id=214463946]
 
-[node name="Player" type="Sprite2D" parent="GameView/GameViewport"]
-texture = ExtResource("7_prince")
+[node name="Player" type="Sprite2D" parent="GameView/GameViewport" unique_id=232581758]
 z_index = 200
-centered = true
 texture_filter = 1
+texture = ExtResource("7_prince")
 script = ExtResource("4_player")
