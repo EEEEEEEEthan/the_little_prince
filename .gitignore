@@ -1,0 +1,18 @@
+# 排除 .godot 下的内容，但放行全局 class_name 缓存（--script 模式要靠它解析 class_name）
+/.godot/*
+!/.godot/global_script_class_cache.cfg
+/.engine/
+/.export/
+/.tmp/
+/.temp/
+/.idea/
+/.vscode/
+# 本地导出中间产物；线上可玩包提交在 docs/
+/build/
+# 预压缩旁车（本地/隧道用；勿入库，由 export/precompress 生成）
+*.gz
+*.br
+*.pyc
+__pycache__/
+.DS_Store
+Thumbs.db
