@@ -1,0 +1,14 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; but the format is straightforward enough for minimal setup.
+
+config_version=5
+
+[application]
+
+config/name="the_little_prince"
+config/features=PackedStringArray("4.8")
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_pull_requests/plugin.cfg")
