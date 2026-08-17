@@ -6,15 +6,17 @@ extends Sprite2D
 enum Kind { ROSE, VOLCANO, BAOBAB }
 
 const ROSE_TEXTURE: Texture2D = preload("res://planet/rose.png")
-const VOLCANO_TEXTURE: Texture2D = preload("res://planet/volcano.png")
-const BAOBAB_TEXTURE: Texture2D = preload("res://planet/baobab.png")
+const VOLCANO_SHEET: Texture2D = preload("res://planet/volcano.png")
+const BAOBAB_SHEET: Texture2D = preload("res://planet/baobab.png")
 
 var kind: Kind
 var angle: float
+var variant: int
 
-func configure(prop_kind: Kind, prop_angle: float) -> void:
+func configure(prop_kind: Kind, prop_angle: float, prop_variant: int = 0) -> void:
 	kind = prop_kind
 	angle = prop_angle
+	variant = prop_variant
 	_apply_texture()
 	_place_on_surface()
 
@@ -30,10 +32,14 @@ func _apply_texture() -> void:
 			texture = ROSE_TEXTURE
 			name = "Rose"
 		Kind.VOLCANO:
-			texture = VOLCANO_TEXTURE
+			texture = VOLCANO_SHEET
+			hframes = WorldConstants.VOLCANO_VARIANT_COUNT
+			frame = variant
 			name = "Volcano"
 		Kind.BAOBAB:
-			texture = BAOBAB_TEXTURE
+			texture = BAOBAB_SHEET
+			hframes = WorldConstants.BAOBAB_VARIANT_COUNT
+			frame = variant
 			name = "Baobab"
 	offset = Vector2(0.0, -float(texture.get_height()) * 0.5)
 

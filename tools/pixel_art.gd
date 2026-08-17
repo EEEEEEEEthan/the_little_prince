@@ -158,20 +158,31 @@ static func build_starfield(width: int, height: int) -> Image:
 
 ## ---------- 地物 Image（导出用） ----------
 
-static func build_volcano_sprite(size: int) -> Image:
+## 火山：variant 0/1 为死火山（形态各异、暗色岩口），variant 2 为活火山（熔岩发光 + 烟）。
+static func build_volcano_sprite(size: int, variant: int = 0) -> Image:
 	var img := _new_image(size)
 	var cx: float = size * 0.5
 	var top_y: float = size * 0.22
 	var base_y: float = size * 0.86
 	var top_half: float = size * 0.07
 	var base_half: float = size * 0.38
+	var slope_light := Color(0.42, 0.2, 0.15)
+	var slope_dark := Color(0.24, 0.11, 0.09)
+	var active := variant == 2
+	if variant == 1:
+		top_y = size * 0.28
+		base_y = size * 0.9
+		top_half = size * 0.09
+		base_half = size * 0.42
+		slope_light = Color(0.46, 0.23, 0.17)
+		slope_dark = Color(0.27, 0.13, 0.1)
 
 	for y in range(int(top_y), int(base_y) + 1):
 		var t: float = (y - top_y) / max(base_y - top_y, 1.0)
 		var half_w: float = lerpf(top_half, base_half, pow(t, 0.8))
-		var slope_color := Color(0.42, 0.2, 0.15).lerp(Color(0.24, 0.11, 0.09), t)
+		var slope_color := slope_light.lerp(slope_dark, t)
 		for x in range(int(cx - half_w), int(cx + half_w) + 1):
-			var n: float = _hash(x, y, 3)
+			var n: float = _hash(x, y, 3 + variant)
 			var c := slope_color
 			c.r += (n - 0.5) * 0.05
 			c.g += (n - 0.5) * 0.04
@@ -182,32 +193,91 @@ static func build_volcano_sprite(size: int) -> Image:
 			img.set_pixel(x, y, c)
 
 	_fill_ellipse(img, Vector2(cx, top_y + 1.0), top_half * 1.1, top_half * 0.55, Color(0.12, 0.07, 0.06))
-	_fill_ellipse(img, Vector2(cx, top_y + 1.6), top_half * 0.7, top_half * 0.35, Color(0.95, 0.42, 0.08, 0.9))
-	_fill_ellipse(img, Vector2(cx, top_y + 1.6), top_half * 0.32, top_half * 0.18, Color(1.0, 0.85, 0.25))
-	_stroke_line(
-		img,
-		Vector2(cx + top_half * 0.4, top_y + 2.0),
-		Vector2(cx + base_half * 0.45, base_y - 3.0),
-		1.4,
-		Color(0.9, 0.35, 0.05, 0.75)
-	)
-	_fill_ellipse(img, Vector2(cx - 1.0, top_y - 3.0), size * 0.09, size * 0.06, Color(0.75, 0.78, 0.8, 0.35))
-	_fill_ellipse(img, Vector2(cx + 2.0, top_y - 6.0), size * 0.07, size * 0.05, Color(0.8, 0.82, 0.85, 0.22))
+	if active:
+		_fill_ellipse(img, Vector2(cx, top_y + 1.6), top_half * 0.7, top_half * 0.35, Color(0.95, 0.42, 0.08, 0.9))
+		_fill_ellipse(img, Vector2(cx, top_y + 1.6), top_half * 0.32, top_half * 0.18, Color(1.0, 0.85, 0.25))
+		_stroke_line(
+			img,
+			Vector2(cx + top_half * 0.4, top_y + 2.0),
+			Vector2(cx + base_half * 0.45, base_y - 3.0),
+			1.4,
+			Color(0.9, 0.35, 0.05, 0.75)
+		)
+		_fill_ellipse(img, Vector2(cx - 1.0, top_y - 3.0), size * 0.09, size * 0.06, Color(0.75, 0.78, 0.8, 0.35))
+		_fill_ellipse(img, Vector2(cx + 2.0, top_y - 6.0), size * 0.07, size * 0.05, Color(0.8, 0.82, 0.85, 0.22))
+	else:
+		_fill_ellipse(img, Vector2(cx, top_y - 1.0), size * 0.06, size * 0.04, Color(0.6, 0.58, 0.55, 0.3))
 	return img
 
-static func build_baobab_sprite(size: int) -> Image:
+## 猴面包树：variant 控制形态（高瘦 / 矮胖 / 斜枝 / 经典）与叶色，供 spritesheet 随机。
+static func build_baobab_sprite(size: int, variant: int = 0) -> Image:
 	var img := _new_image(size)
 	var cx: float = size * 0.5
 	var trunk_top: float = size * 0.42
 	var trunk_bottom: float = size * 0.92
+	var top_half: float = size * 0.14
+	var bottom_half: float = size * 0.2
+	var trunk_color := Color(0.4, 0.28, 0.16)
+	var branch_color := Color(0.35, 0.24, 0.14)
+	var leaf_color := Color(0.18, 0.35, 0.16)
+	var leaf_hi := Color(0.24, 0.42, 0.2)
+	var branch_tips: Array[Vector2] = []
+
+	match variant % 4:
+		1:
+			trunk_top = size * 0.34
+			top_half = size * 0.11
+			bottom_half = size * 0.16
+			trunk_color = Color(0.42, 0.3, 0.17)
+			leaf_color = Color(0.16, 0.34, 0.18)
+			leaf_hi = Color(0.22, 0.4, 0.22)
+			branch_tips = [
+				Vector2(cx - size * 0.18, trunk_top - size * 0.16),
+				Vector2(cx, trunk_top - size * 0.24),
+				Vector2(cx + size * 0.2, trunk_top - size * 0.13),
+			]
+		2:
+			trunk_top = size * 0.48
+			top_half = size * 0.16
+			bottom_half = size * 0.24
+			trunk_color = Color(0.38, 0.27, 0.15)
+			leaf_color = Color(0.2, 0.38, 0.17)
+			leaf_hi = Color(0.27, 0.45, 0.21)
+			branch_tips = [
+				Vector2(cx - size * 0.24, trunk_top - size * 0.12),
+				Vector2(cx, trunk_top - size * 0.2),
+				Vector2(cx + size * 0.26, trunk_top - size * 0.1),
+				Vector2(cx - size * 0.1, trunk_top - size * 0.22),
+				Vector2(cx + size * 0.1, trunk_top - size * 0.2),
+			]
+		3:
+			trunk_top = size * 0.4
+			top_half = size * 0.15
+			bottom_half = size * 0.21
+			branch_color = Color(0.33, 0.22, 0.12)
+			leaf_color = Color(0.17, 0.33, 0.15)
+			leaf_hi = Color(0.23, 0.4, 0.19)
+			branch_tips = [
+				Vector2(cx - size * 0.26, trunk_top - size * 0.1),
+				Vector2(cx - size * 0.08, trunk_top - size * 0.24),
+				Vector2(cx + size * 0.16, trunk_top - size * 0.16),
+				Vector2(cx + size * 0.02, trunk_top - size * 0.2),
+			]
+		_:
+			branch_tips = [
+				Vector2(cx - size * 0.22, trunk_top - size * 0.14),
+				Vector2(cx, trunk_top - size * 0.2),
+				Vector2(cx + size * 0.24, trunk_top - size * 0.12),
+				Vector2(cx - size * 0.08, trunk_top - size * 0.22),
+			]
 
 	for y in range(int(trunk_top), int(trunk_bottom) + 1):
 		var t: float = (y - trunk_top) / max(trunk_bottom - trunk_top, 1.0)
-		var half_w: float = lerpf(size * 0.14, size * 0.2, t)
-		var trunk_color := Color(0.4, 0.28, 0.16).darkened(t * 0.15)
+		var half_w: float = lerpf(top_half, bottom_half, t)
+		var trunk_shade := trunk_color.darkened(t * 0.15)
 		for x in range(int(cx - half_w), int(cx + half_w) + 1):
-			var n: float = _hash(x, y, 41)
-			var c := trunk_color
+			var n: float = _hash(x, y, 41 + variant)
+			var c := trunk_shade
 			c.r += (n - 0.5) * 0.05
 			c.g += (n - 0.5) * 0.04
 			c.b += (n - 0.5) * 0.03
@@ -216,17 +286,34 @@ static func build_baobab_sprite(size: int) -> Image:
 			c.a = 1.0
 			img.set_pixel(x, y, c)
 
-	var branch_tips: Array[Vector2] = [
-		Vector2(cx - size * 0.22, trunk_top - size * 0.14),
-		Vector2(cx, trunk_top - size * 0.2),
-		Vector2(cx + size * 0.24, trunk_top - size * 0.12),
-		Vector2(cx - size * 0.08, trunk_top - size * 0.22),
-	]
 	for tip in branch_tips:
-		_stroke_line(img, Vector2(cx, trunk_top), tip, size * 0.06, Color(0.35, 0.24, 0.14))
-		_fill_ellipse(img, tip, size * 0.13, size * 0.1, Color(0.18, 0.35, 0.16))
-		_fill_ellipse(img, tip + Vector2(0, -size * 0.03), size * 0.08, size * 0.06, Color(0.24, 0.42, 0.2))
+		_stroke_line(img, Vector2(cx, trunk_top), tip, size * 0.06, branch_color)
+		_fill_ellipse(img, tip, size * 0.13, size * 0.1, leaf_color)
+		_fill_ellipse(img, tip + Vector2(0, -size * 0.03), size * 0.08, size * 0.06, leaf_hi)
 	return img
+
+## 把若干等高单帧横向拼接为 spritesheet（帧宽 = size，帧高 = size）。
+static func _stack_horizontal(frames: Array[Image], size: int) -> Image:
+	var sheet := Image.create(size * frames.size(), size, false, Image.FORMAT_RGBA8)
+	sheet.fill(Color(0, 0, 0, 0))
+	for i in frames.size():
+		var frame: Image = frames[i]
+		sheet.blit_rect(frame, Rect2i(0, 0, frame.get_width(), frame.get_height()), Vector2i(i * size, 0))
+	return sheet
+
+## 火山 spritesheet：variant 0/1 死火山，variant 2 活火山。
+static func build_volcano_sheet(size: int, variant_count: int) -> Image:
+	var frames: Array[Image] = []
+	for i in variant_count:
+		frames.append(build_volcano_sprite(size, i))
+	return _stack_horizontal(frames, size)
+
+## 猴面包树 spritesheet：variant_count 个不同形态。
+static func build_baobab_sheet(size: int, variant_count: int) -> Image:
+	var frames: Array[Image] = []
+	for i in variant_count:
+		frames.append(build_baobab_sprite(size, i))
+	return _stack_horizontal(frames, size)
 
 static func build_rose_sprite(size: int) -> Image:
 	var img := _new_image(size)

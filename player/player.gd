@@ -10,5 +10,4 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var direction := Input.get_axis("move_left", "move_right")
-	if not is_zero_approx(direction):
-		planet.move_player(direction, delta)
+	planet.move_player(direction, delta)

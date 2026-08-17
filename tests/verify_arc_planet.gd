@@ -115,10 +115,18 @@ func _check_static_assets() -> int:
 				% [expected_diameter, expected_diameter, body.get_width(), body.get_height()]
 			)
 			failed += 1
-	# 精灵尺寸应对齐常量
+	# 精灵尺寸应对齐常量（火山 / 猴面包树为 spritesheet，宽度 = 帧数 × 帧尺寸）
 	var sprite_checks: Array = [
-		["res://planet/volcano.png", WorldConstants.VOLCANO_SPRITE_SIZE, WorldConstants.VOLCANO_SPRITE_SIZE],
-		["res://planet/baobab.png", WorldConstants.BAOBAB_SPRITE_SIZE, WorldConstants.BAOBAB_SPRITE_SIZE],
+		[
+			"res://planet/volcano.png",
+			WorldConstants.VOLCANO_SPRITE_SIZE * WorldConstants.VOLCANO_VARIANT_COUNT,
+			WorldConstants.VOLCANO_SPRITE_SIZE,
+		],
+		[
+			"res://planet/baobab.png",
+			WorldConstants.BAOBAB_SPRITE_SIZE * WorldConstants.BAOBAB_VARIANT_COUNT,
+			WorldConstants.BAOBAB_SPRITE_SIZE,
+		],
 		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
 		["res://player/prince.png", WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT],
 	]
@@ -149,6 +157,15 @@ func _check_pixel_art_export_api() -> int:
 	)
 	if volcano == null or baobab == null or rose == null or prince == null:
 		printerr("PixelArt build_* 失败")
+		failed += 1
+	var volcano_sheet := PixelArt.build_volcano_sheet(
+		WorldConstants.VOLCANO_SPRITE_SIZE, WorldConstants.VOLCANO_VARIANT_COUNT
+	)
+	var baobab_sheet := PixelArt.build_baobab_sheet(
+		WorldConstants.BAOBAB_SPRITE_SIZE, WorldConstants.BAOBAB_VARIANT_COUNT
+	)
+	if volcano_sheet == null or baobab_sheet == null:
+		printerr("PixelArt build_*_sheet 失败")
 		failed += 1
 	var art_src := FileAccess.get_file_as_string("res://tools/pixel_art.gd")
 	for forbidden in ["make_volcano_layers", "make_baobab_layers", "make_rose_layers"]:
@@ -258,6 +275,31 @@ func _check_scene_and_mechanics() -> int:
 		if rose_count != 1:
 			printerr("玫瑰数量应为 1，实际 %d" % rose_count)
 			failed += 1
+		var active_volcanoes := 0
+		var dead_volcanoes := 0
+		for prop in planet.surface_props:
+			if prop.kind != SurfaceProp.Kind.VOLCANO:
+				continue
+			if prop.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT:
+				active_volcanoes += 1
+			else:
+				dead_volcanoes += 1
+		if active_volcanoes != 1:
+			printerr("活火山数量应为 1，实际 %d" % active_volcanoes)
+			failed += 1
+		if dead_volcanoes != WorldConstants.VOLCANO_DEAD_VARIANT_COUNT:
+			printerr(
+				"死火山数量应为 %d，实际 %d"
+				% [WorldConstants.VOLCANO_DEAD_VARIANT_COUNT, dead_volcanoes]
+			)
+			failed += 1
+		for prop in planet.surface_props:
+			if (
+				prop.kind == SurfaceProp.Kind.BAOBAB
+				and (prop.variant < 0 or prop.variant >= WorldConstants.BAOBAB_VARIANT_COUNT)
+			):
+				printerr("猴面包树变体越界：%d" % prop.variant)
+				failed += 1
 		var expected_props: int = 1 + WorldConstants.VOLCANO_COUNT + WorldConstants.BAOBAB_COUNT
 		if planet.surface_props.size() != expected_props:
 			printerr(

@@ -19,11 +19,15 @@ func _export() -> void:
 		"res://planet/rose.png",
 	)
 	failed += _save(
-		PixelArt.build_volcano_sprite(WorldConstants.VOLCANO_SPRITE_SIZE),
+		PixelArt.build_volcano_sheet(
+			WorldConstants.VOLCANO_SPRITE_SIZE, WorldConstants.VOLCANO_VARIANT_COUNT
+		),
 		"res://planet/volcano.png",
 	)
 	failed += _save(
-		PixelArt.build_baobab_sprite(WorldConstants.BAOBAB_SPRITE_SIZE),
+		PixelArt.build_baobab_sheet(
+			WorldConstants.BAOBAB_SPRITE_SIZE, WorldConstants.BAOBAB_VARIANT_COUNT
+		),
 		"res://planet/baobab.png",
 	)
 	failed += _save(

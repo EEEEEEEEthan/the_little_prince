@@ -19,6 +19,8 @@ var surface_props: Array[SurfaceProp] = []
 
 var _rng := RandomNumberGenerator.new()
 var _occupied_angles: Array[float] = []
+## 当前角速度（弧度/秒），经阻尼向目标速度平滑逼近。
+var _angular_velocity: float = 0.0
 
 func _ready() -> void:
 	_rng.seed = WorldConstants.WORLD_SEED
@@ -27,13 +29,17 @@ func _ready() -> void:
 func apex_global_position() -> Vector2:
 	return global_position + Vector2(0.0, -WorldConstants.PLANET_RADIUS)
 
-## 玩家沿线移动 direction 方向一段距离，驱动星球反向旋转。
+## 玩家沿线移动 direction 方向，角速度带阻尼平滑逼近目标，驱动星球反向旋转。
 func move_player(direction: float, delta: float) -> void:
-	var angular_step := WorldConstants.PLAYER_SPEED / WorldConstants.PLANET_RADIUS * delta
-	player_angle = fposmod(player_angle + direction * angular_step, TAU)
+	var max_angular_speed := WorldConstants.PLAYER_SPEED / WorldConstants.PLANET_RADIUS
+	var target_velocity := direction * max_angular_speed
+	var smoothing := 1.0 - exp(-WorldConstants.PLAYER_DAMPING * delta)
+	_angular_velocity = lerp(_angular_velocity, target_velocity, smoothing)
+	player_angle = fposmod(player_angle + _angular_velocity * delta, TAU)
 	_sync_rotation()
 
 func teleport_player(angle: float) -> void:
+	_angular_velocity = 0.0
 	player_angle = fposmod(angle, TAU)
 	_sync_rotation()
 
@@ -65,6 +71,8 @@ func _place_rose() -> void:
 
 func _place_volcanoes() -> void:
 	var base_angles: Array[float] = [TAU * 0.22, TAU * 0.55, TAU * 0.82]
+	var active_index := _rng.randi_range(0, WorldConstants.VOLCANO_COUNT - 1)
+	var dead_variant := 0
 	for index in WorldConstants.VOLCANO_COUNT:
 		var angle := fposmod(
 			base_angles[index % base_angles.size()] + _rng.randf_range(-0.08, 0.08), TAU
@@ -79,9 +87,15 @@ func _place_volcanoes() -> void:
 			if not blocked:
 				break
 			angle = _rng.randf() * TAU
+		var variant: int
+		if index == active_index:
+			variant = WorldConstants.VOLCANO_ACTIVE_VARIANT
+		else:
+			variant = dead_variant
+			dead_variant += 1
 		volcano_angles.append(angle)
 		_occupied_angles.append(angle)
-		_spawn_prop(SurfaceProp.Kind.VOLCANO, angle)
+		_spawn_prop(SurfaceProp.Kind.VOLCANO, angle, variant)
 
 func _place_baobabs() -> void:
 	var attempts := 0
@@ -96,7 +110,10 @@ func _place_baobabs() -> void:
 			continue
 		baobab_angles.append(angle)
 		_occupied_angles.append(angle)
-		_spawn_prop(SurfaceProp.Kind.BAOBAB, angle)
+		_spawn_prop(
+			SurfaceProp.Kind.BAOBAB, angle,
+			_rng.randi_range(0, WorldConstants.BAOBAB_VARIANT_COUNT - 1),
+		)
 
 func _too_close_to_any(angle: float, others: Array[float], clearance: float) -> bool:
 	for other in others:
@@ -104,8 +121,8 @@ func _too_close_to_any(angle: float, others: Array[float], clearance: float) -> 
 			return true
 	return false
 
-func _spawn_prop(kind: SurfaceProp.Kind, angle: float) -> void:
+func _spawn_prop(kind: SurfaceProp.Kind, angle: float, variant: int = 0) -> void:
 	var prop := SurfaceProp.new()
 	surface.add_child(prop)
-	prop.configure(kind, angle)
+	prop.configure(kind, angle, variant)
 	surface_props.append(prop)
