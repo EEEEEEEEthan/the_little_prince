@@ -137,12 +137,12 @@ static func build_planet_body(radius: float) -> Image:
 		_fill_ellipse(img, Vector2(px, py), spot_r, spot_r, spot_c)
 	return img
 
-## 深空星野：固定内部分辨率底图
+## 深空星野：按密度铺星（约 1 颗/717px²），任意尺寸下视口内星密度一致
 static func build_starfield(width: int, height: int) -> Image:
 	var img := Image.create(width, height, false, Image.FORMAT_RGBA8)
 	var bg := Color(0.015, 0.018, 0.055)
 	img.fill(bg)
-	var count: int = int(clampf(float(width * height) / 2800.0, 80.0, 260.0))
+	var count: int = int(float(width * height) / 717.0)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 424242
 	for i in count:

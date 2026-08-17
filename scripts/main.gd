@@ -4,8 +4,8 @@ extends Control
 ##   Main (Control)
 ##   └── GameView (SubViewportContainer, stretch + Nearest)
 ##       └── GameViewport (SubViewport 256×224)
-##           ├── Starfield
 ##           ├── Planet —— Body + Surface 同受 -player_angle
+##           │   └── Starfield —— 绕球心缓慢自转，模拟星球自转
 ##           └── Player —— 改角后立刻通知 Planet；始终钉在弧顶
 ##
 ## 项目逻辑分辨率为 256×224（窗口 override 960×960 + canvas_items 放大），
@@ -13,7 +13,6 @@ extends Control
 
 @onready var game_view: SubViewportContainer = $GameView
 @onready var game_viewport: SubViewport = $GameView/GameViewport
-@onready var starfield: Starfield = $GameView/GameViewport/Starfield
 @onready var planet: Planet = $GameView/GameViewport/Planet
 @onready var player: Player = $GameView/GameViewport/Player
 

@@ -57,6 +57,13 @@ const SPRITE_PLAYER_H: int = 18
 const PROP_SCALE: float = 1.0
 const PLAYER_SCALE: float = 1.0
 
+## ---------- 星空 ----------
+## 星空贴图边长：以球心为中心、覆盖「随玩家角任意旋转」所需方形
+## （内切圆半径须 ≥ 球心到视口最远角，约 309px）
+const STARFIELD_SIZE: int = 640
+## 星空相对星球的自转角速度（弧度/秒）；缓慢持续
+const STAR_ROTATION_SPEED: float = 0.02
+
 ## ---------- 静态资源路径（由导出脚本写入，运行时 preload） ----------
 const ASSET_PRINCE := "res://assets/sprites/prince.png"
 const ASSET_ROSE := "res://assets/sprites/rose.png"

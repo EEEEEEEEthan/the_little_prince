@@ -30,7 +30,7 @@ func _export() -> void:
 		"res://assets/planet/body.png"
 	)
 	err += _save(
-		PixelArt.build_starfield(WorldConstants.INTERNAL_WIDTH, WorldConstants.INTERNAL_HEIGHT),
+		PixelArt.build_starfield(WorldConstants.STARFIELD_SIZE, WorldConstants.STARFIELD_SIZE),
 		"res://assets/bg/starfield.png"
 	)
 	if err == 0:

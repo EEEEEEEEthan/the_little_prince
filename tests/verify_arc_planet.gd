@@ -127,14 +127,14 @@ func _check_static_assets() -> int:
 		if tex.get_width() < 8 or tex.get_height() < 8:
 			printerr("贴图尺寸过小：%s（%dx%d）" % [path, tex.get_width(), tex.get_height()])
 			failed += 1
-	# 星野应对齐内部分辨率
+	# 星野应为中心对齐球心的方形（边长 STARFIELD_SIZE）
 	var star: Texture2D = load("res://assets/bg/starfield.png") as Texture2D
 	if star != null:
-		if star.get_width() != WorldConstants.INTERNAL_WIDTH or star.get_height() != WorldConstants.INTERNAL_HEIGHT:
+		if star.get_width() != WorldConstants.STARFIELD_SIZE or star.get_height() != WorldConstants.STARFIELD_SIZE:
 			printerr(
 				"starfield 应为 %dx%d，实际 %dx%d"
 				% [
-					WorldConstants.INTERNAL_WIDTH, WorldConstants.INTERNAL_HEIGHT,
+					WorldConstants.STARFIELD_SIZE, WorldConstants.STARFIELD_SIZE,
 					star.get_width(), star.get_height(),
 				]
 			)
@@ -325,6 +325,12 @@ func _check_scene_and_mechanics() -> int:
 		if planet.get_node_or_null("Body") == null:
 			printerr("找不到 Body")
 			failed += 1
+		if planet.get_node_or_null("Starfield") == null:
+			printerr("找不到 Starfield（应为 Planet 子节点）")
+			failed += 1
+		if scene.get_node_or_null("GameView/GameViewport/Starfield") != null:
+			printerr("Starfield 不应再作为 GameViewport 直接子节点")
+			failed += 1
 
 	if planet != null and player != null:
 		player.planet = planet
@@ -332,6 +338,7 @@ func _check_scene_and_mechanics() -> int:
 		player.set_angle_and_sync(0.75)
 		var surface2: Node2D = planet.get_node("Surface") as Node2D
 		var body2: Node2D = planet.get_node("Body") as Node2D
+		var starfield2: Starfield = planet.get_node("Starfield") as Starfield
 		if not is_equal_approx(surface2.rotation, -player.angle):
 			printerr(
 				"Surface.rotation 应为 %s，实际 %s"
@@ -346,6 +353,15 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 		if not is_equal_approx(body2.rotation, surface2.rotation):
 			printerr("Body 与 Surface 旋转应一致")
+			failed += 1
+		if not is_equal_approx(starfield2.planet_rotation, -player.angle):
+			printerr(
+				"Starfield.planet_rotation 应为 %s，实际 %s（星空须随星球转）"
+				% [-player.angle, starfield2.planet_rotation]
+			)
+			failed += 1
+		if WorldConstants.STAR_ROTATION_SPEED <= 0.0:
+			printerr("STAR_ROTATION_SPEED 应大于 0（星空相对星球自转）")
 			failed += 1
 
 		var apex: Vector2 = planet.apex_global_position()
@@ -363,6 +379,9 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 		if not is_equal_approx(body2.rotation, -player.angle):
 			printerr("负角时 Body.rotation 不同步")
+			failed += 1
+		if not is_equal_approx(starfield2.planet_rotation, -player.angle):
+			printerr("负角时 Starfield.planet_rotation 不同步")
 			failed += 1
 
 		# 弧顶相对球心应在正上方

@@ -1,11 +1,12 @@
 class_name Planet
 extends Node2D
 ## 2D 圆弧星球：
-##   Body / Surface 同受 rotation = -player_angle（沙斑、岩边与地物一起转）；
+##   Body / Surface / Starfield 同受 rotation = -player_angle（沙斑、岩边、地物与星空一起转）；
 ##   小王子视觉上始终停在弧顶（屏幕固定位置）。
 
 @onready var body: PlanetBody = $Body
 @onready var surface: Node2D = $Surface
+@onready var starfield: Starfield = $Starfield
 
 ## 当前玩家角（由 Player 改角后立刻写入，同帧一致）
 var player_angle: float = 0.0
@@ -61,6 +62,8 @@ func _sync_planet_rotation() -> void:
 		body.rotation = rot
 	if surface != null:
 		surface.rotation = rot
+	if starfield != null:
+		starfield.set_planet_rotation(rot)
 	for prop in surface_props:
 		prop.update_visibility(player_angle)
 
