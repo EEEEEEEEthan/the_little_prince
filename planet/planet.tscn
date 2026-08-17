@@ -10,14 +10,15 @@
 [ext_resource type="Texture2D" uid="uid://duk1gaik3krys" path="res://planet/volcano.png" id="8_volcano"]
 [ext_resource type="Texture2D" uid="uid://bblja4kg8jkmg" path="res://planet/baobab.png" id="9_baobab"]
 [ext_resource type="Shader" uid="uid://77ilermcmh3b" path="res://planet/day_sky.gdshader" id="10_day_sky_shader"]
-[ext_resource type="GradientTexture1D" uid="uid://c9h4k8m2v7xqw" path="res://planet/zenith_gradient.tres" id="11_zenith_gradient"]
-[ext_resource type="GradientTexture1D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="12_night_sky_gradient"]
-[ext_resource type="GradientTexture1D" uid="uid://cb6n3w9t4y8zr" path="res://planet/horizon_gradient.tres" id="13_horizon_gradient"]
+[ext_resource type="Texture2D" uid="uid://dah4k8m2v7xqw" path="res://planet/zenith_gradient.tres" id="11_zenith_gradient"]
+[ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="12_night_sky_gradient"]
+[ext_resource type="Texture2D" uid="uid://cb6n3xat4y80r" path="res://planet/horizon_gradient.tres" id="13_horizon_gradient"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_day_sky"]
 shader = ExtResource("10_day_sky_shader")
 shader_parameter/zenith_gradient = ExtResource("11_zenith_gradient")
 shader_parameter/horizon_gradient = ExtResource("13_horizon_gradient")
+shader_parameter/phase = 0.5
 
 [node name="Planet" type="Node2D" unique_id=1020592655]
 script = ExtResource("1_planet")
