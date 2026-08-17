@@ -13,17 +13,20 @@ var world_pixel_size: float = float(WorldConstants.WORLD_PIXELS)
 var _sprite: Sprite2D
 ## 环绕幽灵：8 个偏移副本，跟随本体同步移动
 var _ghosts: Array[Sprite2D] = []
+var _player_tex: Texture2D
 
 func _ready() -> void:
-	var tex := PixelArt.make_player_sprite(14, 20)
+	_player_tex = PixelArt.make_player_sprite(14, 20)
 	_sprite = Sprite2D.new()
 	_sprite.name = "小王子精灵"
-	_sprite.texture = tex
+	_sprite.texture = _player_tex
 	_sprite.centered = true
 	_sprite.z_index = 10
 	add_child(_sprite)
+	# 父节点仍在布置子树时不能 add_child，延后创建环绕幽灵
+	call_deferred("_setup_ghosts")
 
-	# 幽灵挂在 PlanetWorld 下，避免作为 CharacterBody2D 子节点被重复变换
+func _setup_ghosts() -> void:
 	var ghost_root := Node2D.new()
 	ghost_root.name = "小王子环绕幽灵"
 	ghost_root.z_index = 10
@@ -35,10 +38,10 @@ func _ready() -> void:
 			if ox == 0 and oy == 0:
 				continue
 			var ghost := Sprite2D.new()
-			ghost.texture = tex
+			ghost.texture = _player_tex
 			ghost.centered = true
 			ghost.z_index = 10
-			ghost.position = global_position + Vector2(float(ox) * world, float(oy) * world)
+			ghost.global_position = global_position + Vector2(float(ox) * world, float(oy) * world)
 			ghost_root.add_child(ghost)
 			_ghosts.append(ghost)
 
