@@ -1,9 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://b8littleprince01"]
+[gd_scene format=3 uid="uid://cojn20gna51qe"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
-[ext_resource type="Script" path="res://scripts/world_generator.gd" id="2_world"]
-[ext_resource type="Script" path="res://scripts/player.gd" id="3_player"]
-[ext_resource type="Shader" path="res://shaders/sphere_fisheye.gdshader" id="4_shader"]
+[ext_resource type="Script" uid="uid://cyh14kfr3hytu" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bvron3cmugo0m" path="res://scripts/world_generator.gd" id="2_world"]
+[ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://scripts/player.gd" id="3_player"]
+[ext_resource type="Shader" uid="uid://bdx4bmmxspdb1" path="res://shaders/sphere_fisheye.gdshader" id="4_shader"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 6.0
@@ -14,10 +14,10 @@ shader_parameter/player_uv = Vector2(0.5, 0.5)
 shader_parameter/view_size = Vector2(960, 960)
 shader_parameter/curvature = 1.55
 shader_parameter/view_span = 0.48
-shader_parameter/space_color = Vector3(0.015, 0.018, 0.055)
+shader_parameter/space_color = Color(0.015, 0.018, 0.055, 1)
 shader_parameter/star_density = 0.45
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=1719014773]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -26,31 +26,33 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
 
-[node name="WorldHost" type="Node" parent="."]
+[node name="WorldHost" type="Node" parent="." unique_id=1530708257]
 
-[node name="WorldViewport" type="SubViewport" parent="WorldHost"]
+[node name="WorldViewport" type="SubViewport" parent="WorldHost" unique_id=1482903739]
 disable_3d = true
 handle_input_locally = false
-size = Vector2i(512, 512)
+anisotropic_filtering_level = 0
+canvas_item_default_texture_filter = 0
+oversampling = false
 render_target_update_mode = 4
 
-[node name="PlanetWorld" type="Node2D" parent="WorldHost/WorldViewport"]
+[node name="PlanetWorld" type="Node2D" parent="WorldHost/WorldViewport" unique_id=1396710079]
 script = ExtResource("2_world")
 
-[node name="Ground" type="TileMapLayer" parent="WorldHost/WorldViewport/PlanetWorld"]
+[node name="Ground" type="TileMapLayer" parent="WorldHost/WorldViewport/PlanetWorld" unique_id=1593184373]
 
-[node name="Props" type="Node2D" parent="WorldHost/WorldViewport/PlanetWorld"]
+[node name="Props" type="Node2D" parent="WorldHost/WorldViewport/PlanetWorld" unique_id=1230279965]
 
-[node name="Player" type="CharacterBody2D" parent="WorldHost/WorldViewport/PlanetWorld"]
-collision_layer = 1
+[node name="Player" type="CharacterBody2D" parent="WorldHost/WorldViewport/PlanetWorld" unique_id=770089130]
 collision_mask = 0
 motion_mode = 1
 script = ExtResource("3_player")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldHost/WorldViewport/PlanetWorld/Player"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldHost/WorldViewport/PlanetWorld/Player" unique_id=1103326871]
 shape = SubResource("CircleShape2D_player")
 
-[node name="PlanetView" type="ColorRect" parent="."]
+[node name="PlanetView" type="ColorRect" parent="." unique_id=319599372]
+material = SubResource("ShaderMaterial_planet")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -59,4 +61,3 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
-material = SubResource("ShaderMaterial_planet")
