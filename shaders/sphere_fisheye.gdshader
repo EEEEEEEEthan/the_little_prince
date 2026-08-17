@@ -17,7 +17,7 @@ shader_type canvas_item;
 // 按较短边归一化，使单位圆在任意宽高比窗口下仍是视觉正圆。
 
 // 世界贴图：由隐藏的 SubViewport 渲染整张地图 + 地物 + 小王子得到
-uniform sampler2D world_tex : filter_linear, repeat_enable;
+uniform sampler2D world_tex : filter_nearest, repeat_enable;
 // 玩家在地图上的归一化坐标（0~1），即「球心对准的地方」
 uniform vec2 player_uv = vec2(0.5, 0.5);
 // PlanetView 实际像素尺寸（由 main.gd 每帧写入）
