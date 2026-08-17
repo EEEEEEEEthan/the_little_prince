@@ -78,7 +78,7 @@ static func make_rock_tile(size: int) -> ImageTexture:
 			img.set_pixel(x, y, c)
 	return ImageTexture.create_from_image(img)
 
-## ---------- 地物贴图 ----------
+## ---------- 地物贴图（侧视单图，兼容旧调用） ----------
 
 ## 火山：锥形山体 + 火山口 + 岩浆微光 + 一缕青烟
 static func make_volcano_sprite(size: int) -> ImageTexture:
@@ -173,6 +173,175 @@ static func make_rose_sprite(size: int) -> ImageTexture:
 	_fill_ellipse(img, bloom_center, size * 0.09, size * 0.09, Color(0.6, 0.08, 0.18))
 	_fill_ellipse(img, bloom_center - Vector2(0, size * 0.02), size * 0.04, size * 0.04, Color(0.98, 0.75, 0.35))
 	return ImageTexture.create_from_image(img)
+
+## ---------- 地物高度切片（俯视截面，底→顶，供 StackedProp 使用） ----------
+
+## 猴面包树切片：底部粗树干椭圆 → 中段树干 → 顶层树冠团块
+static func make_baobab_layers(size: int, layer_count: int = WorldConstants.BAOBAB_LAYER_COUNT) -> Array[Texture2D]:
+	var layers: Array[Texture2D] = []
+	var cx: float = size * 0.5
+	var cy: float = size * 0.5
+	var trunk := Color(0.4, 0.28, 0.16)
+	var canopy_a := Color(0.18, 0.35, 0.16)
+	var canopy_b := Color(0.24, 0.42, 0.2)
+	var last: int = maxi(layer_count - 1, 1)
+
+	for i in layer_count:
+		var img := _new_image(size)
+		var t: float = float(i) / float(last)
+		if t < 0.45:
+			# 底部粗干：椭圆截面略扁，随高度略收
+			var local_t: float = t / 0.45
+			var rx: float = lerpf(size * 0.28, size * 0.2, local_t)
+			var ry: float = lerpf(size * 0.22, size * 0.16, local_t)
+			var c := trunk.darkened(local_t * 0.08)
+			_fill_ellipse(img, Vector2(cx, cy), rx, ry, c)
+			_fill_ellipse(img, Vector2(cx, cy), rx * 0.55, ry * 0.55, c.lightened(0.08))
+			# 树皮竖纹噪点
+			for y in range(int(cy - ry), int(cy + ry) + 1):
+				for x in range(int(cx - rx), int(cx + rx) + 1):
+					if _hash(x, y, 41) > 0.72 and img.get_pixel(x, y).a > 0.1:
+						_blend_px(img, x, y, Color(0, 0, 0, 0.18))
+		elif t < 0.62:
+			# 中段：稍细树干 + 分叉起点
+			var rx2: float = size * 0.16
+			var ry2: float = size * 0.13
+			_fill_ellipse(img, Vector2(cx, cy), rx2, ry2, trunk.darkened(0.05))
+			_fill_ellipse(img, Vector2(cx - size * 0.1, cy - size * 0.04), size * 0.08, size * 0.06, trunk)
+			_fill_ellipse(img, Vector2(cx + size * 0.11, cy - size * 0.02), size * 0.08, size * 0.06, trunk)
+		else:
+			# 顶层树冠：几团绿叶（标志性「胖伞」）
+			var canopy_t: float = (t - 0.62) / 0.38
+			var blobs: Array[Vector2] = [
+				Vector2(cx - size * 0.16, cy + size * 0.02),
+				Vector2(cx, cy - size * 0.08),
+				Vector2(cx + size * 0.18, cy + size * 0.04),
+				Vector2(cx - size * 0.04, cy + size * 0.12),
+			]
+			var scale: float = lerpf(0.7, 1.05, canopy_t)
+			for bi in blobs.size():
+				var tip: Vector2 = blobs[bi]
+				var col := canopy_a if bi % 2 == 0 else canopy_b
+				_fill_ellipse(img, tip, size * 0.14 * scale, size * 0.11 * scale, col)
+				_fill_ellipse(
+					img,
+					tip + Vector2(0, -size * 0.03),
+					size * 0.08 * scale,
+					size * 0.06 * scale,
+					col.lightened(0.12)
+				)
+			# 中央仍露一点枝丫
+			if canopy_t < 0.35:
+				_fill_ellipse(img, Vector2(cx, cy), size * 0.07, size * 0.06, trunk.darkened(0.1))
+		layers.append(ImageTexture.create_from_image(img))
+	return layers
+
+## 火山切片：底部宽锥底向上收窄，顶层火山口 + 岩浆；若干侧层保留岩浆流
+static func make_volcano_layers(size: int, layer_count: int = WorldConstants.VOLCANO_LAYER_COUNT) -> Array[Texture2D]:
+	var layers: Array[Texture2D] = []
+	var cx: float = size * 0.5
+	var cy: float = size * 0.5
+	var rock_a := Color(0.42, 0.2, 0.15)
+	var rock_b := Color(0.24, 0.11, 0.09)
+	var lava := Color(0.95, 0.42, 0.08)
+	var lava_hot := Color(1.0, 0.85, 0.25)
+	var crater := Color(0.12, 0.07, 0.06)
+	var last: int = maxi(layer_count - 1, 1)
+
+	for i in layer_count:
+		var img := _new_image(size)
+		var t: float = float(i) / float(last)
+		# 锥体半径：底宽顶窄
+		var rx: float = lerpf(size * 0.42, size * 0.12, pow(t, 0.75))
+		var ry: float = lerpf(size * 0.36, size * 0.1, pow(t, 0.75))
+		var slope := rock_a.lerp(rock_b, t)
+
+		_fill_ellipse(img, Vector2(cx, cy), rx, ry, slope)
+		# 边缘加暗一圈
+		_fill_ellipse(img, Vector2(cx, cy), rx * 0.92, ry * 0.92, slope.lightened(0.04))
+		for y in range(int(cy - ry), int(cy + ry) + 1):
+			for x in range(int(cx - rx), int(cx + rx) + 1):
+				var dx: float = (x + 0.5 - cx) / max(rx, 0.0001)
+				var dy: float = (y + 0.5 - cy) / max(ry, 0.0001)
+				var r2: float = dx * dx + dy * dy
+				if r2 <= 1.0 and r2 > 0.82:
+					_blend_px(img, x, y, Color(0, 0, 0, 0.28))
+				elif r2 <= 1.0 and _hash(x, y, 3) > 0.78:
+					_blend_px(img, x, y, Color(0, 0, 0, 0.12))
+
+		# 中上层：岩浆流（偏右下，与侧视图一致）
+		if t > 0.25 and t < 0.78:
+			var flow_from := Vector2(cx + rx * 0.15, cy)
+			var flow_to := Vector2(cx + rx * 0.85, cy + ry * 0.55)
+			_stroke_line(img, flow_from, flow_to, max(1.2, size * 0.04 * (1.0 - t)), Color(0.9, 0.35, 0.05, 0.8))
+
+		# 顶层：火山口 + 岩浆池
+		if t > 0.72:
+			var crater_t: float = (t - 0.72) / 0.28
+			var crx: float = lerpf(rx * 0.85, rx * 1.05, crater_t)
+			var cry: float = lerpf(ry * 0.7, ry * 0.9, crater_t)
+			_fill_ellipse(img, Vector2(cx, cy), crx, cry, crater)
+			_fill_ellipse(img, Vector2(cx, cy), crx * 0.65, cry * 0.55, lava)
+			_fill_ellipse(img, Vector2(cx, cy - cry * 0.1), crx * 0.28, cry * 0.22, lava_hot)
+			# 顶层一点青烟暗示
+			if crater_t > 0.6:
+				_fill_ellipse(
+					img,
+					Vector2(cx - size * 0.02, cy - ry * 0.15),
+					size * 0.06,
+					size * 0.04,
+					Color(0.75, 0.78, 0.8, 0.3)
+				)
+		layers.append(ImageTexture.create_from_image(img))
+	return layers
+
+## 玫瑰切片：茎截面 → 叶 → 花瓣环 → 花心
+static func make_rose_layers(size: int, layer_count: int = WorldConstants.ROSE_LAYER_COUNT) -> Array[Texture2D]:
+	var layers: Array[Texture2D] = []
+	var cx: float = size * 0.5
+	var cy: float = size * 0.5
+	var stem := Color(0.2, 0.45, 0.18)
+	var leaf := Color(0.22, 0.5, 0.2)
+	var petal_a := Color(0.85, 0.18, 0.32)
+	var petal_b := Color(0.92, 0.32, 0.42)
+	var heart := Color(0.6, 0.08, 0.18)
+	var tip := Color(0.98, 0.75, 0.35)
+	var last: int = maxi(layer_count - 1, 1)
+
+	for i in layer_count:
+		var img := _new_image(size)
+		var t: float = float(i) / float(last)
+		if t < 0.28:
+			# 茎：小圆截面
+			var r: float = lerpf(size * 0.08, size * 0.06, t / 0.28)
+			_fill_ellipse(img, Vector2(cx, cy), r, r, stem)
+		elif t < 0.5:
+			# 叶：两侧小椭圆
+			_fill_ellipse(img, Vector2(cx, cy), size * 0.05, size * 0.05, stem)
+			_fill_ellipse(img, Vector2(cx - size * 0.16, cy), size * 0.14, size * 0.07, leaf)
+			_fill_ellipse(img, Vector2(cx + size * 0.16, cy + size * 0.04), size * 0.14, size * 0.07, leaf.lightened(0.05))
+		elif t < 0.85:
+			# 花瓣环：六片俯视
+			var bloom_t: float = (t - 0.5) / 0.35
+			var petal_r: float = lerpf(size * 0.12, size * 0.18, bloom_t)
+			var ring: float = lerpf(size * 0.08, size * 0.13, bloom_t)
+			for pi in range(6):
+				var angle: float = TAU * float(pi) / 6.0
+				var petal_pos: Vector2 = Vector2(cx, cy) + Vector2(cos(angle), sin(angle)) * ring
+				var col := petal_a if pi % 2 == 0 else petal_b
+				_fill_ellipse(img, petal_pos, petal_r, petal_r * 0.8, col)
+			_fill_ellipse(img, Vector2(cx, cy), size * 0.07, size * 0.07, heart)
+		else:
+			# 花心高光
+			_fill_ellipse(img, Vector2(cx, cy), size * 0.1, size * 0.1, heart)
+			_fill_ellipse(img, Vector2(cx, cy - size * 0.02), size * 0.045, size * 0.045, tip)
+			# 仍留一圈薄花瓣边缘
+			for pi in range(6):
+				var angle2: float = TAU * float(pi) / 6.0 + 0.2
+				var p2: Vector2 = Vector2(cx, cy) + Vector2(cos(angle2), sin(angle2)) * size * 0.1
+				_fill_ellipse(img, p2, size * 0.08, size * 0.06, petal_a if pi % 2 == 0 else petal_b)
+		layers.append(ImageTexture.create_from_image(img))
+	return layers
 
 ## 小王子：金色卷发 + 绿色大衣剪影，简洁可辨认
 static func make_player_sprite(width: int, height: int) -> ImageTexture:

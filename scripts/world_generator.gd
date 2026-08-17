@@ -2,14 +2,14 @@ class_name WorldGenerator
 extends Node2D
 ## 负责搭建整颗伪星球的「地面真相」：
 ## 1) 生成 32×32 的 TileMapLayer 地表（沙地/岩地，每格 16×16 像素）
-## 2) 摆放 3 座火山、1 朵玫瑰、若干猴面包树
+## 2) 摆放 3 座火山、1 朵玫瑰、若干猴面包树（均为 StackedProp 伪 3D）
 ## 3) 计算玩家出生点
 ##
 ## 本节点运行在被隐藏渲染的 SubViewport 内部，其渲染结果会被
 ## sphere_fisheye.gdshader 采样为「整颗星球」的贴图源。
 ##
-## 地物采用 3×3 环绕复制绘制：当精灵跨过地图边界时，对侧边缘
-## 仍能看到伸出的部分，从而在球面 wrap 采样时 seam 不可见。
+## 地物采用 StackedProp：3×3 环绕副本 + 沿玩家径向的多层切片堆叠，
+## 球视图下方头朝下、边缘凸出；跨边界时 seam 仍不可见。
 
 @onready var ground: TileMapLayer = $Ground
 @onready var props_root: Node2D = $Props
@@ -21,6 +21,9 @@ var volcano_tiles: Array[Vector2i] = []
 var baobab_tiles: Array[Vector2i] = []
 var rose_tile: Vector2i = Vector2i.ZERO
 var spawn_tile: Vector2i = Vector2i.ZERO
+
+## 已生成的 StackedProp 引用，便于测试 / 外部批量更新
+var stacked_props: Array[StackedProp] = []
 
 ## 记录被地物占用的格子，避免火山/玫瑰/猴面包树互相重叠
 var _occupied: Dictionary = {}
@@ -83,7 +86,12 @@ func _paint_terrain() -> void:
 func _place_rose() -> void:
 	rose_tile = Vector2i(WorldConstants.MAP_TILES / 2, WorldConstants.MAP_TILES / 2)
 	_occupied[rose_tile] = true
-	_spawn_prop_wrapped(rose_tile, PixelArt.make_rose_sprite(18), Vector2(0, -2))
+	_spawn_stacked_prop(
+		rose_tile,
+		PixelArt.make_rose_layers(18, WorldConstants.ROSE_LAYER_COUNT),
+		WorldConstants.ROSE_PITCH,
+		Vector2(0, -2)
+	)
 
 ## 3 座火山彼此保持环面最小距离，视觉上分散在星球各处
 func _place_volcanoes() -> void:
@@ -106,7 +114,12 @@ func _place_volcanoes() -> void:
 			continue
 		volcano_tiles.append(t)
 		_occupied[t] = true
-		_spawn_prop_wrapped(t, PixelArt.make_volcano_sprite(36), Vector2(0, -6))
+		_spawn_stacked_prop(
+			t,
+			PixelArt.make_volcano_layers(36, WorldConstants.VOLCANO_LAYER_COUNT),
+			WorldConstants.VOLCANO_PITCH,
+			Vector2(0, -6)
+		)
 
 ## 猴面包树数量多，随机散布但避免彼此紧贴或压在火山/玫瑰上
 func _place_baobabs() -> void:
@@ -128,7 +141,12 @@ func _place_baobabs() -> void:
 			continue
 		baobab_tiles.append(t)
 		_occupied[t] = true
-		_spawn_prop_wrapped(t, PixelArt.make_baobab_sprite(28), Vector2(0, -4))
+		_spawn_stacked_prop(
+			t,
+			PixelArt.make_baobab_layers(28, WorldConstants.BAOBAB_LAYER_COUNT),
+			WorldConstants.BAOBAB_PITCH,
+			Vector2(0, -4)
+		)
 
 ## 出生点选在玫瑰旁边的空地——小王子每天都会照看他的玫瑰
 func _choose_spawn_tile() -> void:
@@ -161,20 +179,25 @@ func _tile_center(tile: Vector2i) -> Vector2:
 	var ts := float(WorldConstants.TILE_SIZE)
 	return Vector2(float(tile.x) * ts + ts * 0.5, float(tile.y) * ts + ts * 0.5)
 
-## 在逻辑位置及 8 个环绕副本处各画一份精灵。
-## 副本中心可落在视口外，但其伸出视口内的像素会出现在对侧边缘，
-## 配合 shader 的 fract() 采样即可消除球面 seam。
-func _spawn_prop_wrapped(tile: Vector2i, texture: Texture2D, extra_offset: Vector2) -> void:
-	var center := _tile_center(tile) + extra_offset
-	var world := float(WorldConstants.WORLD_PIXELS)
-	for ox in range(-1, 2):
-		for oy in range(-1, 2):
-			var sprite := Sprite2D.new()
-			sprite.texture = texture
-			sprite.centered = true
-			sprite.position = center + Vector2(float(ox) * world, float(oy) * world)
-			sprite.z_index = 1
-			props_root.add_child(sprite)
+## 在逻辑格子上生成一个 StackedProp（内部自带 3×3 环绕 + 径向层叠）
+func _spawn_stacked_prop(
+	tile: Vector2i,
+	textures: Array[Texture2D],
+	pitch: float,
+	extra_offset: Vector2
+) -> StackedProp:
+	var prop := StackedProp.new()
+	prop.name = "StackedProp_%d_%d" % [tile.x, tile.y]
+	props_root.add_child(prop)
+	prop.configure(
+		textures,
+		pitch,
+		extra_offset,
+		_tile_center(tile),
+		float(WorldConstants.WORLD_PIXELS)
+	)
+	stacked_props.append(prop)
+	return prop
 
 ## 供 main.gd / Player 使用：出生点的世界坐标（像素）
 func spawn_world_position() -> Vector2:

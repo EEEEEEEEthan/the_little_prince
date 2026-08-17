@@ -13,6 +13,7 @@ func _run_tests() -> void:
 	failed += _check_constants()
 	failed += _check_wrap_math()
 	failed += _check_pixel_art()
+	failed += _check_stacked_orientation()
 	failed += _check_input_map()
 	failed += _check_shader_no_rim()
 	failed += await _check_scene_and_world()
@@ -42,6 +43,15 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
+		failed += 1
+	if WorldConstants.ROSE_LAYER_COUNT < 3:
+		printerr("ROSE_LAYER_COUNT 过少：%d" % WorldConstants.ROSE_LAYER_COUNT)
+		failed += 1
+	if WorldConstants.BAOBAB_LAYER_COUNT < 3:
+		printerr("BAOBAB_LAYER_COUNT 过少：%d" % WorldConstants.BAOBAB_LAYER_COUNT)
+		failed += 1
+	if WorldConstants.VOLCANO_LAYER_COUNT < 3:
+		printerr("VOLCANO_LAYER_COUNT 过少：%d" % WorldConstants.VOLCANO_LAYER_COUNT)
 		failed += 1
 	print("  常量检查 OK（16×16 格，32×32 地图，512×512 世界）")
 	return failed
@@ -81,7 +91,81 @@ func _check_pixel_art() -> int:
 	if volcano == null or baobab == null or rose == null or prince == null:
 		printerr("程序生成贴图失败")
 		failed += 1
-	print("  程序生成贴图 OK")
+
+	# Stacked 切片：多层、非空、底→顶数量合理
+	failed += _assert_layers(
+		PixelArt.make_volcano_layers(36),
+		WorldConstants.VOLCANO_LAYER_COUNT,
+		"火山"
+	)
+	failed += _assert_layers(
+		PixelArt.make_baobab_layers(28),
+		WorldConstants.BAOBAB_LAYER_COUNT,
+		"猴面包树"
+	)
+	failed += _assert_layers(
+		PixelArt.make_rose_layers(18),
+		WorldConstants.ROSE_LAYER_COUNT,
+		"玫瑰"
+	)
+	print("  程序生成贴图 OK（含 stacked 切片）")
+	return failed
+
+func _assert_layers(layers: Array[Texture2D], expected: int, label: String) -> int:
+	if layers.size() != expected:
+		printerr("%s 切片层数应为 %d，实际 %d" % [label, expected, layers.size()])
+		return 1
+	if layers.is_empty():
+		printerr("%s 切片为空" % label)
+		return 1
+	for i in layers.size():
+		if layers[i] == null:
+			printerr("%s 第 %d 层纹理为空" % [label, i])
+			return 1
+		if layers[i].get_width() < 4 or layers[i].get_height() < 4:
+			printerr("%s 第 %d 层尺寸过小" % [label, i])
+			return 1
+	return 0
+
+func _check_stacked_orientation() -> int:
+	## 地物在玩家正下方时，outward≈+Y，rotation 应使本地 -Y 朝世界 +Y
+	var failed := 0
+	var prop := StackedProp.new()
+	prop.world_pixel_size = float(WorldConstants.WORLD_PIXELS)
+	var layers: Array[Texture2D] = PixelArt.make_rose_layers(12, 3)
+	prop.configure(layers, 1.0, Vector2.ZERO, Vector2(100, 200), float(WorldConstants.WORLD_PIXELS))
+
+	var player_pos := Vector2(100, 100)
+	var anchor := Vector2(100, 200)
+	var delta := prop.torus_delta(anchor, player_pos)
+	# prop - player ≈ (0, +100)
+	if delta.y <= 0.0 or absf(delta.x) > 1.0:
+		printerr("torus_delta 下方方向错误：%s" % delta)
+		failed += 1
+
+	prop.update_toward(player_pos)
+	# 主副本 wrap (0,0) 在 _wrap_roots 中间：ox,oy 循环 -1,0,1 → 索引 4
+	if prop._wrap_roots.size() != 9:
+		printerr("环绕副本数应为 9，实际 %d" % prop._wrap_roots.size())
+		failed += 1
+	else:
+		var main_root: Node2D = prop._wrap_roots[4]
+		# rotation = outward.angle() + PI/2；outward≈(0,1) → angle=PI/2 → rot=PI
+		var expected_rot := Vector2(0, 1).angle() + PI * 0.5
+		if absf(angle_difference(main_root.rotation, expected_rot)) > 0.05:
+			printerr(
+				"下方视角 rotation 错误：实际 %s，期望约 %s"
+				% [main_root.rotation, expected_rot]
+			)
+			failed += 1
+		# 顶层应沿本地 -Y 偏移（堆叠）
+		var top: Sprite2D = prop._wrap_layers[4][2]
+		if top.position.y >= -0.5:
+			printerr("层偏移未沿本地 -Y：%s" % top.position)
+			failed += 1
+	prop.free()
+	if failed == 0:
+		print("  StackedProp 朝向 / 层偏移 OK")
 	return failed
 
 func _check_input_map() -> int:
@@ -170,6 +254,39 @@ func _check_scene_and_world() -> int:
 				if ground.get_cell_source_id(cell) == -1:
 					printerr("格子 %s 未绘制" % cell)
 					failed += 1
+
+		# Props 下应为 StackedProp（玫瑰+火山+猴面包），且层数合理
+		var expected_props: int = (
+			WorldConstants.ROSE_COUNT + WorldConstants.VOLCANO_COUNT + WorldConstants.BAOBAB_COUNT
+		)
+		if world.stacked_props.size() != expected_props:
+			printerr(
+				"StackedProp 数量应为 %d，实际 %d"
+				% [expected_props, world.stacked_props.size()]
+			)
+			failed += 1
+		var props_node: Node2D = world.get_node_or_null("Props") as Node2D
+		if props_node == null:
+			printerr("找不到 Props 节点")
+			failed += 1
+		else:
+			var stacked_in_tree := 0
+			for child in props_node.get_children():
+				if child is StackedProp:
+					stacked_in_tree += 1
+					var sp: StackedProp = child
+					if sp.layer_textures.size() < 3:
+						printerr("StackedProp 层数过少：%d" % sp.layer_textures.size())
+						failed += 1
+					if sp._wrap_roots.size() != 9:
+						printerr("StackedProp 环绕副本应为 9，实际 %d" % sp._wrap_roots.size())
+						failed += 1
+			if stacked_in_tree != expected_props:
+				printerr(
+					"Props 下 StackedProp 节点数应为 %d，实际 %d"
+					% [expected_props, stacked_in_tree]
+				)
+				failed += 1
 
 	var player: Player = scene.get_node_or_null("WorldHost/WorldViewport/PlanetWorld/Player") as Player
 	if player == null:
