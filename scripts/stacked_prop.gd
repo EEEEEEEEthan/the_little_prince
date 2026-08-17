@@ -1,11 +1,13 @@
 class_name StackedProp
 extends Node2D
-## 多层切片地物：沿「玩家→地物」环面最短方向堆叠，形成伪 3D 凸出。
+## 多层切片地物：经典 sprite stacking——倾斜堆叠、不旋转切片。
 ##
 ## 原理（配合 sphere_fisheye 球心=玩家）：
-## - 本地 -Y（精灵「头」）对齐环面最短向量 outward（地物相对玩家）
-## - 球视图下方时 outward≈+Y，精灵头朝下；边缘时沿径向偏移凸出
-## - 靠近玩家时 |delta| 极小，fallback 为世界朝上，看起来近乎直立
+## - 切片 Sprite2D 始终 rotation=0（贴图正立）
+## - 各层沿环面最短向量 outward（地物相对玩家）做位置偏移：position = outward * pitch * i
+## - 球下方 outward≈+Y → 高层往下偏，看起来头朝下/向下凸
+## - 球边缘 → 高层沿径向外偏，体积凸出
+## - 靠近玩家时 |delta| 极小，fallback 为 (0,-1)，近乎直立微弱堆叠
 ##
 ## 结构：本节点下 3×3 环绕副本（各一份层叠），seam 与旧 Sprite wrap 一致。
 
@@ -56,7 +58,7 @@ func _process(_delta: float) -> void:
 		return
 	update_toward(player.global_position)
 
-## 外部也可每帧调用：按玩家世界坐标刷新全部环绕副本的朝向与层偏移
+## 外部也可每帧调用：按玩家世界坐标刷新全部环绕副本的层偏移（不旋转）
 func update_toward(player_world_pos: Vector2) -> void:
 	if not _built:
 		return
@@ -72,6 +74,7 @@ func update_toward(player_world_pos: Vector2) -> void:
 			var root: Node2D = _wrap_roots[wi]
 			var anchor: Vector2 = _logical_center + base_offset + Vector2(float(ox) * world, float(oy) * world)
 			root.global_position = anchor
+			root.rotation = 0.0
 
 			var delta := _torus_delta_to_nearest_player(anchor, player_base, world)
 			var outward: Vector2
@@ -80,14 +83,12 @@ func update_toward(player_world_pos: Vector2) -> void:
 			else:
 				outward = delta.normalized()
 
-			# 本地 -Y 对齐 outward：Sprite2D 默认「上」是 -Y
-			root.rotation = outward.angle() + PI * 0.5
-
 			var layers: Array = _wrap_layers[wi]
 			for i in layers.size():
 				var sprite: Sprite2D = layers[i]
-				# 父节点已旋转，本地 -Y 即世界 outward
-				sprite.position = Vector2(0, -pitch * float(i))
+				# 切片保持正立；仅沿视角径向偏移，堆叠呈倾斜体积
+				sprite.rotation = 0.0
+				sprite.position = outward * pitch * float(i)
 				sprite.z_index = i
 			wi += 1
 
@@ -108,6 +109,7 @@ func _rebuild_wraps() -> void:
 		for oy in range(-1, 2):
 			var root := Node2D.new()
 			root.name = "Wrap_%d_%d" % [ox, oy]
+			root.rotation = 0.0
 			root.position = _logical_center + base_offset + Vector2(float(ox) * world, float(oy) * world)
 			add_child(root)
 			_wrap_roots.append(root)
@@ -117,14 +119,16 @@ func _rebuild_wraps() -> void:
 				var sprite := Sprite2D.new()
 				sprite.texture = layer_textures[i]
 				sprite.centered = true
-				sprite.position = Vector2(0, -pitch * float(i))
+				sprite.rotation = 0.0
+				# 初始按默认朝上堆叠，首帧 update_toward 会改成真实 outward
+				sprite.position = Vector2(0, -1) * pitch * float(i)
 				sprite.z_index = i
 				root.add_child(sprite)
 				layers.append(sprite)
 			_wrap_layers.append(layers)
 
 	_built = true
-	# 初始朝上，等第一帧 _process 再对齐玩家
+	# 初始用一个偏下的假玩家位置触发一次偏移，等 _process 再对齐真玩家
 	update_toward(Vector2(_logical_center.x, _logical_center.y + world * 0.25))
 
 ## ---------- 环面几何 ----------

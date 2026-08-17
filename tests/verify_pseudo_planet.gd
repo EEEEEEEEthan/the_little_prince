@@ -128,44 +128,68 @@ func _assert_layers(layers: Array[Texture2D], expected: int, label: String) -> i
 	return 0
 
 func _check_stacked_orientation() -> int:
-	## 地物在玩家正下方时，outward≈+Y，rotation 应使本地 -Y 朝世界 +Y
+	## 经典 stacking：切片不旋转，只沿 outward 做位置偏移（倾斜堆叠）
 	var failed := 0
 	var prop := StackedProp.new()
 	prop.world_pixel_size = float(WorldConstants.WORLD_PIXELS)
 	var layers: Array[Texture2D] = PixelArt.make_rose_layers(12, 3)
 	prop.configure(layers, 1.0, Vector2.ZERO, Vector2(100, 200), float(WorldConstants.WORLD_PIXELS))
 
-	var player_pos := Vector2(100, 100)
+	if prop._wrap_roots.size() != 9:
+		printerr("环绕副本数应为 9，实际 %d" % prop._wrap_roots.size())
+		failed += 1
+		prop.free()
+		return failed
+
+	# --- 下方视角：outward≈+Y，高层 position.y > 低层，且 rotation≈0 ---
+	var player_below := Vector2(100, 100)
 	var anchor := Vector2(100, 200)
-	var delta := prop.torus_delta(anchor, player_pos)
-	# prop - player ≈ (0, +100)
+	var delta := prop.torus_delta(anchor, player_below)
 	if delta.y <= 0.0 or absf(delta.x) > 1.0:
 		printerr("torus_delta 下方方向错误：%s" % delta)
 		failed += 1
 
-	prop.update_toward(player_pos)
-	# 主副本 wrap (0,0) 在 _wrap_roots 中间：ox,oy 循环 -1,0,1 → 索引 4
-	if prop._wrap_roots.size() != 9:
-		printerr("环绕副本数应为 9，实际 %d" % prop._wrap_roots.size())
+	prop.update_toward(player_below)
+	var main_root: Node2D = prop._wrap_roots[4]
+	if not is_zero_approx(main_root.rotation):
+		printerr("下方视角 root 不应旋转：%s" % main_root.rotation)
 		failed += 1
-	else:
-		var main_root: Node2D = prop._wrap_roots[4]
-		# rotation = outward.angle() + PI/2；outward≈(0,1) → angle=PI/2 → rot=PI
-		var expected_rot := Vector2(0, 1).angle() + PI * 0.5
-		if absf(angle_difference(main_root.rotation, expected_rot)) > 0.05:
-			printerr(
-				"下方视角 rotation 错误：实际 %s，期望约 %s"
-				% [main_root.rotation, expected_rot]
-			)
+	var bot: Sprite2D = prop._wrap_layers[4][0]
+	var mid: Sprite2D = prop._wrap_layers[4][1]
+	var top: Sprite2D = prop._wrap_layers[4][2]
+	for spr in [bot, mid, top]:
+		if not is_zero_approx(spr.rotation):
+			printerr("切片不应旋转：%s" % spr.rotation)
 			failed += 1
-		# 顶层应沿本地 -Y 偏移（堆叠）
-		var top: Sprite2D = prop._wrap_layers[4][2]
-		if top.position.y >= -0.5:
-			printerr("层偏移未沿本地 -Y：%s" % top.position)
+			break
+	if not (top.position.y > mid.position.y and mid.position.y > bot.position.y):
+		printerr(
+			"下方视角高层应沿 +Y 偏移：bot=%s mid=%s top=%s"
+			% [bot.position, mid.position, top.position]
+		)
+		failed += 1
+
+	# --- 右侧视角：outward≈+X，高层 position.x > 低层 ---
+	var player_left := Vector2(50, 200)
+	prop.update_toward(player_left)
+	bot = prop._wrap_layers[4][0]
+	mid = prop._wrap_layers[4][1]
+	top = prop._wrap_layers[4][2]
+	for spr2 in [bot, mid, top]:
+		if not is_zero_approx(spr2.rotation):
+			printerr("右侧视角切片不应旋转：%s" % spr2.rotation)
 			failed += 1
+			break
+	if not (top.position.x > mid.position.x and mid.position.x > bot.position.x):
+		printerr(
+			"右侧视角高层应沿 +X 偏移：bot=%s mid=%s top=%s"
+			% [bot.position, mid.position, top.position]
+		)
+		failed += 1
+
 	prop.free()
 	if failed == 0:
-		print("  StackedProp 朝向 / 层偏移 OK")
+		print("  StackedProp 倾斜堆叠 / 不旋转 OK")
 	return failed
 
 func _check_input_map() -> int:
