@@ -26,11 +26,11 @@ const BAOBAB_MIN_DISTANCE: float = 1.8
 const PLAYER_SPEED: float = 120.0
 
 ## SubViewport 渲染边长：等于世界像素边长即可完整覆盖整张地图。
-## 边缘地物通过 3×3 环绕副本伸入视口，保证球面采样时 seam 不可见。
+## 地物改由屏幕叠加层绘制，视口内仅地面 + 小王子（小王子仍用 3×3 幽灵）。
 const VIEWPORT_PIXELS: int = WORLD_PIXELS
 
-## ---------- Stacked-sprite 伪 3D 地物 ----------
-## 层数（底→顶）与层间距 pitch（像素）。pitch 越大，边缘径向凸出越明显。
+## ---------- Stacked-sprite 伪 3D 地物（屏幕空间叠加） ----------
+## 层数（底→顶）与世界 pitch（贴图像素）。实际凸出在 PropScreenOverlay 用屏幕 pitch。
 const ROSE_LAYER_COUNT: int = 7
 const BAOBAB_LAYER_COUNT: int = 9
 const VOLCANO_LAYER_COUNT: int = 11
@@ -39,8 +39,9 @@ const ROSE_PITCH: float = 1.0
 const BAOBAB_PITCH: float = 1.2
 const VOLCANO_PITCH: float = 1.5
 
-## 与玩家几乎重合时，|delta| 低于此阈值则 lean=0，方向 fallback 为 (0,-1)
-const STACK_OUTWARD_EPSILON: float = 0.5
-## 环面距离达到此值时 lean=1（满倾斜）。与球面可视半跨度量级一致：
-## WORLD_PIXELS * view_span * 0.45 ≈ 512 * 0.48 * 0.45 ≈ 110.6
-const STACK_LEAN_FULL_DISTANCE: float = float(WORLD_PIXELS) * 0.48 * 0.45
+## 世界 pitch → 屏幕像素的额外放大：边缘顶层需明显戳出单位圆（r>1）
+const STACK_SCREEN_PITCH_SCALE: float = 1.35
+
+## 与 shader 默认一致，供测试 / 无材质时回退
+const SHADER_DEFAULT_CURVATURE: float = 1.55
+const SHADER_DEFAULT_VIEW_SPAN: float = 0.48

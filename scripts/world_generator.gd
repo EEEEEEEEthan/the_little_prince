@@ -2,14 +2,12 @@ class_name WorldGenerator
 extends Node2D
 ## 负责搭建整颗伪星球的「地面真相」：
 ## 1) 生成 32×32 的 TileMapLayer 地表（沙地/岩地，每格 16×16 像素）
-## 2) 摆放 3 座火山、1 朵玫瑰、若干猴面包树（均为 StackedProp 伪 3D）
+## 2) 生成 3 座火山、1 朵玫瑰、若干猴面包树的 StackedProp 描述数据
 ## 3) 计算玩家出生点
 ##
-## 本节点运行在被隐藏渲染的 SubViewport 内部，其渲染结果会被
-## sphere_fisheye.gdshader 采样为「整颗星球」的贴图源。
-##
-## 地物采用 StackedProp：3×3 环绕副本 + 沿玩家径向的多层切片堆叠，
-## 球视图下方头朝下、边缘凸出；跨边界时 seam 仍不可见。
+## 本节点运行在被隐藏渲染的 SubViewport 内部：只应把地面 + 小王子
+## 画进球面贴图。地物挂在 props_root 下但 visible=false，由 Main 的
+## PropScreenOverlay 用球面逆投影叠到屏幕上，才能在边缘戳出剪影。
 
 @onready var ground: TileMapLayer = $Ground
 @onready var props_root: Node2D = $Props
@@ -22,7 +20,7 @@ var baobab_tiles: Array[Vector2i] = []
 var rose_tile: Vector2i = Vector2i.ZERO
 var spawn_tile: Vector2i = Vector2i.ZERO
 
-## 已生成的 StackedProp 引用，便于测试 / 外部批量更新
+## 已生成的 StackedProp 描述，供 Main / Overlay / 测试使用
 var stacked_props: Array[StackedProp] = []
 
 ## 记录被地物占用的格子，避免火山/玫瑰/猴面包树互相重叠
@@ -37,6 +35,8 @@ func _ready() -> void:
 	_place_volcanoes()
 	_place_baobabs()
 	_choose_spawn_tile()
+	# 地物不进球面贴图，避免被 r>1 星空裁切
+	props_root.visible = false
 
 ## ---------- 地表 ----------
 
@@ -179,7 +179,7 @@ func _tile_center(tile: Vector2i) -> Vector2:
 	var ts := float(WorldConstants.TILE_SIZE)
 	return Vector2(float(tile.x) * ts + ts * 0.5, float(tile.y) * ts + ts * 0.5)
 
-## 在逻辑格子上生成一个 StackedProp（内部自带 3×3 环绕 + 径向层叠）
+## 生成 StackedProp 描述节点（不可见）；环面由 SphereProjection 处理，无需 3×3 wrap
 func _spawn_stacked_prop(
 	tile: Vector2i,
 	textures: Array[Texture2D],

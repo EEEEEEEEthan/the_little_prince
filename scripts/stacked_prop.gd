@@ -1,174 +1,44 @@
 class_name StackedProp
 extends Node2D
-## 多层切片地物：经典 sprite stacking——倾斜堆叠、不旋转切片。
+## 多层切片地物的「数据描述」：位置、纹理、世界 pitch。
 ##
-## 原理（配合 sphere_fisheye 球心=玩家）：
-## - 切片 Sprite2D 始终 rotation=0（贴图正立）
-## - 各层沿环面最短向量 outward（地物相对玩家）做位置偏移
-## - lean 随环面距离从 0→1：球心俯视几乎重合，边缘满偏移凸出
-##   position = outward * pitch * i * lean
-## - 靠近玩家时 |delta| 极小 → lean=0，严格无倾斜
+## 视觉不再画进 SubViewport（否则会被鱼眼在 r>1 裁掉）。
+## 由 Main 下的 PropScreenOverlay 按 SphereProjection 逆映射叠到屏幕上，
+## 沿屏幕径向 lean 堆叠，边缘高层可落到 r>1，从星球剪影凸出。
 ##
-## 结构：本节点下 3×3 环绕副本（各一份层叠），seam 与旧 Sprite wrap 一致。
+## 本节点挂在 props_root 下仅作数据容器；props_root.visible=false。
 
 ## 底→顶 的高度切片纹理
 var layer_textures: Array[Texture2D] = []
-## 相邻层沿 outward 的间距（像素）
+## 相邻层的世界 pitch（贴图像素）；overlay 会换成屏幕像素间距
 var pitch: float = 1.2
 ## 加到逻辑锚点上的微调（例如让根部贴地心）
 var base_offset: Vector2 = Vector2.ZERO
-## 环面世界像素边长（与 Player.world_pixel_size 一致）
+## 环面世界像素边长
 var world_pixel_size: float = float(WorldConstants.WORLD_PIXELS)
+## 逻辑格子中心（世界像素，不含 base_offset）
+var logical_center: Vector2 = Vector2.ZERO
 
-## 逻辑锚点（主副本，不含 wrap 偏移；含 base_offset 之前的格子中心）
-var _logical_center: Vector2 = Vector2.ZERO
-## 9 个环绕副本根节点（各含一层层 Sprite2D）
-var _wrap_roots: Array[Node2D] = []
-## 每个副本的层精灵：_wrap_layers[wrap_i][layer_i]
-var _wrap_layers: Array = []
-var _player: Node2D = null
-var _built: bool = false
-
-## 由 WorldGenerator 调用：写入纹理与摆放参数并搭建 3×3 层叠
+## 由 WorldGenerator 调用：写入纹理与摆放参数（不创建可见精灵）
 func configure(
 	textures: Array[Texture2D],
 	p_pitch: float,
 	p_base_offset: Vector2,
-	logical_center: Vector2,
+	p_logical_center: Vector2,
 	p_world: float = float(WorldConstants.WORLD_PIXELS)
 ) -> void:
 	layer_textures = textures
 	pitch = p_pitch
 	base_offset = p_base_offset
-	_logical_center = logical_center
+	logical_center = p_logical_center
 	world_pixel_size = p_world
-	_rebuild_wraps()
 
-func _ready() -> void:
-	# 若尚未 configure（例如场景里手摆），在就绪时按当前属性搭建
-	if not _built and not layer_textures.is_empty():
-		_rebuild_wraps()
-	set_process(true)
+## 地物锚点世界像素（含 base_offset）
+func anchor_world() -> Vector2:
+	return logical_center + base_offset
 
-func _process(_delta: float) -> void:
-	if not _built:
-		return
-	var player := _resolve_player()
-	if player == null:
-		return
-	update_toward(player.global_position)
-
-## 外部也可每帧调用：按玩家世界坐标刷新全部环绕副本的层偏移（不旋转）
-func update_toward(player_world_pos: Vector2) -> void:
-	if not _built:
-		return
-	var world := world_pixel_size
-	# 玩家逻辑坐标落在 [0, world) 内，便于找最近镜像
-	var player_base := Vector2(
-		fposmod(player_world_pos.x, world),
-		fposmod(player_world_pos.y, world)
-	)
-	var wi := 0
-	for ox in range(-1, 2):
-		for oy in range(-1, 2):
-			var root: Node2D = _wrap_roots[wi]
-			var anchor: Vector2 = _logical_center + base_offset + Vector2(float(ox) * world, float(oy) * world)
-			root.global_position = anchor
-			root.rotation = 0.0
-
-			var delta := _torus_delta_to_nearest_player(anchor, player_base, world)
-			var dist := delta.length()
-			var outward: Vector2
-			var lean: float
-			if dist < WorldConstants.STACK_OUTWARD_EPSILON:
-				# 球心俯视：方向无所谓，lean 必须为 0
-				outward = Vector2(0, -1)
-				lean = 0.0
-			else:
-				outward = delta / dist
-				lean = clampf(dist / WorldConstants.STACK_LEAN_FULL_DISTANCE, 0.0, 1.0)
-				# smoothstep：中心更平、边缘更满
-				lean = lean * lean * (3.0 - 2.0 * lean)
-
-			var layers: Array = _wrap_layers[wi]
-			for i in layers.size():
-				var sprite: Sprite2D = layers[i]
-				# 切片保持正立；偏移量随 lean 从 0（球心）到满 pitch（边缘）
-				sprite.rotation = 0.0
-				sprite.position = outward * pitch * float(i) * lean
-				sprite.z_index = i
-			wi += 1
-
-## ---------- 搭建 ----------
-
-func _rebuild_wraps() -> void:
-	for child in get_children():
-		child.queue_free()
-	_wrap_roots.clear()
-	_wrap_layers.clear()
-
-	if layer_textures.is_empty():
-		_built = false
-		return
-
-	var world := world_pixel_size
-	for ox in range(-1, 2):
-		for oy in range(-1, 2):
-			var root := Node2D.new()
-			root.name = "Wrap_%d_%d" % [ox, oy]
-			root.rotation = 0.0
-			root.position = _logical_center + base_offset + Vector2(float(ox) * world, float(oy) * world)
-			add_child(root)
-			_wrap_roots.append(root)
-
-			var layers: Array[Sprite2D] = []
-			for i in layer_textures.size():
-				var sprite := Sprite2D.new()
-				sprite.texture = layer_textures[i]
-				sprite.centered = true
-				sprite.rotation = 0.0
-				# 初始按默认朝上堆叠，首帧 update_toward 会改成真实 outward
-				sprite.position = Vector2(0, -1) * pitch * float(i)
-				sprite.z_index = i
-				root.add_child(sprite)
-				layers.append(sprite)
-			_wrap_layers.append(layers)
-
-	_built = true
-	# 初始用一个偏下的假玩家位置触发一次偏移，等 _process 再对齐真玩家
-	update_toward(Vector2(_logical_center.x, _logical_center.y + world * 0.25))
-
-## ---------- 环面几何 ----------
-
-## 地物锚点相对「最近玩家镜像」的位移（prop - player），即环面最短向量
-static func _torus_delta_to_nearest_player(anchor: Vector2, player_base: Vector2, world: float) -> Vector2:
-	var best := Vector2.ZERO
-	var best_len2 := INF
-	for px in range(-1, 2):
-		for py in range(-1, 2):
-			var player_img := player_base + Vector2(float(px) * world, float(py) * world)
-			var d := anchor - player_img
-			var len2 := d.length_squared()
-			if len2 < best_len2:
-				best_len2 = len2
-				best = d
-	return best
-
-## 与静态方法等价的实例封装，便于测试调用
-func torus_delta(anchor: Vector2, player_world_pos: Vector2) -> Vector2:
-	var world := world_pixel_size
-	var player_base := Vector2(fposmod(player_world_pos.x, world), fposmod(player_world_pos.y, world))
-	return _torus_delta_to_nearest_player(anchor, player_base, world)
-
-func _resolve_player() -> Node2D:
-	if is_instance_valid(_player):
-		return _player
-	# Props 与 Player 同属 PlanetWorld
-	var props := get_parent()
-	if props == null:
-		return null
-	var world_root := props.get_parent()
-	if world_root == null:
-		return null
-	_player = world_root.get_node_or_null("Player") as Node2D
-	return _player
+## 地物锚点归一化 UV（0~1），供 SphereProjection 使用
+func world_uv() -> Vector2:
+	var a := anchor_world()
+	var w := maxf(world_pixel_size, 1.0)
+	return Vector2(fposmod(a.x, w) / w, fposmod(a.y, w) / w)
