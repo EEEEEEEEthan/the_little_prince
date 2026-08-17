@@ -2,9 +2,9 @@ class_name PixelArt
 extends RefCounted
 ## 程序化像素画生成器（导出工具用）。
 ##
-## 游戏运行时贴图已静态化到 assets/（见 WorldConstants.ASSET_*），
-## 由 SurfaceProp / Player / PlanetBody / Starfield preload 加载。
-## 本类保留算法，供 scripts/tools/export_static_assets.gd 生成 PNG；
+## 游戏运行时贴图已静态化为 player/ 与 planet/ 下的 PNG，
+## 由场景 tscn 或 SurfaceProp / Player / Starfield preload 加载。
+## 本类保留算法，供 tools/export_static_assets.gd 生成 PNG；
 ## 运行时路径不应再调用 make_*。
 
 ## ---------- 基础绘制工具 ----------
@@ -82,7 +82,7 @@ static func build_rock_tile(size: int) -> Image:
 			img.set_pixel(x, y, c)
 	return img
 
-## 完整星球圆盘：沙色填充 + 岩边 + 噪点斑块（替代 PlanetBody 逐帧 _draw）
+## 完整星球圆盘：沙色填充 + 岩边 + 噪点斑块（静态贴图，替换旧逐帧 _draw）
 static func build_planet_body(radius: float) -> Image:
 	var r: int = max(1, int(ceil(radius)))
 	var size: int = r * 2

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://duk1gaik3krys"
-path="res://.godot/imported/volcano.png-7aefa69b54ffe8723de4dbfce65bc35c.ctex"
+uid="uid://bblja4kg8jkmg"
+path="res://.godot/imported/baobab.png-775d756e7d70e97251318a6b30916777.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/volcano.png"
-dest_files=["res://.godot/imported/volcano.png-7aefa69b54ffe8723de4dbfce65bc35c.ctex"]
+source_file="res://planet/baobab.png"
+dest_files=["res://.godot/imported/baobab.png-775d756e7d70e97251318a6b30916777.ctex"]
 
 [params]
 

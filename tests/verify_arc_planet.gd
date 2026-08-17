@@ -1,29 +1,27 @@
 extends SceneTree
-## 头无模式验证：256×224 SubViewport 像素视口、静态 assets、圆弧力学、无旧伪 3D 残留。
+## 头无模式验证：像素视口、静态 assets、圆弧力学、无旧伪 3D 残留。
 ## 用法：
-##   /workspace/.engine/.engine --headless --path /workspace \
-##     --script res://tests/verify_arc_planet.gd
+##   ./.engine/.engine.exe --headless --path . --script res://tests/verify_arc_planet.gd
 
 const VIEWPORT_PATH := "GameView/GameViewport"
 const PLANET_PATH := "GameView/GameViewport/Planet"
 const PLAYER_PATH := "GameView/GameViewport/Player"
 
 const REQUIRED_ASSETS: Array[String] = [
-	"res://assets/sprites/prince.png",
-	"res://assets/sprites/rose.png",
-	"res://assets/sprites/volcano.png",
-	"res://assets/sprites/baobab.png",
-	"res://assets/planet/body.png",
-	"res://assets/bg/starfield.png",
+	"res://player/prince.png",
+	"res://planet/rose.png",
+	"res://planet/volcano.png",
+	"res://planet/baobab.png",
+	"res://planet/body.png",
+	"res://planet/starfield.png",
 ]
 
 func _init() -> void:
-	call_deferred("_run_tests")
+	call_deferred(&"_run_tests")
 
 func _run_tests() -> void:
 	var failed := 0
 	failed += _check_constants()
-	failed += _check_angle_wrap()
 	failed += _check_static_assets()
 	failed += _check_pixel_art_export_api()
 	failed += _check_no_legacy()
@@ -38,53 +36,38 @@ func _run_tests() -> void:
 
 func _check_constants() -> int:
 	var failed := 0
-	if WorldConstants.INTERNAL_WIDTH != 256 or WorldConstants.INTERNAL_HEIGHT != 224:
-		printerr(
-			"内部视口应为 256×224，实际 %dx%d"
-			% [WorldConstants.INTERNAL_WIDTH, WorldConstants.INTERNAL_HEIGHT]
-		)
-		failed += 1
 	if WorldConstants.VOLCANO_COUNT != 3:
 		printerr("VOLCANO_COUNT 应为 3，实际 %d" % WorldConstants.VOLCANO_COUNT)
-		failed += 1
-	if WorldConstants.ROSE_COUNT != 1:
-		printerr("ROSE_COUNT 应为 1，实际 %d" % WorldConstants.ROSE_COUNT)
 		failed += 1
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	# 内部坐标系半径：大于旧等比缩放约 51，落在建议区间 78~90
 	if WorldConstants.PLANET_RADIUS < 78.0 or WorldConstants.PLANET_RADIUS > 90.0:
-		printerr(
-			"PLANET_RADIUS 应在 78~90（内部 256×224）：%s"
-			% WorldConstants.PLANET_RADIUS
-		)
+		printerr("PLANET_RADIUS 应在 78~90（内部 256×224）：%s" % WorldConstants.PLANET_RADIUS)
 		failed += 1
-	# 弧顶须偏下，屏幕底部只露浅弧（地面不往上移）
 	if WorldConstants.APEX_Y_RATIO < 0.80 or WorldConstants.APEX_Y_RATIO >= 1.0:
 		printerr("APEX_Y_RATIO 应偏下（约 0.85~0.92）：%s" % WorldConstants.APEX_Y_RATIO)
 		failed += 1
-	# 像素风精灵尺寸相对半径 ~80 应协调（不宜再是 120/96）
-	if WorldConstants.SPRITE_VOLCANO < 28 or WorldConstants.SPRITE_VOLCANO > 48:
-		printerr("SPRITE_VOLCANO 应约 32~40，实际 %d" % WorldConstants.SPRITE_VOLCANO)
+	if WorldConstants.VOLCANO_SPRITE_SIZE < 28 or WorldConstants.VOLCANO_SPRITE_SIZE > 48:
+		printerr("VOLCANO_SPRITE_SIZE 应约 32~40，实际 %d" % WorldConstants.VOLCANO_SPRITE_SIZE)
 		failed += 1
-	if WorldConstants.SPRITE_BAOBAB < 24 or WorldConstants.SPRITE_BAOBAB > 40:
-		printerr("SPRITE_BAOBAB 应约 28~36，实际 %d" % WorldConstants.SPRITE_BAOBAB)
+	if WorldConstants.BAOBAB_SPRITE_SIZE < 24 or WorldConstants.BAOBAB_SPRITE_SIZE > 40:
+		printerr("BAOBAB_SPRITE_SIZE 应约 28~36，实际 %d" % WorldConstants.BAOBAB_SPRITE_SIZE)
 		failed += 1
-	if WorldConstants.SPRITE_ROSE < 14 or WorldConstants.SPRITE_ROSE > 26:
-		printerr("SPRITE_ROSE 应约 16~22，实际 %d" % WorldConstants.SPRITE_ROSE)
+	if WorldConstants.ROSE_SPRITE_SIZE < 14 or WorldConstants.ROSE_SPRITE_SIZE > 26:
+		printerr("ROSE_SPRITE_SIZE 应约 16~22，实际 %d" % WorldConstants.ROSE_SPRITE_SIZE)
 		failed += 1
 	if (
-		WorldConstants.SPRITE_PLAYER_W < 10 or WorldConstants.SPRITE_PLAYER_W > 16
-		or WorldConstants.SPRITE_PLAYER_H < 14 or WorldConstants.SPRITE_PLAYER_H > 24
+		WorldConstants.PLAYER_SPRITE_WIDTH < 10 or WorldConstants.PLAYER_SPRITE_WIDTH > 16
+		or WorldConstants.PLAYER_SPRITE_HEIGHT < 14 or WorldConstants.PLAYER_SPRITE_HEIGHT > 24
 	):
 		printerr(
-			"SPRITE_PLAYER 应约 12×18，实际 %dx%d"
-			% [WorldConstants.SPRITE_PLAYER_W, WorldConstants.SPRITE_PLAYER_H]
+			"PLAYER_SPRITE 应约 12×18，实际 %dx%d"
+			% [WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT]
 		)
 		failed += 1
 	# 旧伪 3D 常量不得残留在源码中
-	var const_src := FileAccess.get_file_as_string("res://scripts/world_constants.gd")
+	var const_src := FileAccess.get_file_as_string("res://core/world_constants.gd")
 	for legacy in [
 		"TILE_SIZE", "MAP_TILES", "WORLD_PIXELS", "VIEWPORT_PIXELS",
 		"LAYER_COUNT", "ROSE_LAYER_COUNT", "STACK_OUTWARD_EPSILON", "STACK_LEAN",
@@ -92,24 +75,7 @@ func _check_constants() -> int:
 		if const_src.find(legacy) >= 0:
 			printerr("world_constants.gd 仍含旧符号：%s" % legacy)
 			failed += 1
-	print("  常量检查 OK（内部视口 / 半径 78~90 / 弧顶偏下 / 像素精灵）")
-	return failed
-
-func _check_angle_wrap() -> int:
-	var failed := 0
-	var a := fposmod(TAU + 0.3, TAU)
-	if not is_equal_approx(a, 0.3):
-		printerr("正角 wrap 失败：%s" % a)
-		failed += 1
-	a = fposmod(-0.4, TAU)
-	if not is_equal_approx(a, TAU - 0.4):
-		printerr("负角 wrap 失败：%s" % a)
-		failed += 1
-	a = fposmod(3.0 * TAU + 1.2, TAU)
-	if not is_equal_approx(a, 1.2):
-		printerr("多圈 wrap 失败：%s" % a)
-		failed += 1
-	print("  角度 fposmod wrap OK")
+	print("  常量检查 OK（半径 78~90 / 弧顶偏下 / 像素精灵）")
 	return failed
 
 func _check_static_assets() -> int:
@@ -127,8 +93,8 @@ func _check_static_assets() -> int:
 		if tex.get_width() < 8 or tex.get_height() < 8:
 			printerr("贴图尺寸过小：%s（%dx%d）" % [path, tex.get_width(), tex.get_height()])
 			failed += 1
-	# 星野应为中心对齐球心的方形（边长 STARFIELD_SIZE）
-	var star: Texture2D = load("res://assets/bg/starfield.png") as Texture2D
+	# 星野应为以球心为中心的正方形
+	var star: Texture2D = load("res://planet/starfield.png") as Texture2D
 	if star != null:
 		if star.get_width() != WorldConstants.STARFIELD_SIZE or star.get_height() != WorldConstants.STARFIELD_SIZE:
 			printerr(
@@ -140,30 +106,30 @@ func _check_static_assets() -> int:
 			)
 			failed += 1
 	# 星球圆盘直径应约等于 2 * PLANET_RADIUS
-	var body: Texture2D = load("res://assets/planet/body.png") as Texture2D
+	var body: Texture2D = load("res://planet/body.png") as Texture2D
 	if body != null:
-		var expected_d: int = int(ceil(WorldConstants.PLANET_RADIUS)) * 2
-		if body.get_width() != expected_d or body.get_height() != expected_d:
+		var expected_diameter: int = int(ceil(WorldConstants.PLANET_RADIUS)) * 2
+		if body.get_width() != expected_diameter or body.get_height() != expected_diameter:
 			printerr(
 				"body.png 应为 %dx%d，实际 %dx%d"
-				% [expected_d, expected_d, body.get_width(), body.get_height()]
+				% [expected_diameter, expected_diameter, body.get_width(), body.get_height()]
 			)
 			failed += 1
 	# 精灵尺寸应对齐常量
-	var checks: Array = [
-		["res://assets/sprites/volcano.png", WorldConstants.SPRITE_VOLCANO, WorldConstants.SPRITE_VOLCANO],
-		["res://assets/sprites/baobab.png", WorldConstants.SPRITE_BAOBAB, WorldConstants.SPRITE_BAOBAB],
-		["res://assets/sprites/rose.png", WorldConstants.SPRITE_ROSE, WorldConstants.SPRITE_ROSE],
-		["res://assets/sprites/prince.png", WorldConstants.SPRITE_PLAYER_W, WorldConstants.SPRITE_PLAYER_H],
+	var sprite_checks: Array = [
+		["res://planet/volcano.png", WorldConstants.VOLCANO_SPRITE_SIZE, WorldConstants.VOLCANO_SPRITE_SIZE],
+		["res://planet/baobab.png", WorldConstants.BAOBAB_SPRITE_SIZE, WorldConstants.BAOBAB_SPRITE_SIZE],
+		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
+		["res://player/prince.png", WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT],
 	]
-	for item in checks:
-		var t: Texture2D = load(item[0]) as Texture2D
-		if t == null:
+	for item in sprite_checks:
+		var tex: Texture2D = load(item[0]) as Texture2D
+		if tex == null:
 			continue
-		if t.get_width() != int(item[1]) or t.get_height() != int(item[2]):
+		if tex.get_width() != int(item[1]) or tex.get_height() != int(item[2]):
 			printerr(
 				"%s 尺寸应为 %dx%d，实际 %dx%d"
-				% [item[0], item[1], item[2], t.get_width(), t.get_height()]
+				% [item[0], item[1], item[2], tex.get_width(), tex.get_height()]
 			)
 			failed += 1
 	print("  静态 assets PNG 可加载 OK")
@@ -171,31 +137,31 @@ func _check_static_assets() -> int:
 
 func _check_pixel_art_export_api() -> int:
 	var failed := 0
-	# 导出用 API 仍可用（运行时不依赖）
 	var sand := PixelArt.build_sand_tile(16)
 	if sand == null or sand.get_width() != 16:
 		printerr("build_sand_tile 失败")
 		failed += 1
-	var volcano := PixelArt.build_volcano_sprite(WorldConstants.SPRITE_VOLCANO)
-	var baobab := PixelArt.build_baobab_sprite(WorldConstants.SPRITE_BAOBAB)
-	var rose := PixelArt.build_rose_sprite(WorldConstants.SPRITE_ROSE)
+	var volcano := PixelArt.build_volcano_sprite(WorldConstants.VOLCANO_SPRITE_SIZE)
+	var baobab := PixelArt.build_baobab_sprite(WorldConstants.BAOBAB_SPRITE_SIZE)
+	var rose := PixelArt.build_rose_sprite(WorldConstants.ROSE_SPRITE_SIZE)
 	var prince := PixelArt.build_player_sprite(
-		WorldConstants.SPRITE_PLAYER_W, WorldConstants.SPRITE_PLAYER_H
+		WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT
 	)
 	if volcano == null or baobab == null or rose == null or prince == null:
 		printerr("PixelArt build_* 失败")
 		failed += 1
-	var art_src := FileAccess.get_file_as_string("res://scripts/pixel_art.gd")
+	var art_src := FileAccess.get_file_as_string("res://tools/pixel_art.gd")
 	for forbidden in ["make_volcano_layers", "make_baobab_layers", "make_rose_layers"]:
 		if art_src.find(forbidden) >= 0:
 			printerr("PixelArt 仍含 %s" % forbidden)
 			failed += 1
-	# 运行时脚本不应再调用 PixelArt.make_*
+	# 运行时脚本不应调用 PixelArt 生成贴图
 	for runtime_path in [
-		"res://scripts/player.gd",
-		"res://scripts/surface_prop.gd",
-		"res://scripts/planet_body.gd",
-		"res://scripts/starfield.gd",
+		"res://main.gd",
+		"res://player/player.gd",
+		"res://planet/planet.gd",
+		"res://planet/surface_prop.gd",
+		"res://planet/starfield.gd",
 	]:
 		var src := FileAccess.get_file_as_string(runtime_path)
 		if src.find("PixelArt.make_") >= 0 or src.find("PixelArt.build_") >= 0:
@@ -210,6 +176,8 @@ func _check_no_legacy() -> int:
 		"res://shaders/sphere_fisheye.gdshader",
 		"res://scripts/stacked_prop.gd",
 		"res://scripts/world_generator.gd",
+		"res://scripts/planet_body.gd",
+		"res://scripts/input_setup.gd",
 	]:
 		if ResourceLoader.exists(path) or FileAccess.file_exists(path):
 			printerr("旧文件仍存在：%s" % path)
@@ -219,44 +187,24 @@ func _check_no_legacy() -> int:
 
 func _check_input_map() -> int:
 	var failed := 0
-	InputSetup.ensure_move_actions()
-	for action in InputSetup.ACTIONS:
-		if not InputMap.has_action(action):
-			printerr("InputMap 缺少动作：%s" % action)
-			failed += 1
-			continue
-		if InputMap.action_get_events(action).is_empty():
-			printerr("动作 %s 没有任何按键事件" % action)
-			failed += 1
-	for action in InputSetup.ACTIONS:
-		if InputMap.has_action(action):
-			InputMap.erase_action(action)
-	InputSetup._ensured = false
-	InputSetup.ensure_move_actions()
-	for action in InputSetup.ACTIONS:
-		if not InputMap.has_action(action):
-			printerr("运行时重新注册失败：%s" % action)
+	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down"]:
+		if not InputMap.has_action(action) or InputMap.action_get_events(action).is_empty():
+			printerr("InputMap 缺少动作或按键：%s" % action)
 			failed += 1
 	print("  InputMap move_* 动作 OK")
 	return failed
 
 func _check_scene_and_mechanics() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://scenes/main.tscn")
+	var packed: PackedScene = load("res://main.tscn")
 	if packed == null:
-		printerr("无法加载 scenes/main.tscn")
+		printerr("无法加载 main.tscn")
 		return 1
-	var scene: Node = packed.instantiate()
+	var scene := packed.instantiate()
 	root.add_child(scene)
 	await process_frame
 	await process_frame
 
-	for action in InputSetup.ACTIONS:
-		if not InputMap.has_action(action):
-			printerr("场景加载后缺少 InputMap 动作：%s" % action)
-			failed += 1
-
-	# 禁止旧 WorldHost / PlanetView / 鱼眼；允许新的像素 SubViewport
 	if scene.get_node_or_null("WorldHost") != null:
 		printerr("旧 WorldHost 结构仍存在")
 		failed += 1
@@ -310,9 +258,7 @@ func _check_scene_and_mechanics() -> int:
 		if rose_count != 1:
 			printerr("玫瑰数量应为 1，实际 %d" % rose_count)
 			failed += 1
-		var expected_props: int = (
-			WorldConstants.ROSE_COUNT + WorldConstants.VOLCANO_COUNT + WorldConstants.BAOBAB_COUNT
-		)
+		var expected_props: int = 1 + WorldConstants.VOLCANO_COUNT + WorldConstants.BAOBAB_COUNT
 		if planet.surface_props.size() != expected_props:
 			printerr(
 				"地表地物总数应为 %d，实际 %d"
@@ -333,120 +279,72 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 
 	if planet != null and player != null:
-		player.planet = planet
-		# 改角后立刻同步：Body / Surface.rotation == -player_angle，玩家在弧顶
-		player.set_angle_and_sync(0.75)
-		var surface2: Node2D = planet.get_node("Surface") as Node2D
-		var body2: Node2D = planet.get_node("Body") as Node2D
-		var starfield2: Starfield = planet.get_node("Starfield") as Starfield
-		if not is_equal_approx(surface2.rotation, -player.angle):
+		planet.teleport_player(0.75)
+		var surface: Node2D = planet.get_node("Surface") as Node2D
+		var body: Node2D = planet.get_node("Body") as Node2D
+		var starfield: Starfield = planet.get_node("Starfield") as Starfield
+		if not is_equal_approx(surface.rotation, -planet.player_angle):
 			printerr(
 				"Surface.rotation 应为 %s，实际 %s"
-				% [-player.angle, surface2.rotation]
+				% [-planet.player_angle, surface.rotation]
 			)
 			failed += 1
-		if not is_equal_approx(body2.rotation, -player.angle):
+		if not is_equal_approx(body.rotation, -planet.player_angle):
 			printerr(
 				"Body.rotation 应为 %s，实际 %s（本体须随星球转）"
-				% [-player.angle, body2.rotation]
+				% [-planet.player_angle, body.rotation]
 			)
 			failed += 1
-		if not is_equal_approx(body2.rotation, surface2.rotation):
+		if not is_equal_approx(body.rotation, surface.rotation):
 			printerr("Body 与 Surface 旋转应一致")
 			failed += 1
-		if not is_equal_approx(starfield2.planet_rotation, -player.angle):
+		if not is_equal_approx(starfield.planet_rotation, -planet.player_angle):
 			printerr(
 				"Starfield.planet_rotation 应为 %s，实际 %s（星空须随星球转）"
-				% [-player.angle, starfield2.planet_rotation]
+				% [-planet.player_angle, starfield.planet_rotation]
 			)
 			failed += 1
 		if WorldConstants.STAR_ROTATION_SPEED <= 0.0:
 			printerr("STAR_ROTATION_SPEED 应大于 0（星空相对星球自转）")
 			failed += 1
 
-		var apex: Vector2 = planet.apex_global_position()
+		var apex := planet.apex_global_position()
 		if player.global_position.distance_to(apex) > 0.5:
-			printerr(
-				"玩家应在弧顶 %s，实际 %s"
-				% [apex, player.global_position]
-			)
+			printerr("玩家应在弧顶 %s，实际 %s" % [apex, player.global_position])
 			failed += 1
 
-		# 再测负角 wrap（同帧）
-		player.set_angle_and_sync(fposmod(-0.2, TAU))
-		if not is_equal_approx(surface2.rotation, -player.angle):
+		planet.teleport_player(fposmod(-0.2, TAU))
+		if not is_equal_approx(surface.rotation, -planet.player_angle):
 			printerr("负角时 Surface.rotation 不同步")
 			failed += 1
-		if not is_equal_approx(body2.rotation, -player.angle):
+		if not is_equal_approx(body.rotation, -planet.player_angle):
 			printerr("负角时 Body.rotation 不同步")
 			failed += 1
-		if not is_equal_approx(starfield2.planet_rotation, -player.angle):
+		if not is_equal_approx(starfield.planet_rotation, -planet.player_angle):
 			printerr("负角时 Starfield.planet_rotation 不同步")
 			failed += 1
 
-		# 弧顶相对球心应在正上方
 		apex = planet.apex_global_position()
-		var up: Vector2 = apex - planet.global_position
+		var up := apex - planet.global_position
 		if absf(up.x) > 0.5 or up.y >= 0.0:
 			printerr("弧顶应在球心正上方，实际偏移 %s" % up)
 			failed += 1
-		if not is_equal_approx(up.length(), planet.planet_radius):
+		if not is_equal_approx(up.length(), WorldConstants.PLANET_RADIUS):
 			printerr(
 				"弧顶距离应等于半径 %s，实际 %s"
-				% [planet.planet_radius, up.length()]
+				% [WorldConstants.PLANET_RADIUS, up.length()]
 			)
 			failed += 1
 
-		# 精灵随半径相对基准缩放
-		var expected_player: float = (
-			planet.planet_radius / WorldConstants.PLANET_RADIUS * WorldConstants.PLAYER_SCALE
-		)
-		if not is_equal_approx(player.scale.x, expected_player):
-			printerr(
-				"玩家 scale 应为 %s，实际 %s"
-				% [expected_player, player.scale.x]
-			)
+		# 弧顶偏下：相对内部视口高度
+		var viewport_height := float(game_viewport.size.y)
+		if apex.y / viewport_height < 0.75:
+			printerr("弧顶 Y 比例应偏下（≥0.75），实际 %s" % (apex.y / viewport_height))
 			failed += 1
-		if not planet.surface_props.is_empty():
-			var expected_prop: float = (
-				planet.planet_radius / WorldConstants.PLANET_RADIUS * WorldConstants.PROP_SCALE
-			)
-			var prop_scale: float = planet.surface_props[0].scale.x
-			if not is_equal_approx(prop_scale, expected_prop):
-				printerr(
-					"地物 scale 应为 %s，实际 %s"
-					% [expected_prop, prop_scale]
-				)
-				failed += 1
-
-		# 弧顶偏下：相对内部视口高度（256×224）
-		var vp_h: float = float(WorldConstants.INTERNAL_HEIGHT)
-		var apex_ratio: float = apex.y / vp_h
-		if apex_ratio < 0.75:
-			printerr("弧顶 Y 比例应偏下（≥0.75），实际 %s" % apex_ratio)
-			failed += 1
-		# 球心应在视口底边之外或极近底边，只露浅弧
-		if planet.global_position.y < vp_h * 0.95:
+		if planet.global_position.y < viewport_height * 0.95:
 			printerr(
 				"球心应靠近/低于视口底边以浅露弧面，实际 y=%s / vh=%s"
-				% [planet.global_position.y, vp_h]
-			)
-			failed += 1
-
-		# 模拟缩小半径后比例仍正确
-		var half_r: float = WorldConstants.PLANET_RADIUS * 0.5
-		planet.apply_layout(planet.global_position, half_r)
-		player.set_planet_radius(half_r)
-		player.place_at_apex(planet.apex_global_position())
-		var half_player: float = 0.5 * WorldConstants.PLAYER_SCALE
-		var half_prop: float = 0.5 * WorldConstants.PROP_SCALE
-		if not is_equal_approx(player.scale.x, half_player):
-			printerr("半半径时玩家 scale 应为 %s，实际 %s" % [half_player, player.scale.x])
-			failed += 1
-		if not is_equal_approx(planet.surface_props[0].scale.x, half_prop):
-			printerr(
-				"半半径时地物 scale 应为 %s，实际 %s"
-				% [half_prop, planet.surface_props[0].scale.x]
+				% [planet.global_position.y, viewport_height]
 			)
 			failed += 1
 

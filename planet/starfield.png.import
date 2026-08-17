@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bblja4kg8jkmg"
-path="res://.godot/imported/baobab.png-a0c1363c1ed0b90f759333d5be80b4b6.ctex"
+uid="uid://iv5817y5gutj"
+path="res://.godot/imported/starfield.png-371c579079ef9729db1ed9fe34bfd47c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/baobab.png"
-dest_files=["res://.godot/imported/baobab.png-a0c1363c1ed0b90f759333d5be80b4b6.ctex"]
+source_file="res://planet/starfield.png"
+dest_files=["res://.godot/imported/starfield.png-371c579079ef9729db1ed9fe34bfd47c.ctex"]
 
 [params]
 
