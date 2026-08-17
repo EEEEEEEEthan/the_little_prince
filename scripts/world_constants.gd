@@ -1,46 +1,47 @@
 class_name WorldConstants
 extends RefCounted
-## 全局世界常量：小王子伪星球的地图/资源规格集中管理，避免魔法数字散落各处。
+## 全局世界常量：2D 圆弧星球的布局与地物规格集中管理。
 
-## 单个地表格子的像素边长（每格 16×16 像素）
-const TILE_SIZE: int = 16
-## 地图逻辑网格边长（32×32 格，构成一张可首尾相连的环面地图）
-const MAP_TILES: int = 32
-## 整张地图渲染成纹理后的像素边长（32×16 = 512）
-const WORLD_PIXELS: int = TILE_SIZE * MAP_TILES
+## ---------- 星球几何（相对 960×960 参考分辨率，运行时按窗口缩放） ----------
+## 参考分辨率下的星球半径（像素）；球心在屏幕下方外，仅露出上缘圆弧
+const PLANET_RADIUS: float = 720.0
+## 弧顶（小王子站立处）相对视口高度的比例（0=顶，1=底）
+const APEX_Y_RATIO: float = 0.40
+## 参考视口短边，用于把 PLANET_RADIUS 缩放到实际窗口
+const REFERENCE_VIEWPORT: float = 960.0
 
-## 地物数量：3 座火山、1 朵玫瑰、很多猴面包树
+## ---------- 可见半弧与深度排序 ----------
+## 相对弧顶超过此角的地物视为背面（隐藏或淡化）
+const VISIBLE_HALF_ARC: float = PI * 0.55
+## 背面地物 modulate 透明度下限（0=完全隐藏）
+const BACKFACE_ALPHA: float = 0.0
+
+## ---------- 地物数量 ----------
 const VOLCANO_COUNT: int = 3
 const ROSE_COUNT: int = 1
 const BAOBAB_COUNT: int = 28
 
-## 固定世界种子，保证地形与地物布局可复现（便于自动化验证与美术调优）
+## 固定世界种子，保证地物角布局可复现
 const WORLD_SEED: int = 20260817
 
-## 火山之间的最小「环面距离」（格），保证 3 座火山足够分散
-const VOLCANO_MIN_DISTANCE: float = 9.0
-## 猴面包树之间的最小「环面距离」（格），避免过度堆叠
-const BAOBAB_MIN_DISTANCE: float = 1.8
+## 玫瑰固定角（弧度，0 = 弧顶基准角）
+const ROSE_ANGLE: float = 0.0
+## 玩家出生角相对玫瑰的偏移（靠近玫瑰）
+const SPAWN_ANGLE_OFFSET: float = 0.12
 
-## 玩家移动速度（像素/秒）
-const PLAYER_SPEED: float = 120.0
+## 火山之间的最小角间距（弧度）
+const VOLCANO_MIN_ANGLE: float = TAU / 3.0 * 0.72
+## 猴面包树之间的最小角间距
+const BAOBAB_MIN_ANGLE: float = 0.09
+## 地物与玫瑰/火山的最小角间距
+const PROP_CLEARANCE: float = 0.14
 
-## SubViewport 渲染边长：等于世界像素边长即可完整覆盖整张地图。
-## 边缘地物通过 3×3 环绕副本伸入视口，保证球面采样时 seam 不可见。
-const VIEWPORT_PIXELS: int = WORLD_PIXELS
+## 玩家沿线速度（像素/秒）；角速度 = PLAYER_SPEED / planet_radius
+const PLAYER_SPEED: float = 140.0
 
-## ---------- Stacked-sprite 伪 3D 地物 ----------
-## 层数（底→顶）与层间距 pitch（像素）。pitch 越大，边缘径向凸出越明显。
-const ROSE_LAYER_COUNT: int = 7
-const BAOBAB_LAYER_COUNT: int = 9
-const VOLCANO_LAYER_COUNT: int = 11
-
-const ROSE_PITCH: float = 1.0
-const BAOBAB_PITCH: float = 1.2
-const VOLCANO_PITCH: float = 1.5
-
-## 与玩家几乎重合时，|delta| 低于此阈值则 lean=0，方向 fallback 为 (0,-1)
-const STACK_OUTWARD_EPSILON: float = 0.5
-## 环面距离达到此值时 lean=1（满倾斜）。与球面可视半跨度量级一致：
-## WORLD_PIXELS * view_span * 0.45 ≈ 512 * 0.48 * 0.45 ≈ 110.6
-const STACK_LEAN_FULL_DISTANCE: float = float(WORLD_PIXELS) * 0.48 * 0.45
+## ---------- 侧视精灵像素尺寸（适配大圆星球） ----------
+const SPRITE_VOLCANO: int = 64
+const SPRITE_BAOBAB: int = 48
+const SPRITE_ROSE: int = 32
+const SPRITE_PLAYER_W: int = 22
+const SPRITE_PLAYER_H: int = 32

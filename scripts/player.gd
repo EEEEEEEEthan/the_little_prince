@@ -1,86 +1,66 @@
 class_name Player
-extends CharacterBody2D
-## 小王子本人。使用方向键 / WASD 在伪星球平面网格上移动，
-## 走出地图任意一边会从对边环绕出现（左右、上下都首尾相连），
-## 这正是让平面地图能够被 shader 包裹成一颗「球」的关键前提。
-##
-## 视觉上通过 3×3 幽灵精灵保证：当小王子靠近地图边缘时，
-## SubViewport 纹理的对侧仍能画出他伸出边界的部分，球面无缝。
+extends Node2D
+## 小王子：左右输入驱动星球角；改角后立刻通知 Planet（同帧无延迟）。
+## 屏幕位置钉在弧顶（planet_center + (0, -radius)），地表/本体绕球心旋转。
 
-## 世界像素边长（由 main.gd 在场景搭建完成后写入，默认值与常量保持一致）
-var world_pixel_size: float = float(WorldConstants.WORLD_PIXELS)
+## 当前站立角（弧度，绕球心；fposmod 到 [0, TAU)）
+var angle: float = 0.0
+## 当前星球半径（窗口缩放后）
+var planet_radius: float = WorldConstants.PLANET_RADIUS
+## 由 Main 注入；改角后立刻同步旋转
+var planet: Planet = null
 
 var _sprite: Sprite2D
-## 环绕幽灵：8 个偏移副本，跟随本体同步移动
-var _ghosts: Array[Sprite2D] = []
-var _player_tex: Texture2D
 
 func _ready() -> void:
-	# 双保险：即便 Main 尚未 _ready，也不要在读输入前缺少 move_* 动作
 	InputSetup.ensure_move_actions()
-	_player_tex = PixelArt.make_player_sprite(14, 20)
 	_sprite = Sprite2D.new()
 	_sprite.name = "小王子精灵"
-	_sprite.texture = _player_tex
+	_sprite.texture = PixelArt.make_player_sprite(
+		WorldConstants.SPRITE_PLAYER_W,
+		WorldConstants.SPRITE_PLAYER_H
+	)
 	_sprite.centered = true
-	_sprite.z_index = 10
+	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# 脚底贴地：贴图底部对齐弧顶
+	var h: float = float(_sprite.texture.get_height())
+	_sprite.offset = Vector2(0, -h * 0.5)
+	_sprite.z_index = 200
 	add_child(_sprite)
-	# 父节点仍在布置子树时不能 add_child，延后创建环绕幽灵
-	call_deferred("_setup_ghosts")
+	z_index = 200
+	_apply_visual_scale()
 
-func _setup_ghosts() -> void:
-	var ghost_root := Node2D.new()
-	ghost_root.name = "小王子环绕幽灵"
-	ghost_root.z_index = 10
-	get_parent().add_child(ghost_root)
-
-	var world := world_pixel_size
-	for ox in range(-1, 2):
-		for oy in range(-1, 2):
-			if ox == 0 and oy == 0:
-				continue
-			var ghost := Sprite2D.new()
-			ghost.texture = _player_tex
-			ghost.centered = true
-			ghost.z_index = 10
-			ghost.global_position = global_position + Vector2(float(ox) * world, float(oy) * world)
-			ghost_root.add_child(ghost)
-			_ghosts.append(ghost)
-
-func _physics_process(_delta: float) -> void:
-	var input_dir := Vector2(
-		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
-		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
+func _physics_process(delta: float) -> void:
+	var input_x: float = (
+		Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
 	)
-	if input_dir.length_squared() > 1.0:
-		input_dir = input_dir.normalized()
-
-	velocity = input_dir * WorldConstants.PLAYER_SPEED
-	move_and_slide()
-	_wrap_around()
-	_sync_ghosts()
-
-## 环绕（toroidal wrap）：X、Y 分别对世界像素边长取模，
-## 使地图在逻辑上首尾相连，视觉上则由 shader 呈现为完整球面。
-func _wrap_around() -> void:
-	global_position.x = fposmod(global_position.x, world_pixel_size)
-	global_position.y = fposmod(global_position.y, world_pixel_size)
-
-func _sync_ghosts() -> void:
-	if _ghosts.is_empty():
+	if is_zero_approx(input_x):
 		return
-	var world := world_pixel_size
-	var i := 0
-	for ox in range(-1, 2):
-		for oy in range(-1, 2):
-			if ox == 0 and oy == 0:
-				continue
-			_ghosts[i].global_position = global_position + Vector2(float(ox) * world, float(oy) * world)
-			i += 1
+	var angular_speed: float = WorldConstants.PLAYER_SPEED / max(planet_radius, 1.0)
+	angle = fposmod(angle + input_x * angular_speed * delta, TAU)
+	# 改角后立刻通知，避免 Main 先跑导致慢一帧
+	_notify_planet()
 
-## 玩家在整张地图上的归一化坐标（0~1），供球面 shader 用作采样中心
-func normalized_uv() -> Vector2:
-	return Vector2(
-		fposmod(global_position.x, world_pixel_size) / world_pixel_size,
-		fposmod(global_position.y, world_pixel_size) / world_pixel_size
-	)
+## 同步半径并按基准半径缩放精灵
+func set_planet_radius(radius: float) -> void:
+	planet_radius = radius
+	_apply_visual_scale()
+
+func _apply_visual_scale() -> void:
+	var s: float = planet_radius / WorldConstants.PLANET_RADIUS
+	scale = Vector2(s, s)
+
+## 把脚底放到弧顶世界坐标
+func place_at_apex(apex: Vector2) -> void:
+	global_position = apex
+
+## 写入角度并立刻驱动星球旋转 + 钉在弧顶
+func set_angle_and_sync(new_angle: float) -> void:
+	angle = fposmod(new_angle, TAU)
+	_notify_planet()
+
+func _notify_planet() -> void:
+	if planet == null:
+		return
+	planet.set_player_angle(angle)
+	place_at_apex(planet.apex_global_position())
