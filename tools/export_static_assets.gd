@@ -38,6 +38,10 @@ func _export() -> void:
 		PixelArt.build_starfield(WorldConstants.STARFIELD_SIZE, WorldConstants.STARFIELD_SIZE),
 		"res://planet/starfield.png",
 	)
+	failed += _save(
+		PixelArt.build_day_sky(WorldConstants.STARFIELD_SIZE),
+		"res://planet/day_sky.png",
+	)
 	if failed == 0:
 		print("[export_static_assets] 全部 PNG 已写入 player/ 与 planet/")
 		quit(0)

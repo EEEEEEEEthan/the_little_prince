@@ -2,8 +2,8 @@ class_name WorldConstants
 extends RefCounted
 ## 圆弧星球世界的全局配置：几何、地物规格与贴图生成尺寸。
 
-## 星球半径（内部 256×224 像素视口坐标系）。刻意大于等比缩放值，让可见弧面更宽。
-const PLANET_RADIUS: float = 84.0
+## 星球半径（内部 256×224 像素视口坐标系）。
+const PLANET_RADIUS: float = 48.0
 ## 弧顶（小王子站立处）相对视口高度的比例；偏下使地面留在屏幕底部。
 const APEX_Y_RATIO: float = 0.88
 
@@ -11,7 +11,7 @@ const APEX_Y_RATIO: float = 0.88
 const VISIBLE_HALF_ARC: float = PI * 0.55
 
 const VOLCANO_COUNT: int = 3
-const BAOBAB_COUNT: int = 28
+const BAOBAB_COUNT: int = 16
 const WORLD_SEED: int = 20260817
 
 const ROSE_ANGLE: float = 0.0

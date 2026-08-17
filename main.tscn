@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" path="res://planet/starfield.png" id="5_starfield"]
 [ext_resource type="Texture2D" path="res://planet/body.png" id="6_body"]
 [ext_resource type="Texture2D" path="res://player/prince.png" id="7_prince"]
+[ext_resource type="Texture2D" path="res://planet/day_sky.png" id="8_day_sky"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -36,12 +37,19 @@ render_target_update_mode = 4
 unique_name_in_owner = true
 script = ExtResource("2_planet")
 
-[node name="Starfield" type="Sprite2D" parent="GameView/GameViewport/Planet"]
-texture = ExtResource("5_starfield")
+[node name="Starfield" type="Node2D" parent="GameView/GameViewport/Planet"]
 z_index = -100
+script = ExtResource("3_starfield")
+
+[node name="DaySky" type="Sprite2D" parent="GameView/GameViewport/Planet/Starfield"]
+texture = ExtResource("8_day_sky")
 centered = true
 texture_filter = 1
-script = ExtResource("3_starfield")
+
+[node name="NightSky" type="Sprite2D" parent="GameView/GameViewport/Planet/Starfield"]
+texture = ExtResource("5_starfield")
+centered = true
+texture_filter = 1
 
 [node name="Body" type="Sprite2D" parent="GameView/GameViewport/Planet"]
 texture = ExtResource("6_body")

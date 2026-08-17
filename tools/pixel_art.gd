@@ -156,6 +156,24 @@ static func build_starfield(width: int, height: int) -> Image:
 			_set_px(img, sx + 1, sy, c)
 	return img
 
+## 白天天空：浅蓝渐变（尺寸与星野一致、中心对齐球心）。
+static func build_day_sky(size: int) -> Image:
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var top := Color(0.36, 0.62, 0.88)
+	var bottom := Color(0.92, 0.86, 0.66)
+	for y in size:
+		var t: float = float(y) / float(max(size - 1, 1))
+		var c := top.lerp(bottom, t)
+		for x in size:
+			var n: float = _hash(x, y, 53)
+			var p := c
+			p.r += (n - 0.5) * 0.02
+			p.g += (n - 0.5) * 0.02
+			p.b += (n - 0.5) * 0.02
+			p.a = 1.0
+			img.set_pixel(x, y, p)
+	return img
+
 ## ---------- 地物 Image（导出用） ----------
 
 ## 火山：variant 0/1 为死火山（形态各异、暗色岩口），variant 2 为活火山（熔岩发光 + 烟）。

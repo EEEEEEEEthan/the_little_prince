@@ -14,6 +14,7 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/baobab.png",
 	"res://planet/body.png",
 	"res://planet/starfield.png",
+	"res://planet/day_sky.png",
 ]
 
 func _init() -> void:
@@ -42,8 +43,8 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if WorldConstants.PLANET_RADIUS < 78.0 or WorldConstants.PLANET_RADIUS > 90.0:
-		printerr("PLANET_RADIUS 应在 78~90（内部 256×224）：%s" % WorldConstants.PLANET_RADIUS)
+	if WorldConstants.PLANET_RADIUS < 40.0 or WorldConstants.PLANET_RADIUS > 60.0:
+		printerr("PLANET_RADIUS 应在 40~60（内部 256×224）：%s" % WorldConstants.PLANET_RADIUS)
 		failed += 1
 	if WorldConstants.APEX_Y_RATIO < 0.80 or WorldConstants.APEX_Y_RATIO >= 1.0:
 		printerr("APEX_Y_RATIO 应偏下（约 0.85~0.92）：%s" % WorldConstants.APEX_Y_RATIO)
@@ -75,7 +76,7 @@ func _check_constants() -> int:
 		if const_src.find(legacy) >= 0:
 			printerr("world_constants.gd 仍含旧符号：%s" % legacy)
 			failed += 1
-	print("  常量检查 OK（半径 78~90 / 弧顶偏下 / 像素精灵）")
+	print("  常量检查 OK（半径 40~60 / 弧顶偏下 / 像素精灵）")
 	return failed
 
 func _check_static_assets() -> int:
@@ -102,6 +103,18 @@ func _check_static_assets() -> int:
 				% [
 					WorldConstants.STARFIELD_SIZE, WorldConstants.STARFIELD_SIZE,
 					star.get_width(), star.get_height(),
+				]
+			)
+			failed += 1
+	# 白天天空应与星野同尺寸同中心
+	var day_sky: Texture2D = load("res://planet/day_sky.png") as Texture2D
+	if day_sky != null:
+		if day_sky.get_width() != WorldConstants.STARFIELD_SIZE or day_sky.get_height() != WorldConstants.STARFIELD_SIZE:
+			printerr(
+				"day_sky 应为 %dx%d，实际 %dx%d"
+				% [
+					WorldConstants.STARFIELD_SIZE, WorldConstants.STARFIELD_SIZE,
+					day_sky.get_width(), day_sky.get_height(),
 				]
 			)
 			failed += 1
@@ -166,6 +179,10 @@ func _check_pixel_art_export_api() -> int:
 	)
 	if volcano_sheet == null or baobab_sheet == null:
 		printerr("PixelArt build_*_sheet 失败")
+		failed += 1
+	var day_sky := PixelArt.build_day_sky(WorldConstants.STARFIELD_SIZE)
+	if day_sky == null or day_sky.get_width() != WorldConstants.STARFIELD_SIZE:
+		printerr("PixelArt build_day_sky 失败")
 		failed += 1
 	var art_src := FileAccess.get_file_as_string("res://tools/pixel_art.gd")
 	for forbidden in ["make_volcano_layers", "make_baobab_layers", "make_rose_layers"]:
@@ -319,6 +336,12 @@ func _check_scene_and_mechanics() -> int:
 		if scene.get_node_or_null("GameView/GameViewport/Starfield") != null:
 			printerr("Starfield 不应再作为 GameViewport 直接子节点")
 			failed += 1
+		if planet.get_node_or_null("Starfield/DaySky") == null:
+			printerr("找不到 Starfield/DaySky（白天天空）")
+			failed += 1
+		if planet.get_node_or_null("Starfield/NightSky") == null:
+			printerr("找不到 Starfield/NightSky（黑夜星空）")
+			failed += 1
 
 	if planet != null and player != null:
 		planet.teleport_player(0.75)
@@ -348,6 +371,14 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 		if WorldConstants.STAR_ROTATION_SPEED <= 0.0:
 			printerr("STAR_ROTATION_SPEED 应大于 0（星空相对星球自转）")
+			failed += 1
+		starfield._update_daylight()
+		var expected_night_alpha := 1.0 - (cos(starfield.rotation) + 1.0) * 0.5
+		if not is_equal_approx(starfield.night_sky.modulate.a, expected_night_alpha):
+			printerr(
+				"NightSky 透明度应随相对角度混合（%s），实际 %s"
+				% [expected_night_alpha, starfield.night_sky.modulate.a]
+			)
 			failed += 1
 
 		var apex := planet.apex_global_position()
