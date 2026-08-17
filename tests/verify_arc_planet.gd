@@ -123,10 +123,10 @@ func _check_static_assets() -> int:
 			sky_image.get_width() / 2, sky_image.get_height() - 1
 		)
 		if top_color.r < 0.95 or top_color.g > 0.02 or top_color.b > 0.02:
-			printerr("day_sky 顶部应为纯红（天顶坐标 1），实际 %s" % top_color.to_html(false))
+			printerr("day_sky 顶部应为纯红（霞光坐标 1），实际 %s" % top_color.to_html(false))
 			failed += 1
 		if bottom_color.r > 0.05 or bottom_color.g > 0.02 or bottom_color.b > 0.02:
-			printerr("day_sky 底部应为纯黑（地平线坐标 0），实际 %s" % bottom_color.to_html(false))
+			printerr("day_sky 底部应为纯黑（天顶坐标 0），实际 %s" % bottom_color.to_html(false))
 			failed += 1
 	# 星球圆盘直径应约等于 2 * PLANET_RADIUS
 	var body: Texture2D = load("res://planet/body.png") as Texture2D
