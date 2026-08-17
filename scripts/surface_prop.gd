@@ -6,8 +6,13 @@ extends Node2D
 ##   position = Vector2(sin(α), -cos(α)) * radius
 ##   rotation  = α
 ## 精灵脚底贴地（offset 把贴图底部对齐到圆周），头朝外、脚朝球心。
+## 贴图来自 assets/sprites/*.png（静态 preload）。
 
 enum Kind { ROSE, VOLCANO, BAOBAB }
+
+const _ROSE_TEX: Texture2D = preload("res://assets/sprites/rose.png")
+const _VOLCANO_TEX: Texture2D = preload("res://assets/sprites/volcano.png")
+const _BAOBAB_TEX: Texture2D = preload("res://assets/sprites/baobab.png")
 
 ## 地物在星球上的绝对角（弧度）
 var angle: float = 0.0
@@ -30,7 +35,7 @@ func set_planet_radius(radius: float) -> void:
 	_place_on_surface()
 	_apply_visual_scale()
 
-## 相对基准半径缩放，再乘 PROP_SCALE；窗口变化后地物相对星球仍协调
+## 相对基准半径缩放，再乘 PROP_SCALE
 func _apply_visual_scale() -> void:
 	var s: float = (_radius / WorldConstants.PLANET_RADIUS) * WorldConstants.PROP_SCALE
 	scale = Vector2(s, s)
@@ -63,13 +68,13 @@ func _apply_texture() -> void:
 	var tex: Texture2D
 	match kind:
 		Kind.ROSE:
-			tex = PixelArt.make_rose_sprite(WorldConstants.SPRITE_ROSE)
+			tex = _ROSE_TEX
 			name = "玫瑰"
 		Kind.VOLCANO:
-			tex = PixelArt.make_volcano_sprite(WorldConstants.SPRITE_VOLCANO)
+			tex = _VOLCANO_TEX
 			name = "火山"
 		Kind.BAOBAB:
-			tex = PixelArt.make_baobab_sprite(WorldConstants.SPRITE_BAOBAB)
+			tex = _BAOBAB_TEX
 			name = "猴面包树"
 	_sprite.texture = tex
 	# 脚底贴地：把精灵中心上移半高，使贴图底部落在圆周上
