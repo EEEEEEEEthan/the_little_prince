@@ -334,12 +334,19 @@ func _check_scene_and_mechanics() -> int:
 		if WorldConstants.STAR_ROTATION_SPEED <= 0.0:
 			printerr("STAR_ROTATION_SPEED 应大于 0（星空相对星球自转）")
 			failed += 1
+		# 昼夜混合：正午夜幕完全透明，午夜完全遮盖
+		starfield.rotation = 0.0
 		starfield._update_daylight()
-		var expected_night_alpha := 1.0 - (cos(starfield.rotation) + 1.0) * 0.5
-		if not is_equal_approx(starfield.night_sky.modulate.a, expected_night_alpha):
+		if not is_zero_approx(starfield.night_sky.modulate.a):
 			printerr(
-				"NightSky 透明度应随相对角度混合（%s），实际 %s"
-				% [expected_night_alpha, starfield.night_sky.modulate.a]
+				"正午 NightSky 应完全透明，实际 %s" % starfield.night_sky.modulate.a
+			)
+			failed += 1
+		starfield.rotation = PI
+		starfield._update_daylight()
+		if not is_equal_approx(starfield.night_sky.modulate.a, 1.0):
+			printerr(
+				"午夜 NightSky 应完全不透明，实际 %s" % starfield.night_sky.modulate.a
 			)
 			failed += 1
 
@@ -359,7 +366,7 @@ func _check_scene_and_mechanics() -> int:
 					% [Starfield.DAY_PHASE_ZENITH_COLORS[0], noon_zenith]
 				)
 				failed += 1
-			starfield.rotation = PI * 0.25
+			starfield.rotation = WorldConstants.DAY_HALF_ARC * 0.5
 			starfield._update_daylight()
 			var expected_mid_zenith := Starfield.DAY_PHASE_ZENITH_COLORS[0].lerp(
 				Starfield.DAY_PHASE_ZENITH_COLORS[1], 0.5

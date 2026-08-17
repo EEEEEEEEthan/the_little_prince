@@ -28,6 +28,8 @@ const PLAYER_DAMPING: float = 12.0
 
 const STARFIELD_SIZE: int = 640
 const STAR_ROTATION_SPEED: float = 0.02
+## 白天半宽（弧度）：正午蓝天与黎明各自覆盖的角度，越大白天越长、黄昏夜晚越短。
+const DAY_HALF_ARC: float = PI * 0.65
 
 ## 地物 / 玩家贴图的生成尺寸（像素）。火山与猴面包树以 spritesheet 横向拼接，
 ## 每个变体一帧，帧尺寸仍为 *_SPRITE_SIZE。

@@ -12,8 +12,8 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_day_sky"]
 shader = ExtResource("9_day_sky_shader")
-shader_parameter/zenith_color = Color(0.36, 0.62, 0.88, 1)
-shader_parameter/horizon_color = Color(0.92, 0.86, 0.66, 1)
+shader_parameter/zenith_color = Color(0.36, 0.6, 0.95, 1)
+shader_parameter/horizon_color = Color(0.78, 0.88, 1, 1)
 
 [node name="Main" type="Control" unique_id=134579991]
 layout_mode = 3
