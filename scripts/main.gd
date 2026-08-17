@@ -1,48 +1,41 @@
-extends Control
-## 全局总控：
-##  1) 确保 InputMap 已注册 WASD/方向键（不依赖 project.godot 解析是否成功）；
-##  2) 等待隐藏的 SubViewport 把地图 + 地物 + 小王子渲染完成；
-##  3) 把该渲染结果（ViewportTexture）交给 PlanetView 的球面 Shader；
-##  4) 每帧写入玩家 UV 与 PlanetView 尺寸，保证球心跟随且剪影为正圆。
+extends Node2D
+## 全局总控（真正的 2D 圆弧星球）：
+##   Main
+##   ├── Starfield —— 深空 + 星点
+##   ├── Planet    —— Body + Surface 同受 -player_angle
+##   └── Player    —— 改角后立刻通知 Planet；始终钉在弧顶
 ##
-## 场景树：
-##   Main (Control，全屏)
-##   ├── WorldHost (Node，仅承载隐藏渲染用的 SubViewport)
-##   │   └── WorldViewport (SubViewport，512×512，不直接显示)
-##   │       └── PlanetWorld (WorldGenerator)
-##   │           ├── Ground (TileMapLayer)
-##   │           ├── Props
-##   │           └── Player（小王子）
-##   └── PlanetView (ColorRect + sphere_fisheye.gdshader)
+## 力学：角速度 = PLAYER_SPEED / planet_radius；
+## Body/Surface.rotation = -player_angle，玩家屏幕位置固定在弧顶。
 
-@onready var world_viewport: SubViewport = $WorldHost/WorldViewport
-@onready var world_root: WorldGenerator = $WorldHost/WorldViewport/PlanetWorld
-@onready var player: Player = $WorldHost/WorldViewport/PlanetWorld/Player
-@onready var planet_view: ColorRect = $PlanetView
+@onready var starfield: Starfield = $Starfield
+@onready var planet: Planet = $Planet
+@onready var player: Player = $Player
 
 func _ready() -> void:
-	# 必须在任何 get_action_strength("move_*") 之前完成
 	InputSetup.ensure_move_actions()
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
+	player.planet = planet
+	_layout_world()
+	# 出生角靠近玫瑰；set_angle_and_sync 同帧驱动 Body/Surface
+	player.set_angle_and_sync(planet.spawn_angle)
 
-	# 视口尺寸与世界像素边长严格对齐，保证整张地图完整进入纹理
-	var px := WorldConstants.VIEWPORT_PIXELS
-	world_viewport.size = Vector2i(px, px)
+func _on_viewport_size_changed() -> void:
+	_layout_world()
+	player.place_at_apex(planet.apex_global_position())
 
-	player.world_pixel_size = float(WorldConstants.WORLD_PIXELS)
-	player.global_position = world_root.spawn_world_position()
+## 按窗口重算：球心在屏幕下方外，弧顶落在 APEX_Y_RATIO 高度
+func _layout_world() -> void:
+	var size: Vector2 = get_viewport_rect().size
+	if size.x < 1.0 or size.y < 1.0:
+		size = Vector2(WorldConstants.REFERENCE_VIEWPORT, WorldConstants.REFERENCE_VIEWPORT)
 
-	var material := planet_view.material as ShaderMaterial
-	material.set_shader_parameter("world_tex", world_viewport.get_texture())
-	_update_shader_uniforms()
+	starfield.set_viewport_size(size)
 
-func _process(_delta: float) -> void:
-	_update_shader_uniforms()
+	var scale: float = minf(size.x, size.y) / WorldConstants.REFERENCE_VIEWPORT
+	var radius: float = WorldConstants.PLANET_RADIUS * scale
+	var apex_y: float = size.y * WorldConstants.APEX_Y_RATIO
+	var center := Vector2(size.x * 0.5, apex_y + radius)
 
-func _update_shader_uniforms() -> void:
-	var material := planet_view.material as ShaderMaterial
-	material.set_shader_parameter("player_uv", player.normalized_uv())
-	# 用 PlanetView 实际像素尺寸修正 aspect，保证任意窗口比例下仍是正圆
-	var sz: Vector2 = planet_view.size
-	if sz.x < 1.0 or sz.y < 1.0:
-		sz = get_viewport_rect().size
-	material.set_shader_parameter("view_size", sz)
+	planet.apply_layout(center, radius)
+	player.set_planet_radius(radius)
