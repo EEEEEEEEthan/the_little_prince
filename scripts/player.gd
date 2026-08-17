@@ -16,6 +16,8 @@ var _ghosts: Array[Sprite2D] = []
 var _player_tex: Texture2D
 
 func _ready() -> void:
+	# 双保险：即便 Main 尚未 _ready，也不要在读输入前缺少 move_* 动作
+	InputSetup.ensure_move_actions()
 	_player_tex = PixelArt.make_player_sprite(14, 20)
 	_sprite = Sprite2D.new()
 	_sprite.name = "小王子精灵"

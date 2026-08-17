@@ -11,11 +11,11 @@ radius = 6.0
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_planet"]
 shader = ExtResource("4_shader")
 shader_parameter/player_uv = Vector2(0.5, 0.5)
+shader_parameter/view_size = Vector2(960, 960)
 shader_parameter/curvature = 1.55
 shader_parameter/view_span = 0.48
 shader_parameter/space_color = Vector3(0.015, 0.018, 0.055)
 shader_parameter/star_density = 0.45
-shader_parameter/rim_glow_color = Vector3(0.45, 0.65, 1.0)
 
 [node name="Main" type="Control"]
 layout_mode = 3

@@ -12,11 +12,16 @@ shader_type canvas_item;
 //      当前所在的归一化坐标 player_uv，就得到最终采样坐标——这样无论
 //      玩家走到地图哪里，球心永远对准玩家，效果等价于「相机永远跟随
 //      小王子」，且完全没有传统摄像机在地图边缘会露出空白的问题。
+//
+// 正圆保证：view_size 由 Main 传入 PlanetView 的实际像素尺寸；
+// 按较短边归一化，使单位圆在任意宽高比窗口下仍是视觉正圆。
 
 // 世界贴图：由隐藏的 SubViewport 渲染整张地图 + 地物 + 小王子得到
 uniform sampler2D world_tex : filter_linear, repeat_enable;
 // 玩家在地图上的归一化坐标（0~1），即「球心对准的地方」
 uniform vec2 player_uv = vec2(0.5, 0.5);
+// PlanetView 实际像素尺寸（由 main.gd 每帧写入）
+uniform vec2 view_size = vec2(1.0, 1.0);
 // 球面曲率：1.0 约等于标准正交半球投影；调大后边缘畸变更强、可视范围更广
 uniform float curvature : hint_range(0.5, 3.0) = 1.55;
 // 圆形画面边缘对应地图宽度的比例（可视范围），越大能看到越多地图内容
@@ -24,8 +29,6 @@ uniform float view_span : hint_range(0.05, 1.0) = 0.48;
 // 深空背景色 & 星点密度
 uniform vec3 space_color : source_color = vec3(0.015, 0.018, 0.055);
 uniform float star_density : hint_range(0.0, 1.0) = 0.45;
-// 星球边缘的大气辉光颜色
-uniform vec3 rim_glow_color : source_color = vec3(0.45, 0.65, 1.0);
 
 // 注意：PI / TAU 是 Godot Shading Language 的内置常量，不能再自行定义
 const float HALF_PI = PI * 0.5;
@@ -38,15 +41,18 @@ float hash21(vec2 p) {
 }
 
 void fragment() {
-	// 以画面中心为原点、并按视口宽高比修正的坐标，保证圆形不会被拉扁成椭圆
-	float aspect = SCREEN_PIXEL_SIZE.y / max(SCREEN_PIXEL_SIZE.x, 0.0000001);
+	// 以画面中心为原点，按 PlanetView 真实像素宽高比归一化：
+	// 较短边映射到 [-1, 1]，较长边按比例拉长，单位圆 = 视觉正圆
+	vec2 size = max(view_size, vec2(1.0));
+	float min_side = min(size.x, size.y);
 	vec2 p = (UV - 0.5) * 2.0;
-	p.y *= aspect;
+	p.x *= size.x / min_side;
+	p.y *= size.y / min_side;
 	float r = length(p);
 
 	if (r > 1.0) {
 		// 圆外：星空背景
-		vec2 star_uv = floor(SCREEN_UV * 360.0);
+		vec2 star_uv = floor(UV * max(size.x, size.y) * 0.45);
 		float star = step(0.9972, hash21(star_uv)) * star_density;
 		float twinkle = 0.55 + 0.45 * hash21(star_uv + 17.0);
 		COLOR = vec4(space_color + vec3(star * twinkle), 1.0);
@@ -62,14 +68,11 @@ void fragment() {
 		vec2 sample_uv = fract(player_uv + offset);
 		vec4 tex_color = texture(world_tex, sample_uv);
 
-		// 球面明暗：中心更亮，边缘更暗，增强立体感
-		float shade = mix(0.52, 1.0, z);
-		// 边缘大气辉光
-		float rim = smoothstep(0.78, 1.0, r) * 0.5;
-		// 柔和剪影边缘，避免硬锯齿
-		float edge_aa = 1.0 - smoothstep(0.985, 1.0, r);
+		// 轻微球面明暗（中心略亮），无边缘辉光
+		float shade = mix(0.72, 1.0, z);
+		// 极窄抗锯齿，不改变正圆观感
+		float edge_aa = 1.0 - smoothstep(0.992, 1.0, r);
 
-		vec3 final_rgb = tex_color.rgb * shade + rim_glow_color * rim;
-		COLOR = vec4(final_rgb, edge_aa);
+		COLOR = vec4(tex_color.rgb * shade, edge_aa);
 	}
 }

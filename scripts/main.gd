@@ -1,9 +1,9 @@
 extends Control
 ## 全局总控：
-##  1) 等待隐藏的 SubViewport 把地图 + 地物 + 小王子渲染完成；
-##  2) 把该渲染结果（ViewportTexture）交给 PlanetView 的球面 Shader；
-##  3) 每帧把玩家的归一化坐标写入 Shader，让球心始终对准小王子，
-##     从而实现「相机永远跟随玩家」的视觉效果。
+##  1) 确保 InputMap 已注册 WASD/方向键（不依赖 project.godot 解析是否成功）；
+##  2) 等待隐藏的 SubViewport 把地图 + 地物 + 小王子渲染完成；
+##  3) 把该渲染结果（ViewportTexture）交给 PlanetView 的球面 Shader；
+##  4) 每帧写入玩家 UV 与 PlanetView 尺寸，保证球心跟随且剪影为正圆。
 ##
 ## 场景树：
 ##   Main (Control，全屏)
@@ -21,6 +21,9 @@ extends Control
 @onready var planet_view: ColorRect = $PlanetView
 
 func _ready() -> void:
+	# 必须在任何 get_action_strength("move_*") 之前完成
+	InputSetup.ensure_move_actions()
+
 	# 视口尺寸与世界像素边长严格对齐，保证整张地图完整进入纹理
 	var px := WorldConstants.VIEWPORT_PIXELS
 	world_viewport.size = Vector2i(px, px)
@@ -30,11 +33,16 @@ func _ready() -> void:
 
 	var material := planet_view.material as ShaderMaterial
 	material.set_shader_parameter("world_tex", world_viewport.get_texture())
-	_update_shader_player_uv()
+	_update_shader_uniforms()
 
 func _process(_delta: float) -> void:
-	_update_shader_player_uv()
+	_update_shader_uniforms()
 
-func _update_shader_player_uv() -> void:
+func _update_shader_uniforms() -> void:
 	var material := planet_view.material as ShaderMaterial
 	material.set_shader_parameter("player_uv", player.normalized_uv())
+	# 用 PlanetView 实际像素尺寸修正 aspect，保证任意窗口比例下仍是正圆
+	var sz: Vector2 = planet_view.size
+	if sz.x < 1.0 or sz.y < 1.0:
+		sz = get_viewport_rect().size
+	material.set_shader_parameter("view_size", sz)

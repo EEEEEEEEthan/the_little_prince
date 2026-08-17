@@ -1,5 +1,6 @@
 extends SceneTree
-## 头无模式验证脚本：检查世界常量、环面 wrap、场景可加载、地物数量。
+## 头无模式验证脚本：检查世界常量、环面 wrap、场景可加载、地物数量、
+## InputMap 动作、shader 无边缘辉光。
 ## 用法：
 ##   /workspace/.engine/.engine --headless --path /workspace \
 ##     --script res://tests/verify_pseudo_planet.gd
@@ -12,6 +13,8 @@ func _run_tests() -> void:
 	failed += _check_constants()
 	failed += _check_wrap_math()
 	failed += _check_pixel_art()
+	failed += _check_input_map()
+	failed += _check_shader_no_rim()
 	failed += await _check_scene_and_world()
 	if failed == 0:
 		print("[verify_pseudo_planet] 全部通过")
@@ -81,6 +84,49 @@ func _check_pixel_art() -> int:
 	print("  程序生成贴图 OK")
 	return failed
 
+func _check_input_map() -> int:
+	var failed := 0
+	# 先走运行时注册（与游戏启动路径一致），再断言四个动作存在
+	InputSetup.ensure_move_actions()
+	for action in InputSetup.ACTIONS:
+		if not InputMap.has_action(action):
+			printerr("InputMap 缺少动作：%s" % action)
+			failed += 1
+			continue
+		var events := InputMap.action_get_events(action)
+		if events.is_empty():
+			printerr("动作 %s 没有任何按键事件" % action)
+			failed += 1
+	# 再验证：即使清空后重新 ensure，也能恢复
+	for action in InputSetup.ACTIONS:
+		if InputMap.has_action(action):
+			InputMap.erase_action(action)
+	InputSetup._ensured = false
+	InputSetup.ensure_move_actions()
+	for action in InputSetup.ACTIONS:
+		if not InputMap.has_action(action):
+			printerr("运行时重新注册失败：%s" % action)
+			failed += 1
+	print("  InputMap move_* 动作 OK")
+	return failed
+
+func _check_shader_no_rim() -> int:
+	var failed := 0
+	var path := "res://shaders/sphere_fisheye.gdshader"
+	if not FileAccess.file_exists(path):
+		printerr("找不到 shader：%s" % path)
+		return 1
+	var src := FileAccess.get_file_as_string(path)
+	for forbidden in ["rim_glow", "rim_glow_color", "float rim"]:
+		if src.find(forbidden) >= 0:
+			printerr("shader 仍含边缘光相关内容：%s" % forbidden)
+			failed += 1
+	if src.find("view_size") < 0:
+		printerr("shader 缺少 view_size uniform（正圆 aspect 所需）")
+		failed += 1
+	print("  shader 无 rim / 含 view_size OK")
+	return failed
+
 func _check_scene_and_world() -> int:
 	var failed := 0
 	var packed: PackedScene = load("res://scenes/main.tscn")
@@ -91,6 +137,12 @@ func _check_scene_and_world() -> int:
 	root.add_child(scene)
 	await process_frame
 	await process_frame
+
+	# 场景加载后四个 move_* 必须仍存在（main._ready / player._ready 会 ensure）
+	for action in InputSetup.ACTIONS:
+		if not InputMap.has_action(action):
+			printerr("场景加载后缺少 InputMap 动作：%s" % action)
+			failed += 1
 
 	var world: WorldGenerator = scene.get_node_or_null("WorldHost/WorldViewport/PlanetWorld") as WorldGenerator
 	if world == null:
@@ -138,6 +190,22 @@ func _check_scene_and_world() -> int:
 	if viewport == null or viewport.size != Vector2i(512, 512):
 		printerr("SubViewport 尺寸应为 512×512，实际 %s" % (viewport.size if viewport else "null"))
 		failed += 1
+
+	# 确认 PlanetView 材质已写入 view_size，且无 rim 参数
+	var planet_view: ColorRect = scene.get_node_or_null("PlanetView") as ColorRect
+	if planet_view == null:
+		printerr("找不到 PlanetView")
+		failed += 1
+	else:
+		var mat := planet_view.material as ShaderMaterial
+		if mat == null:
+			printerr("PlanetView 无 ShaderMaterial")
+			failed += 1
+		else:
+			var vs: Variant = mat.get_shader_parameter("view_size")
+			if typeof(vs) != TYPE_VECTOR2:
+				printerr("view_size 未正确设置")
+				failed += 1
 
 	print("  场景与世界生成 OK")
 	scene.queue_free()
