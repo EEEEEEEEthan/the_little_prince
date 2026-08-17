@@ -7,6 +7,8 @@ const VIEWPORT_PATH := "GameView/GameViewport"
 const PLANET_PATH := "GameView/GameViewport/Planet"
 const PLAYER_PATH := "GameView/GameViewport/Player"
 
+const SKY_PHASE := preload("res://planet/sky_phase.gd")
+
 const REQUIRED_ASSETS: Array[String] = [
 	"res://player/prince.png",
 	"res://planet/rose.png",
@@ -128,6 +130,60 @@ func _check_static_assets() -> int:
 		if bottom_color.r > 0.05 or bottom_color.g > 0.02 or bottom_color.b > 0.02:
 			printerr("day_sky 底部应为纯黑（天顶坐标 0），实际 %s" % bottom_color.to_html(false))
 			failed += 1
+	# 天空渐变资源：天顶/地平线两个 GradientTexture1D，X=相位（0 午夜、1/4 日出、
+	# 1/2 正午、3/4 日落、1 午夜），关键相位须命中对应关键色
+	var zenith_gradient: GradientTexture1D = load("res://planet/zenith_gradient.tres")
+	var horizon_gradient: GradientTexture1D = load("res://planet/horizon_gradient.tres")
+	if zenith_gradient == null:
+		printerr("zenith_gradient.tres 应可加载为 GradientTexture1D")
+		failed += 1
+	if horizon_gradient == null:
+		printerr("horizon_gradient.tres 应可加载为 GradientTexture1D")
+		failed += 1
+	if zenith_gradient != null and horizon_gradient != null:
+		var zenith_cases := [
+			[0.0, Color(0.01, 0.01, 0.04), "午夜天顶"],
+			[0.25, Color(1.0, 0.7, 0.66), "日出天顶"],
+			[0.5, Color(0.36, 0.6, 0.95), "正午天顶"],
+			[0.75, Color(1.0, 0.3, 0.12), "日落天顶"],
+			[1.0, Color(0.01, 0.01, 0.04), "午夜天顶"],
+		]
+		for item in zenith_cases:
+			var got: Color = zenith_gradient.gradient.sample(item[0])
+			if (
+				absf(got.r - item[1].r) > 0.02
+				or absf(got.g - item[1].g) > 0.02
+				or absf(got.b - item[1].b) > 0.02
+			):
+				printerr(
+					"zenith_gradient %s 应为 %s，实际 %s"
+					% [item[2], item[1].to_html(false), got.to_html(false)]
+				)
+				failed += 1
+		var horizon_cases := [
+			[0.0, Color(0.02, 0.03, 0.08), "午夜地平线"],
+			[0.25, Color(0.45, 0.55, 0.82), "日出地平线"],
+			[0.5, Color(0.78, 0.88, 1.0), "正午地平线"],
+			[0.75, Color(0.3, 0.22, 0.42), "日落地平线"],
+			[1.0, Color(0.02, 0.03, 0.08), "午夜地平线"],
+		]
+		for item in horizon_cases:
+			var got: Color = horizon_gradient.gradient.sample(item[0])
+			if (
+				absf(got.r - item[1].r) > 0.02
+				or absf(got.g - item[1].g) > 0.02
+				or absf(got.b - item[1].b) > 0.02
+			):
+				printerr(
+					"horizon_gradient %s 应为 %s，实际 %s"
+					% [item[2], item[1].to_html(false), got.to_html(false)]
+				)
+				failed += 1
+	# 夜空透明度渐变（GradientTexture1D）应可加载；高度为 1，不走通用贴图尺寸检查
+	var night_grad := load("res://planet/night_sky_gradient.tres")
+	if night_grad == null or not (night_grad is GradientTexture1D):
+		printerr("night_sky_gradient.tres 应可加载为 GradientTexture1D")
+		failed += 1
 	# 星球圆盘直径应约等于 2 * PLANET_RADIUS
 	var body: Texture2D = load("res://planet/body.png") as Texture2D
 	if body != null:
@@ -334,50 +390,59 @@ func _check_scene_and_mechanics() -> int:
 		if WorldConstants.STAR_ROTATION_SPEED <= 0.0:
 			printerr("STAR_ROTATION_SPEED 应大于 0（星空相对星球自转）")
 			failed += 1
-		# 昼夜混合：正午夜幕完全透明，午夜完全遮盖
-		starfield.rotation = 0.0
-		starfield._update_daylight()
-		if not is_zero_approx(starfield.night_sky.modulate.a):
-			printerr(
-				"正午 NightSky 应完全透明，实际 %s" % starfield.night_sky.modulate.a
-			)
+		# NightSky 透明度：按相位从 night_sky_gradient 渐变采样（0=午夜不透明、0.25/0.5=白天透明）
+		var night_gradient: GradientTexture1D = starfield.night_sky_gradient
+		if night_gradient == null:
+			printerr("Starfield 应挂 night_sky_gradient（GradientTexture1D）")
 			failed += 1
-		starfield.rotation = PI
-		starfield._update_daylight()
-		if not is_equal_approx(starfield.night_sky.modulate.a, 1.0):
-			printerr(
-				"午夜 NightSky 应完全不透明，实际 %s" % starfield.night_sky.modulate.a
-			)
-			failed += 1
+		else:
+			for case in [
+				[0.0, 1.0],
+				[0.25, 0.0],
+				[0.5, 0.0],
+				[0.75, 1.0],
+				[1.0, 1.0],
+			]:
+				starfield.rotation = SKY_PHASE.phase_to_angle(case[0])
+				starfield._update_daylight()
+				var alpha: float = starfield.night_sky.modulate.a
+				if absf(alpha - case[1]) > 0.02:
+					printerr(
+						"相位 %s 的 NightSky 透明度应为 %s，实际 %s"
+						% [case[0], case[1], alpha]
+					)
+					failed += 1
 
-		# 白天天空 shader：按星空相对角度在时段关键色间插值换色
+		# 白天天空 shader：从 zenith/horizon 渐变按相位取渐变色，Starfield 每帧写入相位
 		var day_sky_sprite: Sprite2D = planet.get_node("Starfield/DaySky") as Sprite2D
 		var sky_material := day_sky_sprite.material as ShaderMaterial
+		if day_sky_sprite.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
+			printerr("DaySky 应使用 LINEAR 过滤以平滑采样渐变贴图")
+			failed += 1
 		if sky_material == null or sky_material.shader == null:
 			printerr("DaySky 应挂载天空换色 ShaderMaterial")
 			failed += 1
 		else:
-			starfield.rotation = 0.0
-			starfield._update_daylight()
-			var noon_zenith: Color = sky_material.get_shader_parameter("zenith_color")
-			if not noon_zenith.is_equal_approx(Starfield.DAY_PHASE_ZENITH_COLORS[0]):
-				printerr(
-					"正午天顶色应为 %s，实际 %s"
-					% [Starfield.DAY_PHASE_ZENITH_COLORS[0], noon_zenith]
-				)
-				failed += 1
-			starfield.rotation = WorldConstants.DAY_HALF_ARC * 0.5
-			starfield._update_daylight()
-			var expected_mid_zenith := Starfield.DAY_PHASE_ZENITH_COLORS[0].lerp(
-				Starfield.DAY_PHASE_ZENITH_COLORS[1], 0.5
-			)
-			var mid_zenith: Color = sky_material.get_shader_parameter("zenith_color")
-			if not mid_zenith.is_equal_approx(expected_mid_zenith):
-				printerr(
-					"正午->夕阳中途天顶色应为 %s，实际 %s"
-					% [expected_mid_zenith, mid_zenith]
-				)
-				failed += 1
+			for param in ["zenith_gradient", "horizon_gradient"]:
+				var gradient_tex := sky_material.get_shader_parameter(param) as Texture2D
+				if gradient_tex == null:
+					printerr("DaySky shader 应挂 %s" % param)
+					failed += 1
+			for case in [
+				[0.0, 0.5],
+				[WorldConstants.DAY_HALF_ARC, 0.25],
+				[PI, 0.0],
+				[TAU - WorldConstants.DAY_HALF_ARC, 0.75],
+			]:
+				starfield.rotation = case[0]
+				starfield._update_daylight()
+				var phase: float = sky_material.get_shader_parameter("phase")
+				if not is_equal_approx(phase, SKY_PHASE.angle_to_phase(case[0])):
+					printerr(
+						"相位(rotation=%s)应为 %s，实际 %s"
+						% [case[0], SKY_PHASE.angle_to_phase(case[0]), phase]
+					)
+					failed += 1
 
 		var apex := planet.apex_global_position()
 		if player.global_position.distance_to(apex) > 0.5:
