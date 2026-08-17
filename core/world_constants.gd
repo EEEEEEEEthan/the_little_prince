@@ -12,14 +12,8 @@ const VISIBLE_HALF_ARC: float = PI * 0.55
 
 const VOLCANO_COUNT: int = 3
 const BAOBAB_COUNT: int = 16
-const WORLD_SEED: int = 20260817
 
-const ROSE_ANGLE: float = 0.0
 const SPAWN_ANGLE_OFFSET: float = 0.12
-
-const VOLCANO_MIN_ANGLE: float = TAU / 3.0 * 0.72
-const BAOBAB_MIN_ANGLE: float = 0.10
-const PROP_CLEARANCE: float = 0.15
 
 ## 玩家沿线最大速度（像素/秒）；目标角速度 = PLAYER_SPEED / PLANET_RADIUS。
 const PLAYER_SPEED: float = 56.0

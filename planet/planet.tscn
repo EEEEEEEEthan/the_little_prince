@@ -1,0 +1,271 @@
+[gd_scene format=3 uid="uid://cc3nptocfdk0k"]
+
+[ext_resource type="Script" uid="uid://bkphckiepbgmj" path="res://planet/planet.gd" id="1_planet"]
+[ext_resource type="Script" uid="uid://blpnkbllpbace" path="res://planet/starfield.gd" id="2_starfield"]
+[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
+[ext_resource type="Texture2D" uid="uid://o6opelwgjkao" path="res://planet/body.png" id="4_body"]
+[ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
+[ext_resource type="Texture2D" uid="uid://c8rnueqnsb6jk" path="res://planet/day_sky.png" id="6_day_sky"]
+[ext_resource type="Texture2D" uid="uid://bg1wirq3v1g5c" path="res://planet/rose.png" id="7_rose"]
+[ext_resource type="Texture2D" uid="uid://duk1gaik3krys" path="res://planet/volcano.png" id="8_volcano"]
+[ext_resource type="Texture2D" uid="uid://bblja4kg8jkmg" path="res://planet/baobab.png" id="9_baobab"]
+[ext_resource type="Shader" uid="uid://77ilermcmh3b" path="res://planet/day_sky.gdshader" id="10_day_sky_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_day_sky"]
+shader = ExtResource("10_day_sky_shader")
+shader_parameter/zenith_color = Color(0.36, 0.6, 0.95, 1)
+shader_parameter/horizon_color = Color(0.78, 0.88, 1, 1)
+
+[node name="Planet" type="Node2D" unique_id=1020592655]
+script = ExtResource("1_planet")
+
+[node name="Starfield" type="Node2D" parent="." unique_id=852054590]
+z_index = -100
+script = ExtResource("2_starfield")
+
+[node name="DaySky" type="Sprite2D" parent="Starfield" unique_id=991000336]
+texture_filter = 1
+material = SubResource("ShaderMaterial_day_sky")
+texture = ExtResource("6_day_sky")
+
+[node name="NightSky" type="Sprite2D" parent="Starfield" unique_id=851971498]
+texture_filter = 1
+texture = ExtResource("5_starfield")
+
+[node name="Surface" type="Node2D" parent="." unique_id=1169720567]
+
+[node name="Volcano" type="Sprite2D" parent="Surface" unique_id=67520320]
+texture_filter = 1
+position = Vector2(44.000004, -10.000001)
+rotation = 1.322235
+texture = ExtResource("8_volcano")
+offset = Vector2(0, -12.96)
+hframes = 3
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 1
+variant = 2
+
+[node name="Volcano2" type="Sprite2D" parent="Surface" unique_id=1280196619]
+texture_filter = 1
+position = Vector2(-16, 42)
+rotation = -2.7793012
+texture = ExtResource("8_volcano")
+offset = Vector2(0, -12.96)
+hframes = 3
+script = ExtResource("3_surface_prop")
+kind = 1
+
+[node name="Volcano3" type="Sprite2D" parent="Surface" unique_id=1036392147]
+texture_filter = 1
+position = Vector2(-44.46383, -18.08226)
+rotation = -1.18455
+texture = ExtResource("8_volcano")
+offset = Vector2(0, -14.4)
+hframes = 3
+frame = 1
+script = ExtResource("3_surface_prop")
+kind = 1
+variant = 1
+
+[node name="Rose" type="Sprite2D" parent="Surface" unique_id=240828752]
+texture_filter = 1
+position = Vector2(0, -48)
+texture = ExtResource("7_rose")
+offset = Vector2(0, -9.2)
+script = ExtResource("3_surface_prop")
+
+[node name="Baobab" type="Sprite2D" parent="Surface" unique_id=1796814090]
+texture_filter = 1
+position = Vector2(-47.6974, -5.381223)
+rotation = 4.824734
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 2
+
+[node name="Baobab2" type="Sprite2D" parent="Surface" unique_id=677575263]
+texture_filter = 1
+position = Vector2(34.31241, -33.56573)
+rotation = 0.796398
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 3
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 3
+
+[node name="Baobab3" type="Sprite2D" parent="Surface" unique_id=2117036339]
+texture_filter = 1
+position = Vector2(-20.47916, -43.41203)
+rotation = 5.842401
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 2
+
+[node name="Baobab4" type="Sprite2D" parent="Surface" unique_id=914275009]
+texture_filter = 1
+position = Vector2(10, 45)
+rotation = 2.93024
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 2
+
+[node name="Baobab5" type="Sprite2D" parent="Surface" unique_id=942940131]
+texture_filter = 1
+position = Vector2(16.86495, -44.93967)
+rotation = 0.359016
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 1
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 1
+
+[node name="Baobab6" type="Sprite2D" parent="Surface" unique_id=80811792]
+texture_filter = 1
+position = Vector2(-33.14792, 34.71621)
+rotation = 3.903886
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 2
+
+[node name="Baobab7" type="Sprite2D" parent="Surface" unique_id=1232238802]
+texture_filter = 1
+position = Vector2(-11.29591, -46.65193)
+rotation = 6.045626
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 2
+
+[node name="Baobab8" type="Sprite2D" parent="Surface" unique_id=1903417816]
+texture_filter = 1
+position = Vector2(-40.20967, -26.21416)
+rotation = 5.290124
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 2
+
+[node name="Baobab9" type="Sprite2D" parent="Surface" unique_id=598481963]
+texture_filter = 1
+position = Vector2(20.999998, 40.999996)
+rotation = 2.702703
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 3
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 3
+
+[node name="Baobab10" type="Sprite2D" parent="Surface" unique_id=584051714]
+texture_filter = 1
+position = Vector2(40.999996, 18.999998)
+rotation = 2.012402
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 2
+
+[node name="Baobab11" type="Sprite2D" parent="Surface" unique_id=1517630802]
+texture_filter = 1
+position = Vector2(-28.55234, 38.5845)
+rotation = 3.77866
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 3
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 3
+
+[node name="Baobab12" type="Sprite2D" parent="Surface" unique_id=2144153387]
+texture_filter = 1
+position = Vector2(-47.99964, -0.186414)
+rotation = 4.716273
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 2
+
+[node name="Baobab13" type="Sprite2D" parent="Surface" unique_id=1877528567]
+texture_filter = 1
+position = Vector2(-46.71462, 11.03378)
+rotation = 4.480444
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 3
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 3
+
+[node name="Baobab14" type="Sprite2D" parent="Surface" unique_id=602724225]
+texture_filter = 1
+position = Vector2(-27.5115, -39.33341)
+rotation = 5.672833
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 3
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 3
+
+[node name="Baobab15" type="Sprite2D" parent="Surface" unique_id=1244439368]
+texture_filter = 1
+position = Vector2(37.89257, -29.46444)
+rotation = 0.909878
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+script = ExtResource("3_surface_prop")
+kind = 2
+
+[node name="Baobab16" type="Sprite2D" parent="Surface" unique_id=867214092]
+texture_filter = 1
+position = Vector2(0.9999995, 46)
+rotation = 3.076368
+texture = ExtResource("9_baobab")
+offset = Vector2(0, -13.44)
+hframes = 4
+frame = 3
+script = ExtResource("3_surface_prop")
+kind = 2
+variant = 3
+
+[node name="Body" type="Sprite2D" parent="." unique_id=1433111694]
+z_index = 4096
+texture_filter = 1
+texture = ExtResource("4_body")
