@@ -34,11 +34,36 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if WorldConstants.PLANET_RADIUS < 100.0:
-		printerr("PLANET_RADIUS 不合理：%s" % WorldConstants.PLANET_RADIUS)
+	# 相对旧大圆（720）必须明显缩小，落在小星球目标区间
+	const OLD_PLANET_RADIUS := 720.0
+	if WorldConstants.PLANET_RADIUS >= OLD_PLANET_RADIUS * 0.5:
+		printerr(
+			"PLANET_RADIUS 应远小于旧值 %.0f，实际 %s"
+			% [OLD_PLANET_RADIUS, WorldConstants.PLANET_RADIUS]
+		)
 		failed += 1
-	if WorldConstants.APEX_Y_RATIO <= 0.0 or WorldConstants.APEX_Y_RATIO >= 1.0:
-		printerr("APEX_Y_RATIO 应在 (0,1)：%s" % WorldConstants.APEX_Y_RATIO)
+	if WorldConstants.PLANET_RADIUS < 100.0 or WorldConstants.PLANET_RADIUS > 280.0:
+		printerr("PLANET_RADIUS 应约在 200~240（允许 100~280）：%s" % WorldConstants.PLANET_RADIUS)
+		failed += 1
+	# 弧顶须偏下，屏幕底部只露浅弧
+	if WorldConstants.APEX_Y_RATIO < 0.80 or WorldConstants.APEX_Y_RATIO >= 1.0:
+		printerr("APEX_Y_RATIO 应偏下（约 0.85~0.92）：%s" % WorldConstants.APEX_Y_RATIO)
+		failed += 1
+	# 地物/玩家精灵须明显大于旧大圆时代的尺寸
+	if WorldConstants.SPRITE_VOLCANO <= 64:
+		printerr("SPRITE_VOLCANO 应明显大于旧值 64，实际 %d" % WorldConstants.SPRITE_VOLCANO)
+		failed += 1
+	if WorldConstants.SPRITE_BAOBAB <= 48:
+		printerr("SPRITE_BAOBAB 应明显大于旧值 48，实际 %d" % WorldConstants.SPRITE_BAOBAB)
+		failed += 1
+	if WorldConstants.SPRITE_ROSE <= 32:
+		printerr("SPRITE_ROSE 应明显大于旧值 32，实际 %d" % WorldConstants.SPRITE_ROSE)
+		failed += 1
+	if WorldConstants.SPRITE_PLAYER_W <= 22 or WorldConstants.SPRITE_PLAYER_H <= 32:
+		printerr(
+			"SPRITE_PLAYER 应明显加大，实际 %dx%d"
+			% [WorldConstants.SPRITE_PLAYER_W, WorldConstants.SPRITE_PLAYER_H]
+		)
 		failed += 1
 	# 旧伪 3D 常量不得残留在源码中
 	var const_src := FileAccess.get_file_as_string("res://scripts/world_constants.gd")
@@ -49,7 +74,7 @@ func _check_constants() -> int:
 		if const_src.find(legacy) >= 0:
 			printerr("world_constants.gd 仍含旧符号：%s" % legacy)
 			failed += 1
-	print("  常量检查 OK（3 火山 / 1 玫瑰 / 猴面包≥10 / 半径合理）")
+	print("  常量检查 OK（小半径 / 弧顶偏下 / 大地物精灵 / 地物数量）")
 	return failed
 
 func _check_angle_wrap() -> int:
@@ -253,20 +278,40 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 
-		# 精灵随半径相对基准缩放
-		var expected_scale: float = planet.planet_radius / WorldConstants.PLANET_RADIUS
-		if not is_equal_approx(player.scale.x, expected_scale):
+		# 精灵随半径相对基准缩放，并计入 PLAYER_SCALE / PROP_SCALE
+		var expected_player: float = (
+			planet.planet_radius / WorldConstants.PLANET_RADIUS * WorldConstants.PLAYER_SCALE
+		)
+		if not is_equal_approx(player.scale.x, expected_player):
 			printerr(
 				"玩家 scale 应为 %s，实际 %s"
-				% [expected_scale, player.scale.x]
+				% [expected_player, player.scale.x]
 			)
 			failed += 1
 		if not planet.surface_props.is_empty():
+			var expected_prop: float = (
+				planet.planet_radius / WorldConstants.PLANET_RADIUS * WorldConstants.PROP_SCALE
+			)
 			var prop_scale: float = planet.surface_props[0].scale.x
-			if not is_equal_approx(prop_scale, expected_scale):
+			if not is_equal_approx(prop_scale, expected_prop):
 				printerr(
 					"地物 scale 应为 %s，实际 %s"
-					% [expected_scale, prop_scale]
+					% [expected_prop, prop_scale]
+				)
+				failed += 1
+
+		# 弧顶偏下：相对视口应靠近底部（浅露地表）
+		var vp_h: float = scene.get_viewport_rect().size.y
+		if vp_h > 1.0:
+			var apex_ratio: float = apex.y / vp_h
+			if apex_ratio < 0.75:
+				printerr("弧顶 Y 比例应偏下（≥0.75），实际 %s" % apex_ratio)
+				failed += 1
+			# 球心应在屏幕底边之外或极近底边，只露浅弧
+			if planet.global_position.y < vp_h * 0.95:
+				printerr(
+					"球心应靠近/低于屏幕底边以浅露弧面，实际 y=%s / vh=%s"
+					% [planet.global_position.y, vp_h]
 				)
 				failed += 1
 
@@ -275,11 +320,16 @@ func _check_scene_and_mechanics() -> int:
 		planet.apply_layout(planet.global_position, half_r)
 		player.set_planet_radius(half_r)
 		player.place_at_apex(planet.apex_global_position())
-		if not is_equal_approx(player.scale.x, 0.5):
-			printerr("半半径时玩家 scale 应为 0.5，实际 %s" % player.scale.x)
+		var half_player: float = 0.5 * WorldConstants.PLAYER_SCALE
+		var half_prop: float = 0.5 * WorldConstants.PROP_SCALE
+		if not is_equal_approx(player.scale.x, half_player):
+			printerr("半半径时玩家 scale 应为 %s，实际 %s" % [half_player, player.scale.x])
 			failed += 1
-		if not is_equal_approx(planet.surface_props[0].scale.x, 0.5):
-			printerr("半半径时地物 scale 应为 0.5，实际 %s" % planet.surface_props[0].scale.x)
+		if not is_equal_approx(planet.surface_props[0].scale.x, half_prop):
+			printerr(
+				"半半径时地物 scale 应为 %s，实际 %s"
+				% [half_prop, planet.surface_props[0].scale.x]
+			)
 			failed += 1
 
 	print("  场景与圆弧力学 OK")
