@@ -115,14 +115,22 @@ func _place_baobabs() -> void:
 	while baobab_angles.size() < WorldConstants.BAOBAB_COUNT and attempts < 8000:
 		attempts += 1
 		var a: float = _rng.randf() * TAU
-		if not _angle_free(a, WorldConstants.PROP_CLEARANCE):
+		# 相对玫瑰/火山用 PROP_CLEARANCE；树彼此用更紧的 BAOBAB_MIN_ANGLE
+		# （避免把 PROP_CLEARANCE 套到树-树上导致放不满）
+		if _angular_distance(a, rose_angle) < WorldConstants.PROP_CLEARANCE:
 			continue
-		var too_close := false
+		var blocked := false
+		for v in volcano_angles:
+			if _angular_distance(a, v) < WorldConstants.PROP_CLEARANCE:
+				blocked = true
+				break
+		if blocked:
+			continue
 		for other in baobab_angles:
 			if _angular_distance(a, other) < WorldConstants.BAOBAB_MIN_ANGLE:
-				too_close = true
+				blocked = true
 				break
-		if too_close:
+		if blocked:
 			continue
 		baobab_angles.append(a)
 		_occupied_angles.append(a)

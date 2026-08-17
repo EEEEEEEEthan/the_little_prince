@@ -24,7 +24,7 @@ func _on_viewport_size_changed() -> void:
 	_layout_world()
 	player.place_at_apex(planet.apex_global_position())
 
-## 按窗口重算：球心在屏幕下方外，弧顶落在 APEX_Y_RATIO 高度
+## 按窗口重算：小半径 + 高 APEX_Y_RATIO → 球心更靠下，底部只露浅弧
 func _layout_world() -> void:
 	var size: Vector2 = get_viewport_rect().size
 	if size.x < 1.0 or size.y < 1.0:
@@ -35,6 +35,7 @@ func _layout_world() -> void:
 	var scale: float = minf(size.x, size.y) / WorldConstants.REFERENCE_VIEWPORT
 	var radius: float = WorldConstants.PLANET_RADIUS * scale
 	var apex_y: float = size.y * WorldConstants.APEX_Y_RATIO
+	# 弧顶在 apex_y，球心在其正下方 radius 处（通常已落在屏幕底边之外）
 	var center := Vector2(size.x * 0.5, apex_y + radius)
 
 	planet.apply_layout(center, radius)

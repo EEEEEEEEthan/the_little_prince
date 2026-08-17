@@ -47,7 +47,8 @@ func set_planet_radius(radius: float) -> void:
 	_apply_visual_scale()
 
 func _apply_visual_scale() -> void:
-	var s: float = planet_radius / WorldConstants.PLANET_RADIUS
+	# 窗口缩放 × PLAYER_SCALE；基准窗下 visual_scale≈1，体量靠 SPRITE_PLAYER_*
+	var s: float = (planet_radius / WorldConstants.PLANET_RADIUS) * WorldConstants.PLAYER_SCALE
 	scale = Vector2(s, s)
 
 ## 把脚底放到弧顶世界坐标

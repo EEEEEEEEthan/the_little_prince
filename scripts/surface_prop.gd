@@ -30,9 +30,9 @@ func set_planet_radius(radius: float) -> void:
 	_place_on_surface()
 	_apply_visual_scale()
 
-## 相对基准半径缩放，避免窗口变化后地物相对星球失调
+## 相对基准半径缩放，再乘 PROP_SCALE；窗口变化后地物相对星球仍协调
 func _apply_visual_scale() -> void:
-	var s: float = _radius / WorldConstants.PLANET_RADIUS
+	var s: float = (_radius / WorldConstants.PLANET_RADIUS) * WorldConstants.PROP_SCALE
 	scale = Vector2(s, s)
 
 ## 根据相对弧顶的角更新可见性与深度（相对角 = angle - player_angle）
