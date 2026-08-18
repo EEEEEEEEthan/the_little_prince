@@ -51,7 +51,6 @@ def main() -> int:
                 print(text, end="", file=sys.stderr if key.data == "stderr" else sys.stdout, flush=True)
                 if key.data == "stderr" and ERROR_LINE.search(text):
                     error_seen = True
-                    break
             if error_seen:
                 break
     finally:
