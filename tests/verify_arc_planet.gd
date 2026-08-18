@@ -6,9 +6,11 @@ extends SceneTree
 const VIEWPORT_PATH := "GameView/GameViewport"
 const PLANET_PATH := "GameView/GameViewport/Planet"
 const PLAYER_PATH := "GameView/GameViewport/Player"
-const PREVIOUS_PLANET_RADIUS := 48.0
-const PREVIOUS_PLAYER_SPEED := 56.0
+const PREVIOUS_PLANET_RADIUS := 56.0
+const PREVIOUS_PLAYER_SPEED := 40.0
 const PREVIOUS_STAR_ROTATION_SPEED := 0.02
+const EXPECTED_PLANET_RADIUS := PREVIOUS_PLANET_RADIUS * 1.3
+const EXPECTED_PLAYER_SPEED := PREVIOUS_PLAYER_SPEED * 0.5
 
 const WorldConstants = preload("res://core/world_constants.gd")
 const SKY_PHASE := preload("res://planet/sky_phase.gd")
@@ -48,14 +50,20 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if WorldConstants.PLANET_RADIUS <= PREVIOUS_PLANET_RADIUS or WorldConstants.PLANET_RADIUS > 60.0:
+	if (
+		absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01
+		or WorldConstants.PLANET_RADIUS > 80.0
+	):
 		printerr(
-			"PLANET_RADIUS 应大于 %s 且不超过 60（内部 256×224）：%s"
-			% [PREVIOUS_PLANET_RADIUS, WorldConstants.PLANET_RADIUS]
+			"PLANET_RADIUS 应为原值的 130%%（%s），实际 %s"
+			% [EXPECTED_PLANET_RADIUS, WorldConstants.PLANET_RADIUS]
 		)
 		failed += 1
-	if WorldConstants.PLAYER_SPEED >= PREVIOUS_PLAYER_SPEED:
-		printerr("PLAYER_SPEED 应低于原值 %s：%s" % [PREVIOUS_PLAYER_SPEED, WorldConstants.PLAYER_SPEED])
+	if absf(WorldConstants.PLAYER_SPEED - EXPECTED_PLAYER_SPEED) > 0.01:
+		printerr(
+			"PLAYER_SPEED 应为原值的 50%%（%s），实际 %s"
+			% [EXPECTED_PLAYER_SPEED, WorldConstants.PLAYER_SPEED]
+		)
 		failed += 1
 	if WorldConstants.STAR_ROTATION_SPEED >= PREVIOUS_STAR_ROTATION_SPEED:
 		printerr(
@@ -93,7 +101,7 @@ func _check_constants() -> int:
 		if const_src.find(legacy) >= 0:
 			printerr("world_constants.gd 仍含旧符号：%s" % legacy)
 			failed += 1
-	print("  常量检查 OK（半径增大 / 速度降低 / 弧顶偏下 / 像素精灵）")
+	print("  常量检查 OK（半径增加 30%% / 移速降低 50%% / 弧顶偏下 / 像素精灵）")
 	return failed
 
 func _check_static_assets() -> int:
