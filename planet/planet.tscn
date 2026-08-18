@@ -4,11 +4,13 @@
 [ext_resource type="Script" uid="uid://cxk4t7xar3mnb" path="res://planet/sky.gd" id="2_sky"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="Texture2D" uid="uid://o6opelwgjkao" path="res://planet/body.png" id="4_body"]
+[ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
 [ext_resource type="Texture2D" uid="uid://c8rnueqnsb6jk" path="res://planet/day_sky.png" id="6_day_sky"]
 [ext_resource type="Texture2D" uid="uid://bg1wirq3v1g5c" path="res://planet/rose.png" id="7_rose"]
 [ext_resource type="Texture2D" uid="uid://duk1gaik3krys" path="res://planet/volcano.png" id="8_volcano"]
 [ext_resource type="Texture2D" uid="uid://bblja4kg8jkmg" path="res://planet/baobab.png" id="9_baobab"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
+[ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
 
 [sub_resource type="Gradient" id="Gradient_zenith"]
 offsets = PackedFloat32Array(0.0625, 0.15272728, 0.2509091, 0.6218182, 0.7927273, 0.9375)
@@ -20,7 +22,10 @@ gradient = SubResource("Gradient_zenith")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("10_sky_shader")
 shader_parameter/zenith_gradient = SubResource("GradientTexture1D_kk0h5")
+shader_parameter/starfield_tex = ExtResource("5_starfield")
+shader_parameter/star_alpha_gradient = ExtResource("11_star_alpha_gradient")
 shader_parameter/phase = 0.5
+shader_parameter/uv_noise_strength = 0.02
 
 [node name="Planet" type="Node2D" unique_id=1020592655]
 script = ExtResource("1_planet")
