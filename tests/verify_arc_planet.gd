@@ -111,14 +111,16 @@ func _check_static_assets() -> int:
 		if star_image.get_pixel(0, 0).a > 0.01:
 			printerr("starfield 背景应为纯透明")
 			failed += 1
+		var invalid_star_alpha := false
 		for y in range(star_image.get_height()):
 			for x in range(star_image.get_width()):
 				var alpha := star_image.get_pixel(x, y).a
 				if alpha > 0.01 and alpha < 0.99:
 					printerr("starfield 星星 alpha 应为不透明，位置 (%d,%d)，实际 %s" % [x, y, alpha])
 					failed += 1
+					invalid_star_alpha = true
 					break
-			if failed > 0:
+			if invalid_star_alpha:
 				break
 	# 白天天空应与星野同尺寸同中心，且为黑红渐变（红通道=高度坐标，供 shader 换色）
 	var day_sky: Texture2D = load("res://planet/day_sky.png") as Texture2D
