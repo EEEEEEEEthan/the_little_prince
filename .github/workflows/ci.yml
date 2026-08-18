@@ -26,6 +26,9 @@ jobs:
       - name: Prepare Godot engine
         run: bash .engine-prepare.sh
 
+      - name: Import project assets
+        run: .engine/.engine --headless --path . --import
+
       - name: Run verify_arc_planet
         run: |
           python3 tests/run_godot_verify.py --timeout 120 -- \
