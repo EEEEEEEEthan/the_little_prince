@@ -18,14 +18,15 @@ func _run_tests() -> void:
 	var packed_scene := load("res://main.tscn") as PackedScene
 	if packed_scene == null:
 		printerr("无法加载主场景")
-		quit(failed + 1)
+		failed += 1
+		quit(failed)
 		return
 	var scene := packed_scene.instantiate()
 	root.add_child(scene)
 	await process_frame
 	var game_view := scene.get_node("GameView") as SubViewportContainer
 	var material := game_view.material as ShaderMaterial
-	if material == null or material.shader != shader:
+	if shader == null or material == null or material.shader != shader:
 		printerr("GameView 应挂载色板后处理材质")
 		failed += 1
 	elif material.get_shader_parameter("palette") != palette:
