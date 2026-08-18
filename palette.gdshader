@@ -12,10 +12,7 @@ void fragment() {
 
 	float closest_distance = 1e6;
 	vec3 closest_color = source.rgb;
-	for (int index = 0; index < 64; index++) {
-		if (index >= palette_size) {
-			break;
-		}
+	for (int index = 0; index < palette_size; index++) {
 		float palette_u = (float(index) + 0.5) / float(palette_size);
 		vec3 palette_color = texture(palette, vec2(palette_u, 0.5)).rgb;
 		float distance = dot(source.rgb - palette_color, source.rgb - palette_color);

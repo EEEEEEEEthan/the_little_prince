@@ -15,7 +15,12 @@ func _run_tests() -> void:
 		printerr("无法加载色板后处理 shader")
 		failed += 1
 
-	var scene := (load("res://main.tscn") as PackedScene).instantiate()
+	var packed_scene := load("res://main.tscn") as PackedScene
+	if packed_scene == null:
+		printerr("无法加载主场景")
+		quit(failed + 1)
+		return
+	var scene := packed_scene.instantiate()
 	root.add_child(scene)
 	await process_frame
 	var game_view := scene.get_node("GameView") as SubViewportContainer
