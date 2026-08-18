@@ -116,7 +116,7 @@ func _check_static_assets() -> int:
 			for x in range(star_image.get_width()):
 				var alpha := star_image.get_pixel(x, y).a
 				if alpha > 0.01 and alpha < 0.99:
-					printerr("starfield 星星 alpha 应为不透明，位置 (%d,%d)，实际 %s" % [x, y, alpha])
+					printerr("starfield 像素 alpha 应为 0 或 1，位置 (%d,%d)，实际 %s" % [x, y, alpha])
 					failed += 1
 					invalid_star_alpha = true
 					break
