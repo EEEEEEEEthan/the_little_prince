@@ -34,6 +34,9 @@ texture_filter = 2
 material = SubResource("ShaderMaterial_sky")
 texture = ExtResource("6_day_sky")
 script = ExtResource("2_sky")
+zenith_gradient = SubResource("GradientTexture1D_kk0h5")
+starfield_tex = ExtResource("5_starfield")
+grain_strength = 0.035
 
 [node name="Surface" type="Node2D" parent="." unique_id=1169720567]
 
