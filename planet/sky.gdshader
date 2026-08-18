@@ -36,7 +36,7 @@ void fragment() {
 
 	// --- 胶片颗粒（film grain）---
 	// 使用天空贴图像素坐标作为种子，避免颗粒固定在屏幕上
-	vec2 sky_pixel = floor(UV * vec2(textureSize(day_sky_tex, 0)));
+	vec2 sky_pixel = floor(UV * 640.0);
 	float grain = hash(sky_pixel) - 0.5;
 	blended += grain * grain_strength;
 
