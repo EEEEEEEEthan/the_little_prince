@@ -6,7 +6,7 @@ extends Node2D
 
 @onready var body: Sprite2D = $Body
 @onready var surface: Node2D = $Surface
-@onready var sky: Node2D = $Sky
+@onready var sky = $Sky
 
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0

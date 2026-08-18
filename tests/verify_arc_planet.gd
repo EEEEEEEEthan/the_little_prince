@@ -359,7 +359,7 @@ func _check_scene_and_mechanics() -> int:
 		planet.teleport_player(0.75)
 		var surface: Node2D = planet.get_node("Surface") as Node2D
 		var body: Node2D = planet.get_node("Body") as Node2D
-		var sky: Node2D = planet.get_node("Sky") as Node2D
+		var sky = planet.get_node("Sky")
 		if not is_equal_approx(surface.rotation, -planet.player_angle):
 			printerr(
 				"Surface.rotation 应为 %s，实际 %s"
