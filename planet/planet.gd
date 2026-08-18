@@ -1,12 +1,12 @@
 class_name Planet
 extends Node2D
-## 2D 圆弧星球：Body / Surface / Starfield 统一绕球心旋转，旋转角 = -player_angle。
+## 2D 圆弧星球：Body / Surface / Sky 统一绕球心旋转，旋转角 = -player_angle。
 ## 地表地物（玫瑰/火山/猴面包树）静态写在 planet.tscn，运行期不再生成。
 ## 小王子视觉上始终停在弧顶，实际由地表与星空反向旋转模拟行走。
 
 @onready var body: Sprite2D = $Body
 @onready var surface: Node2D = $Surface
-@onready var starfield: Starfield = $Starfield
+@onready var sky = $Sky
 
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0
@@ -58,6 +58,6 @@ func _sync_rotation() -> void:
 	var rotation_value := -player_angle
 	body.rotation = rotation_value
 	surface.rotation = rotation_value
-	starfield.set_planet_rotation(rotation_value)
+	sky.set_planet_rotation(rotation_value)
 	for prop in surface_props:
 		prop.update_visibility(player_angle)
