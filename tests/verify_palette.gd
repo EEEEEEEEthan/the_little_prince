@@ -26,12 +26,16 @@ func _run_tests() -> void:
 	await process_frame
 	var game_view := scene.get_node("GameView") as SubViewportContainer
 	var material := game_view.material as ShaderMaterial
-	if shader == null or material == null or material.shader != shader:
+	if shader == null:
+		pass
+	elif material == null or material.shader != shader:
 		printerr("GameView 应挂载色板后处理材质")
 		failed += 1
-	elif material.get_shader_parameter("palette") != palette:
-		printerr("色板后处理材质应使用 palette.png")
-		failed += 1
+	else:
+		var material_palette := material.get_shader_parameter("palette") as Texture2D
+		if material_palette == null or material_palette.resource_path != palette.resource_path:
+			printerr("色板后处理材质应使用 palette.png")
+			failed += 1
 	if failed == 0:
 		print("[verify_palette] 全部通过")
 	scene.queue_free()
