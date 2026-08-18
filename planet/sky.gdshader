@@ -36,7 +36,7 @@ void fragment() {
 
 	// --- 胶片颗粒（film grain）---
 	// 使用纹理坐标作为种子，避免颗粒随时间闪烁
-	float grain = hash(floor(UV * 256.0)) - 0.5;
+	float grain = hash(floor(FRAGCOORD.xy)) - 0.5;
 	blended += grain * grain_strength;
 
 	// --- 输出：整体 alpha 取 day_sky 遮罩 alpha（圆形裁切）---
