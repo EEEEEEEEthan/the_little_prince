@@ -9,7 +9,7 @@ void fragment() {
 		return;
 	}
 
-	float closest_distance = 1e6;
+	float closest_distance = 3.0;
 	vec3 closest_color = source.rgb;
 	int palette_width = textureSize(palette, 0).x;
 	for (int index = 0; index < palette_width; index++) {
