@@ -1,4 +1,4 @@
-class_name Sky
+class_name PlanetSky
 extends Sprite2D
 ## 统一天空背景：单个 Sprite2D 绑定 sky.gdshader，负责白天渐变色、
 ## 夜空星图叠加与胶片颗粒效果。原 Starfield/DaySky/NightSky 三节点合并于此。
