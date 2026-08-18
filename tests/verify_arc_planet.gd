@@ -7,6 +7,7 @@ const VIEWPORT_PATH := "GameView/GameViewport"
 const PLANET_PATH := "GameView/GameViewport/Planet"
 const PLAYER_PATH := "GameView/GameViewport/Player"
 
+const WorldConstants = preload("res://core/world_constants.gd")
 const SKY_PHASE := preload("res://planet/sky_phase.gd")
 
 const REQUIRED_ASSETS: Array[String] = [
