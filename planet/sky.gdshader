@@ -17,8 +17,10 @@ float hash(vec2 p) {
 
 void fragment() {
 	float mask_alpha = texture(TEXTURE, UV).a;
-	float uv_noise = (hash(UV * 640.0) - 0.5) * uv_noise_strength;
-	vec3 sky_color = texture(zenith_gradient, vec2(clamp(phase + uv_noise, 0.0, 1.0), 0.5)).rgb;
+	// 用纹理像素坐标取样，噪声附着在 UV 上而不是随每帧采样位置变化。
+	vec2 pixel_uv = floor(UV / TEXTURE_PIXEL_SIZE);
+	float pixel_noise = (hash(pixel_uv) - 0.5) * uv_noise_strength;
+	vec3 sky_color = texture(zenith_gradient, vec2(clamp(phase + pixel_noise, 0.0, 1.0), 0.5)).rgb;
 	vec4 stars = texture(starfield_tex, UV);
 	float star_alpha = texture(star_alpha_gradient, vec2(phase, 0.5)).r;
 	vec3 final_color = mix(sky_color, stars.rgb, stars.a * star_alpha);
