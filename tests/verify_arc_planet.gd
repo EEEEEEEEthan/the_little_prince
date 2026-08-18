@@ -348,24 +348,18 @@ func _check_scene_and_mechanics() -> int:
 		if planet.get_node_or_null("Body") == null:
 			printerr("找不到 Body")
 			failed += 1
-		if planet.get_node_or_null("Starfield") == null:
-			printerr("找不到 Starfield（应为 Planet 子节点）")
+		if planet.get_node_or_null("Sky") == null:
+			printerr("找不到 Sky（应为 Planet 子节点）")
 			failed += 1
-		if scene.get_node_or_null("GameView/GameViewport/Starfield") != null:
-			printerr("Starfield 不应再作为 GameViewport 直接子节点")
-			failed += 1
-		if planet.get_node_or_null("Starfield/DaySky") == null:
-			printerr("找不到 Starfield/DaySky（白天天空）")
-			failed += 1
-		if planet.get_node_or_null("Starfield/NightSky") == null:
-			printerr("找不到 Starfield/NightSky（黑夜星空）")
+		if scene.get_node_or_null("GameView/GameViewport/Sky") != null:
+			printerr("Sky 不应再作为 GameViewport 直接子节点")
 			failed += 1
 
 	if planet != null and player != null:
 		planet.teleport_player(0.75)
 		var surface: Node2D = planet.get_node("Surface") as Node2D
 		var body: Node2D = planet.get_node("Body") as Node2D
-		var starfield: Starfield = planet.get_node("Starfield") as Starfield
+		var sky: Sky = planet.get_node("Sky") as Sky
 		if not is_equal_approx(surface.rotation, -planet.player_angle):
 			printerr(
 				"Surface.rotation 应为 %s，实际 %s"
@@ -381,61 +375,38 @@ func _check_scene_and_mechanics() -> int:
 		if not is_equal_approx(body.rotation, surface.rotation):
 			printerr("Body 与 Surface 旋转应一致")
 			failed += 1
-		if not is_equal_approx(starfield.planet_rotation, -planet.player_angle):
+		if not is_equal_approx(sky.planet_rotation, -planet.player_angle):
 			printerr(
-				"Starfield.planet_rotation 应为 %s，实际 %s（星空须随星球转）"
-				% [-planet.player_angle, starfield.planet_rotation]
+				"Sky.planet_rotation 应为 %s，实际 %s（星空须随星球转）"
+				% [-planet.player_angle, sky.planet_rotation]
 			)
 			failed += 1
 		if WorldConstants.STAR_ROTATION_SPEED <= 0.0:
 			printerr("STAR_ROTATION_SPEED 应大于 0（星空相对星球自转）")
 			failed += 1
-		# NightSky 透明度：按相位从 night_sky_gradient 渐变采样（0=午夜不透明、0.25/0.5=白天透明）
-		var night_gradient: GradientTexture1D = starfield.night_sky_gradient
-		if night_gradient == null:
-			printerr("Starfield 应挂 night_sky_gradient（GradientTexture1D）")
-			failed += 1
-		else:
-			for case in [
-				[0.0, 1.0],
-				[0.25, 0.0],
-				[0.5, 0.0],
-				[0.75, 1.0],
-				[1.0, 1.0],
-			]:
-				starfield.rotation = SKY_PHASE.phase_to_angle(case[0])
-				starfield._update_daylight()
-				var alpha: float = starfield.night_sky.modulate.a
-				if absf(alpha - case[1]) > 0.02:
-					printerr(
-						"相位 %s 的 NightSky 透明度应为 %s，实际 %s"
-						% [case[0], case[1], alpha]
-					)
-					failed += 1
-
-		# 白天天空 shader：从 zenith/horizon 渐变按相位取渐变色，Starfield 每帧写入相位
-		var day_sky_sprite: Sprite2D = planet.get_node("Starfield/DaySky") as Sprite2D
-		var sky_material := day_sky_sprite.material as ShaderMaterial
-		if day_sky_sprite.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
-			printerr("DaySky 应使用 LINEAR 过滤以平滑采样渐变贴图")
-			failed += 1
+		# 统一天空 shader：检查 Sky 节点挂 ShaderMaterial，且关键参数均已绑定
+		var sky_material := sky.material as ShaderMaterial
 		if sky_material == null or sky_material.shader == null:
-			printerr("DaySky 应挂载天空换色 ShaderMaterial")
+			printerr("Sky 应挂载统一天空 ShaderMaterial")
 			failed += 1
 		else:
-			for param in ["zenith_gradient", "horizon_gradient"]:
-				var gradient_tex := sky_material.get_shader_parameter(param) as Texture2D
-				if gradient_tex == null:
-					printerr("DaySky shader 应挂 %s" % param)
+			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
+				printerr("Sky 应使用 LINEAR 过滤以平滑采样渐变贴图")
+				failed += 1
+			for param in ["zenith_gradient", "horizon_gradient", "night_sky_gradient", "day_sky_tex", "starfield_tex"]:
+				var tex := sky_material.get_shader_parameter(param) as Texture2D
+				if tex == null:
+					printerr("Sky shader 应挂 %s" % param)
 					failed += 1
+			# 相位同步：_update_daylight 应将 phase 写入 shader
 			for case in [
 				[0.0, 0.5],
 				[WorldConstants.DAY_HALF_ARC, 0.25],
 				[PI, 0.0],
 				[TAU - WorldConstants.DAY_HALF_ARC, 0.75],
 			]:
-				starfield.rotation = case[0]
-				starfield._update_daylight()
+				sky.rotation = case[0]
+				sky._update_daylight()
 				var phase: float = sky_material.get_shader_parameter("phase")
 				if not is_equal_approx(phase, SKY_PHASE.angle_to_phase(case[0])):
 					printerr(
@@ -456,8 +427,8 @@ func _check_scene_and_mechanics() -> int:
 		if not is_equal_approx(body.rotation, -planet.player_angle):
 			printerr("负角时 Body.rotation 不同步")
 			failed += 1
-		if not is_equal_approx(starfield.planet_rotation, -planet.player_angle):
-			printerr("负角时 Starfield.planet_rotation 不同步")
+		if not is_equal_approx(sky.planet_rotation, -planet.player_angle):
+			printerr("负角时 Sky.planet_rotation 不同步")
 			failed += 1
 
 		apex = planet.apex_global_position()
