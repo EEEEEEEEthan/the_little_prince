@@ -4,10 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import re
 import selectors
 import subprocess
 import sys
 import time
+
+
+ERROR_LINE = re.compile(r"(?im)^\s*(?:ERROR|SCRIPT ERROR|PARSE ERROR|PARSER ERROR):")
 
 
 def main() -> int:
@@ -45,7 +49,7 @@ def main() -> int:
                     continue
                 text = data.decode(errors="replace")
                 print(text, end="", file=sys.stderr if key.data == "stderr" else sys.stdout, flush=True)
-                if key.data == "stderr" and text.strip():
+                if key.data == "stderr" and ERROR_LINE.search(text):
                     error_seen = True
                     break
             if error_seen:
