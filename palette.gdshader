@@ -9,7 +9,7 @@ void fragment() {
 		return;
 	}
 
-	float closest_distance = 3.0; // Maximum squared distance between RGB colors.
+	float closest_distance = 4.0; // Greater than the maximum squared RGB distance (3.0).
 	vec3 closest_color = source.rgb;
 	int palette_width = textureSize(palette, 0).x;
 	for (int index = 0; index < palette_width; index++) {

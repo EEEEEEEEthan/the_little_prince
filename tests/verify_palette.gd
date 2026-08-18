@@ -25,6 +25,7 @@ func _run_tests() -> void:
 		return
 	var scene := packed_scene.instantiate()
 	root.add_child(scene)
+	# Wait for the scene and its children to finish initialization.
 	await process_frame
 	await process_frame
 	var game_view := scene.get_node("GameView") as SubViewportContainer
