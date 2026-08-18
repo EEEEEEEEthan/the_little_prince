@@ -5,7 +5,7 @@ shader_type canvas_item;
 uniform sampler2D zenith_gradient;
 uniform sampler2D starfield_tex : hint_default_black;
 uniform sampler2D star_alpha_gradient : hint_default_white;
-uniform sampler2D noise_texture;
+uniform sampler2D noise_texture : hint_default_white;
 // phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
 uniform float phase : hint_range(0.0, 1.0) = 0.5;
 uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
