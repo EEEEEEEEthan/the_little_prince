@@ -408,11 +408,10 @@ func _check_scene_and_mechanics() -> int:
 			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
 				printerr("Sky 应使用 LINEAR 过滤以平滑采样渐变贴图")
 				failed += 1
-			for param in ["zenith_gradient", "starfield_tex"]:
-				var tex := sky_material.get_shader_parameter(param) as Texture2D
-				if tex == null:
-					printerr("Sky shader 应挂 %s" % param)
-					failed += 1
+			var zenith_gradient := sky_material.get_shader_parameter("zenith_gradient") as Texture2D
+			if zenith_gradient == null:
+				printerr("Sky shader 应挂 zenith_gradient")
+				failed += 1
 			# 相位同步：_update_daylight 应将 phase 写入 shader
 			for case in [
 				[0.0, 0.5],

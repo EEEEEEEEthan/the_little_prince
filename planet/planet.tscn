@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://cxk4t7xar3mnb" path="res://planet/sky.gd" id="2_sky"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="Texture2D" uid="uid://o6opelwgjkao" path="res://planet/body.png" id="4_body"]
-[ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
 [ext_resource type="Texture2D" uid="uid://c8rnueqnsb6jk" path="res://planet/day_sky.png" id="6_day_sky"]
 [ext_resource type="Texture2D" uid="uid://bg1wirq3v1g5c" path="res://planet/rose.png" id="7_rose"]
 [ext_resource type="Texture2D" uid="uid://duk1gaik3krys" path="res://planet/volcano.png" id="8_volcano"]
@@ -20,8 +19,8 @@ gradient = SubResource("Gradient_zenith")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("10_sky_shader")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_kk0h5")
 shader_parameter/phase = 0.5
-shader_parameter/grain_strength = 0.035
 
 [node name="Planet" type="Node2D" unique_id=1020592655]
 script = ExtResource("1_planet")
@@ -32,8 +31,6 @@ texture_filter = 2
 material = SubResource("ShaderMaterial_sky")
 texture = ExtResource("6_day_sky")
 script = ExtResource("2_sky")
-zenith_gradient = SubResource("GradientTexture1D_kk0h5")
-starfield_tex = ExtResource("5_starfield")
 
 [node name="Surface" type="Node2D" parent="." unique_id=1169720567]
 
