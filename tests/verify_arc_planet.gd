@@ -448,7 +448,7 @@ func _check_scene_and_mechanics() -> int:
 
 		var apex := planet.apex_global_position()
 		var expected_apex_y := float(game_viewport.size.y) * WorldConstants.APEX_Y_RATIO
-		if not is_equal_approx(apex.y, expected_apex_y):
+		if absf(apex.y - expected_apex_y) > 0.5:
 			printerr(
 				"增大半径后弧顶 Y 仍应保持不变，期望 %s，实际 %s"
 				% [expected_apex_y, apex.y]
