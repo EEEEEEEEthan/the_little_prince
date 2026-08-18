@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cc3nptocfdk0k"]
 
 [ext_resource type="Script" uid="uid://bkphckiepbgmj" path="res://planet/planet.gd" id="1_planet"]
-[ext_resource type="Script" uid="uid://cxk4t7w9r3mnb" path="res://planet/sky.gd" id="2_sky"]
+[ext_resource type="Script" uid="uid://cxk4t7xar3mnb" path="res://planet/sky.gd" id="2_sky"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="Texture2D" uid="uid://o6opelwgjkao" path="res://planet/body.png" id="4_body"]
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
