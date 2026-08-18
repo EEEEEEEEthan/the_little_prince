@@ -6,6 +6,9 @@ extends SceneTree
 const VIEWPORT_PATH := "GameView/GameViewport"
 const PLANET_PATH := "GameView/GameViewport/Planet"
 const PLAYER_PATH := "GameView/GameViewport/Player"
+const PREVIOUS_PLANET_RADIUS := 48.0
+const PREVIOUS_PLAYER_SPEED := 56.0
+const PREVIOUS_STAR_ROTATION_SPEED := 0.02
 
 const WorldConstants = preload("res://core/world_constants.gd")
 const SKY_PHASE := preload("res://planet/sky_phase.gd")
@@ -45,14 +48,20 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if WorldConstants.PLANET_RADIUS <= 48.0 or WorldConstants.PLANET_RADIUS > 60.0:
-		printerr("PLANET_RADIUS 应大于 48 且不超过 60（内部 256×224）：%s" % WorldConstants.PLANET_RADIUS)
+	if WorldConstants.PLANET_RADIUS <= PREVIOUS_PLANET_RADIUS or WorldConstants.PLANET_RADIUS > 60.0:
+		printerr(
+			"PLANET_RADIUS 应大于 %s 且不超过 60（内部 256×224）：%s"
+			% [PREVIOUS_PLANET_RADIUS, WorldConstants.PLANET_RADIUS]
+		)
 		failed += 1
-	if WorldConstants.PLAYER_SPEED >= 56.0:
-		printerr("PLAYER_SPEED 应低于原值 56：%s" % WorldConstants.PLAYER_SPEED)
+	if WorldConstants.PLAYER_SPEED >= PREVIOUS_PLAYER_SPEED:
+		printerr("PLAYER_SPEED 应低于原值 %s：%s" % [PREVIOUS_PLAYER_SPEED, WorldConstants.PLAYER_SPEED])
 		failed += 1
-	if WorldConstants.STAR_ROTATION_SPEED >= 0.02:
-		printerr("STAR_ROTATION_SPEED 应低于原值 0.02：%s" % WorldConstants.STAR_ROTATION_SPEED)
+	if WorldConstants.STAR_ROTATION_SPEED >= PREVIOUS_STAR_ROTATION_SPEED:
+		printerr(
+			"STAR_ROTATION_SPEED 应低于原值 %s：%s"
+			% [PREVIOUS_STAR_ROTATION_SPEED, WorldConstants.STAR_ROTATION_SPEED]
+		)
 		failed += 1
 	if WorldConstants.APEX_Y_RATIO < 0.80 or WorldConstants.APEX_Y_RATIO >= 1.0:
 		printerr("APEX_Y_RATIO 应偏下（约 0.85~0.92）：%s" % WorldConstants.APEX_Y_RATIO)
