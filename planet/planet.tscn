@@ -20,8 +20,6 @@ gradient = SubResource("Gradient_zenith")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("10_sky_shader")
-shader_parameter/zenith_gradient = SubResource("GradientTexture1D_kk0h5")
-shader_parameter/starfield_tex = ExtResource("5_starfield")
 shader_parameter/phase = 0.5
 shader_parameter/grain_strength = 0.035
 
