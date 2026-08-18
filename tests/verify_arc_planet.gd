@@ -408,7 +408,7 @@ func _check_scene_and_mechanics() -> int:
 			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
 				printerr("Sky 应使用 LINEAR 过滤以平滑采样渐变贴图")
 				failed += 1
-			for param in ["zenith_gradient", "starfield_tex", "star_alpha_gradient"]:
+			for param in ["zenith_gradient", "starfield_tex", "star_alpha_gradient", "noise_texture"]:
 				var tex := sky_material.get_shader_parameter(param) as Texture2D
 				if tex == null:
 					printerr("Sky shader 应挂 %s" % param)
