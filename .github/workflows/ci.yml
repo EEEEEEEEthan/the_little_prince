@@ -26,8 +26,10 @@ jobs:
 
       - name: Run verify_arc_planet
         run: |
-          .engine/.engine --headless --path . \
+          # Godot errors return a non-zero status; timeout also fails runs that hang.
+          timeout --foreground --kill-after=5s 120s \
+            .engine/.engine --headless --path . \
             --script res://tests/verify_arc_planet.gd \
             2>&1 | tee /tmp/verify.log
-          # GDScript SceneTree 脚本以 quit(0/1) 结束，退出码直接作为 CI 结果
+          # GDScript SceneTree 脚本以 quit(0/1) 结束，timeout/Godot 退出码直接作为 CI 结果
           exit "${PIPESTATUS[0]}"
