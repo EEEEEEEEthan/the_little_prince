@@ -1,45 +1,24 @@
 shader_type canvas_item;
-// 统一天空 shader：用 day_sky 贴图红通道作高度 mask，
-// 天顶/地平线渐变从 zenith_gradient/horizon_gradient 按 phase 取色，
-// 夜空贴图（starfield）按 phase 从 night_sky_gradient 取透明度叠加，
-// 最后叠加胶片颗粒（film grain）效果。
+// 统一天空 shader：按天空相位从 zenith_gradient 采样背景色，
+// 并用夜空渐变控制星星的透明度。
 
 uniform sampler2D zenith_gradient;
-uniform sampler2D horizon_gradient;
-uniform sampler2D night_sky_gradient;
-uniform sampler2D day_sky_tex : hint_default_white;
 uniform sampler2D starfield_tex : hint_default_black;
+uniform sampler2D star_alpha_gradient : hint_default_white;
+uniform sampler2D noise_texture : hint_default_white;
 // phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
 uniform float phase : hint_range(0.0, 1.0) = 0.5;
-// grain: 颗粒强度，建议 0.02–0.06
-uniform float grain_strength : hint_range(0.0, 0.2) = 0.035;
-// 低质量哈希噪声（无 texture 依赖，使用天空贴图坐标保持颗粒随天空移动）
-float hash(vec2 p) {
-	p = fract(p * vec2(443.897, 441.423));
-	p += dot(p, p + 19.19);
-	return fract(p.x * p.y);
-}
+uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
 
 void fragment() {
-	// --- 白天天空：day_sky 贴图红通道作高度 ---
-	vec4 day_mask = texture(day_sky_tex, UV);
-	vec3 day_color = mix(
-		texture(horizon_gradient, vec2(phase, 0.5)).rgb,
-		texture(zenith_gradient, vec2(phase, 0.5)).rgb,
-		day_mask.r
-	);
-
-	// --- 夜空：starfield 贴图，alpha 由 night_sky_gradient 控制 ---
+	float mask_alpha = texture(TEXTURE, UV).a;
+	// 量化到噪声纹理像素后取样，噪声附着在像素上而不是随帧跳动。
+	vec2 noise_size = vec2(textureSize(noise_texture, 0));
+	vec2 noise_uv = (floor(UV * noise_size) + 0.5) / max(noise_size, vec2(1.0));
+	float pixel_noise = (texture(noise_texture, noise_uv).r - 0.5) * noise_strength;
+	vec3 sky_color = texture(zenith_gradient, vec2(clamp(phase + pixel_noise, 0.0, 1.0), 0.5)).rgb;
 	vec4 stars = texture(starfield_tex, UV);
-	float night_alpha = texture(night_sky_gradient, vec2(phase, 0.5)).r;
-	vec3 blended = mix(day_color, stars.rgb, stars.a * night_alpha);
-
-	// --- 胶片颗粒（film grain）---
-	// 使用天空贴图像素坐标作为种子，避免颗粒固定在屏幕上
-	vec2 sky_pixel = floor(UV * 640.0);
-	float grain = hash(sky_pixel) - 0.5;
-	blended += grain * grain_strength;
-
-	// --- 输出：整体 alpha 取 day_sky 遮罩 alpha（圆形裁切）---
-	COLOR = vec4(blended, day_mask.a);
+	float star_alpha = texture(star_alpha_gradient, vec2(phase, 0.5)).r;
+	vec3 final_color = mix(sky_color, stars.rgb, stars.a * star_alpha);
+	COLOR = vec4(final_color, mask_alpha);
 }

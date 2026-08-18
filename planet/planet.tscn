@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cc3nptocfdk0k"]
 
 [ext_resource type="Script" uid="uid://bkphckiepbgmj" path="res://planet/planet.gd" id="1_planet"]
-[ext_resource type="Script" uid="uid://cxk4t7w9r3mnb" path="res://planet/sky.gd" id="2_sky"]
+[ext_resource type="Script" uid="uid://cxk4t7xar3mnb" path="res://planet/sky.gd" id="2_sky"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="Texture2D" uid="uid://o6opelwgjkao" path="res://planet/body.png" id="4_body"]
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
@@ -10,19 +10,35 @@
 [ext_resource type="Texture2D" uid="uid://duk1gaik3krys" path="res://planet/volcano.png" id="8_volcano"]
 [ext_resource type="Texture2D" uid="uid://bblja4kg8jkmg" path="res://planet/baobab.png" id="9_baobab"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
-[ext_resource type="Texture2D" uid="uid://dah4k8m2v7xqw" path="res://planet/zenith_gradient.tres" id="11_zenith_gradient"]
-[ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="12_night_sky_gradient"]
-[ext_resource type="Texture2D" uid="uid://cb6n3xat4y80r" path="res://planet/horizon_gradient.tres" id="13_horizon_gradient"]
+[ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_aiioy"]
+noise_type = 2
+frequency = 0.001
+fractal_octaves = 10
+fractal_lacunarity = 2.32
+fractal_gain = 1.065
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_sky"]
+width = 640
+height = 640
+noise = SubResource("FastNoiseLite_aiioy")
+
+[sub_resource type="Gradient" id="Gradient_zenith"]
+offsets = PackedFloat32Array(0.047272727, 0.21090908, 0.26909092, 0.6363636, 0.76, 0.8181818, 0.8909091)
+colors = PackedColorArray(0.1646875, 0.1178125, 0.136875, 1, 0.5411765, 0.56078434, 0.7176471, 1, 0.46000004, 0.615625, 0.9046875, 1, 0.45882353, 0.6156863, 0.90588236, 1, 0.34368372, 0.3283189, 0.41317907, 1, 0.3181154, 0.29822287, 0.3737613, 1, 0.16470589, 0.11764706, 0.13725491, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_zenith"]
+gradient = SubResource("Gradient_zenith")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("10_sky_shader")
-shader_parameter/zenith_gradient = ExtResource("11_zenith_gradient")
-shader_parameter/horizon_gradient = ExtResource("13_horizon_gradient")
-shader_parameter/night_sky_gradient = ExtResource("12_night_sky_gradient")
-shader_parameter/day_sky_tex = ExtResource("6_day_sky")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
 shader_parameter/starfield_tex = ExtResource("5_starfield")
+shader_parameter/star_alpha_gradient = ExtResource("11_star_alpha_gradient")
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
 shader_parameter/phase = 0.5
-shader_parameter/grain_strength = 0.035
+shader_parameter/noise_strength = 0.02
 
 [node name="Planet" type="Node2D" unique_id=1020592655]
 script = ExtResource("1_planet")

@@ -1,9 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://cojn20gna51qe"]
+[gd_scene load_steps=6 format=3 uid="uid://cojn20gna51qe"]
 
 [ext_resource type="Script" uid="uid://cyh14kfr3hytu" path="res://main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://planet/planet.tscn" id="2_planet"]
 [ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://player/player.gd" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://mybv7igebkcb" path="res://player/prince.png" id="4_prince"]
+[ext_resource type="Shader" path="res://palette.gdshader" id="5_palette_shader"]
+[ext_resource type="Texture2D" path="res://palette.png" id="6_palette"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
+shader = ExtResource("5_palette_shader")
+shader_parameter/palette = ExtResource("6_palette")
 
 [node name="Main" type="Control" unique_id=134579991]
 layout_mode = 3
@@ -16,6 +22,7 @@ script = ExtResource("1_main")
 
 [node name="GameView" type="SubViewportContainer" parent="." unique_id=1849713084]
 texture_filter = 1
+material = SubResource("ShaderMaterial_palette")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

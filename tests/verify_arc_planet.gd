@@ -7,6 +7,7 @@ const VIEWPORT_PATH := "GameView/GameViewport"
 const PLANET_PATH := "GameView/GameViewport/Planet"
 const PLAYER_PATH := "GameView/GameViewport/Player"
 
+const WorldConstants = preload("res://core/world_constants.gd")
 const SKY_PHASE := preload("res://planet/sky_phase.gd")
 
 const REQUIRED_ASSETS: Array[String] = [
@@ -107,6 +108,21 @@ func _check_static_assets() -> int:
 				]
 			)
 			failed += 1
+		var star_image := star.get_image()
+		if star_image.get_pixel(0, 0).a > 0.01:
+			printerr("starfield 背景应为纯透明")
+			failed += 1
+		var invalid_star_alpha := false
+		for y in range(star_image.get_height()):
+			for x in range(star_image.get_width()):
+				var alpha := star_image.get_pixel(x, y).a
+				if alpha > 0.01 and alpha < 0.99:
+					printerr("starfield 像素 alpha 应为 0 或 1，位置 (%d,%d)，实际 %s" % [x, y, alpha])
+					failed += 1
+					invalid_star_alpha = true
+					break
+			if invalid_star_alpha:
+				break
 	# 白天天空应与星野同尺寸同中心，且为黑红渐变（红通道=高度坐标，供 shader 换色）
 	var day_sky: Texture2D = load("res://planet/day_sky.png") as Texture2D
 	if day_sky != null:
@@ -393,7 +409,7 @@ func _check_scene_and_mechanics() -> int:
 			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
 				printerr("Sky 应使用 LINEAR 过滤以平滑采样渐变贴图")
 				failed += 1
-			for param in ["zenith_gradient", "horizon_gradient", "night_sky_gradient", "day_sky_tex", "starfield_tex"]:
+			for param in ["zenith_gradient", "starfield_tex", "star_alpha_gradient", "noise_texture"]:
 				var tex := sky_material.get_shader_parameter(param) as Texture2D
 				if tex == null:
 					printerr("Sky shader 应挂 %s" % param)
