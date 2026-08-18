@@ -13,9 +13,7 @@ uniform sampler2D starfield_tex : hint_default_black;
 uniform float phase : hint_range(0.0, 1.0) = 0.5;
 // grain: 颗粒强度，建议 0.02–0.06
 uniform float grain_strength : hint_range(0.0, 0.2) = 0.035;
-// TIME 由 Godot 自动提供给 canvas_item shader
-
-// 低质量哈希噪声（无 texture 依赖，帧间随 TIME 变化）
+// 低质量哈希噪声（无 texture 依赖，使用 UV 保持颗粒固定）
 float hash(vec2 p) {
 	p = fract(p * vec2(443.897, 441.423));
 	p += dot(p, p + 19.19);
@@ -37,8 +35,8 @@ void fragment() {
 	vec3 blended = mix(day_color, stars.rgb, stars.a * night_alpha);
 
 	// --- 胶片颗粒（film grain）---
-	// 用像素坐标 + 时间作为种子，使颗粒每帧随机但不抖动整体画面
-	float grain = hash(FRAGCOORD.xy + vec2(TIME * 7.3, TIME * 3.7)) - 0.5;
+	// 使用纹理坐标作为种子，避免颗粒随时间闪烁
+	float grain = hash(floor(UV * 256.0)) - 0.5;
 	blended += grain * grain_strength;
 
 	// --- 输出：整体 alpha 取 day_sky 遮罩 alpha（圆形裁切）---
