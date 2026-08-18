@@ -13,7 +13,7 @@ uniform sampler2D starfield_tex : hint_default_black;
 uniform float phase : hint_range(0.0, 1.0) = 0.5;
 // grain: 颗粒强度，建议 0.02–0.06
 uniform float grain_strength : hint_range(0.0, 0.2) = 0.035;
-// 低质量哈希噪声（无 texture 依赖，使用 UV 保持颗粒固定）
+// 低质量哈希噪声（无 texture 依赖，使用像素坐标保持颗粒固定）
 float hash(vec2 p) {
 	p = fract(p * vec2(443.897, 441.423));
 	p += dot(p, p + 19.19);
