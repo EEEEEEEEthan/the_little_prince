@@ -5,21 +5,17 @@ shader_type canvas_item;
 uniform sampler2D zenith_gradient;
 uniform sampler2D starfield_tex : hint_default_black;
 uniform sampler2D star_alpha_gradient : hint_default_white;
+uniform sampler2D noise_texture : hint_default_gray;
 // phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
 uniform float phase : hint_range(0.0, 1.0) = 0.5;
-uniform float uv_noise_strength : hint_range(0.0, 0.1) = 0.02;
-
-float hash(vec2 p) {
-	p = fract(p * vec2(443.897, 441.423));
-	p += dot(p, p + 19.19);
-	return fract(p.x * p.y);
-}
+uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
 
 void fragment() {
 	float mask_alpha = texture(TEXTURE, UV).a;
-	// 用纹理像素坐标取样，噪声附着在 UV 上而不是随每帧采样位置变化。
-	vec2 pixel_uv = floor(UV / max(TEXTURE_PIXEL_SIZE, vec2(0.000001)));
-	float pixel_noise = (hash(pixel_uv) - 0.5) * uv_noise_strength;
+	// 量化到噪声纹理像素后取样，噪声附着在像素上而不是随帧跳动。
+	vec2 noise_size = vec2(textureSize(noise_texture, 0));
+	vec2 noise_uv = (floor(UV * noise_size) + 0.5) / max(noise_size, vec2(1.0));
+	float pixel_noise = (texture(noise_texture, noise_uv).r - 0.5) * noise_strength;
 	vec3 sky_color = texture(zenith_gradient, vec2(clamp(phase + pixel_noise, 0.0, 1.0), 0.5)).rgb;
 	vec4 stars = texture(starfield_tex, UV);
 	float star_alpha = texture(star_alpha_gradient, vec2(phase, 0.5)).r;

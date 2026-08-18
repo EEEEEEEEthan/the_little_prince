@@ -12,20 +12,31 @@
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
 
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_sky"]
+noise_type = 0
+frequency = 0.02
+fractal_type = 0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_sky"]
+width = 256
+height = 224
+noise = SubResource("FastNoiseLite_sky")
+
 [sub_resource type="Gradient" id="Gradient_zenith"]
 offsets = PackedFloat32Array(0.047272727, 0.21090908, 0.31636363, 0.4690909, 0.6218182, 0.6981818, 0.7781818, 0.8509091, 0.92)
 colors = PackedColorArray(0.1646875, 0.1178125, 0.136875, 1, 0.5411765, 0.56078434, 0.7176471, 1, 0.46000004, 0.615625, 0.9046875, 1, 0.2360022, 0.5789415, 0.6787102, 1, 0.45882353, 0.6156863, 0.90588236, 1, 0.5411765, 0.56078434, 0.7176471, 1, 0.34368372, 0.3283189, 0.41317907, 1, 0.7063785, 0.13835081, 0.20535362, 1, 0.16470589, 0.11764706, 0.13725491, 1)
 
-[sub_resource type="GradientTexture1D" id="GradientTexture1D_kk0h5"]
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_zenith"]
 gradient = SubResource("Gradient_zenith")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("10_sky_shader")
-shader_parameter/zenith_gradient = SubResource("GradientTexture1D_kk0h5")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
 shader_parameter/starfield_tex = ExtResource("5_starfield")
 shader_parameter/star_alpha_gradient = ExtResource("11_star_alpha_gradient")
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
 shader_parameter/phase = 0.5
-shader_parameter/uv_noise_strength = 0.02
+shader_parameter/noise_strength = 0.02
 
 [node name="Planet" type="Node2D" unique_id=1020592655]
 script = ExtResource("1_planet")
