@@ -45,8 +45,14 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if WorldConstants.PLANET_RADIUS < 40.0 or WorldConstants.PLANET_RADIUS > 60.0:
-		printerr("PLANET_RADIUS 应在 40~60（内部 256×224）：%s" % WorldConstants.PLANET_RADIUS)
+	if WorldConstants.PLANET_RADIUS <= 48.0 or WorldConstants.PLANET_RADIUS > 60.0:
+		printerr("PLANET_RADIUS 应大于 48 且不超过 60（内部 256×224）：%s" % WorldConstants.PLANET_RADIUS)
+		failed += 1
+	if WorldConstants.PLAYER_SPEED >= 56.0:
+		printerr("PLAYER_SPEED 应低于原值 56：%s" % WorldConstants.PLAYER_SPEED)
+		failed += 1
+	if WorldConstants.STAR_ROTATION_SPEED >= 0.02:
+		printerr("STAR_ROTATION_SPEED 应低于原值 0.02：%s" % WorldConstants.STAR_ROTATION_SPEED)
 		failed += 1
 	if WorldConstants.APEX_Y_RATIO < 0.80 or WorldConstants.APEX_Y_RATIO >= 1.0:
 		printerr("APEX_Y_RATIO 应偏下（约 0.85~0.92）：%s" % WorldConstants.APEX_Y_RATIO)
@@ -78,7 +84,7 @@ func _check_constants() -> int:
 		if const_src.find(legacy) >= 0:
 			printerr("world_constants.gd 仍含旧符号：%s" % legacy)
 			failed += 1
-	print("  常量检查 OK（半径 40~60 / 弧顶偏下 / 像素精灵）")
+	print("  常量检查 OK（半径增大 / 速度降低 / 弧顶偏下 / 像素精灵）")
 	return failed
 
 func _check_static_assets() -> int:
@@ -432,6 +438,13 @@ func _check_scene_and_mechanics() -> int:
 					failed += 1
 
 		var apex := planet.apex_global_position()
+		var expected_apex_y := float(game_viewport.size.y) * WorldConstants.APEX_Y_RATIO
+		if not is_equal_approx(apex.y, expected_apex_y):
+			printerr(
+				"增大半径后弧顶 Y 仍应保持不变，期望 %s，实际 %s"
+				% [expected_apex_y, apex.y]
+			)
+			failed += 1
 		if player.global_position.distance_to(apex) > 0.5:
 			printerr("玩家应在弧顶 %s，实际 %s" % [apex, player.global_position])
 			failed += 1
