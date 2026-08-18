@@ -27,6 +27,12 @@ func _run_tests() -> void:
 	root.add_child(scene)
 	await process_frame
 	var game_view := scene.get_node("GameView") as SubViewportContainer
+	if game_view == null:
+		printerr("找不到 GameView")
+		failed += 1
+		scene.queue_free()
+		quit(failed)
+		return
 	var material := game_view.material as ShaderMaterial
 	if material == null or material.shader != shader:
 		printerr("GameView 应挂载色板后处理材质")

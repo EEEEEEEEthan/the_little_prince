@@ -10,7 +10,6 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
 shader = ExtResource("5_palette_shader")
 shader_parameter/palette = ExtResource("6_palette")
-shader_parameter/palette_size = 32
 
 [node name="Main" type="Control" unique_id=134579991]
 layout_mode = 3
