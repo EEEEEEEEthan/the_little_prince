@@ -6,6 +6,11 @@ extends SceneTree
 const VIEWPORT_PATH := "GameView/GameViewport"
 const PLANET_PATH := "GameView/GameViewport/Planet"
 const PLAYER_PATH := "GameView/GameViewport/Player"
+const PREVIOUS_PLANET_RADIUS := 56.0
+const PREVIOUS_PLAYER_SPEED := 40.0
+const PREVIOUS_STAR_ROTATION_SPEED := 0.02
+const EXPECTED_PLANET_RADIUS := PREVIOUS_PLANET_RADIUS * 1.3
+const EXPECTED_PLAYER_SPEED := PREVIOUS_PLAYER_SPEED * 0.5
 
 const WorldConstants = preload("res://core/world_constants.gd")
 const SKY_PHASE := preload("res://planet/sky_phase.gd")
@@ -45,8 +50,26 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if WorldConstants.PLANET_RADIUS < 40.0 or WorldConstants.PLANET_RADIUS > 60.0:
-		printerr("PLANET_RADIUS 应在 40~60（内部 256×224）：%s" % WorldConstants.PLANET_RADIUS)
+	if (
+		absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01
+		or WorldConstants.PLANET_RADIUS > 80.0
+	):
+		printerr(
+			"PLANET_RADIUS 应为原值的 130%%（%s），实际 %s"
+			% [EXPECTED_PLANET_RADIUS, WorldConstants.PLANET_RADIUS]
+		)
+		failed += 1
+	if absf(WorldConstants.PLAYER_SPEED - EXPECTED_PLAYER_SPEED) > 0.01:
+		printerr(
+			"PLAYER_SPEED 应为原值的 50%%（%s），实际 %s"
+			% [EXPECTED_PLAYER_SPEED, WorldConstants.PLAYER_SPEED]
+		)
+		failed += 1
+	if WorldConstants.STAR_ROTATION_SPEED >= PREVIOUS_STAR_ROTATION_SPEED:
+		printerr(
+			"STAR_ROTATION_SPEED 应低于原值 %s：%s"
+			% [PREVIOUS_STAR_ROTATION_SPEED, WorldConstants.STAR_ROTATION_SPEED]
+		)
 		failed += 1
 	if WorldConstants.APEX_Y_RATIO < 0.80 or WorldConstants.APEX_Y_RATIO >= 1.0:
 		printerr("APEX_Y_RATIO 应偏下（约 0.85~0.92）：%s" % WorldConstants.APEX_Y_RATIO)
@@ -78,7 +101,7 @@ func _check_constants() -> int:
 		if const_src.find(legacy) >= 0:
 			printerr("world_constants.gd 仍含旧符号：%s" % legacy)
 			failed += 1
-	print("  常量检查 OK（半径 40~60 / 弧顶偏下 / 像素精灵）")
+	print("  常量检查 OK（半径增加 30%% / 移速降低 50%% / 弧顶偏下 / 像素精灵）")
 	return failed
 
 func _check_static_assets() -> int:
@@ -432,6 +455,13 @@ func _check_scene_and_mechanics() -> int:
 					failed += 1
 
 		var apex := planet.apex_global_position()
+		var expected_apex_y := float(game_viewport.size.y) * WorldConstants.APEX_Y_RATIO
+		if absf(apex.y - expected_apex_y) > 0.5:
+			printerr(
+				"增大半径后弧顶 Y 仍应保持不变，期望 %s，实际 %s"
+				% [expected_apex_y, apex.y]
+			)
+			failed += 1
 		if player.global_position.distance_to(apex) > 0.5:
 			printerr("玩家应在弧顶 %s，实际 %s" % [apex, player.global_position])
 			failed += 1
