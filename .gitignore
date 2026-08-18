@@ -1,5 +1,5 @@
 # 排除 .godot 下的内容，但放行全局 class_name 缓存（--script 模式要靠它解析 class_name）
-/.godot/
+/.godot/*
 !/.godot/global_script_class_cache.cfg
 /.engine/
 /.export/
