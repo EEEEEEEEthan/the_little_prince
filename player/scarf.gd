@@ -9,7 +9,7 @@ const SEGMENT_LENGTH: float = 1.7
 const GRAVITY: float = 180.0
 const DAMPING: float = 0.86
 const WIND_PER_WALK_SPEED: float = 22.0
-const IDLE_SWAY: float = 96.0
+const IDLE_SWAY: float = 36.0
 const CONSTRAINT_ITERATIONS: int = 5
 const DISPLAY_FPS: float = 8.0
 const NECK_SIDE_OFFSET: float = 2.0
@@ -66,7 +66,7 @@ func _physics_process(delta: float) -> void:
 func _simulate(delta: float) -> void:
 	_pin_neck()
 	var walk_speed := planet.angular_velocity * WorldConstants.PLANET_RADIUS
-	var motion_weight := clampf(absf(walk_speed) / (WorldConstants.PLAYER_SPEED * 0.25), 0.0, 1.0)
+	var motion_weight := clampf(absf(walk_speed) / WorldConstants.PLAYER_SPEED, 0.0, 1.0)
 	var wind_x := lerpf(
 			-_facing_sign() * IDLE_SWAY,
 			-walk_speed * WIND_PER_WALK_SPEED,
