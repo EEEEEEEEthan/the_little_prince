@@ -19,8 +19,8 @@ var volcano_angles: Array[float] = []
 var baobab_angles: Array[float] = []
 var surface_props: Array[SurfaceProp] = []
 
-## 当前角速度（弧度/秒），经阻尼向目标速度平滑逼近。
-var _angular_velocity: float = 0.0
+## 当前角速度（弧度/秒），经阻尼向目标速度平滑逼近。正值表示向右走。
+var angular_velocity: float = 0.0
 
 func _ready() -> void:
 	# 星球贴图按显示直径原尺寸绘制，禁止用 scale 放大。
@@ -44,15 +44,15 @@ func apex_global_position() -> Vector2:
 	return global_position + Vector2(0.0, -WorldConstants.PLANET_RADIUS)
 
 func is_moving() -> bool:
-	return absf(_angular_velocity) > 0.02
+	return absf(angular_velocity) > 0.02
 
 ## 玩家沿线移动 direction 方向，角速度带阻尼平滑逼近目标，驱动星球反向旋转。
 func move_player(direction: float, delta: float) -> void:
 	var max_angular_speed := WorldConstants.PLAYER_SPEED / WorldConstants.PLANET_RADIUS
 	var target_velocity := direction * max_angular_speed
 	var smoothing := 1.0 - exp(-WorldConstants.PLAYER_DAMPING * delta)
-	_angular_velocity = lerp(_angular_velocity, target_velocity, smoothing)
-	player_angle = fposmod(player_angle + _angular_velocity * delta, TAU)
+	angular_velocity = lerp(angular_velocity, target_velocity, smoothing)
+	player_angle = fposmod(player_angle + angular_velocity * delta, TAU)
 	_sync_rotation()
 
 ## 弧顶附近最近的可互动物体；超出 INTERACT_RANGE_PX 则返回 null。
@@ -70,7 +70,7 @@ func find_nearest_interactable() -> SurfaceProp:
 	return best
 
 func teleport_player(angle: float) -> void:
-	_angular_velocity = 0.0
+	angular_velocity = 0.0
 	player_angle = fposmod(angle, TAU)
 	_sync_rotation()
 

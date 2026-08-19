@@ -684,6 +684,8 @@ func _check_scene_and_mechanics() -> int:
 			printerr("向左走时 flip_h 应为 true")
 			failed += 1
 
+		failed += _check_scarf(player, planet)
+
 		planet.teleport_player(fposmod(-0.2, TAU))
 		if not is_equal_approx(surface.rotation, -planet.player_angle):
 			printerr("负角时 Surface.rotation 不同步")
@@ -725,6 +727,75 @@ func _check_scene_and_mechanics() -> int:
 	scene.queue_free()
 	await process_frame
 	return failed
+
+func _check_scarf(player: Player, planet: Planet) -> int:
+	var failed := 0
+	var scarf := player.get_node("Scarf") as Scarf
+	if scarf == null:
+		printerr("Player 下应有 Scarf 节点")
+		return 1
+	if scarf is CollisionObject2D:
+		printerr("围巾不应使用引擎碰撞/刚体")
+		failed += 1
+	if scarf.simulated_positions.size() != Scarf.POINT_COUNT:
+		printerr(
+				"围巾质点数应为 %d，实际 %d"
+				% [Scarf.POINT_COUNT, scarf.simulated_positions.size()]
+		)
+		failed += 1
+	if Scarf.DISPLAY_FPS > WorldConstants.PLAYER_WALK_FPS:
+		printerr(
+				"围巾抽帧帧率应不超过走路帧率 %s，实际 %s"
+				% [WorldConstants.PLAYER_WALK_FPS, Scarf.DISPLAY_FPS]
+		)
+		failed += 1
+	planet.teleport_player(planet.player_angle)
+	player.flip_h = false
+	player.frame = 0
+	var settle_delta := 1.0 / 60.0
+	for _step_index in 48:
+		scarf._physics_process(settle_delta)
+	failed += _assert_scarf_integer_display(scarf)
+	var neck := scarf.simulated_positions[0]
+	var tip := scarf.simulated_positions[Scarf.POINT_COUNT - 1]
+	if tip.y <= neck.y + 1.0:
+		printerr("静止围巾应下垂，neck=%s tip=%s" % [neck, tip])
+		failed += 1
+	if tip.x >= neck.x:
+		printerr("面朝右静止时围巾应偏左，neck=%s tip=%s" % [neck, tip])
+		failed += 1
+	var step_delta := 1.0 / 30.0
+	for _step_index in 48:
+		planet.move_player(1.0, step_delta)
+		player._update_animation(1.0, step_delta)
+		scarf._physics_process(step_delta)
+	neck = scarf.simulated_positions[0]
+	tip = scarf.simulated_positions[Scarf.POINT_COUNT - 1]
+	if tip.x >= neck.x - 1.0:
+		printerr("向右走时围巾应拖在左侧，neck=%s tip=%s" % [neck, tip])
+		failed += 1
+	failed += _assert_scarf_integer_display(scarf)
+	for _step_index in 48:
+		planet.move_player(-1.0, step_delta)
+		player._update_animation(-1.0, step_delta)
+		scarf._physics_process(step_delta)
+	neck = scarf.simulated_positions[0]
+	tip = scarf.simulated_positions[Scarf.POINT_COUNT - 1]
+	if tip.x <= neck.x + 1.0:
+		printerr("向左走时围巾应拖在右侧，neck=%s tip=%s" % [neck, tip])
+		failed += 1
+	failed += _assert_scarf_integer_display(scarf)
+	print("  围巾 Verlet / 抽帧 OK")
+	return failed
+
+
+func _assert_scarf_integer_display(scarf: Scarf) -> int:
+	for point in scarf.display_positions:
+		if not point.is_equal_approx(point.round()):
+			printerr("围巾抽帧坐标应为整数，实际 %s" % point)
+			return 1
+	return 0
+
 
 func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 	var failed := 0
