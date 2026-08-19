@@ -505,11 +505,17 @@ func _check_scene_and_mechanics() -> int:
 			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
 				printerr("Sky 应使用 NEAREST 过滤")
 				failed += 1
+			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
+				printerr("Sky 应使用 NEAREST 过滤")
+				failed += 1
+			if sky.texture == null or sky.texture.resource_path != "res://planet/starfield.png":
+				printerr("Sky.texture 应为 starfield.png")
+				failed += 1
 			for line in sky_material.shader.code.split("\n"):
 				if line.begins_with("uniform sampler2D") and not line.contains("filter_nearest"):
 					printerr("Sky shader sampler 应使用 filter_nearest：%s" % line)
 					failed += 1
-			for param in ["zenith_gradient", "starfield_tex", "star_alpha_gradient", "noise_texture"]:
+			for param in ["zenith_gradient", "star_alpha_gradient", "noise_texture"]:
 				var tex := sky_material.get_shader_parameter(param) as Texture2D
 				if tex == null:
 					printerr("Sky shader 应挂 %s" % param)
