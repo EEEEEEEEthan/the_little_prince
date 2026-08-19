@@ -45,7 +45,7 @@ script = ExtResource("1_planet")
 
 [node name="Sky" type="Sprite2D" parent="." unique_id=852054590]
 z_index = -100
-texture_filter = 2
+texture_filter = 1
 material = SubResource("ShaderMaterial_sky")
 texture = ExtResource("6_day_sky")
 script = ExtResource("2_sky")
