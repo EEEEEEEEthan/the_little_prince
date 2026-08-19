@@ -325,17 +325,13 @@ func _check_static_assets() -> int:
 			WorldConstants.BAOBAB_SPRITE_SIZE,
 		],
 		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
-<<<<<<< HEAD
-		["res://player/prince.png", WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT],
-		["res://ui/prompt_a.png", 13, 13],
-		["res://ui/portraits/prince.png", 32, 32],
-=======
 		[
 			"res://player/prince.png",
 			WorldConstants.PLAYER_SPRITE_WIDTH * WorldConstants.PLAYER_SPRITE_FRAME_COUNT,
 			WorldConstants.PLAYER_SPRITE_HEIGHT,
 		],
->>>>>>> origin/main
+		["res://ui/prompt_a.png", 13, 13],
+		["res://ui/portraits/prince.png", 32, 32],
 	]
 	for item in sprite_checks:
 		var tex: Texture2D = load(item[0]) as Texture2D
