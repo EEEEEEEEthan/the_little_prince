@@ -45,7 +45,7 @@ const PLAYER_SPRITE_FRAME_COUNT: int = PLAYER_IDLE_FRAME_COUNT + PLAYER_WALK_FRA
 const PLAYER_IDLE_FPS: float = 2.0
 const PLAYER_WALK_FPS: float = 8.0
 
-## 火山 spritesheet：前 2 帧为死火山（形态各异），第 3 帧为活火山（熔岩发光 + 烟）。
+## 火山 spritesheet：死火山变体在前，活火山在后（熔岩发光；烟雾由粒子绘制）。
 const VOLCANO_VARIANT_COUNT: int = 3
 const VOLCANO_DEAD_VARIANT_COUNT: int = 2
 const VOLCANO_ACTIVE_VARIANT: int = 2

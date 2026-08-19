@@ -19,6 +19,7 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://player/prince.png",
 	"res://planet/rose.png",
 	"res://planet/volcano.png",
+	"res://planet/pale_gray_puff.png",
 	"res://planet/baobab.png",
 	"res://planet/body.png",
 	"res://planet/starfield.png",
@@ -319,6 +320,7 @@ func _check_static_assets() -> int:
 			WorldConstants.VOLCANO_SPRITE_SIZE * WorldConstants.VOLCANO_VARIANT_COUNT,
 			WorldConstants.VOLCANO_SPRITE_SIZE,
 		],
+		["res://planet/pale_gray_puff.png", 4, 4],
 		[
 			"res://planet/baobab.png",
 			WorldConstants.BAOBAB_SPRITE_SIZE * WorldConstants.BAOBAB_VARIANT_COUNT,
@@ -342,6 +344,28 @@ func _check_static_assets() -> int:
 				"%s 尺寸应为 %dx%d，实际 %dx%d"
 				% [item[0], item[1], item[2], tex.get_width(), tex.get_height()]
 			)
+			failed += 1
+	var volcano_tex := load("res://planet/volcano.png") as Texture2D
+	if volcano_tex != null:
+		var volcano_img := volcano_tex.get_image()
+		var frame_size := WorldConstants.VOLCANO_SPRITE_SIZE
+		var active_origin := WorldConstants.VOLCANO_ACTIVE_VARIANT * frame_size
+		var found_lava := false
+		var found_smoke_pixel := false
+		for pixel_y in range(frame_size):
+			for pixel_x in range(active_origin, active_origin + frame_size):
+				var pixel := volcano_img.get_pixel(pixel_x, pixel_y)
+				if pixel.a < 0.5:
+					continue
+				if pixel.s > 0.45 and pixel.r > pixel.b + 0.2:
+					found_lava = true
+				if pixel.s < 0.18 and pixel.v > 0.45:
+					found_smoke_pixel = true
+		if not found_lava:
+			printerr("活火山帧应含熔岩色")
+			failed += 1
+		if found_smoke_pixel:
+			printerr("活火山贴图不应再含烟雾像素")
 			failed += 1
 	print("  静态 assets PNG 可加载 OK")
 	return failed
@@ -469,6 +493,10 @@ func _check_scene_and_mechanics() -> int:
 				active_volcanoes += 1
 			else:
 				dead_volcanoes += 1
+				for child in prop.get_children():
+					if child is CPUParticles2D:
+						printerr("死火山 %s 不应有粒子" % prop.name)
+						failed += 1
 		if active_volcanoes != 1:
 			printerr("活火山数量应为 1，实际 %d" % active_volcanoes)
 			failed += 1
@@ -478,6 +506,28 @@ func _check_scene_and_mechanics() -> int:
 				% [WorldConstants.VOLCANO_DEAD_VARIANT_COUNT, dead_volcanoes]
 			)
 			failed += 1
+		var volcano_smoke := planet.get_node_or_null("%VolcanoSmoke") as CPUParticles2D
+		if volcano_smoke == null:
+			printerr("活火山应有 VolcanoSmoke 粒子")
+			failed += 1
+		else:
+			if not volcano_smoke.emitting:
+				printerr("VolcanoSmoke 应为 emitting")
+				failed += 1
+			if not volcano_smoke.local_coords:
+				printerr("VolcanoSmoke 应使用 local_coords（随火山旋转）")
+				failed += 1
+			if volcano_smoke.texture == null:
+				printerr("VolcanoSmoke 应有 puff 贴图")
+				failed += 1
+			var smoke_host := volcano_smoke.get_parent() as SurfaceProp
+			if (
+				smoke_host == null
+				or smoke_host.kind != SurfaceProp.Kind.VOLCANO
+				or smoke_host.variant != WorldConstants.VOLCANO_ACTIVE_VARIANT
+			):
+				printerr("VolcanoSmoke 应挂在活火山上")
+				failed += 1
 		for prop in planet.surface_props:
 			if (
 				prop.kind == SurfaceProp.Kind.BAOBAB
