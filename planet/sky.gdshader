@@ -2,10 +2,10 @@ shader_type canvas_item;
 // 统一天空 shader：按天空相位从 zenith_gradient 采样背景色，
 // 并用夜空渐变控制星星的透明度。
 
-uniform sampler2D zenith_gradient;
-uniform sampler2D starfield_tex : hint_default_black;
-uniform sampler2D star_alpha_gradient : hint_default_white;
-uniform sampler2D noise_texture : hint_default_white;
+uniform sampler2D zenith_gradient : filter_nearest;
+uniform sampler2D starfield_tex : hint_default_black, filter_nearest;
+uniform sampler2D star_alpha_gradient : hint_default_white, filter_nearest;
+uniform sampler2D noise_texture : hint_default_white, filter_nearest;
 // phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
 uniform float phase : hint_range(0.0, 1.0) = 0.5;
 uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
