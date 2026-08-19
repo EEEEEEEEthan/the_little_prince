@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://cojn20gna51qe"]
+[gd_scene load_steps=11 format=3 uid="uid://cojn20gna51qe"]
 
 [ext_resource type="Script" uid="uid://cyh14kfr3hytu" path="res://main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://planet/planet.tscn" id="2_planet"]
@@ -6,6 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://mybv7igebkcb" path="res://player/prince.png" id="4_prince"]
 [ext_resource type="Shader" path="res://palette.gdshader" id="5_palette_shader"]
 [ext_resource type="Texture2D" path="res://palette.png" id="6_palette"]
+[ext_resource type="Script" uid="uid://cr35jjjk4jfxm" path="res://ui/interact_prompt.gd" id="7_prompt"]
+[ext_resource type="Texture2D" uid="uid://bcculx3lqeq03" path="res://ui/prompt_a.png" id="8_prompt_tex"]
+[ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="9_dialogue"]
+[ext_resource type="Script" uid="uid://ciwt72d3i6fwy" path="res://interact/interaction.gd" id="10_interact"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
 shader = ExtResource("5_palette_shader")
@@ -46,3 +50,18 @@ texture_filter = 1
 texture = ExtResource("4_prince")
 hframes = 6
 script = ExtResource("3_player")
+
+[node name="InteractPrompt" type="Sprite2D" parent="GameView/GameViewport"]
+unique_name_in_owner = true
+z_index = 250
+z_as_relative = false
+texture_filter = 1
+texture = ExtResource("8_prompt_tex")
+script = ExtResource("7_prompt")
+
+[node name="DialogueBox" parent="GameView/GameViewport" instance=ExtResource("9_dialogue")]
+unique_name_in_owner = true
+
+[node name="Interaction" type="Node" parent="GameView/GameViewport"]
+unique_name_in_owner = true
+script = ExtResource("10_interact")

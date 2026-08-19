@@ -7,6 +7,18 @@ enum Kind { ROSE, VOLCANO, BAOBAB }
 
 @export var kind: Kind = Kind.ROSE
 @export var variant: int = 0
+## 对话目录 id；空则猴面包树回落到 &"baobab"。
+@export var dialogue_id: StringName = &""
+
+func get_dialogue_id() -> StringName:
+	if dialogue_id != &"":
+		return dialogue_id
+	if kind == Kind.BAOBAB:
+		return &"baobab"
+	return &""
+
+func is_interactable() -> bool:
+	return get_dialogue_id() != &""
 
 ## 依据相对玩家角的可见性与前后深度更新显示状态。
 func update_visibility(player_angle: float) -> void:

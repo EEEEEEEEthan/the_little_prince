@@ -15,6 +15,11 @@ const BAOBAB_COUNT: int = 16
 
 const SPAWN_ANGLE_OFFSET: float = 0.12
 
+## 可互动物体相对弧顶的半宽（像素，沿圆周）。
+const INTERACT_RANGE_PX: float = 16.0
+## A 键提示跟随点：地物本地坐标 Y（沿半径向外为负），提示本身不继承旋转。
+const INTERACT_PROMPT_LOCAL_Y: float = -38.0
+
 ## 玩家沿线最大速度（像素/秒）；目标角速度 = PLAYER_SPEED / PLANET_RADIUS。
 const PLAYER_SPEED: float = 20.0
 ## 移动阻尼系数（1/秒）：越大起步/刹车越干脆，越小越绵软。

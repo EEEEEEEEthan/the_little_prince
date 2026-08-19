@@ -4,6 +4,7 @@ extends Sprite2D
 ## 贴图为 idle+walk 横拼 spritesheet，按角速度切帧；左右用 flip_h。
 
 @onready var planet: Planet = %Planet
+@onready var interaction: Interaction = %Interaction
 
 var _anim_time: float = 0.0
 var _was_moving: bool = false
@@ -19,7 +20,9 @@ func _ready() -> void:
 	frame = 0
 
 func _physics_process(delta: float) -> void:
-	var direction := Input.get_axis("move_left", "move_right")
+	var direction := 0.0
+	if not interaction.is_busy():
+		direction = Input.get_axis("move_left", "move_right")
 	planet.move_player(direction, delta)
 	_update_animation(direction, delta)
 
