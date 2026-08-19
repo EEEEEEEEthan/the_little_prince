@@ -17,31 +17,31 @@ var _lines: Array[DialogueLine] = []
 var _index: int = 0
 var _is_holding: bool = false
 var _hold_started_while_typing: bool = false
-var _joy_confirm_was_down: Dictionary = {}
-var _joy_confirm_rose_this_frame: Dictionary = {}
-var _accepted_joypad_devices: Dictionary = {}
+var _is_revealing: bool = false
+var _typewriter_accum_seconds: float = 0.0
 
 func _ready() -> void:
 	# tscn 保持可见便于编辑；开局再关。
 	visible = false
-	_sync_joy_confirm_buttons()
+	set_process(false)
 	_timer.wait_time = TYPEWRITER_INTERVAL
-	_timer.timeout.connect(_on_typewriter_tick)
 
-func _process(_delta: float) -> void:
-	_sync_joy_confirm_buttons()
-	if not visible:
+func _process(delta: float) -> void:
+	if not _is_revealing:
 		return
-	var held := _is_interact_held()
-	mark_holding(held)
-	if is_typing():
-		_set_accelerating(held)
+	var typewriter_interval := (
+		TYPEWRITER_FAST_INTERVAL if _is_holding else TYPEWRITER_INTERVAL
+	)
+	_typewriter_accum_seconds += delta
+	while _is_revealing and _typewriter_accum_seconds >= typewriter_interval:
+		_typewriter_accum_seconds -= typewriter_interval
+		_reveal_next_character()
 
 func is_open() -> bool:
 	return visible
 
 func is_typing() -> bool:
-	return not _timer.is_stopped()
+	return _is_revealing
 
 func play(lines: Array[DialogueLine]) -> void:
 	if lines.is_empty():
@@ -51,18 +51,10 @@ func play(lines: Array[DialogueLine]) -> void:
 	_index = 0
 	_is_holding = false
 	_hold_started_while_typing = false
-	_accepted_joypad_devices.clear()
-	for device in _interact_joypad_devices():
-		if not _is_interact_joy_pressed_on(device):
-			continue
-		if _joy_confirm_rose_this_frame.has(device) or not _joy_confirm_was_down.get(device, false):
-			_accepted_joypad_devices[device] = true
+	_set_accelerating(false)
 	visible = true
 	set_process(true)
 	_show_line()
-	var held := _is_interact_held()
-	_set_accelerating(held)
-	mark_holding(held)
 
 func mark_holding(held: bool) -> void:
 	if not visible or held == _is_holding:
@@ -92,11 +84,13 @@ func close() -> void:
 	_typewriter.stop()
 	_is_holding = false
 	_hold_started_while_typing = false
-	_accepted_joypad_devices.clear()
+	_is_revealing = false
+	_typewriter_accum_seconds = 0.0
 	_set_accelerating(false)
 	%ContinueTriangle.visible = false
 	_lines.clear()
 	_index = 0
+	set_process(false)
 	visible = false
 
 func _show_line() -> void:
@@ -106,90 +100,23 @@ func _show_line() -> void:
 	_portrait.texture = line.portrait
 	_body.visible_characters = 0
 	%ContinueTriangle.visible = false
-	_timer.start()
-	_on_typewriter_tick()
+	_timer.stop()
+	_is_revealing = true
+	_typewriter_accum_seconds = 0.0
+	_reveal_next_character()
 
 func _set_accelerating(enabled: bool) -> void:
-	var typewriter_wait_time := TYPEWRITER_FAST_INTERVAL if enabled else TYPEWRITER_INTERVAL
-	var wait_time_changed := not is_equal_approx(_timer.wait_time, typewriter_wait_time)
-	_timer.wait_time = typewriter_wait_time
+	_timer.wait_time = TYPEWRITER_FAST_INTERVAL if enabled else TYPEWRITER_INTERVAL
 	_typewriter.volume_db = TYPEWRITER_FAST_VOLUME_DB if enabled else TYPEWRITER_VOLUME_DB
-	if wait_time_changed and not _timer.is_stopped():
-		_timer.start()
 
-func _is_interact_held() -> bool:
-	for event in InputMap.action_get_events(&"interact"):
-		var key := event as InputEventKey
-		if key == null:
-			continue
-		if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
-			return true
-		if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
-			return true
-	for device: int in _accepted_joypad_devices:
-		if _is_interact_joy_pressed_on(device):
-			return true
-	if DisplayServer.get_name() != "headless" or not Input.is_action_pressed(&"interact"):
-		return false
-	for device in _interact_joypad_devices():
-		if _is_interact_joy_pressed_on(device):
-			return false
-	return true
-
-func _sync_joy_confirm_buttons() -> void:
-	_joy_confirm_rose_this_frame.clear()
-	var active_devices: Dictionary = {}
-	for device in _interact_joypad_devices():
-		active_devices[device] = true
-		var is_down := _is_interact_joy_pressed_on(device)
-		var was_down: bool = _joy_confirm_was_down.get(device, false)
-		if is_down and not was_down:
-			_joy_confirm_rose_this_frame[device] = true
-			if visible:
-				_accepted_joypad_devices[device] = true
-		if not is_down:
-			_accepted_joypad_devices.erase(device)
-		_joy_confirm_was_down[device] = is_down
-	for device in _joy_confirm_was_down.keys():
-		if active_devices.has(device):
-			continue
-		_joy_confirm_was_down.erase(device)
-		_accepted_joypad_devices.erase(device)
-
-func _interact_joypad_devices() -> Array[int]:
-	const joypad_device_limit := 16
-	var devices: Array[int] = []
-	var seen: Dictionary = {}
-	var add_device := func(device: int) -> void:
-		if seen.has(device):
-			return
-		seen[device] = true
-		devices.append(device)
-	for device in Input.get_connected_joypads():
-		add_device.call(device)
-	for device: int in _accepted_joypad_devices:
-		add_device.call(device)
-	for device in joypad_device_limit:
-		if seen.has(device):
-			continue
-		if _is_interact_joy_pressed_on(device):
-			add_device.call(device)
-	return devices
-
-func _is_interact_joy_pressed_on(device: int) -> bool:
-	for event in InputMap.action_get_events(&"interact"):
-		var joy_button := event as InputEventJoypadButton
-		if joy_button != null and Input.is_joy_button_pressed(device, joy_button.button_index):
-			return true
-	return false
-
-func _on_typewriter_tick() -> void:
+func _reveal_next_character() -> void:
 	var total := _body.get_total_character_count()
 	if _body.visible_characters < total:
 		_body.visible_characters += 1
 		_play_blip()
 	if _body.visible_characters >= total:
-		_timer.stop()
+		_is_revealing = false
+		_typewriter_accum_seconds = 0.0
 		_set_accelerating(false)
 		%ContinueTriangle.visible = true
 

@@ -878,7 +878,7 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 
 	var lines := DialogueCatalog.lines_for_id(&"baobab")
 	if lines.size() >= 2 and dialogue != null:
-		failed += await _check_typewriter_hold(dialogue, lines)
+		failed += await _check_typewriter_hold(scene, dialogue, lines)
 		dialogue.close()
 		if dialogue.is_open():
 			printerr("close 后对话框应关闭")
@@ -902,7 +902,9 @@ func _assert_focus(
 	return failed
 
 
-func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -> int:
+func _check_typewriter_hold(
+	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
+) -> int:
 	var failed := 0
 	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
 	var timer := dialogue.get_node("Timer") as Timer
@@ -912,7 +914,6 @@ func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -
 	var second_text := lines[1].text
 
 	dialogue.play(lines)
-	dialogue.set_process(false)
 	if not dialogue.is_open() or not dialogue.is_typing():
 		printerr("play 后对话框应打开且处于打字机中")
 		failed += 1
@@ -997,20 +998,20 @@ func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -
 		printerr("最后一句松开后应关闭对话框")
 		failed += 1
 
-	failed += await _check_typewriter_hold_follows_interact(dialogue, lines)
+	failed += await _check_typewriter_hold_follows_confirm_events(scene, dialogue, lines)
 	return failed
 
 
-func _check_typewriter_hold_follows_interact(
-	dialogue: DialogueBox, lines: Array[DialogueLine]
+func _check_typewriter_hold_follows_confirm_events(
+	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	Input.action_release(&"interact")
-	Input.action_release(&"move_left")
+	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var first_text := lines[0].text
 
-	Input.action_press(&"move_left")
 	dialogue.play(lines)
+	scene._input(_move_left_event(true))
 	await process_frame
 	if not dialogue.is_typing():
 		printerr("按住移动打开对话后应仍在打字")
@@ -1018,144 +1019,139 @@ func _check_typewriter_hold_follows_interact(
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
 		printerr("按住移动不应加速打字机，wait_time=%s" % timer.wait_time)
 		failed += 1
-	Input.action_press(&"interact")
-	await process_frame
+
+	scene._input(_interact_key_event(true))
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
-		printerr("按住 interact 应加速，wait_time=%s" % timer.wait_time)
+		printerr("按下确认键应加速，wait_time=%s" % timer.wait_time)
 		failed += 1
-	Input.action_release(&"interact")
-	await process_frame
-	if not dialogue.is_typing():
-		printerr("松开 interact 后应继续打字")
+	if body.visible_characters >= body.get_total_character_count():
+		printerr("加速前当前句应尚未打完")
+		failed += 1
+	scene._input(_interact_key_event(false))
+	if not dialogue.is_typing() or body.text != first_text:
+		printerr("打字中松开确认键应继续打字并留在当前句")
 		failed += 1
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
-		printerr("松开 interact 应恢复正常速度，wait_time=%s" % timer.wait_time)
+		printerr("打字中松开确认键应恢复正常速度，wait_time=%s" % timer.wait_time)
 		failed += 1
-	Input.action_release(&"move_left")
+	scene._input(_move_left_event(false))
 	dialogue.close()
 
-	Input.action_press(&"interact")
 	dialogue.play(lines)
+	dialogue.mark_holding(true)
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
-		printerr("打开对话时仍按住 interact 应立即加速，wait_time=%s" % timer.wait_time)
+		printerr("打开对话时仍按住确认键应立即加速，wait_time=%s" % timer.wait_time)
 		failed += 1
-	Input.action_release(&"interact")
-	await process_frame
+	scene._input(_interact_key_event(false))
 	if not dialogue.is_typing():
-		printerr("打开后松开 interact 应继续打字")
+		printerr("打开后松开确认键应继续打字")
 		failed += 1
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
-		printerr("打开后松开 interact 应恢复正常速度，wait_time=%s" % timer.wait_time)
+		printerr("打开后松开确认键应恢复正常速度，wait_time=%s" % timer.wait_time)
 		failed += 1
 	dialogue.close()
-	Input.action_release(&"interact")
-	Input.action_release(&"move_left")
 
-	failed += await _check_typewriter_hold_restores_after_key_release(dialogue, lines)
+	failed += _check_typewriter_hold_restores_after_key_release(scene, dialogue, lines)
 	return failed
 
 
 func _check_typewriter_hold_restores_after_key_release(
-	dialogue: DialogueBox, lines: Array[DialogueLine]
+	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	var enter := InputEventKey.new()
-	enter.physical_keycode = KEY_ENTER
-	enter.keycode = KEY_ENTER
-	enter.pressed = true
-	Input.parse_input_event(enter)
-	Input.flush_buffered_events()
+	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
 	dialogue.play(lines)
-	await process_frame
+	scene._input(_interact_key_event(true))
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
 		printerr("实体 Enter 按下应加速，wait_time=%s" % timer.wait_time)
 		failed += 1
-	enter.pressed = false
-	Input.parse_input_event(enter)
-	Input.flush_buffered_events()
-	await process_frame
+	scene._input(_interact_key_event(false))
 	if not dialogue.is_typing():
 		printerr("松开实体 Enter 后应继续打字")
+		failed += 1
+	if body.visible_characters >= body.get_total_character_count():
+		printerr("松开实体 Enter 后当前句应尚未打完")
 		failed += 1
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
 		printerr("松开实体 Enter 后应恢复正常速度，wait_time=%s" % timer.wait_time)
 		failed += 1
 	dialogue.close()
 
-	failed += await _check_typewriter_hold_joypad_confirm(dialogue, lines)
+	failed += _check_typewriter_hold_joypad_confirm(scene, dialogue, lines)
 	return failed
 
 
 func _check_typewriter_hold_joypad_confirm(
-	dialogue: DialogueBox, lines: Array[DialogueLine]
+	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	_set_joy_confirm_pressed(false)
-	Input.action_release(&"interact")
+	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
 
-	_set_joy_confirm_pressed(true)
 	dialogue.play(lines)
+	scene._input(_interact_joy_event(true))
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
-		printerr("手柄确认键按下打开对话应立即加速，wait_time=%s" % timer.wait_time)
+		printerr("手柄确认键按下应加速，wait_time=%s" % timer.wait_time)
 		failed += 1
-	_set_joy_confirm_pressed(false)
-	dialogue.close()
-
-	_set_joy_confirm_pressed(true)
-	dialogue._process(0.0)
-	dialogue.play(lines)
-	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
-		printerr("手柄确认键同帧先 process 再打开仍应加速，wait_time=%s" % timer.wait_time)
-		failed += 1
-	_set_joy_confirm_pressed(false)
-	await process_frame
+	scene._input(_interact_joy_event(false))
 	if not dialogue.is_typing():
 		printerr("松开手柄确认键后应继续打字")
+		failed += 1
+	if body.visible_characters >= body.get_total_character_count():
+		printerr("松开手柄确认键后当前句应尚未打完")
 		failed += 1
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
 		printerr("松开手柄确认键后应恢复正常速度，wait_time=%s" % timer.wait_time)
 		failed += 1
 	dialogue.close()
 
-	_set_joy_confirm_pressed(true)
-	await process_frame
-	await process_frame
 	dialogue.play(lines)
-	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
-		printerr("打开前已按住的手柄确认键不应加速，wait_time=%s" % timer.wait_time)
-		failed += 1
-	var enter := InputEventKey.new()
-	enter.physical_keycode = KEY_ENTER
-	enter.keycode = KEY_ENTER
-	enter.pressed = true
-	Input.parse_input_event(enter)
-	Input.flush_buffered_events()
-	await process_frame
+	scene._input(_interact_joy_event(true))
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
-		printerr("手柄常按时按住键盘仍应加速，wait_time=%s" % timer.wait_time)
+		printerr("手柄确认键按下应加速，wait_time=%s" % timer.wait_time)
 		failed += 1
-	enter.pressed = false
-	Input.parse_input_event(enter)
-	Input.flush_buffered_events()
-	await process_frame
+	scene._input(_interact_joy_event(false))
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
-		printerr("手柄常按时松开键盘应恢复正常速度，wait_time=%s" % timer.wait_time)
+		printerr("松开手柄确认键后应恢复正常速度，wait_time=%s" % timer.wait_time)
+		failed += 1
+	scene._input(_interact_key_event(true))
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
+		printerr("手柄松开后按住键盘应加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	scene._input(_interact_key_event(false))
+	if not dialogue.is_typing():
+		printerr("键盘松开后应继续打字")
+		failed += 1
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("键盘松开后应恢复正常速度，wait_time=%s" % timer.wait_time)
 		failed += 1
 	dialogue.close()
-	_set_joy_confirm_pressed(false)
-	Input.action_release(&"interact")
 	return failed
 
 
-func _set_joy_confirm_pressed(pressed: bool) -> void:
+func _interact_key_event(pressed: bool) -> InputEventKey:
+	var enter := InputEventKey.new()
+	enter.physical_keycode = KEY_ENTER
+	enter.keycode = KEY_ENTER
+	enter.pressed = pressed
+	return enter
+
+
+func _interact_joy_event(pressed: bool) -> InputEventJoypadButton:
 	var joy_button := InputEventJoypadButton.new()
 	joy_button.device = 0
 	joy_button.button_index = JOY_BUTTON_A
 	joy_button.pressed = pressed
-	Input.parse_input_event(joy_button)
-	Input.flush_buffered_events()
+	return joy_button
+
+
+func _move_left_event(pressed: bool) -> InputEventKey:
+	var move_left := InputEventKey.new()
+	move_left.physical_keycode = KEY_A
+	move_left.keycode = KEY_A
+	move_left.pressed = pressed
+	return move_left
 
 
 func _await_dialogue_idle(dialogue: DialogueBox) -> bool:
