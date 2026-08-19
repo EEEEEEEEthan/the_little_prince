@@ -842,7 +842,7 @@ func _check_clouds(planet: Planet) -> int:
 					% [cloud.name, distances[cloud_index], WorldConstants.CLOUD_ORBIT_MIN_RADIUS]
 			)
 			failed += 1
-		if cloud.modulate.a >= 1.0 or cloud.modulate.a <= 0.5:
+		if cloud.modulate.a >= 0.75 or cloud.modulate.a <= 0.35:
 			printerr("%s 应略透明，alpha=%s" % [cloud.name, cloud.modulate.a])
 			failed += 1
 		if not faces_planet.call(cloud):
