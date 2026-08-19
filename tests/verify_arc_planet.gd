@@ -812,6 +812,21 @@ func _check_clouds(planet: Planet) -> int:
 				% [WorldConstants.CLOUD_COUNT, clouds.get_child_count()]
 		)
 		failed += 1
+	var cloud_image := (clouds.get_child(0) as Sprite2D).texture.get_image()
+	var punched_hole_count := 0
+	for pixel_y in range(1, cloud_image.get_height() - 1):
+		for pixel_x in range(1, cloud_image.get_width() - 1):
+			if cloud_image.get_pixel(pixel_x, pixel_y).a > 0.05:
+				continue
+			var opaque_neighbor_count := 0
+			for neighbor in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+				if cloud_image.get_pixel(pixel_x + neighbor.x, pixel_y + neighbor.y).a > 0.5:
+					opaque_neighbor_count += 1
+			if opaque_neighbor_count >= 3:
+				punched_hole_count += 1
+	if punched_hole_count > 0:
+		printerr("云朵贴图不应掏洞，内部镂空 %d 像素" % punched_hole_count)
+		failed += 1
 	if not is_equal_approx(clouds.planet_rotation, -planet.player_angle):
 		printerr(
 				"Clouds.planet_rotation 应为 %s，实际 %s"
