@@ -11,6 +11,9 @@
 [ext_resource type="Texture2D" uid="uid://cpalegraypuff" path="res://planet/pale_gray_puff.png" id="12_puff"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
+[ext_resource type="Script" uid="uid://dkc8cloudlayer" path="res://planet/clouds.gd" id="13_clouds"]
+[ext_resource type="Texture2D" uid="uid://cwlvnpufffrm" path="res://planet/white_lavender_puff_frames.png" id="14_cloud_tex"]
+[ext_resource type="Shader" uid="uid://bcloudframeshd" path="res://planet/cloud_frame.gdshader" id="15_cloud_shader"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_aiioy"]
 noise_type = 2
@@ -39,6 +42,9 @@ shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
 shader_parameter/phase = 0.5
 shader_parameter/noise_strength = 0.02
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cloud_frame"]
+shader = ExtResource("15_cloud_shader")
+
 [sub_resource type="Gradient" id="Gradient_volcano_smoke"]
 offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
 colors = PackedColorArray(1, 1, 1, 1, 0.933333, 0.933333, 0.815686, 0.75, 0.627451, 0.772549, 0.678431, 0.35, 0.466667, 0.666667, 0.643137, 0)
@@ -52,6 +58,16 @@ texture_filter = 1
 material = SubResource("ShaderMaterial_sky")
 texture = ExtResource("5_starfield")
 script = ExtResource("2_sky")
+
+[node name="Clouds" type="Node2D" parent="." unique_id=1847000001]
+script = ExtResource("13_clouds")
+
+[node name="CloudSprites" type="MultiMeshInstance2D" parent="Clouds" unique_id=1847000002]
+unique_name_in_owner = true
+texture_filter = 1
+texture_repeat = 0
+material = SubResource("ShaderMaterial_cloud_frame")
+texture = ExtResource("14_cloud_tex")
 
 [node name="Surface" type="Node2D" parent="." unique_id=1169720567]
 
