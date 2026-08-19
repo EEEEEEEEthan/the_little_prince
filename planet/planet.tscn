@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://bg1wirq3v1g5c" path="res://planet/rose.png" id="7_rose"]
 [ext_resource type="Texture2D" uid="uid://duk1gaik3krys" path="res://planet/volcano.png" id="8_volcano"]
 [ext_resource type="Texture2D" uid="uid://bblja4kg8jkmg" path="res://planet/baobab.png" id="9_baobab"]
+[ext_resource type="Texture2D" uid="uid://cpalegraypuff" path="res://planet/pale_gray_puff.png" id="12_puff"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
 
@@ -38,6 +39,10 @@ shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
 shader_parameter/phase = 0.5
 shader_parameter/noise_strength = 0.02
 
+[sub_resource type="Gradient" id="Gradient_volcano_smoke"]
+offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.933333, 0.933333, 0.815686, 0.75, 0.627451, 0.772549, 0.678431, 0.35, 0.466667, 0.666667, 0.643137, 0)
+
 [node name="Planet" type="Node2D" unique_id=1020592655]
 script = ExtResource("1_planet")
 
@@ -61,6 +66,31 @@ frame = 2
 script = ExtResource("3_surface_prop")
 kind = 1
 variant = 2
+
+[node name="VolcanoSmoke" type="CPUParticles2D" parent="Surface/Volcano" unique_id=1938475620]
+unique_name_in_owner = true
+z_index = 1
+texture_filter = 1
+position = Vector2(0, -20)
+amount = 18
+texture = ExtResource("12_puff")
+lifetime = 2.2
+preprocess = 2.5
+randomness = 0.4
+lifetime_randomness = 0.45
+local_coords = true
+emission_shape = 1
+emission_sphere_radius = 2.0
+direction = Vector2(0, -1)
+spread = 18.0
+gravity = Vector2(0, -14)
+initial_velocity_min = 5.0
+initial_velocity_max = 11.0
+angular_velocity_min = -20.0
+angular_velocity_max = 20.0
+scale_amount_min = 0.5
+scale_amount_max = 1.0
+color_ramp = SubResource("Gradient_volcano_smoke")
 
 [node name="Volcano2" type="Sprite2D" parent="Surface" unique_id=1280196619]
 texture_filter = 1
