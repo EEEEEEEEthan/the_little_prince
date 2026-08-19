@@ -456,9 +456,10 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 		for prop in planet.surface_props:
 			var dist := prop.position.length()
-			if absf(dist - WorldConstants.PLANET_RADIUS) > 0.51:
+			# 允许沿起伏轮廓略微内缩，但不得停在放大前的旧圆（约 62.4）上。
+			if dist < 64.0 or dist > WorldConstants.PLANET_RADIUS + 1.5:
 				printerr(
-					"地物 %s 应在半径 %s 上，实际 %s"
+					"地物 %s 应靠近半径 %s，实际 %s"
 					% [prop.name, WorldConstants.PLANET_RADIUS, dist]
 				)
 				failed += 1
