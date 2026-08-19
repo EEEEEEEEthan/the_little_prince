@@ -29,6 +29,8 @@ const PLAYER_DAMPING: float = 12.0
 
 const STARFIELD_SIZE: int = 640
 const STAR_ROTATION_SPEED: float = 0.01
+const CLOUD_DRIFT_SPEED: float = 0.006
+const CLOUD_COUNT: int = 6
 ## 白天半宽（弧度）：正午蓝天与黎明各自覆盖的角度，越大白天越长、黄昏夜晚越短。
 const DAY_HALF_ARC: float = PI * 0.65
 
@@ -37,6 +39,9 @@ const DAY_HALF_ARC: float = PI * 0.65
 const VOLCANO_SPRITE_SIZE: int = 36
 const BAOBAB_SPRITE_SIZE: int = 32
 const ROSE_SPRITE_SIZE: int = 20
+const CLOUD_SPRITE_WIDTH: int = 32
+const CLOUD_SPRITE_HEIGHT: int = 16
+const CLOUD_VARIANT_COUNT: int = 4
 const PLAYER_SPRITE_WIDTH: int = 12
 const PLAYER_SPRITE_HEIGHT: int = 18
 ## 相对弧顶再下移的像素，让脚更贴地。

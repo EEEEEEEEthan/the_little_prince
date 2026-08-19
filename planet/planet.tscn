@@ -11,6 +11,8 @@
 [ext_resource type="Texture2D" uid="uid://cpalegraypuff" path="res://planet/pale_gray_puff.png" id="12_puff"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
+[ext_resource type="Script" uid="uid://dkc8cloudlayer" path="res://planet/clouds.gd" id="13_clouds"]
+[ext_resource type="Texture2D" uid="uid://cwhitelobepuf" path="res://planet/white_lobed_puff.png" id="14_cloud_tex"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_aiioy"]
 noise_type = 2
@@ -52,6 +54,65 @@ texture_filter = 1
 material = SubResource("ShaderMaterial_sky")
 texture = ExtResource("5_starfield")
 script = ExtResource("2_sky")
+
+[node name="Clouds" type="Node2D" parent="." unique_id=1847000001]
+script = ExtResource("13_clouds")
+
+[node name="Cloud" type="Sprite2D" parent="Clouds" unique_id=1847000002]
+z_index = 40
+texture_filter = 1
+position = Vector2(31.504544, -109.56032)
+rotation = 0.28
+texture = ExtResource("14_cloud_tex")
+offset = Vector2(0, -8)
+hframes = 4
+
+[node name="Cloud2" type="Sprite2D" parent="Clouds" unique_id=1847000003]
+z_index = 20
+texture_filter = 1
+position = Vector2(114.651146, -47.234678)
+rotation = 1.18
+texture = ExtResource("14_cloud_tex")
+offset = Vector2(0, -8)
+hframes = 4
+frame = 1
+
+[node name="Cloud3" type="Sprite2D" parent="Clouds" unique_id=1847000004]
+texture_filter = 1
+position = Vector2(97.609861, 50.717996)
+rotation = 2.05
+texture = ExtResource("14_cloud_tex")
+offset = Vector2(0, -8)
+hframes = 4
+frame = 2
+
+[node name="Cloud4" type="Sprite2D" parent="Clouds" unique_id=1847000005]
+texture_filter = 1
+position = Vector2(-24.828237, 117.403401)
+rotation = 3.35
+texture = ExtResource("14_cloud_tex")
+offset = Vector2(0, -8)
+hframes = 4
+frame = 3
+
+[node name="Cloud5" type="Sprite2D" parent="Clouds" unique_id=1847000006]
+texture_filter = 1
+position = Vector2(-112.881802, 26.715141)
+rotation = 4.48
+texture = ExtResource("14_cloud_tex")
+offset = Vector2(0, -8)
+hframes = 4
+frame = 1
+
+[node name="Cloud6" type="Sprite2D" parent="Clouds" unique_id=1847000007]
+z_index = 10
+texture_filter = 1
+position = Vector2(-78.891382, -93.059926)
+rotation = 5.58
+texture = ExtResource("14_cloud_tex")
+offset = Vector2(0, -8)
+hframes = 4
+frame = 2
 
 [node name="Surface" type="Node2D" parent="." unique_id=1169720567]
 

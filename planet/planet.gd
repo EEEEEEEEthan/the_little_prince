@@ -1,6 +1,6 @@
 class_name Planet
 extends Node2D
-## 2D 圆弧星球：Body / Surface / Sky 统一绕球心旋转，旋转角 = -player_angle。
+## 2D 圆弧星球：Body / Surface / Sky / Clouds 统一绕球心旋转，旋转角 = -player_angle。
 ## 地表地物静态写在 planet.tscn。
 ## Body 贴图按显示直径原尺寸绘制，不使用 scale。
 ## 小王子视觉上始终停在弧顶，实际由地表与星空反向旋转模拟行走。
@@ -8,6 +8,7 @@ extends Node2D
 @onready var body: Sprite2D = $Body
 @onready var surface: Node2D = $Surface
 @onready var sky = $Sky
+@onready var clouds = $Clouds
 
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0
@@ -79,5 +80,6 @@ func _sync_rotation() -> void:
 	body.rotation = rotation_value
 	surface.rotation = rotation_value
 	sky.set_planet_rotation(rotation_value)
+	clouds.set_planet_rotation(rotation_value)
 	for prop in surface_props:
 		prop.update_visibility(player_angle)
