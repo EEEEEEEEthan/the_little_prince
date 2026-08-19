@@ -26,12 +26,17 @@ const STAR_ROTATION_SPEED: float = 0.01
 const DAY_HALF_ARC: float = PI * 0.65
 
 ## 地物 / 玩家贴图的生成尺寸（像素）。火山与猴面包树以 spritesheet 横向拼接，
-## 每个变体一帧，帧尺寸仍为 *_SPRITE_SIZE。
+## 每个变体一帧，帧尺寸仍为 *_SPRITE_SIZE。小王子为 idle+walk 横拼 spritesheet。
 const VOLCANO_SPRITE_SIZE: int = 36
 const BAOBAB_SPRITE_SIZE: int = 32
 const ROSE_SPRITE_SIZE: int = 20
 const PLAYER_SPRITE_WIDTH: int = 12
 const PLAYER_SPRITE_HEIGHT: int = 18
+const PLAYER_IDLE_FRAME_COUNT: int = 2
+const PLAYER_WALK_FRAME_COUNT: int = 4
+const PLAYER_SPRITE_FRAME_COUNT: int = PLAYER_IDLE_FRAME_COUNT + PLAYER_WALK_FRAME_COUNT
+const PLAYER_IDLE_FPS: float = 2.0
+const PLAYER_WALK_FPS: float = 8.0
 
 ## 火山 spritesheet：前 2 帧为死火山（形态各异），第 3 帧为活火山（熔岩发光 + 烟）。
 const VOLCANO_VARIANT_COUNT: int = 3

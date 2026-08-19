@@ -92,6 +92,21 @@ func _check_constants() -> int:
 			% [WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT]
 		)
 		failed += 1
+	if (
+		WorldConstants.PLAYER_IDLE_FRAME_COUNT < 1
+		or WorldConstants.PLAYER_WALK_FRAME_COUNT < 2
+		or WorldConstants.PLAYER_SPRITE_FRAME_COUNT
+		!= WorldConstants.PLAYER_IDLE_FRAME_COUNT + WorldConstants.PLAYER_WALK_FRAME_COUNT
+	):
+		printerr(
+			"小王子 spritesheet 应为 idle+walk，实际 idle=%d walk=%d total=%d"
+			% [
+				WorldConstants.PLAYER_IDLE_FRAME_COUNT,
+				WorldConstants.PLAYER_WALK_FRAME_COUNT,
+				WorldConstants.PLAYER_SPRITE_FRAME_COUNT,
+			]
+		)
+		failed += 1
 	# 旧伪 3D 常量不得残留在源码中
 	var const_src := FileAccess.get_file_as_string("res://core/world_constants.gd")
 	for legacy in [
@@ -246,7 +261,11 @@ func _check_static_assets() -> int:
 			WorldConstants.BAOBAB_SPRITE_SIZE,
 		],
 		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
-		["res://player/prince.png", WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT],
+		[
+			"res://player/prince.png",
+			WorldConstants.PLAYER_SPRITE_WIDTH * WorldConstants.PLAYER_SPRITE_FRAME_COUNT,
+			WorldConstants.PLAYER_SPRITE_HEIGHT,
+		],
 	]
 	for item in sprite_checks:
 		var tex: Texture2D = load(item[0]) as Texture2D
@@ -390,6 +409,17 @@ func _check_scene_and_mechanics() -> int:
 		if planet.get_node_or_null("Sky") == null:
 			printerr("找不到 Sky（应为 Planet 子节点）")
 			failed += 1
+		if not planet.body.scale.is_equal_approx(Vector2.ONE):
+			printerr("Body.scale 应为 (1,1)（贴图原尺寸显示），实际 %s" % planet.body.scale)
+			failed += 1
+		for prop in planet.surface_props:
+			var dist := prop.position.length()
+			if absf(dist - WorldConstants.PLANET_RADIUS) > 0.51:
+				printerr(
+					"地物 %s 应在半径 %s 上，实际 %s"
+					% [prop.name, WorldConstants.PLANET_RADIUS, dist]
+				)
+				failed += 1
 		if scene.get_node_or_null("GameView/GameViewport/Sky") != null:
 			printerr("Sky 不应再作为 GameViewport 直接子节点")
 			failed += 1
@@ -464,6 +494,35 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 		if player.global_position.distance_to(apex) > 0.5:
 			printerr("玩家应在弧顶 %s，实际 %s" % [apex, player.global_position])
+			failed += 1
+		if player.hframes != WorldConstants.PLAYER_SPRITE_FRAME_COUNT:
+			printerr(
+				"Player.hframes 应为 %d，实际 %d"
+				% [WorldConstants.PLAYER_SPRITE_FRAME_COUNT, player.hframes]
+			)
+			failed += 1
+		if not player.scale.is_equal_approx(Vector2.ONE):
+			printerr("Player.scale 应为 (1,1)，实际 %s" % player.scale)
+			failed += 1
+		player._update_animation(0.0, 0.6)
+		if player.frame < 0 or player.frame >= WorldConstants.PLAYER_IDLE_FRAME_COUNT:
+			printerr("静止时应停在 idle 帧，实际 frame=%d" % player.frame)
+			failed += 1
+		planet.move_player(1.0, 0.2)
+		player._update_animation(1.0, 0.2)
+		if not planet.is_moving():
+			printerr("输入右移后星球应仍有角速度")
+			failed += 1
+		if player.frame < WorldConstants.PLAYER_IDLE_FRAME_COUNT:
+			printerr("行走时应切到 walk 帧，实际 frame=%d" % player.frame)
+			failed += 1
+		if player.flip_h:
+			printerr("向右走时 flip_h 应为 false")
+			failed += 1
+		planet.move_player(-1.0, 0.2)
+		player._update_animation(-1.0, 0.05)
+		if not player.flip_h:
+			printerr("向左走时 flip_h 应为 true")
 			failed += 1
 
 		planet.teleport_player(fposmod(-0.2, TAU))

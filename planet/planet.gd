@@ -1,7 +1,8 @@
 class_name Planet
 extends Node2D
 ## 2D 圆弧星球：Body / Surface / Sky 统一绕球心旋转，旋转角 = -player_angle。
-## 地表地物（玫瑰/火山/猴面包树）静态写在 planet.tscn，运行期不再生成。
+## 地表地物静态写在 planet.tscn；_ready 时按 PLANET_RADIUS 径向贴地。
+## Body 贴图按显示直径原尺寸绘制，不使用 scale。
 ## 小王子视觉上始终停在弧顶，实际由地表与星空反向旋转模拟行走。
 
 @onready var body: Sprite2D = $Body
@@ -22,7 +23,10 @@ var surface_props: Array[SurfaceProp] = []
 var _angular_velocity: float = 0.0
 
 func _ready() -> void:
+	# 星球贴图按显示直径原尺寸绘制，禁止用 scale 放大。
+	body.scale = Vector2.ONE
 	_collect_surface_props()
+	_snap_surface_props_to_radius()
 
 func _collect_surface_props() -> void:
 	for child in surface.get_children():
@@ -39,6 +43,19 @@ func _collect_surface_props() -> void:
 
 func apex_global_position() -> Vector2:
 	return global_position + Vector2(0.0, -WorldConstants.PLANET_RADIUS)
+
+func is_moving() -> bool:
+	return absf(_angular_velocity) > 0.02
+
+## 半径放大后地物仍按旧圆摆放时，沿径向推到当前星球表面。
+func _snap_surface_props_to_radius() -> void:
+	var radius := WorldConstants.PLANET_RADIUS
+	for prop in surface_props:
+		var length := prop.position.length()
+		if length <= 0.001:
+			prop.position = Vector2(0.0, -radius)
+		else:
+			prop.position *= radius / length
 
 ## 玩家沿线移动 direction 方向，角速度带阻尼平滑逼近目标，驱动星球反向旋转。
 func move_player(direction: float, delta: float) -> void:
