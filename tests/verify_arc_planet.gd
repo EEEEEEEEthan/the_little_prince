@@ -89,6 +89,15 @@ func _check_constants() -> int:
 	if WorldConstants.INTERACT_PROMPT_LOCAL_Y > -24.0:
 		printerr("INTERACT_PROMPT_LOCAL_Y 应在树冠上方（负值），实际 %s" % WorldConstants.INTERACT_PROMPT_LOCAL_Y)
 		failed += 1
+	if (
+		WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y > -16.0
+		or WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y < -40.0
+	):
+		printerr(
+			"OVERHEAD_TYPEWRITER_LOCAL_Y 应在头顶附近，实际 %s"
+			% WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y
+		)
+		failed += 1
 	if WorldConstants.BAOBAB_SPRITE_SIZE < 24 or WorldConstants.BAOBAB_SPRITE_SIZE > 40:
 		printerr("BAOBAB_SPRITE_SIZE 应约 28~36，实际 %d" % WorldConstants.BAOBAB_SPRITE_SIZE)
 		failed += 1
@@ -384,7 +393,12 @@ func _check_no_legacy() -> int:
 
 func _check_tscn_editor_visible() -> int:
 	var failed := 0
-	for path in ["res://main.tscn", "res://planet/planet.tscn", "res://ui/dialogue_box.tscn"]:
+	for path in [
+		"res://main.tscn",
+		"res://planet/planet.tscn",
+		"res://ui/dialogue_box.tscn",
+		"res://ui/overhead_typewriter.tscn",
+	]:
 		var src := FileAccess.get_file_as_string(path)
 		if src.contains("visible = false"):
 			printerr("%s 不应在 tscn 写 visible = false（编辑器要能看见，运行时脚本再关）" % path)
@@ -424,6 +438,9 @@ func _check_scene_and_mechanics() -> int:
 		printerr("无法加载 main.tscn")
 		return 1
 	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -718,6 +735,7 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 
+		failed += await _check_overhead_typewriter(scene, planet)
 		failed += await _check_prop_interactions(scene, planet)
 
 	print("  场景与圆弧力学 OK")
@@ -789,6 +807,73 @@ func _assert_scarf_integer_display(scarf: Scarf) -> int:
 			printerr("围巾抽帧坐标应为整数，实际 %s" % point)
 			return 1
 	return 0
+
+
+func _check_overhead_typewriter(scene: Node, planet: Planet) -> int:
+	var failed := 0
+	var overhead := scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	var body := overhead.get_node("Body") as Label
+	if body.horizontal_alignment != HORIZONTAL_ALIGNMENT_CENTER:
+		printerr("头顶文字应水平居中")
+		failed += 1
+	var font_color: Color = body.get("theme_override_colors/font_color")
+	if font_color != Color.WHITE:
+		printerr("头顶文字应为纯白，实际 %s" % font_color)
+		failed += 1
+	var expected_position := (
+			planet.apex_global_position() + Vector2(0.0, WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y)
+	).round()
+	if overhead.global_position.distance_to(expected_position) > 0.5:
+		printerr(
+			"头顶打字机应在弧顶上方 %s，实际 %s"
+			% [expected_position, overhead.global_position]
+		)
+		failed += 1
+
+	var line := OverheadTypewriter.AMBIENT_LINES[0]
+	overhead.play(line)
+	if not overhead.visible:
+		printerr("play 后头顶打字机应可见")
+		failed += 1
+	if body.text != line:
+		printerr("play 后应显示氛围文字")
+		failed += 1
+	if body.visible_characters != 1:
+		printerr(
+			"play 后应立刻打出第一个字，实际 visible_characters=%d"
+			% body.visible_characters
+		)
+		failed += 1
+	await create_timer(OverheadTypewriter.TYPEWRITER_INTERVAL * 3.0).timeout
+	if body.visible_characters <= 1:
+		printerr("打字机应继续出字，实际 visible_characters=%d" % body.visible_characters)
+		failed += 1
+	var typed_deadline_msec := Time.get_ticks_msec() + 2000
+	while (
+			body.visible_characters < line.length()
+			and Time.get_ticks_msec() < typed_deadline_msec
+	):
+		await process_frame
+	if body.visible_characters < line.length():
+		printerr("打字机超时未打完")
+		failed += 1
+	if not overhead.visible:
+		printerr("打完后应停留显示")
+		failed += 1
+	var fade_deadline_msec := Time.get_ticks_msec() + int(
+			(
+				OverheadTypewriter.HOLD_DURATION_SECONDS
+				+ OverheadTypewriter.FADE_DURATION_SECONDS
+				+ 0.5
+			) * 1000.0
+	)
+	while overhead.visible and Time.get_ticks_msec() < fade_deadline_msec:
+		await process_frame
+	if overhead.visible:
+		printerr("停留后应渐隐并隐藏")
+		failed += 1
+	print("  头顶打字机 OK")
+	return failed
 
 
 func _check_prop_interactions(scene: Node, planet: Planet) -> int:
