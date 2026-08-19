@@ -1082,7 +1082,70 @@ func _check_typewriter_hold_restores_after_key_release(
 		printerr("松开实体 Enter 后应恢复正常速度，wait_time=%s" % timer.wait_time)
 		failed += 1
 	dialogue.close()
+
+	failed += await _check_typewriter_hold_joypad_confirm(dialogue, lines)
 	return failed
+
+
+func _check_typewriter_hold_joypad_confirm(
+	dialogue: DialogueBox, lines: Array[DialogueLine]
+) -> int:
+	var failed := 0
+	var timer := dialogue.get_node("Timer") as Timer
+	_set_joy_confirm_pressed(false)
+	Input.action_release(&"interact")
+
+	_set_joy_confirm_pressed(true)
+	dialogue.play(lines)
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
+		printerr("手柄确认键按下打开对话应立即加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	_set_joy_confirm_pressed(false)
+	await process_frame
+	if not dialogue.is_typing():
+		printerr("松开手柄确认键后应继续打字")
+		failed += 1
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("松开手柄确认键后应恢复正常速度，wait_time=%s" % timer.wait_time)
+		failed += 1
+	dialogue.close()
+
+	_set_joy_confirm_pressed(true)
+	await process_frame
+	dialogue.play(lines)
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("打开前已按住的手柄确认键不应加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	var enter := InputEventKey.new()
+	enter.physical_keycode = KEY_ENTER
+	enter.keycode = KEY_ENTER
+	enter.pressed = true
+	Input.parse_input_event(enter)
+	Input.flush_buffered_events()
+	await process_frame
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
+		printerr("手柄常按时按住键盘仍应加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	enter.pressed = false
+	Input.parse_input_event(enter)
+	Input.flush_buffered_events()
+	await process_frame
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("手柄常按时松开键盘应恢复正常速度，wait_time=%s" % timer.wait_time)
+		failed += 1
+	dialogue.close()
+	_set_joy_confirm_pressed(false)
+	Input.action_release(&"interact")
+	return failed
+
+
+func _set_joy_confirm_pressed(pressed: bool) -> void:
+	var joy_button := InputEventJoypadButton.new()
+	joy_button.device = 0
+	joy_button.button_index = JOY_BUTTON_A
+	joy_button.pressed = pressed
+	Input.parse_input_event(joy_button)
+	Input.flush_buffered_events()
 
 
 func _await_dialogue_idle(dialogue: DialogueBox) -> bool:

@@ -17,19 +17,20 @@ var _lines: Array[DialogueLine] = []
 var _index: int = 0
 var _is_holding: bool = false
 var _hold_started_while_typing: bool = false
-var _blocked_joypad_devices: Dictionary = {}
+var _joy_confirm_was_down: Dictionary = {}
+var _accepted_joypad_devices: Dictionary = {}
 
 func _ready() -> void:
 	# tscn 保持可见便于编辑；开局再关。
 	visible = false
-	set_process(false)
+	_sync_joy_confirm_buttons()
 	_timer.wait_time = TYPEWRITER_INTERVAL
 	_timer.timeout.connect(_on_typewriter_tick)
 
 func _process(_delta: float) -> void:
-	for device: int in _blocked_joypad_devices.keys():
-		if not _is_interact_joy_pressed_on(device):
-			_blocked_joypad_devices.erase(device)
+	_sync_joy_confirm_buttons()
+	if not visible:
+		return
 	var held := _is_interact_held()
 	mark_holding(held)
 	if is_typing():
@@ -49,15 +50,16 @@ func play(lines: Array[DialogueLine]) -> void:
 	_index = 0
 	_is_holding = false
 	_hold_started_while_typing = false
-	_blocked_joypad_devices.clear()
-	for device in Input.get_connected_joypads():
-		if _is_interact_joy_pressed_on(device):
-			_blocked_joypad_devices[device] = true
-	_set_accelerating(false)
+	_accepted_joypad_devices.clear()
+	for device in _interact_joypad_devices():
+		if _is_interact_joy_pressed_on(device) and not _joy_confirm_was_down.get(device, false):
+			_accepted_joypad_devices[device] = true
 	visible = true
 	set_process(true)
 	_show_line()
-	mark_holding(_is_interact_held())
+	var held := _is_interact_held()
+	_set_accelerating(held)
+	mark_holding(held)
 
 func mark_holding(held: bool) -> void:
 	if not visible or held == _is_holding:
@@ -87,12 +89,11 @@ func close() -> void:
 	_typewriter.stop()
 	_is_holding = false
 	_hold_started_while_typing = false
-	_blocked_joypad_devices.clear()
+	_accepted_joypad_devices.clear()
 	_set_accelerating(false)
 	%ContinueTriangle.visible = false
 	_lines.clear()
 	_index = 0
-	set_process(false)
 	visible = false
 
 func _show_line() -> void:
@@ -116,26 +117,68 @@ func _set_accelerating(enabled: bool) -> void:
 func _is_interact_held() -> bool:
 	for event in InputMap.action_get_events(&"interact"):
 		var key := event as InputEventKey
-		if key != null:
-			if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
-				return true
-			if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
-				return true
+		if key == null:
 			continue
-		var joy := event as InputEventJoypadButton
-		if joy == null:
+		if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
+			return true
+		if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
+			return true
+	for device: int in _accepted_joypad_devices:
+		if _is_interact_joy_pressed_on(device):
+			return true
+	if DisplayServer.get_name() != "headless" or not Input.is_action_pressed(&"interact"):
+		return false
+	for device in _interact_joypad_devices():
+		if _is_interact_joy_pressed_on(device):
+			return false
+	return true
+
+func _sync_joy_confirm_buttons() -> void:
+	var active_devices: Dictionary = {}
+	for device in _interact_joypad_devices():
+		active_devices[device] = true
+		var is_down := _is_interact_joy_pressed_on(device)
+		if not _joy_confirm_was_down.has(device):
+			_joy_confirm_was_down[device] = is_down
+			if not is_down:
+				_accepted_joypad_devices.erase(device)
 			continue
-		for device in Input.get_connected_joypads():
-			if _blocked_joypad_devices.has(device):
-				continue
-			if Input.is_joy_button_pressed(device, joy.button_index):
-				return true
-	return DisplayServer.get_name() == "headless" and Input.is_action_pressed(&"interact")
+		var was_down: bool = _joy_confirm_was_down[device]
+		if visible and is_down and not was_down:
+			_accepted_joypad_devices[device] = true
+		if not is_down:
+			_accepted_joypad_devices.erase(device)
+		_joy_confirm_was_down[device] = is_down
+	for device in _joy_confirm_was_down.keys():
+		if active_devices.has(device):
+			continue
+		_joy_confirm_was_down.erase(device)
+		_accepted_joypad_devices.erase(device)
+
+func _interact_joypad_devices() -> Array[int]:
+	const joypad_device_limit := 16
+	var devices: Array[int] = []
+	var seen: Dictionary = {}
+	var add_device := func(device: int) -> void:
+		if seen.has(device):
+			return
+		seen[device] = true
+		devices.append(device)
+	for device in Input.get_connected_joypads():
+		add_device.call(device)
+	for device: int in _accepted_joypad_devices:
+		add_device.call(device)
+	for device in joypad_device_limit:
+		if seen.has(device):
+			continue
+		if _is_interact_joy_pressed_on(device):
+			add_device.call(device)
+	return devices
 
 func _is_interact_joy_pressed_on(device: int) -> bool:
 	for event in InputMap.action_get_events(&"interact"):
-		var joy := event as InputEventJoypadButton
-		if joy != null and Input.is_joy_button_pressed(device, joy.button_index):
+		var joy_button := event as InputEventJoypadButton
+		if joy_button != null and Input.is_joy_button_pressed(device, joy_button.button_index):
 			return true
 	return false
 
