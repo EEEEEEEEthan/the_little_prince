@@ -17,7 +17,6 @@ var _lines: Array[DialogueLine] = []
 var _index: int = 0
 var _is_holding: bool = false
 var _hold_started_while_typing: bool = false
-var _was_any_input_held: bool = false
 
 func _ready() -> void:
 	# tscn 保持可见便于编辑；开局再关。
@@ -27,10 +26,7 @@ func _ready() -> void:
 	_timer.timeout.connect(_on_typewriter_tick)
 
 func _process(_delta: float) -> void:
-	var held := Input.is_anything_pressed()
-	if held != _was_any_input_held:
-		mark_holding(held)
-	_was_any_input_held = held
+	mark_holding(Input.is_action_pressed(&"interact"))
 
 func is_open() -> bool:
 	return visible
@@ -46,11 +42,11 @@ func play(lines: Array[DialogueLine]) -> void:
 	_index = 0
 	_is_holding = false
 	_hold_started_while_typing = false
-	_was_any_input_held = Input.is_anything_pressed()
 	_set_accelerating(false)
 	visible = true
 	set_process(true)
 	_show_line()
+	mark_holding(Input.is_action_pressed(&"interact"))
 
 func mark_holding(held: bool) -> void:
 	if not visible or held == _is_holding:
@@ -80,7 +76,6 @@ func close() -> void:
 	_typewriter.stop()
 	_is_holding = false
 	_hold_started_while_typing = false
-	_was_any_input_held = false
 	_set_accelerating(false)
 	%ContinueTriangle.visible = false
 	_lines.clear()
@@ -101,7 +96,7 @@ func _show_line() -> void:
 func _set_accelerating(enabled: bool) -> void:
 	_timer.wait_time = TYPEWRITER_FAST_INTERVAL if enabled else TYPEWRITER_INTERVAL
 	_typewriter.volume_db = TYPEWRITER_FAST_VOLUME_DB if enabled else TYPEWRITER_VOLUME_DB
-	if enabled and not _timer.is_stopped():
+	if not _timer.is_stopped():
 		_timer.start()
 
 func _on_typewriter_tick() -> void:

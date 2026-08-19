@@ -997,6 +997,59 @@ func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -
 		printerr("最后一句松开后应关闭对话框")
 		failed += 1
 
+	failed += await _check_typewriter_hold_follows_interact(dialogue, lines)
+	return failed
+
+
+func _check_typewriter_hold_follows_interact(
+	dialogue: DialogueBox, lines: Array[DialogueLine]
+) -> int:
+	var failed := 0
+	var timer := dialogue.get_node("Timer") as Timer
+	Input.action_release(&"interact")
+	Input.action_release(&"move_left")
+
+	Input.action_press(&"move_left")
+	dialogue.play(lines)
+	await process_frame
+	if not dialogue.is_typing():
+		printerr("按住移动打开对话后应仍在打字")
+		failed += 1
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("按住移动不应加速打字机，wait_time=%s" % timer.wait_time)
+		failed += 1
+	Input.action_press(&"interact")
+	await process_frame
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
+		printerr("按住 interact 应加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	Input.action_release(&"interact")
+	await process_frame
+	if not dialogue.is_typing():
+		printerr("松开 interact 后应继续打字")
+		failed += 1
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("松开 interact 应恢复正常速度，wait_time=%s" % timer.wait_time)
+		failed += 1
+	Input.action_release(&"move_left")
+	dialogue.close()
+
+	Input.action_press(&"interact")
+	dialogue.play(lines)
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
+		printerr("打开对话时仍按住 interact 应立即加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	Input.action_release(&"interact")
+	await process_frame
+	if not dialogue.is_typing():
+		printerr("打开后松开 interact 应继续打字")
+		failed += 1
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("打开后松开 interact 应恢复正常速度，wait_time=%s" % timer.wait_time)
+		failed += 1
+	dialogue.close()
+	Input.action_release(&"interact")
+	Input.action_release(&"move_left")
 	return failed
 
 
