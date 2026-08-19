@@ -12,7 +12,10 @@ func _ready() -> void:
 	hframes = WorldConstants.PLAYER_SPRITE_FRAME_COUNT
 	vframes = 1
 	scale = Vector2.ONE
-	offset = Vector2(0.0, -float(WorldConstants.PLAYER_SPRITE_HEIGHT) * 0.5)
+	offset = Vector2(
+		0.0,
+		-float(WorldConstants.PLAYER_SPRITE_HEIGHT) * 0.5 + WorldConstants.PLAYER_VISUAL_Y_OFFSET
+	)
 	frame = 0
 
 func _physics_process(delta: float) -> void:

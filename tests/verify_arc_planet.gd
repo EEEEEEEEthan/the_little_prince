@@ -547,6 +547,12 @@ func _check_scene_and_mechanics() -> int:
 		if not player.scale.is_equal_approx(Vector2.ONE):
 			printerr("Player.scale 应为 (1,1)，实际 %s" % player.scale)
 			failed += 1
+		var expected_offset_y := (
+			-float(WorldConstants.PLAYER_SPRITE_HEIGHT) * 0.5 + WorldConstants.PLAYER_VISUAL_Y_OFFSET
+		)
+		if absf(player.offset.y - expected_offset_y) > 0.01:
+			printerr("玩家视觉 Y 偏移应为 %s，实际 %s" % [expected_offset_y, player.offset.y])
+			failed += 1
 		player._update_animation(0.0, 0.6)
 		if player.frame < 0 or player.frame >= WorldConstants.PLAYER_IDLE_FRAME_COUNT:
 			printerr("静止时应停在 idle 帧，实际 frame=%d" % player.frame)
