@@ -9,6 +9,11 @@ const PLAYER_PATH := "GameView/GameViewport/Player"
 const PREVIOUS_PLANET_RADIUS := 72.8
 const PREVIOUS_PLAYER_SPEED := 20.0
 const PREVIOUS_STAR_ROTATION_SPEED := 0.02
+const PREVIOUS_CLOUD_INSTANCE_COUNT := 84
+const PREVIOUS_CLOUD_SPRITES_PER_MASS_MIN := 5
+const PREVIOUS_CLOUD_SPRITES_PER_MASS_MAX := 8
+const PREVIOUS_CLOUD_CLUSTER_RADIUS := Vector2(28.0, 10.0)
+const PREVIOUS_CLOUD_INSTANCE_ALPHA_MAX := 0.52
 const EXPECTED_PLANET_RADIUS := PREVIOUS_PLANET_RADIUS * 1.2
 const EXPECTED_PLAYER_SPEED := PREVIOUS_PLAYER_SPEED * 0.8
 
@@ -87,8 +92,52 @@ func _check_constants() -> int:
 			% [WorldConstants.STAR_ROTATION_SPEED, WorldConstants.CLOUD_DRIFT_SPEED]
 		)
 		failed += 1
-	if WorldConstants.CLOUD_INSTANCE_COUNT < 32:
-		printerr("CLOUD_INSTANCE_COUNT 过少：%d" % WorldConstants.CLOUD_INSTANCE_COUNT)
+	if WorldConstants.CLOUD_INSTANCE_COUNT <= PREVIOUS_CLOUD_INSTANCE_COUNT:
+		printerr(
+				"CLOUD_INSTANCE_COUNT 应多于原值 %d，实际 %d"
+				% [PREVIOUS_CLOUD_INSTANCE_COUNT, WorldConstants.CLOUD_INSTANCE_COUNT]
+		)
+		failed += 1
+	if (
+			WorldConstants.CLOUD_SPRITES_PER_MASS_MIN <= PREVIOUS_CLOUD_SPRITES_PER_MASS_MIN
+			or WorldConstants.CLOUD_SPRITES_PER_MASS_MAX <= PREVIOUS_CLOUD_SPRITES_PER_MASS_MAX
+	):
+		printerr(
+				"每团云朵数应多于原值 %d~%d，实际 %d~%d"
+				% [
+					PREVIOUS_CLOUD_SPRITES_PER_MASS_MIN,
+					PREVIOUS_CLOUD_SPRITES_PER_MASS_MAX,
+					WorldConstants.CLOUD_SPRITES_PER_MASS_MIN,
+					WorldConstants.CLOUD_SPRITES_PER_MASS_MAX,
+				]
+		)
+		failed += 1
+	if (
+			WorldConstants.CLOUD_CLUSTER_RADIUS.x <= PREVIOUS_CLOUD_CLUSTER_RADIUS.x
+			or WorldConstants.CLOUD_CLUSTER_RADIUS.y <= PREVIOUS_CLOUD_CLUSTER_RADIUS.y
+	):
+		printerr(
+				"CLOUD_CLUSTER_RADIUS 应大于原值 %s，实际 %s"
+				% [PREVIOUS_CLOUD_CLUSTER_RADIUS, WorldConstants.CLOUD_CLUSTER_RADIUS]
+		)
+		failed += 1
+	var previous_cluster_count_floor := (
+			PREVIOUS_CLOUD_INSTANCE_COUNT / PREVIOUS_CLOUD_SPRITES_PER_MASS_MAX
+	)
+	var cluster_count_floor := (
+			WorldConstants.CLOUD_INSTANCE_COUNT / WorldConstants.CLOUD_SPRITES_PER_MASS_MAX
+	)
+	if cluster_count_floor <= previous_cluster_count_floor:
+		printerr(
+				"云团数量应更多，下限由 %s 变为 %s"
+				% [previous_cluster_count_floor, cluster_count_floor]
+		)
+		failed += 1
+	if WorldConstants.CLOUD_INSTANCE_ALPHA_MAX > PREVIOUS_CLOUD_INSTANCE_ALPHA_MAX * 0.4:
+		printerr(
+				"CLOUD_INSTANCE_ALPHA_MAX 应远低于原值 %s，实际 %s"
+				% [PREVIOUS_CLOUD_INSTANCE_ALPHA_MAX, WorldConstants.CLOUD_INSTANCE_ALPHA_MAX]
+		)
 		failed += 1
 	if WorldConstants.CLOUD_ORBIT_MIN_RADIUS <= WorldConstants.PLANET_RADIUS:
 		printerr(
@@ -853,6 +902,26 @@ func _check_clouds(planet: Planet) -> int:
 	if punched_hole_count > 0:
 		printerr("云朵贴图不应掏洞，内部镂空 %d 像素" % punched_hole_count)
 		failed += 1
+	var opaque_weighted_y := 0.0
+	var opaque_pixel_count := 0
+	for pixel_y in cloud_image.get_height():
+		for pixel_x in cloud_image.get_width():
+			if cloud_image.get_pixel(pixel_x, pixel_y).a <= 0.05:
+				continue
+			var frame_local_y := pixel_y % WorldConstants.CLOUD_FRAME_HEIGHT
+			opaque_weighted_y += float(frame_local_y)
+			opaque_pixel_count += 1
+	if opaque_pixel_count == 0:
+		printerr("云朵贴图没有不透明像素")
+		failed += 1
+	else:
+		var opaque_centroid_y := opaque_weighted_y / float(opaque_pixel_count)
+		if opaque_centroid_y >= float(WorldConstants.CLOUD_FRAME_HEIGHT) * 0.5:
+			printerr(
+					"云朵应蓬松顶朝上，质心 y=%s"
+					% opaque_centroid_y
+			)
+			failed += 1
 	if not is_equal_approx(clouds.planet_rotation, -planet.player_angle):
 		printerr(
 				"Clouds.planet_rotation 应为 %s，实际 %s"
@@ -882,7 +951,7 @@ func _check_clouds(planet: Planet) -> int:
 				instance_color.a < WorldConstants.CLOUD_INSTANCE_ALPHA_MIN - 0.001
 				or instance_color.a > WorldConstants.CLOUD_INSTANCE_ALPHA_MAX + 0.001
 		):
-			printerr("实例 %d 应略透明，alpha=%s" % [instance_index, instance_color.a])
+			printerr("实例 %d 应更透明，alpha=%s" % [instance_index, instance_color.a])
 			failed += 1
 		used_rows[int(round(instance_color.r * float(WorldConstants.CLOUD_FRAME_ROWS - 1)))] = true
 		var expected_rotation := atan2(local_position.x, -local_position.y)
@@ -929,10 +998,10 @@ func _check_clouds(planet: Planet) -> int:
 			failed += 1
 	var drift_seconds := 8.0
 	clouds._process(drift_seconds)
-	var expected_drift := -WorldConstants.CLOUD_DRIFT_SPEED * drift_seconds
+	var expected_drift := WorldConstants.CLOUD_DRIFT_SPEED * drift_seconds
 	if absf(angle_difference(clouds.rotation, rotation_before + expected_drift - 0.4)) > 0.02:
 		printerr(
-				"云层应缓慢飘动，期望转过 %s，实际 %s -> %s"
+				"云层应顺时针缓慢飘动，期望转过 %s，实际 %s -> %s"
 				% [expected_drift, rotation_before, clouds.rotation]
 		)
 		failed += 1
