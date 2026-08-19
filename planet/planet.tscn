@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://cpalegraypuff" path="res://planet/pale_gray_puff.png" id="12_puff"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
+[ext_resource type="Texture2D" uid="uid://b8nblendg1dsk" path="res://planet/night_blend_gradient.tres" id="13_night_blend_gradient"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_aiioy"]
 noise_type = 2
@@ -35,6 +36,7 @@ gradient = SubResource("Gradient_zenith")
 shader = ExtResource("10_sky_shader")
 shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
 shader_parameter/star_alpha_gradient = ExtResource("11_star_alpha_gradient")
+shader_parameter/night_blend_gradient = ExtResource("13_night_blend_gradient")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
 shader_parameter/phase = 0.5
 shader_parameter/noise_strength = 0.02

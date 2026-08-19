@@ -258,6 +258,19 @@ func _check_static_assets() -> int:
 	if night_grad == null or not (night_grad is GradientTexture1D):
 		printerr("night_sky_gradient.tres 应可加载为 GradientTexture1D")
 		failed += 1
+	var night_blend_grad := load("res://planet/night_blend_gradient.tres") as GradientTexture1D
+	if night_blend_grad == null or night_blend_grad.gradient == null:
+		printerr("night_blend_gradient.tres 应可加载为 GradientTexture1D")
+		failed += 1
+	else:
+		var near_blend := night_blend_grad.gradient.sample(0.0).r
+		var far_blend := night_blend_grad.gradient.sample(1.0).r
+		if near_blend > 0.05:
+			printerr("night_blend_gradient 近处（星球中心）应接近 0，实际 %s" % near_blend)
+			failed += 1
+		if far_blend < 0.95:
+			printerr("night_blend_gradient 远处应接近 1，实际 %s" % far_blend)
+			failed += 1
 	# 星球圆盘直径应约等于 2 * PLANET_RADIUS
 	var body: Texture2D = load("res://planet/body.png") as Texture2D
 	if body != null:
@@ -612,7 +625,12 @@ func _check_scene_and_mechanics() -> int:
 				if line.begins_with("uniform sampler2D") and not line.contains("filter_nearest"):
 					printerr("Sky shader sampler 应使用 filter_nearest：%s" % line)
 					failed += 1
-			for param in ["zenith_gradient", "star_alpha_gradient", "noise_texture"]:
+			for param in [
+				"zenith_gradient",
+				"star_alpha_gradient",
+				"night_blend_gradient",
+				"noise_texture",
+			]:
 				var tex := sky_material.get_shader_parameter(param) as Texture2D
 				if tex == null:
 					printerr("Sky shader 应挂 %s" % param)
@@ -633,6 +651,51 @@ func _check_scene_and_mechanics() -> int:
 						% [case[0], SKY_PHASE.angle_to_phase(case[0]), phase]
 					)
 					failed += 1
+			# 正午：近星球天空应亮于远处（远处 blend 到夜空）；取邻域最暗像素避开星星
+			var interact_prompt: CanvasItem = scene.get_node(
+				"GameView/GameViewport/InteractPrompt"
+			)
+			var surface_was_visible := surface.visible
+			var body_was_visible := body.visible
+			var player_was_visible := player.visible
+			var prompt_was_visible := interact_prompt.visible
+			surface.visible = false
+			body.visible = false
+			player.visible = false
+			interact_prompt.visible = false
+			sky.rotation = 0.0
+			sky._update_daylight()
+			await process_frame
+			var viewport_image := game_viewport.get_texture().get_image()
+			if viewport_image == null:
+				printerr("无法读取 GameViewport 贴图")
+				failed += 1
+			else:
+				var near_planet_luminance := 1.0
+				for sample_y in range(175, 185):
+					for sample_x in range(75, 85):
+						near_planet_luminance = minf(
+							near_planet_luminance,
+							viewport_image.get_pixel(sample_x, sample_y).get_luminance()
+						)
+				var far_sky_luminance := 1.0
+				for sample_y in range(5, 15):
+					for sample_x in range(123, 133):
+						far_sky_luminance = minf(
+							far_sky_luminance,
+							viewport_image.get_pixel(sample_x, sample_y).get_luminance()
+						)
+				if far_sky_luminance > near_planet_luminance - 0.08:
+					printerr(
+						"正午远处天空应比近处更暗，近处亮度 %s 远处 %s"
+						% [near_planet_luminance, far_sky_luminance]
+					)
+					failed += 1
+			surface.visible = surface_was_visible
+			body.visible = body_was_visible
+			player.visible = player_was_visible
+			interact_prompt.visible = prompt_was_visible
+			sky.rotation = sky.planet_rotation + sky._self_rotation
 
 		var apex := planet.apex_global_position()
 		var expected_apex_y := float(game_viewport.size.y) * WorldConstants.APEX_Y_RATIO

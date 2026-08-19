@@ -1,6 +1,6 @@
 extends Sprite2D
 ## 统一天空背景：单个 Sprite2D 绑定 sky.gdshader，TEXTURE 为 starfield.png，
-## 负责白天渐变色、夜空星图叠加与胶片颗粒效果。
+## 负责白天渐变色、按到星球距离混向夜空、星图叠加与胶片颗粒效果。
 ## 整体绕球心旋转（星球旋转 + 自转），相位按星空相对角度实时更新 shader 参数。
 
 ## 星球旋转分量，由 Planet 同步写入。
