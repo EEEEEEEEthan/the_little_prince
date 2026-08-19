@@ -6,11 +6,11 @@ extends SceneTree
 const VIEWPORT_PATH := "GameView/GameViewport"
 const PLANET_PATH := "GameView/GameViewport/Planet"
 const PLAYER_PATH := "GameView/GameViewport/Player"
-const PREVIOUS_PLANET_RADIUS := 56.0
-const PREVIOUS_PLAYER_SPEED := 40.0
+const PREVIOUS_PLANET_RADIUS := 72.8
+const PREVIOUS_PLAYER_SPEED := 20.0
 const PREVIOUS_STAR_ROTATION_SPEED := 0.02
-const EXPECTED_PLANET_RADIUS := PREVIOUS_PLANET_RADIUS * 1.3
-const EXPECTED_PLAYER_SPEED := PREVIOUS_PLAYER_SPEED * 0.5
+const EXPECTED_PLANET_RADIUS := PREVIOUS_PLANET_RADIUS * 1.2
+const EXPECTED_PLAYER_SPEED := PREVIOUS_PLAYER_SPEED * 0.8
 
 const WorldConstants = preload("res://core/world_constants.gd")
 const SKY_PHASE := preload("res://planet/sky_phase.gd")
@@ -59,18 +59,15 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT < 10:
 		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if (
-		absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01
-		or WorldConstants.PLANET_RADIUS > 80.0
-	):
+	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
-			"PLANET_RADIUS 应为原值的 130%%（%s），实际 %s"
+			"PLANET_RADIUS 应为原值的 120%%（%s），实际 %s"
 			% [EXPECTED_PLANET_RADIUS, WorldConstants.PLANET_RADIUS]
 		)
 		failed += 1
 	if absf(WorldConstants.PLAYER_SPEED - EXPECTED_PLAYER_SPEED) > 0.01:
 		printerr(
-			"PLAYER_SPEED 应为原值的 50%%（%s），实际 %s"
+			"PLAYER_SPEED 应为原值的 80%%（%s），实际 %s"
 			% [EXPECTED_PLAYER_SPEED, WorldConstants.PLAYER_SPEED]
 		)
 		failed += 1
@@ -131,7 +128,7 @@ func _check_constants() -> int:
 		if const_src.find(legacy) >= 0:
 			printerr("world_constants.gd 仍含旧符号：%s" % legacy)
 			failed += 1
-	print("  常量检查 OK（半径增加 30%% / 移速降低 50%% / 弧顶偏下 / 像素精灵）")
+	print("  常量检查 OK（半径增加 20%% / 移速降低 20%% / 弧顶偏下 / 像素精灵）")
 	return failed
 
 func _check_static_assets() -> int:
@@ -556,8 +553,8 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 		for prop in planet.surface_props:
 			var dist := prop.position.length()
-			# 允许沿起伏轮廓略微内缩，但不得停在放大前的旧圆（约 62.4）上。
-			if dist < 64.0 or dist > WorldConstants.PLANET_RADIUS + 1.5:
+			# 允许沿起伏轮廓略微内缩，但不得停在放大前的旧圆上。
+			if dist < PREVIOUS_PLANET_RADIUS or dist > WorldConstants.PLANET_RADIUS + 1.5:
 				printerr(
 					"地物 %s 应靠近半径 %s，实际 %s"
 					% [prop.name, WorldConstants.PLANET_RADIUS, dist]
