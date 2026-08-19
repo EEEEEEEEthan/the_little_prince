@@ -82,6 +82,7 @@ func close() -> void:
 	_hold_started_while_typing = false
 	_was_any_input_held = false
 	_set_accelerating(false)
+	%ContinueTriangle.visible = false
 	_lines.clear()
 	_index = 0
 	set_process(false)
@@ -93,6 +94,7 @@ func _show_line() -> void:
 	_body.text = line.text
 	_portrait.texture = line.portrait
 	_body.visible_characters = 0
+	%ContinueTriangle.visible = false
 	_timer.start()
 	_on_typewriter_tick()
 
@@ -110,6 +112,7 @@ func _on_typewriter_tick() -> void:
 	if _body.visible_characters >= total:
 		_timer.stop()
 		_set_accelerating(false)
+		%ContinueTriangle.visible = true
 
 func _play_blip() -> void:
 	var shown := _body.visible_characters

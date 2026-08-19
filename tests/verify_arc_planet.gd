@@ -764,6 +764,7 @@ func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -
 	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
 	var timer := dialogue.get_node("Timer") as Timer
 	var typewriter := dialogue.get_node("Typewriter") as AudioStreamPlayer
+	var continue_triangle := dialogue.get_node("ContinueTriangle") as Control
 	var first_text := lines[0].text
 	var second_text := lines[1].text
 
@@ -771,6 +772,9 @@ func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -
 	dialogue.set_process(false)
 	if not dialogue.is_open() or not dialogue.is_typing():
 		printerr("play 后对话框应打开且处于打字机中")
+		failed += 1
+	if continue_triangle.visible:
+		printerr("打字中不应显示继续三角")
 		failed += 1
 	if body.text != first_text:
 		printerr("play 后应显示第一句")
@@ -809,12 +813,18 @@ func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -
 	if not await _await_dialogue_idle(dialogue):
 		printerr("按住加速后打字机超时未结束")
 		return failed + 1
+	if not continue_triangle.visible:
+		printerr("打字结束后应显示继续三角")
+		failed += 1
 	if not is_equal_approx(typewriter.volume_db, DialogueBox.TYPEWRITER_VOLUME_DB):
 		printerr("打字结束后音效应恢复，volume_db=%s" % typewriter.volume_db)
 		failed += 1
 	dialogue.mark_holding(false)
 	if not dialogue.is_open() or dialogue.is_typing() or body.text != first_text:
 		printerr("按住直到结束再松开，不应进入下一句")
+		failed += 1
+	if not continue_triangle.visible:
+		printerr("按住结束再松开后继续三角仍应显示")
 		failed += 1
 
 	dialogue.mark_holding(true)
@@ -828,10 +838,16 @@ func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -
 	if not dialogue.is_typing():
 		printerr("进入下一句后应重新打字")
 		failed += 1
+	if continue_triangle.visible:
+		printerr("进入下一句打字中不应显示继续三角")
+		failed += 1
 
 	if not await _await_dialogue_idle(dialogue):
 		printerr("第二句打字机超时未结束")
 		return failed + 1
+	if not continue_triangle.visible:
+		printerr("第二句打完应显示继续三角")
+		failed += 1
 	dialogue.mark_holding(true)
 	dialogue.mark_holding(false)
 	if dialogue.is_open():
