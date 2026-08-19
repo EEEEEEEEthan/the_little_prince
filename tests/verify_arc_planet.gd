@@ -9,6 +9,11 @@ const PLAYER_PATH := "GameView/GameViewport/Player"
 const PREVIOUS_PLANET_RADIUS := 72.8
 const PREVIOUS_PLAYER_SPEED := 20.0
 const PREVIOUS_STAR_ROTATION_SPEED := 0.02
+const PREVIOUS_CLOUD_INSTANCE_COUNT := 84
+const PREVIOUS_CLOUD_SPRITES_PER_MASS_MIN := 5
+const PREVIOUS_CLOUD_SPRITES_PER_MASS_MAX := 8
+const PREVIOUS_CLOUD_CLUSTER_RADIUS := Vector2(28.0, 10.0)
+const PREVIOUS_CLOUD_INSTANCE_ALPHA_MAX := 0.52
 const EXPECTED_PLANET_RADIUS := PREVIOUS_PLANET_RADIUS * 1.2
 const EXPECTED_PLAYER_SPEED := PREVIOUS_PLAYER_SPEED * 0.8
 
@@ -20,6 +25,7 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/rose.png",
 	"res://planet/volcano.png",
 	"res://planet/pale_gray_puff.png",
+	"res://planet/white_lavender_puff_frames.png",
 	"res://planet/baobab.png",
 	"res://planet/body.png",
 	"res://planet/starfield.png",
@@ -77,6 +83,84 @@ func _check_constants() -> int:
 			% [PREVIOUS_STAR_ROTATION_SPEED, WorldConstants.STAR_ROTATION_SPEED]
 		)
 		failed += 1
+	if (
+		WorldConstants.CLOUD_DRIFT_SPEED <= 0.0
+		or WorldConstants.CLOUD_DRIFT_SPEED >= WorldConstants.STAR_ROTATION_SPEED
+	):
+		printerr(
+			"CLOUD_DRIFT_SPEED 应慢于星空自转 %s，实际 %s"
+			% [WorldConstants.STAR_ROTATION_SPEED, WorldConstants.CLOUD_DRIFT_SPEED]
+		)
+		failed += 1
+	if WorldConstants.CLOUD_INSTANCE_COUNT <= PREVIOUS_CLOUD_INSTANCE_COUNT:
+		printerr(
+				"CLOUD_INSTANCE_COUNT 应多于原值 %d，实际 %d"
+				% [PREVIOUS_CLOUD_INSTANCE_COUNT, WorldConstants.CLOUD_INSTANCE_COUNT]
+		)
+		failed += 1
+	if (
+			WorldConstants.CLOUD_SPRITES_PER_MASS_MIN <= PREVIOUS_CLOUD_SPRITES_PER_MASS_MIN
+			or WorldConstants.CLOUD_SPRITES_PER_MASS_MAX <= PREVIOUS_CLOUD_SPRITES_PER_MASS_MAX
+	):
+		printerr(
+				"每团云朵数应多于原值 %d~%d，实际 %d~%d"
+				% [
+					PREVIOUS_CLOUD_SPRITES_PER_MASS_MIN,
+					PREVIOUS_CLOUD_SPRITES_PER_MASS_MAX,
+					WorldConstants.CLOUD_SPRITES_PER_MASS_MIN,
+					WorldConstants.CLOUD_SPRITES_PER_MASS_MAX,
+				]
+		)
+		failed += 1
+	if (
+			WorldConstants.CLOUD_CLUSTER_RADIUS.x <= PREVIOUS_CLOUD_CLUSTER_RADIUS.x
+			or WorldConstants.CLOUD_CLUSTER_RADIUS.y <= PREVIOUS_CLOUD_CLUSTER_RADIUS.y
+	):
+		printerr(
+				"CLOUD_CLUSTER_RADIUS 应大于原值 %s，实际 %s"
+				% [PREVIOUS_CLOUD_CLUSTER_RADIUS, WorldConstants.CLOUD_CLUSTER_RADIUS]
+		)
+		failed += 1
+	var previous_cluster_count_floor := (
+			PREVIOUS_CLOUD_INSTANCE_COUNT / PREVIOUS_CLOUD_SPRITES_PER_MASS_MAX
+	)
+	var cluster_count_floor := (
+			WorldConstants.CLOUD_INSTANCE_COUNT / WorldConstants.CLOUD_SPRITES_PER_MASS_MAX
+	)
+	if cluster_count_floor <= previous_cluster_count_floor:
+		printerr(
+				"云团数量应更多，下限由 %s 变为 %s"
+				% [previous_cluster_count_floor, cluster_count_floor]
+		)
+		failed += 1
+	if WorldConstants.CLOUD_INSTANCE_ALPHA_MAX > PREVIOUS_CLOUD_INSTANCE_ALPHA_MAX * 0.4:
+		printerr(
+				"CLOUD_INSTANCE_ALPHA_MAX 应远低于原值 %s，实际 %s"
+				% [PREVIOUS_CLOUD_INSTANCE_ALPHA_MAX, WorldConstants.CLOUD_INSTANCE_ALPHA_MAX]
+		)
+		failed += 1
+	if WorldConstants.CLOUD_ORBIT_MIN_RADIUS <= WorldConstants.PLANET_RADIUS:
+		printerr(
+			"CLOUD_ORBIT_MIN_RADIUS 应高于地表半径 %s，实际 %s"
+			% [WorldConstants.PLANET_RADIUS, WorldConstants.CLOUD_ORBIT_MIN_RADIUS]
+		)
+		failed += 1
+	if (
+		WorldConstants.CLOUD_FRAME_WIDTH != 16
+		or WorldConstants.CLOUD_FRAME_HEIGHT != 8
+		or WorldConstants.CLOUD_FRAME_COLUMNS != 4
+		or WorldConstants.CLOUD_FRAME_ROWS != 8
+	):
+		printerr(
+				"云朵帧规格异常：%dx%d 网格 %dx%d"
+				% [
+					WorldConstants.CLOUD_FRAME_WIDTH,
+					WorldConstants.CLOUD_FRAME_HEIGHT,
+					WorldConstants.CLOUD_FRAME_COLUMNS,
+					WorldConstants.CLOUD_FRAME_ROWS,
+				]
+		)
+		failed += 1
 	if WorldConstants.APEX_Y_RATIO < 0.80 or WorldConstants.APEX_Y_RATIO >= 1.0:
 		printerr("APEX_Y_RATIO 应偏下（约 0.85~0.92）：%s" % WorldConstants.APEX_Y_RATIO)
 		failed += 1
@@ -88,6 +172,15 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.INTERACT_PROMPT_LOCAL_Y > -24.0:
 		printerr("INTERACT_PROMPT_LOCAL_Y 应在树冠上方（负值），实际 %s" % WorldConstants.INTERACT_PROMPT_LOCAL_Y)
+		failed += 1
+	if (
+		WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y > -16.0
+		or WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y < -40.0
+	):
+		printerr(
+			"OVERHEAD_TYPEWRITER_LOCAL_Y 应在头顶附近，实际 %s"
+			% WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y
+		)
 		failed += 1
 	if WorldConstants.BAOBAB_SPRITE_SIZE < 24 or WorldConstants.BAOBAB_SPRITE_SIZE > 40:
 		printerr("BAOBAB_SPRITE_SIZE 应约 28~36，实际 %d" % WorldConstants.BAOBAB_SPRITE_SIZE)
@@ -319,6 +412,11 @@ func _check_static_assets() -> int:
 		],
 		["res://planet/pale_gray_puff.png", 8, 8],
 		[
+			"res://planet/white_lavender_puff_frames.png",
+			WorldConstants.CLOUD_FRAME_WIDTH * WorldConstants.CLOUD_FRAME_COLUMNS,
+			WorldConstants.CLOUD_FRAME_HEIGHT * WorldConstants.CLOUD_FRAME_ROWS,
+		],
+		[
 			"res://planet/baobab.png",
 			WorldConstants.BAOBAB_SPRITE_SIZE * WorldConstants.BAOBAB_VARIANT_COUNT,
 			WorldConstants.BAOBAB_SPRITE_SIZE,
@@ -384,7 +482,12 @@ func _check_no_legacy() -> int:
 
 func _check_tscn_editor_visible() -> int:
 	var failed := 0
-	for path in ["res://main.tscn", "res://planet/planet.tscn", "res://ui/dialogue_box.tscn"]:
+	for path in [
+		"res://main.tscn",
+		"res://planet/planet.tscn",
+		"res://ui/dialogue_box.tscn",
+		"res://ui/overhead_typewriter.tscn",
+	]:
 		var src := FileAccess.get_file_as_string(path)
 		if src.contains("visible = false"):
 			printerr("%s 不应在 tscn 写 visible = false（编辑器要能看见，运行时脚本再关）" % path)
@@ -424,6 +527,9 @@ func _check_scene_and_mechanics() -> int:
 		printerr("无法加载 main.tscn")
 		return 1
 	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -517,6 +623,18 @@ func _check_scene_and_mechanics() -> int:
 			if volcano_smoke.texture == null:
 				printerr("VolcanoSmoke 应有 puff 贴图")
 				failed += 1
+			const PREVIOUS_SMOKE_VELOCITY_MAX := 11.0
+			const PREVIOUS_SMOKE_GRAVITY_Y := -14.0
+			const PREVIOUS_SMOKE_LIFETIME := 2.2
+			if volcano_smoke.initial_velocity_max >= PREVIOUS_SMOKE_VELOCITY_MAX * 0.5:
+				printerr("VolcanoSmoke 初速应大幅低于原值")
+				failed += 1
+			if volcano_smoke.gravity.y <= PREVIOUS_SMOKE_GRAVITY_Y * 0.5:
+				printerr("VolcanoSmoke 上升加速度应大幅低于原值")
+				failed += 1
+			if volcano_smoke.lifetime <= PREVIOUS_SMOKE_LIFETIME * 1.5:
+				printerr("VolcanoSmoke 寿命应加长以匹配慢速")
+				failed += 1
 			var smoke_host := volcano_smoke.get_parent() as SurfaceProp
 			if (
 				smoke_host == null
@@ -547,6 +665,9 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 		if planet.get_node_or_null("Sky") == null:
 			printerr("找不到 Sky（应为 Planet 子节点）")
+			failed += 1
+		if planet.get_node_or_null("Clouds") == null:
+			printerr("找不到 Clouds（应为 Planet 子节点）")
 			failed += 1
 		if not planet.body.scale.is_equal_approx(Vector2.ONE):
 			printerr("Body.scale 应为 (1,1)（贴图原尺寸显示），实际 %s" % planet.body.scale)
@@ -589,6 +710,10 @@ func _check_scene_and_mechanics() -> int:
 				"Sky.planet_rotation 应为 %s，实际 %s（星空须随星球转）"
 				% [-planet.player_angle, sky.planet_rotation]
 			)
+			failed += 1
+		failed += _check_clouds(planet)
+		if not is_equal_approx(planet.player_angle, 0.75):
+			printerr("云层检查后 player_angle 应恢复为 0.75")
 			failed += 1
 		if WorldConstants.STAR_ROTATION_SPEED <= 0.0:
 			printerr("STAR_ROTATION_SPEED 应大于 0（星空相对星球自转）")
@@ -693,6 +818,10 @@ func _check_scene_and_mechanics() -> int:
 		if not is_equal_approx(sky.planet_rotation, -planet.player_angle):
 			printerr("负角时 Sky.planet_rotation 不同步")
 			failed += 1
+		var clouds_after_negative = planet.get_node("Clouds")
+		if not is_equal_approx(clouds_after_negative.planet_rotation, -planet.player_angle):
+			printerr("负角时 Clouds.planet_rotation 不同步")
+			failed += 1
 
 		apex = planet.apex_global_position()
 		var up := apex - planet.global_position
@@ -718,12 +847,173 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 
+		failed += await _check_overhead_typewriter(scene, planet)
 		failed += await _check_prop_interactions(scene, planet)
 
 	print("  场景与圆弧力学 OK")
 	scene.queue_free()
 	await process_frame
 	return failed
+
+
+func _check_clouds(planet: Planet) -> int:
+	var failed := 0
+	var original_player_angle := planet.player_angle
+	var clouds = planet.get_node("Clouds")
+	var cloud_sprites := planet.get_node("%CloudSprites") as MultiMeshInstance2D
+	var cloud_multimesh := cloud_sprites.multimesh
+	if cloud_sprites.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
+		printerr("CloudSprites 应使用 NEAREST 过滤")
+		failed += 1
+	if cloud_sprites.texture.resource_path != "res://planet/white_lavender_puff_frames.png":
+		printerr("CloudSprites.texture 应为 white_lavender_puff_frames.png")
+		failed += 1
+	var cloud_material := cloud_sprites.material as ShaderMaterial
+	if cloud_material == null or cloud_material.shader == null:
+		printerr("CloudSprites 应挂载帧动画 ShaderMaterial")
+		failed += 1
+	elif cloud_material.shader.resource_path != "res://planet/cloud_frame.gdshader":
+		printerr("CloudSprites shader 应为 cloud_frame.gdshader")
+		failed += 1
+	if cloud_multimesh.instance_count != WorldConstants.CLOUD_INSTANCE_COUNT:
+		printerr(
+				"云朵实例数应为 %d，实际 %d"
+				% [WorldConstants.CLOUD_INSTANCE_COUNT, cloud_multimesh.instance_count]
+		)
+		failed += 1
+	if clouds._instance_local_positions.size() != WorldConstants.CLOUD_INSTANCE_COUNT:
+		printerr(
+				"云朵布局数应为 %d，实际 %d"
+				% [WorldConstants.CLOUD_INSTANCE_COUNT, clouds._instance_local_positions.size()]
+		)
+		failed += 1
+	var cloud_image := cloud_sprites.texture.get_image()
+	var punched_hole_count := 0
+	for pixel_y in range(1, cloud_image.get_height() - 1):
+		for pixel_x in range(1, cloud_image.get_width() - 1):
+			if cloud_image.get_pixel(pixel_x, pixel_y).a > 0.05:
+				continue
+			var opaque_neighbor_count := 0
+			for neighbor in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+				if cloud_image.get_pixel(pixel_x + neighbor.x, pixel_y + neighbor.y).a > 0.5:
+					opaque_neighbor_count += 1
+			if opaque_neighbor_count >= 4:
+				punched_hole_count += 1
+	if punched_hole_count > 0:
+		printerr("云朵贴图不应掏洞，内部镂空 %d 像素" % punched_hole_count)
+		failed += 1
+	var opaque_weighted_y := 0.0
+	var opaque_pixel_count := 0
+	for pixel_y in cloud_image.get_height():
+		for pixel_x in cloud_image.get_width():
+			if cloud_image.get_pixel(pixel_x, pixel_y).a <= 0.05:
+				continue
+			var frame_local_y := pixel_y % WorldConstants.CLOUD_FRAME_HEIGHT
+			opaque_weighted_y += float(frame_local_y)
+			opaque_pixel_count += 1
+	if opaque_pixel_count == 0:
+		printerr("云朵贴图没有不透明像素")
+		failed += 1
+	else:
+		var opaque_centroid_y := opaque_weighted_y / float(opaque_pixel_count)
+		if opaque_centroid_y >= float(WorldConstants.CLOUD_FRAME_HEIGHT) * 0.5:
+			printerr(
+					"云朵应蓬松顶朝上，质心 y=%s"
+					% opaque_centroid_y
+			)
+			failed += 1
+	if not is_equal_approx(clouds.planet_rotation, -planet.player_angle):
+		printerr(
+				"Clouds.planet_rotation 应为 %s，实际 %s"
+				% [-planet.player_angle, clouds.planet_rotation]
+		)
+		failed += 1
+	var distances: PackedFloat32Array = PackedFloat32Array()
+	distances.resize(clouds._instance_local_positions.size())
+	var used_rows := {}
+	var lowest_orbit := INF
+	var highest_orbit := 0.0
+	var renderer_keeps_instance_data := cloud_multimesh.buffer.size() > 0
+	for instance_index in clouds._instance_local_positions.size():
+		var local_position: Vector2 = clouds._instance_local_positions[instance_index]
+		var orbit_distance := local_position.length()
+		distances[instance_index] = orbit_distance
+		lowest_orbit = minf(lowest_orbit, orbit_distance)
+		highest_orbit = maxf(highest_orbit, orbit_distance)
+		if orbit_distance < WorldConstants.CLOUD_ORBIT_MIN_RADIUS - 1.0:
+			printerr(
+					"实例 %d 轨道应更高，距离 %s，下限 %s"
+					% [instance_index, orbit_distance, WorldConstants.CLOUD_ORBIT_MIN_RADIUS]
+			)
+			failed += 1
+		var instance_color: Color = clouds._instance_colors[instance_index]
+		if (
+				instance_color.a < WorldConstants.CLOUD_INSTANCE_ALPHA_MIN - 0.001
+				or instance_color.a > WorldConstants.CLOUD_INSTANCE_ALPHA_MAX + 0.001
+		):
+			printerr("实例 %d 应更透明，alpha=%s" % [instance_index, instance_color.a])
+			failed += 1
+		used_rows[int(round(instance_color.r * float(WorldConstants.CLOUD_FRAME_ROWS - 1)))] = true
+		var expected_rotation := atan2(local_position.x, -local_position.y)
+		if renderer_keeps_instance_data:
+			var instance_transform := cloud_multimesh.get_instance_transform_2d(instance_index)
+			if instance_transform.get_scale().x > 0.0:
+				if absf(angle_difference(instance_transform.get_rotation(), expected_rotation)) > 0.02:
+					printerr(
+							"实例 %d 应看向行星，rotation=%s 位置=%s"
+							% [instance_index, instance_transform.get_rotation(), local_position]
+					)
+					failed += 1
+	if highest_orbit - lowest_orbit < 8.0:
+		printerr("云团轨道高度应有差异，极差 %s" % (highest_orbit - lowest_orbit))
+		failed += 1
+	if used_rows.size() < 4:
+		printerr("云朵变体过少：%d" % used_rows.size())
+		failed += 1
+	var sample_local_position: Vector2 = clouds._instance_local_positions[0]
+	var rotation_before: float = clouds.rotation
+	var angle_before: float = (
+			clouds.to_global(sample_local_position) - clouds.global_position
+	).angle()
+	planet.teleport_player(fposmod(planet.player_angle + 0.4, TAU))
+	if not is_equal_approx(clouds.planet_rotation, -planet.player_angle):
+		printerr("传送后 Clouds 应跟随星球旋转")
+		failed += 1
+	var angle_after: float = (
+			clouds.to_global(sample_local_position) - clouds.global_position
+	).angle()
+	if absf(angle_difference(angle_after, angle_before - 0.4)) > 0.02:
+		printerr(
+				"云朵应随星球旋转，期望角变 %s，实际 %s -> %s"
+				% [-0.4, angle_before, angle_after]
+		)
+		failed += 1
+	for instance_index in clouds._instance_local_positions.size():
+		var orbit_distance: float = clouds._instance_local_positions[instance_index].length()
+		if absf(orbit_distance - distances[instance_index]) > 0.51:
+			printerr(
+					"实例 %d 轨道半径不应变，期望 %s 实际 %s"
+					% [instance_index, distances[instance_index], orbit_distance]
+			)
+			failed += 1
+	var drift_seconds := 8.0
+	clouds._process(drift_seconds)
+	var expected_drift := WorldConstants.CLOUD_DRIFT_SPEED * drift_seconds
+	if absf(angle_difference(clouds.rotation, rotation_before + expected_drift - 0.4)) > 0.02:
+		printerr(
+				"云层应顺时针缓慢飘动，期望转过 %s，实际 %s -> %s"
+				% [expected_drift, rotation_before, clouds.rotation]
+		)
+		failed += 1
+	for instance_index in clouds._instance_local_positions.size():
+		var orbit_distance: float = clouds._instance_local_positions[instance_index].length()
+		if absf(orbit_distance - distances[instance_index]) > 0.51:
+			printerr("实例 %d 飘动后轨道半径不应变" % instance_index)
+			failed += 1
+	planet.teleport_player(original_player_angle)
+	print("  云层轨道 / 朝向 / 慢飘 OK")
+	return failed
+
 
 func _check_scarf(player: Player, planet: Planet) -> int:
 	var failed := 0
@@ -789,6 +1079,73 @@ func _assert_scarf_integer_display(scarf: Scarf) -> int:
 			printerr("围巾抽帧坐标应为整数，实际 %s" % point)
 			return 1
 	return 0
+
+
+func _check_overhead_typewriter(scene: Node, planet: Planet) -> int:
+	var failed := 0
+	var overhead := scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	var body := overhead.get_node("Body") as Label
+	if body.horizontal_alignment != HORIZONTAL_ALIGNMENT_CENTER:
+		printerr("头顶文字应水平居中")
+		failed += 1
+	var font_color: Color = body.get("theme_override_colors/font_color")
+	if font_color != Color.WHITE:
+		printerr("头顶文字应为纯白，实际 %s" % font_color)
+		failed += 1
+	var expected_position := (
+			planet.apex_global_position() + Vector2(0.0, WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y)
+	).round()
+	if overhead.global_position.distance_to(expected_position) > 0.5:
+		printerr(
+			"头顶打字机应在弧顶上方 %s，实际 %s"
+			% [expected_position, overhead.global_position]
+		)
+		failed += 1
+
+	var line := OverheadTypewriter.AMBIENT_LINES[0]
+	overhead.play(line)
+	if not overhead.visible:
+		printerr("play 后头顶打字机应可见")
+		failed += 1
+	if body.text != line:
+		printerr("play 后应显示氛围文字")
+		failed += 1
+	if body.visible_characters != 1:
+		printerr(
+			"play 后应立刻打出第一个字，实际 visible_characters=%d"
+			% body.visible_characters
+		)
+		failed += 1
+	await create_timer(OverheadTypewriter.TYPEWRITER_INTERVAL * 3.0).timeout
+	if body.visible_characters <= 1:
+		printerr("打字机应继续出字，实际 visible_characters=%d" % body.visible_characters)
+		failed += 1
+	var typed_deadline_msec := Time.get_ticks_msec() + 2000
+	while (
+			body.visible_characters < line.length()
+			and Time.get_ticks_msec() < typed_deadline_msec
+	):
+		await process_frame
+	if body.visible_characters < line.length():
+		printerr("打字机超时未打完")
+		failed += 1
+	if not overhead.visible:
+		printerr("打完后应停留显示")
+		failed += 1
+	var fade_deadline_msec := Time.get_ticks_msec() + int(
+			(
+				OverheadTypewriter.HOLD_DURATION_SECONDS
+				+ OverheadTypewriter.FADE_DURATION_SECONDS
+				+ 0.5
+			) * 1000.0
+	)
+	while overhead.visible and Time.get_ticks_msec() < fade_deadline_msec:
+		await process_frame
+	if overhead.visible:
+		printerr("停留后应渐隐并隐藏")
+		failed += 1
+	print("  头顶打字机 OK")
+	return failed
 
 
 func _check_prop_interactions(scene: Node, planet: Planet) -> int:
@@ -866,9 +1223,22 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			failed += 1
 
 	if dialogue != null:
-		var panel := dialogue.get_node_or_null("Panel") as Control
-		if panel == null or panel.anchor_top > 0.01 or panel.anchor_bottom > 0.01:
-			printerr("对话框应锚在屏幕上方")
+		var panel := dialogue.get_node("Panel") as Control
+		if (
+				not is_equal_approx(panel.anchor_top, 0.5)
+				or not is_equal_approx(panel.anchor_bottom, 0.5)
+		):
+			printerr("对话框应锚在屏幕中间")
+			failed += 1
+		var viewport_height := float((scene.get_node(VIEWPORT_PATH) as SubViewport).size.y)
+		var panel_center_y := panel.position.y + panel.size.y * 0.5
+		var expected_center_below_midline := 16.0
+		var expected_center_y := viewport_height * 0.5 + expected_center_below_midline
+		if absf(panel_center_y - expected_center_y) > 1.0:
+			printerr(
+					"对话框应略低于屏幕中线，期望 y=%s 实际 %s"
+					% [expected_center_y, panel_center_y]
+			)
 			failed += 1
 
 	for dialogue_id in [&"baobab", &"rose", &"volcano_active", &"volcano_dead"]:

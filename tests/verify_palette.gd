@@ -24,6 +24,9 @@ func _run_tests() -> void:
 		quit(failed)
 		return
 	var scene := packed_scene.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
 	root.add_child(scene)
 	# Wait for the scene and its children to finish initialization.
 	await process_frame

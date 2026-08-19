@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="9_dialogue"]
 [ext_resource type="Script" uid="uid://ciwt72d3i6fwy" path="res://interact/interaction.gd" id="10_interact"]
 [ext_resource type="Script" uid="uid://pqblm1m4kgms" path="res://player/scarf.gd" id="11_scarf"]
+[ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
 shader = ExtResource("5_palette_shader")
@@ -70,6 +71,9 @@ texture = ExtResource("8_prompt_tex")
 script = ExtResource("7_prompt")
 
 [node name="DialogueBox" parent="GameView/GameViewport" unique_id=1685094322 instance=ExtResource("9_dialogue")]
+unique_name_in_owner = true
+
+[node name="OverheadTypewriter" parent="GameView/GameViewport" instance=ExtResource("12_overhead")]
 unique_name_in_owner = true
 
 [node name="Interaction" type="Node" parent="GameView/GameViewport" unique_id=1838989427]
