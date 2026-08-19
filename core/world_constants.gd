@@ -30,8 +30,15 @@ const PLAYER_DAMPING: float = 12.0
 const STARFIELD_SIZE: int = 640
 const STAR_ROTATION_SPEED: float = 0.01
 const CLOUD_DRIFT_SPEED: float = 0.006
-const CLOUD_COUNT: int = 14
+const CLOUD_INSTANCE_COUNT: int = 84
 const CLOUD_ORBIT_MIN_RADIUS: float = 145.0
+const CLOUD_ORBIT_MAX_RADIUS: float = 188.0
+const CLOUD_CLUSTER_RADIUS := Vector2(28.0, 10.0)
+const CLOUD_SPRITES_PER_MASS_MIN: int = 5
+const CLOUD_SPRITES_PER_MASS_MAX: int = 8
+const CLOUD_PLACEMENT_SEED: int = 20260819
+const CLOUD_INSTANCE_ALPHA_MIN: float = 0.38
+const CLOUD_INSTANCE_ALPHA_MAX: float = 0.52
 ## 白天半宽（弧度）：正午蓝天与黎明各自覆盖的角度，越大白天越长、黄昏夜晚越短。
 const DAY_HALF_ARC: float = PI * 0.65
 
@@ -40,9 +47,10 @@ const DAY_HALF_ARC: float = PI * 0.65
 const VOLCANO_SPRITE_SIZE: int = 36
 const BAOBAB_SPRITE_SIZE: int = 32
 const ROSE_SPRITE_SIZE: int = 20
-const CLOUD_SPRITE_WIDTH: int = 48
-const CLOUD_SPRITE_HEIGHT: int = 24
-const CLOUD_VARIANT_COUNT: int = 6
+const CLOUD_FRAME_WIDTH: int = 16
+const CLOUD_FRAME_HEIGHT: int = 8
+const CLOUD_FRAME_COLUMNS: int = 4
+const CLOUD_FRAME_ROWS: int = 8
 const PLAYER_SPRITE_WIDTH: int = 12
 const PLAYER_SPRITE_HEIGHT: int = 18
 ## 相对弧顶再下移的像素，让脚更贴地。

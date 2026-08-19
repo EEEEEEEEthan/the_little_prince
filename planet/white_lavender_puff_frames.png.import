@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cwhitelobepuf"
-path="res://.godot/imported/white_lobed_puff.png-00eba60f96d7dea417014a4b70d0e81a.ctex"
+uid="uid://cwlvnpufffrm"
+path="res://.godot/imported/white_lavender_puff_frames.png-0a22a716a61541d5cfedff7de47fa558.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://planet/white_lobed_puff.png"
-dest_files=["res://.godot/imported/white_lobed_puff.png-00eba60f96d7dea417014a4b70d0e81a.ctex"]
+source_file="res://planet/white_lavender_puff_frames.png"
+dest_files=["res://.godot/imported/white_lavender_puff_frames.png-0a22a716a61541d5cfedff7de47fa558.ctex"]
 
 [params]
 
