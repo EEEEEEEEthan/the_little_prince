@@ -1,6 +1,6 @@
 extends Node2D
-## 绕行星的云层：小帧团簇叠成云团，随星球旋转并缓慢自转。
-## 每实例本地 -Y 朝外，底部始终对着球心。背面按可见半弧缩到零。
+## 绕行星的云层：小帧团簇叠成云团，随星球旋转并顺时针慢飘。
+## 每实例本地 -Y 朝外，蓬松顶朝外、底部对着球心。背面按可见半弧缩到零。
 
 var planet_rotation: float = 0.0
 var _self_rotation: float = 0.0
@@ -22,7 +22,7 @@ func set_planet_rotation(value: float) -> void:
 
 func _process(delta: float) -> void:
 	_self_rotation = fposmod(
-			_self_rotation - WorldConstants.CLOUD_DRIFT_SPEED * delta, TAU
+			_self_rotation + WorldConstants.CLOUD_DRIFT_SPEED * delta, TAU
 	)
 	_sync_transform()
 
