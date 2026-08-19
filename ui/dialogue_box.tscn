@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" uid="uid://bvmu7yfjsqvgp" path="res://ui/dialogue_box.gd" id="1_dialogue"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="2_font"]
@@ -16,6 +16,32 @@ content_margin_left = 4.0
 content_margin_top = 4.0
 content_margin_right = 4.0
 content_margin_bottom = 4.0
+
+[sub_resource type="GDScript" id="GDScript_continue_triangle"]
+script/source = "extends Control
+
+func _ready() -> void:
+	set_process(is_visible_in_tree())
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED:
+		set_process(is_visible_in_tree())
+		if not is_visible_in_tree():
+			modulate.a = 1.0
+
+func _process(_delta: float) -> void:
+	modulate.a = 1.0 if int(Time.get_ticks_msec() / 400) % 2 == 0 else 0.0
+
+func _draw() -> void:
+	var triangle_color := Color(1, 0.968627, 0.819608)
+	var triangle_height := int(size.y)
+	var triangle_width := int(size.x)
+	for row_index in triangle_height:
+		var row_width := triangle_width - row_index * 2
+		if row_width <= 0:
+			break
+		draw_rect(Rect2(row_index, row_index, row_width, 1), triangle_color)
+"
 
 [node name="DialogueBox" type="CanvasLayer"]
 layer = 10
@@ -67,6 +93,20 @@ theme_override_font_sizes/font_size = 8
 theme_override_constants/line_spacing = 1
 autowrap_mode = 3
 text = "placeholder"
+
+[node name="ContinueTriangle" type="Control" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(5, 3)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -15.0
+offset_top = 51.0
+offset_right = -10.0
+offset_bottom = 54.0
+grow_horizontal = 0
+mouse_filter = 2
+script = SubResource("GDScript_continue_triangle")
 
 [node name="Typewriter" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_blip")

@@ -757,27 +757,13 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			failed += 1
 
 	for dialogue_id in [&"baobab", &"rose", &"volcano_active", &"volcano_dead"]:
-		if DialogueCatalog.lines_for_id(dialogue_id).size() < 1:
-			printerr("%s 对话不能为空" % dialogue_id)
+		if DialogueCatalog.lines_for_id(dialogue_id).size() < 2:
+			printerr("%s 对话至少两句" % dialogue_id)
 			failed += 1
 
-	var lines := DialogueCatalog.lines_for_id(&"rose")
-	if lines.size() < 2:
-		printerr("rose 对话应至少两句，才能覆盖 advance")
-		failed += 1
-	elif dialogue != null:
-		dialogue.play(lines)
-		if not dialogue.is_open() or not dialogue.is_typing():
-			printerr("play 后对话框应打开且处于打字机中")
-			failed += 1
-		dialogue.advance()
-		if not dialogue.is_open() or dialogue.is_typing():
-			printerr("第一次 advance 应跳过打字机并停留在当前句")
-			failed += 1
-		dialogue.advance()
-		if not dialogue.is_open():
-			printerr("多句对话在第二句前不应关闭")
-			failed += 1
+	var lines := DialogueCatalog.lines_for_id(&"baobab")
+	if lines.size() >= 2 and dialogue != null:
+		failed += await _check_typewriter_hold(dialogue, lines)
 		dialogue.close()
 		if dialogue.is_open():
 			printerr("close 后对话框应关闭")
@@ -799,4 +785,109 @@ func _assert_focus(
 		printerr("%s 应为可交互且 dialogue_id=%s" % [label, dialogue_id])
 		failed += 1
 	return failed
+
+
+func _check_typewriter_hold(dialogue: DialogueBox, lines: Array[DialogueLine]) -> int:
+	var failed := 0
+	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var timer := dialogue.get_node("Timer") as Timer
+	var typewriter := dialogue.get_node("Typewriter") as AudioStreamPlayer
+	var continue_triangle := dialogue.get_node("ContinueTriangle") as Control
+	var first_text := lines[0].text
+	var second_text := lines[1].text
+
+	dialogue.play(lines)
+	dialogue.set_process(false)
+	if not dialogue.is_open() or not dialogue.is_typing():
+		printerr("play 后对话框应打开且处于打字机中")
+		failed += 1
+	if continue_triangle.visible:
+		printerr("打字中不应显示继续三角")
+		failed += 1
+	if body.text != first_text:
+		printerr("play 后应显示第一句")
+		failed += 1
+
+	var characters_before_hold := body.visible_characters
+	dialogue.mark_holding(true)
+	if not dialogue.is_typing():
+		printerr("播放中按下应继续打字，而不是立刻结束")
+		failed += 1
+	if body.visible_characters >= body.get_total_character_count():
+		printerr("播放中按下不应把当前句一次显示完")
+		failed += 1
+	if body.visible_characters != characters_before_hold:
+		printerr("播放中按下不应立刻多出字")
+		failed += 1
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
+		printerr("播放中按住应加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	if not is_equal_approx(typewriter.volume_db, DialogueBox.TYPEWRITER_FAST_VOLUME_DB):
+		printerr("加速时音效应降低，volume_db=%s" % typewriter.volume_db)
+		failed += 1
+
+	dialogue.mark_holding(false)
+	if not dialogue.is_typing() or body.text != first_text:
+		printerr("播放中松开应恢复速度并留在当前句")
+		failed += 1
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("松开后应恢复正常速度，wait_time=%s" % timer.wait_time)
+		failed += 1
+	if not is_equal_approx(typewriter.volume_db, DialogueBox.TYPEWRITER_VOLUME_DB):
+		printerr("松开后音效应恢复，volume_db=%s" % typewriter.volume_db)
+		failed += 1
+
+	dialogue.mark_holding(true)
+	if not await _await_dialogue_idle(dialogue):
+		printerr("按住加速后打字机超时未结束")
+		return failed + 1
+	if not continue_triangle.visible:
+		printerr("打字结束后应显示继续三角")
+		failed += 1
+	if not is_equal_approx(typewriter.volume_db, DialogueBox.TYPEWRITER_VOLUME_DB):
+		printerr("打字结束后音效应恢复，volume_db=%s" % typewriter.volume_db)
+		failed += 1
+	dialogue.mark_holding(false)
+	if not dialogue.is_open() or dialogue.is_typing() or body.text != first_text:
+		printerr("按住直到结束再松开，不应进入下一句")
+		failed += 1
+	if not continue_triangle.visible:
+		printerr("按住结束再松开后继续三角仍应显示")
+		failed += 1
+
+	dialogue.mark_holding(true)
+	if body.text != first_text or not dialogue.is_open() or dialogue.is_typing():
+		printerr("播放结束后按下任意键不应进入下一句")
+		failed += 1
+	dialogue.mark_holding(false)
+	if not dialogue.is_open() or body.text != second_text:
+		printerr("播放结束后松开才应进入下一句")
+		failed += 1
+	if not dialogue.is_typing():
+		printerr("进入下一句后应重新打字")
+		failed += 1
+	if continue_triangle.visible:
+		printerr("进入下一句打字中不应显示继续三角")
+		failed += 1
+
+	if not await _await_dialogue_idle(dialogue):
+		printerr("第二句打字机超时未结束")
+		return failed + 1
+	if not continue_triangle.visible:
+		printerr("第二句打完应显示继续三角")
+		failed += 1
+	dialogue.mark_holding(true)
+	dialogue.mark_holding(false)
+	if dialogue.is_open():
+		printerr("最后一句松开后应关闭对话框")
+		failed += 1
+
+	return failed
+
+
+func _await_dialogue_idle(dialogue: DialogueBox) -> bool:
+	var deadline_msec := Time.get_ticks_msec() + 2000
+	while dialogue.is_typing() and Time.get_ticks_msec() < deadline_msec:
+		await process_frame
+	return not dialogue.is_typing()
 
