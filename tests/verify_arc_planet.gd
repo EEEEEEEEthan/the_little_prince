@@ -517,6 +517,18 @@ func _check_scene_and_mechanics() -> int:
 			if volcano_smoke.texture == null:
 				printerr("VolcanoSmoke 应有 puff 贴图")
 				failed += 1
+			const PREVIOUS_SMOKE_VELOCITY_MAX := 11.0
+			const PREVIOUS_SMOKE_GRAVITY_Y := -14.0
+			const PREVIOUS_SMOKE_LIFETIME := 2.2
+			if volcano_smoke.initial_velocity_max >= PREVIOUS_SMOKE_VELOCITY_MAX * 0.5:
+				printerr("VolcanoSmoke 初速应大幅低于原值")
+				failed += 1
+			if volcano_smoke.gravity.y <= PREVIOUS_SMOKE_GRAVITY_Y * 0.5:
+				printerr("VolcanoSmoke 上升加速度应大幅低于原值")
+				failed += 1
+			if volcano_smoke.lifetime <= PREVIOUS_SMOKE_LIFETIME * 1.5:
+				printerr("VolcanoSmoke 寿命应加长以匹配慢速")
+				failed += 1
 			var smoke_host := volcano_smoke.get_parent() as SurfaceProp
 			if (
 				smoke_host == null
