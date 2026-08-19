@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwhitelobepuf"
-path="res://.godot/imported/white_lobed_puff.png-placeholder.ctex"
+path="res://.godot/imported/white_lobed_puff.png-00eba60f96d7dea417014a4b70d0e81a.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://planet/white_lobed_puff.png"
-dest_files=["res://.godot/imported/white_lobed_puff.png-placeholder.ctex"]
+dest_files=["res://.godot/imported/white_lobed_puff.png-00eba60f96d7dea417014a4b70d0e81a.ctex"]
 
 [params]
 
