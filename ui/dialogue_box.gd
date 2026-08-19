@@ -17,6 +17,7 @@ var _lines: Array[DialogueLine] = []
 var _index: int = 0
 var _is_holding: bool = false
 var _hold_started_while_typing: bool = false
+var _blocked_joypad_devices: Dictionary = {}
 
 func _ready() -> void:
 	# tscn 保持可见便于编辑；开局再关。
@@ -26,7 +27,13 @@ func _ready() -> void:
 	_timer.timeout.connect(_on_typewriter_tick)
 
 func _process(_delta: float) -> void:
-	mark_holding(Input.is_action_pressed(&"interact"))
+	for device: int in _blocked_joypad_devices.keys():
+		if not _is_interact_joy_pressed_on(device):
+			_blocked_joypad_devices.erase(device)
+	var held := _is_interact_held()
+	mark_holding(held)
+	if is_typing():
+		_set_accelerating(held)
 
 func is_open() -> bool:
 	return visible
@@ -42,11 +49,15 @@ func play(lines: Array[DialogueLine]) -> void:
 	_index = 0
 	_is_holding = false
 	_hold_started_while_typing = false
+	_blocked_joypad_devices.clear()
+	for device in Input.get_connected_joypads():
+		if _is_interact_joy_pressed_on(device):
+			_blocked_joypad_devices[device] = true
 	_set_accelerating(false)
 	visible = true
 	set_process(true)
 	_show_line()
-	mark_holding(Input.is_action_pressed(&"interact"))
+	mark_holding(_is_interact_held())
 
 func mark_holding(held: bool) -> void:
 	if not visible or held == _is_holding:
@@ -76,6 +87,7 @@ func close() -> void:
 	_typewriter.stop()
 	_is_holding = false
 	_hold_started_while_typing = false
+	_blocked_joypad_devices.clear()
 	_set_accelerating(false)
 	%ContinueTriangle.visible = false
 	_lines.clear()
@@ -94,10 +106,38 @@ func _show_line() -> void:
 	_on_typewriter_tick()
 
 func _set_accelerating(enabled: bool) -> void:
-	_timer.wait_time = TYPEWRITER_FAST_INTERVAL if enabled else TYPEWRITER_INTERVAL
+	var typewriter_wait_time := TYPEWRITER_FAST_INTERVAL if enabled else TYPEWRITER_INTERVAL
+	var wait_time_changed := not is_equal_approx(_timer.wait_time, typewriter_wait_time)
+	_timer.wait_time = typewriter_wait_time
 	_typewriter.volume_db = TYPEWRITER_FAST_VOLUME_DB if enabled else TYPEWRITER_VOLUME_DB
-	if not _timer.is_stopped():
+	if wait_time_changed and not _timer.is_stopped():
 		_timer.start()
+
+func _is_interact_held() -> bool:
+	for event in InputMap.action_get_events(&"interact"):
+		var key := event as InputEventKey
+		if key != null:
+			if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
+				return true
+			if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
+				return true
+			continue
+		var joy := event as InputEventJoypadButton
+		if joy == null:
+			continue
+		for device in Input.get_connected_joypads():
+			if _blocked_joypad_devices.has(device):
+				continue
+			if Input.is_joy_button_pressed(device, joy.button_index):
+				return true
+	return DisplayServer.get_name() == "headless" and Input.is_action_pressed(&"interact")
+
+func _is_interact_joy_pressed_on(device: int) -> bool:
+	for event in InputMap.action_get_events(&"interact"):
+		var joy := event as InputEventJoypadButton
+		if joy != null and Input.is_joy_button_pressed(device, joy.button_index):
+			return true
+	return false
 
 func _on_typewriter_tick() -> void:
 	var total := _body.get_total_character_count()

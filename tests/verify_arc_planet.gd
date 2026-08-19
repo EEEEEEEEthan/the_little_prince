@@ -1050,6 +1050,38 @@ func _check_typewriter_hold_follows_interact(
 	dialogue.close()
 	Input.action_release(&"interact")
 	Input.action_release(&"move_left")
+
+	failed += await _check_typewriter_hold_restores_after_key_release(dialogue, lines)
+	return failed
+
+
+func _check_typewriter_hold_restores_after_key_release(
+	dialogue: DialogueBox, lines: Array[DialogueLine]
+) -> int:
+	var failed := 0
+	var timer := dialogue.get_node("Timer") as Timer
+	var enter := InputEventKey.new()
+	enter.physical_keycode = KEY_ENTER
+	enter.keycode = KEY_ENTER
+	enter.pressed = true
+	Input.parse_input_event(enter)
+	Input.flush_buffered_events()
+	dialogue.play(lines)
+	await process_frame
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
+		printerr("实体 Enter 按下应加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	enter.pressed = false
+	Input.parse_input_event(enter)
+	Input.flush_buffered_events()
+	await process_frame
+	if not dialogue.is_typing():
+		printerr("松开实体 Enter 后应继续打字")
+		failed += 1
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
+		printerr("松开实体 Enter 后应恢复正常速度，wait_time=%s" % timer.wait_time)
+		failed += 1
+	dialogue.close()
 	return failed
 
 
