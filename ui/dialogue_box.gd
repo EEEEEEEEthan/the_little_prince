@@ -18,6 +18,7 @@ var _index: int = 0
 var _is_holding: bool = false
 var _hold_started_while_typing: bool = false
 var _joy_confirm_was_down: Dictionary = {}
+var _joy_confirm_rose_this_frame: Dictionary = {}
 var _accepted_joypad_devices: Dictionary = {}
 
 func _ready() -> void:
@@ -52,7 +53,9 @@ func play(lines: Array[DialogueLine]) -> void:
 	_hold_started_while_typing = false
 	_accepted_joypad_devices.clear()
 	for device in _interact_joypad_devices():
-		if _is_interact_joy_pressed_on(device) and not _joy_confirm_was_down.get(device, false):
+		if not _is_interact_joy_pressed_on(device):
+			continue
+		if _joy_confirm_rose_this_frame.has(device) or not _joy_confirm_was_down.get(device, false):
 			_accepted_joypad_devices[device] = true
 	visible = true
 	set_process(true)
@@ -134,18 +137,16 @@ func _is_interact_held() -> bool:
 	return true
 
 func _sync_joy_confirm_buttons() -> void:
+	_joy_confirm_rose_this_frame.clear()
 	var active_devices: Dictionary = {}
 	for device in _interact_joypad_devices():
 		active_devices[device] = true
 		var is_down := _is_interact_joy_pressed_on(device)
-		if not _joy_confirm_was_down.has(device):
-			_joy_confirm_was_down[device] = is_down
-			if not is_down:
-				_accepted_joypad_devices.erase(device)
-			continue
-		var was_down: bool = _joy_confirm_was_down[device]
-		if visible and is_down and not was_down:
-			_accepted_joypad_devices[device] = true
+		var was_down: bool = _joy_confirm_was_down.get(device, false)
+		if is_down and not was_down:
+			_joy_confirm_rose_this_frame[device] = true
+			if visible:
+				_accepted_joypad_devices[device] = true
 		if not is_down:
 			_accepted_joypad_devices.erase(device)
 		_joy_confirm_was_down[device] = is_down

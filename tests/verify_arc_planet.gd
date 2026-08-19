@@ -1101,6 +1101,15 @@ func _check_typewriter_hold_joypad_confirm(
 		printerr("手柄确认键按下打开对话应立即加速，wait_time=%s" % timer.wait_time)
 		failed += 1
 	_set_joy_confirm_pressed(false)
+	dialogue.close()
+
+	_set_joy_confirm_pressed(true)
+	dialogue._process(0.0)
+	dialogue.play(lines)
+	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
+		printerr("手柄确认键同帧先 process 再打开仍应加速，wait_time=%s" % timer.wait_time)
+		failed += 1
+	_set_joy_confirm_pressed(false)
 	await process_frame
 	if not dialogue.is_typing():
 		printerr("松开手柄确认键后应继续打字")
@@ -1111,6 +1120,7 @@ func _check_typewriter_hold_joypad_confirm(
 	dialogue.close()
 
 	_set_joy_confirm_pressed(true)
+	await process_frame
 	await process_frame
 	dialogue.play(lines)
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_INTERVAL):
