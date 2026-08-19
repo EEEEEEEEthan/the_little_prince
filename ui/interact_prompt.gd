@@ -1,28 +1,39 @@
 class_name InteractPrompt
 extends Sprite2D
-## 手柄 A 键提示：挂到当前可互动物体头顶，轻微上下浮动。
+## 手柄 A 键提示：跟随目标头顶移动，自身保持屏幕朝向，不继承星球旋转。
 
-var _home: Node
+var _target: SurfaceProp
 
 func _ready() -> void:
-	_home = get_parent()
 	visible = false
+	set_physics_process(false)
 	set_process(false)
 
 func show_on(prop: SurfaceProp) -> void:
-	reparent(prop)
-	position = Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y)
+	_target = prop
 	rotation = 0.0
 	offset = Vector2.ZERO
 	visible = true
+	set_physics_process(true)
 	set_process(true)
+	_sync_to_target()
 
 func hide_prompt() -> void:
+	_target = null
 	visible = false
+	set_physics_process(false)
 	set_process(false)
 	offset = Vector2.ZERO
-	if _home != null and get_parent() != _home:
-		reparent(_home)
+
+func _physics_process(_delta: float) -> void:
+	_sync_to_target()
+
+func _sync_to_target() -> void:
+	if _target == null or not is_instance_valid(_target):
+		hide_prompt()
+		return
+	global_position = _target.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+	global_rotation = 0.0
 
 func _process(_delta: float) -> void:
 	offset = Vector2(0.0, sin(Time.get_ticks_msec() * 0.006) * 1.5)

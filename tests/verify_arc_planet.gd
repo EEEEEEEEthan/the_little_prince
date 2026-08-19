@@ -540,7 +540,7 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 
-		failed += _check_baobab_interaction(scene, planet)
+		failed += await _check_baobab_interaction(scene, planet)
 
 	print("  场景与圆弧力学 OK")
 	scene.queue_free()
@@ -578,10 +578,42 @@ func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
 		printerr("猴面包树应为可交互且 dialogue_id=baobab")
 		failed += 1
 
+	await physics_frame
+	var prompt: InteractPrompt = scene.get_node_or_null("GameView/GameViewport/InteractPrompt") as InteractPrompt
+	if prompt != null:
+		if prompt.get_parent() == target:
+			printerr("A 提示不应挂到地物上（会跟着星球转）")
+			failed += 1
+		if not prompt.visible:
+			printerr("站在猴面包树下应显示 A 提示")
+			failed += 1
+		if absf(prompt.global_rotation) > 0.01:
+			printerr("A 提示应保持屏幕朝向，实际 rotation=%s" % prompt.global_rotation)
+			failed += 1
+		var crown := target.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+		if prompt.global_position.distance_to(crown) > 2.5:
+			printerr("A 提示应跟在树冠上，期望 %s 实际 %s" % [crown, prompt.global_position])
+			failed += 1
+		planet.teleport_player(fposmod(target.rotation + 0.08, TAU))
+		await physics_frame
+		if absf(prompt.global_rotation) > 0.01:
+			printerr("星球转过后 A 提示仍应不旋转，实际 %s" % prompt.global_rotation)
+			failed += 1
+		crown = target.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+		if prompt.global_position.distance_to(crown) > 2.5:
+			printerr("星球转过后 A 提示应跟着树走，期望 %s 实际 %s" % [crown, prompt.global_position])
+			failed += 1
+
 	planet.teleport_player(planet.rose_angle)
 	if planet.find_nearest_interactable() != null:
 		printerr("玫瑰处不应出现猴面包树交互")
 		failed += 1
+
+	if dialogue != null:
+		var panel := dialogue.get_node_or_null("Panel") as Control
+		if panel == null or panel.anchor_top > 0.01 or panel.anchor_bottom > 0.01:
+			printerr("对话框应锚在屏幕上方")
+			failed += 1
 
 	var lines := DialogueCatalog.lines_for_id(&"baobab")
 	if lines.size() < 1:
