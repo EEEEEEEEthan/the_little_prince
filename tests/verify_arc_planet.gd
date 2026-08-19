@@ -998,7 +998,44 @@ func _check_typewriter_hold(
 		printerr("最后一句松开后应关闭对话框")
 		failed += 1
 
+	failed += await _check_typewriter_hold_through_line_then_release(scene, dialogue, lines)
 	failed += await _check_typewriter_hold_follows_confirm_events(scene, dialogue, lines)
+	return failed
+
+
+func _check_typewriter_hold_through_line_then_release(
+	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
+) -> int:
+	var failed := 0
+	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var continue_triangle := dialogue.get_node("ContinueTriangle") as Control
+	var first_text := lines[0].text
+	var second_text := lines[1].text
+
+	dialogue.play(lines)
+	scene._input(_interact_key_event(true))
+	if not await _await_dialogue_idle(dialogue):
+		printerr("按住直到打完超时")
+		return failed + 1
+	if body.text != first_text or dialogue.is_typing():
+		printerr("按住直到打完应留在第一句")
+		failed += 1
+	scene._input(_interact_key_event(false))
+	if not dialogue.is_open() or dialogue.is_typing() or body.text != first_text:
+		printerr("按住直到打完再松开不应进入下一句")
+		failed += 1
+	if not continue_triangle.visible:
+		printerr("按住直到打完再松开后继续三角仍应显示")
+		failed += 1
+	scene._input(_interact_key_event(true))
+	if body.text != first_text or dialogue.is_typing():
+		printerr("打完后按下不应进入下一句")
+		failed += 1
+	scene._input(_interact_key_event(false))
+	if not dialogue.is_open() or body.text != second_text:
+		printerr("打完后松开再按再松开才应进入下一句")
+		failed += 1
+	dialogue.close()
 	return failed
 
 

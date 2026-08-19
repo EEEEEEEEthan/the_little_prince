@@ -16,7 +16,7 @@ const TYPEWRITER_FAST_VOLUME_DB := -20.0
 var _lines: Array[DialogueLine] = []
 var _index: int = 0
 var _is_holding: bool = false
-var _hold_started_while_typing: bool = false
+var _advance_on_confirm_release: bool = false
 var _is_revealing: bool = false
 var _typewriter_accum_seconds: float = 0.0
 
@@ -50,7 +50,7 @@ func play(lines: Array[DialogueLine]) -> void:
 	_lines = lines.duplicate()
 	_index = 0
 	_is_holding = false
-	_hold_started_while_typing = false
+	_advance_on_confirm_release = false
 	_set_accelerating(false)
 	visible = true
 	set_process(true)
@@ -61,18 +61,16 @@ func mark_holding(held: bool) -> void:
 		return
 	_is_holding = held
 	if held:
+		_advance_on_confirm_release = not is_typing()
 		if is_typing():
-			_hold_started_while_typing = true
 			_set_accelerating(true)
-		else:
-			_hold_started_while_typing = false
 		return
 	if is_typing():
 		_set_accelerating(false)
 		return
-	if _hold_started_while_typing:
-		_hold_started_while_typing = false
+	if not _advance_on_confirm_release:
 		return
+	_advance_on_confirm_release = false
 	_index += 1
 	if _index >= _lines.size():
 		close()
@@ -83,7 +81,7 @@ func close() -> void:
 	_timer.stop()
 	_typewriter.stop()
 	_is_holding = false
-	_hold_started_while_typing = false
+	_advance_on_confirm_release = false
 	_is_revealing = false
 	_typewriter_accum_seconds = 0.0
 	_set_accelerating(false)
@@ -119,6 +117,8 @@ func _reveal_next_character() -> void:
 		_typewriter_accum_seconds = 0.0
 		_set_accelerating(false)
 		%ContinueTriangle.visible = true
+		if _is_holding:
+			_advance_on_confirm_release = false
 
 func _play_blip() -> void:
 	var shown := _body.visible_characters
