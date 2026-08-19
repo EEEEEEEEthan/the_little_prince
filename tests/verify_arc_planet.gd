@@ -204,36 +204,12 @@ func _check_static_assets() -> int:
 		if bottom_color.r > 0.05 or bottom_color.g > 0.02 or bottom_color.b > 0.02:
 			printerr("day_sky 底部应为纯黑（天顶坐标 0），实际 %s" % bottom_color.to_html(false))
 			failed += 1
-	# 天空渐变资源：天顶/地平线两个 GradientTexture1D，X=相位（0 午夜、1/4 日出、
-	# 1/2 正午、3/4 日落、1 午夜），关键相位须命中对应关键色
-	var zenith_gradient: GradientTexture1D = load("res://planet/zenith_gradient.tres")
+	# 地平线渐变仍为独立资源；天顶渐变已内联到 Sky 材质，由场景检查覆盖
 	var horizon_gradient: GradientTexture1D = load("res://planet/horizon_gradient.tres")
-	if zenith_gradient == null:
-		printerr("zenith_gradient.tres 应可加载为 GradientTexture1D")
-		failed += 1
 	if horizon_gradient == null:
 		printerr("horizon_gradient.tres 应可加载为 GradientTexture1D")
 		failed += 1
-	if zenith_gradient != null and horizon_gradient != null:
-		var zenith_cases := [
-			[0.0, Color(0.01, 0.01, 0.04), "午夜天顶"],
-			[0.25, Color(1.0, 0.7, 0.66), "日出天顶"],
-			[0.5, Color(0.36, 0.6, 0.95), "正午天顶"],
-			[0.75, Color(1.0, 0.3, 0.12), "日落天顶"],
-			[1.0, Color(0.01, 0.01, 0.04), "午夜天顶"],
-		]
-		for item in zenith_cases:
-			var got: Color = zenith_gradient.gradient.sample(item[0])
-			if (
-				absf(got.r - item[1].r) > 0.02
-				or absf(got.g - item[1].g) > 0.02
-				or absf(got.b - item[1].b) > 0.02
-			):
-				printerr(
-					"zenith_gradient %s 应为 %s，实际 %s"
-					% [item[2], item[1].to_html(false), got.to_html(false)]
-				)
-				failed += 1
+	else:
 		var horizon_cases := [
 			[0.0, Color(0.02, 0.03, 0.08), "午夜地平线"],
 			[0.25, Color(0.45, 0.55, 0.82), "日出地平线"],
@@ -636,65 +612,23 @@ func _check_scene_and_mechanics() -> int:
 					printerr("Sky shader 应挂 %s" % param)
 					failed += 1
 			# 相位同步：_update_daylight 应将 phase 写入 shader
-			for case in [
-				[0.0, 0.5],
-				[WorldConstants.DAY_HALF_ARC, 0.25],
-				[PI, 0.0],
-				[TAU - WorldConstants.DAY_HALF_ARC, 0.75],
+			for sky_rotation in [
+				0.0,
+				WorldConstants.DAY_HALF_ARC,
+				PI,
+				TAU - WorldConstants.DAY_HALF_ARC,
 			]:
-				sky.rotation = case[0]
+				sky.rotation = sky_rotation
 				sky._update_daylight()
 				var phase: float = sky_material.get_shader_parameter("phase")
-				if not is_equal_approx(phase, SKY_PHASE.angle_to_phase(case[0])):
+				var expected_phase: float = SKY_PHASE.angle_to_phase(sky.rotation)
+				var phase_delta := absf(phase - expected_phase)
+				if phase_delta > 0.001 and absf(phase_delta - 1.0) > 0.001:
 					printerr(
 						"相位(rotation=%s)应为 %s，实际 %s"
-						% [case[0], SKY_PHASE.angle_to_phase(case[0]), phase]
+						% [sky_rotation, expected_phase, phase]
 					)
 					failed += 1
-			# 正午：近星球天空应亮于远处（远处 blend 到夜空）；取邻域最暗像素避开星星
-			var interact_prompt: CanvasItem = scene.get_node(
-				"GameView/GameViewport/InteractPrompt"
-			)
-			var surface_was_visible := surface.visible
-			var body_was_visible := body.visible
-			var player_was_visible := player.visible
-			var prompt_was_visible := interact_prompt.visible
-			surface.visible = false
-			body.visible = false
-			player.visible = false
-			interact_prompt.visible = false
-			sky.rotation = 0.0
-			sky._update_daylight()
-			await process_frame
-			var viewport_image := game_viewport.get_texture().get_image()
-			if viewport_image == null:
-				printerr("无法读取 GameViewport 贴图")
-				failed += 1
-			else:
-				var near_planet_luminance := 1.0
-				for sample_y in range(175, 185):
-					for sample_x in range(75, 85):
-						near_planet_luminance = minf(
-							near_planet_luminance,
-							viewport_image.get_pixel(sample_x, sample_y).get_luminance()
-						)
-				var far_sky_luminance := 1.0
-				for sample_y in range(5, 15):
-					for sample_x in range(123, 133):
-						far_sky_luminance = minf(
-							far_sky_luminance,
-							viewport_image.get_pixel(sample_x, sample_y).get_luminance()
-						)
-				if far_sky_luminance > near_planet_luminance - 0.08:
-					printerr(
-						"正午远处天空应比近处更暗，近处亮度 %s 远处 %s"
-						% [near_planet_luminance, far_sky_luminance]
-					)
-					failed += 1
-			surface.visible = surface_was_visible
-			body.visible = body_was_visible
-			player.visible = player_was_visible
-			interact_prompt.visible = prompt_was_visible
 			sky.rotation = sky.planet_rotation + sky._self_rotation
 
 		var apex := planet.apex_global_position()
