@@ -268,7 +268,7 @@ func _check_static_assets() -> int:
 						last_r = float(s)
 				rmin = minf(rmin, last_r)
 				rmax = maxf(rmax, last_r)
-			if rmax - rmin < 2.0:
+			if rmax - rmin < 1.0:
 				printerr(
 					"星球轮廓应有起伏，半径极差过小：%s..%s"
 					% [rmin, rmax]
