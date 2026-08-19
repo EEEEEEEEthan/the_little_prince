@@ -44,4 +44,5 @@ unique_name_in_owner = true
 z_index = 200
 texture_filter = 1
 texture = ExtResource("4_prince")
+hframes = 6
 script = ExtResource("3_player")
