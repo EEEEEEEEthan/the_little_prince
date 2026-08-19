@@ -87,15 +87,21 @@ func _check_constants() -> int:
 			% [WorldConstants.STAR_ROTATION_SPEED, WorldConstants.CLOUD_DRIFT_SPEED]
 		)
 		failed += 1
-	if WorldConstants.CLOUD_COUNT < 4:
+	if WorldConstants.CLOUD_COUNT < 10:
 		printerr("CLOUD_COUNT 过少：%d" % WorldConstants.CLOUD_COUNT)
 		failed += 1
+	if WorldConstants.CLOUD_ORBIT_MIN_RADIUS <= WorldConstants.PLANET_RADIUS:
+		printerr(
+			"CLOUD_ORBIT_MIN_RADIUS 应高于地表半径 %s，实际 %s"
+			% [WorldConstants.PLANET_RADIUS, WorldConstants.CLOUD_ORBIT_MIN_RADIUS]
+		)
+		failed += 1
 	if (
-		WorldConstants.CLOUD_SPRITE_WIDTH < 16
-		or WorldConstants.CLOUD_SPRITE_WIDTH > 40
-		or WorldConstants.CLOUD_SPRITE_HEIGHT < 8
-		or WorldConstants.CLOUD_SPRITE_HEIGHT > 24
-		or WorldConstants.CLOUD_VARIANT_COUNT < 2
+		WorldConstants.CLOUD_SPRITE_WIDTH < 32
+		or WorldConstants.CLOUD_SPRITE_WIDTH > 64
+		or WorldConstants.CLOUD_SPRITE_HEIGHT < 16
+		or WorldConstants.CLOUD_SPRITE_HEIGHT > 32
+		or WorldConstants.CLOUD_VARIANT_COUNT < 4
 	):
 		printerr(
 			"云朵 spritesheet 规格异常：%dx%d x%d"
@@ -814,6 +820,9 @@ func _check_clouds(planet: Planet) -> int:
 		failed += 1
 	var distances: PackedFloat32Array = PackedFloat32Array()
 	distances.resize(clouds.get_child_count())
+	var smallest_scale := 10.0
+	var largest_scale := 0.0
+	var used_frames := {}
 	for cloud_index in clouds.get_child_count():
 		var cloud := clouds.get_child(cloud_index) as Sprite2D
 		if cloud.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
@@ -827,15 +836,27 @@ func _check_clouds(planet: Planet) -> int:
 			failed += 1
 		var from_center := cloud.global_position - planet.global_position
 		distances[cloud_index] = from_center.length()
-		if distances[cloud_index] <= WorldConstants.PLANET_RADIUS:
+		if distances[cloud_index] < WorldConstants.CLOUD_ORBIT_MIN_RADIUS:
 			printerr(
-					"%s 应在地表之外，距离 %s，半径 %s"
-					% [cloud.name, distances[cloud_index], WorldConstants.PLANET_RADIUS]
+					"%s 轨道应更高，距离 %s，下限 %s"
+					% [cloud.name, distances[cloud_index], WorldConstants.CLOUD_ORBIT_MIN_RADIUS]
 			)
+			failed += 1
+		if cloud.modulate.a >= 1.0 or cloud.modulate.a <= 0.5:
+			printerr("%s 应略透明，alpha=%s" % [cloud.name, cloud.modulate.a])
 			failed += 1
 		if not faces_planet.call(cloud):
 			printerr("%s 应看向行星，rotation=%s 位置=%s" % [cloud.name, cloud.global_rotation, from_center])
 			failed += 1
+		smallest_scale = minf(smallest_scale, cloud.scale.x)
+		largest_scale = maxf(largest_scale, cloud.scale.x)
+		used_frames[cloud.frame] = true
+	if largest_scale - smallest_scale < 0.3:
+		printerr("云朵缩放应有明显差异，极差 %s" % (largest_scale - smallest_scale))
+		failed += 1
+	if used_frames.size() < 4:
+		printerr("云朵变体过少：%d" % used_frames.size())
+		failed += 1
 	var first_cloud := clouds.get_child(0) as Sprite2D
 	var rotation_before := first_cloud.global_rotation
 	var angle_before := (first_cloud.global_position - planet.global_position).angle()
