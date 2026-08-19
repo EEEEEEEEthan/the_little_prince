@@ -54,7 +54,7 @@ script = ExtResource("2_sky")
 
 [node name="Volcano" type="Sprite2D" parent="Surface" unique_id=67520320]
 texture_filter = 1
-position = Vector2(70.989672, -16.134016)
+position = Vector2(68, -15)
 rotation = 1.322235
 texture = ExtResource("8_volcano")
 offset = Vector2(0, -12.96)
@@ -66,7 +66,7 @@ variant = 2
 
 [node name="Volcano2" type="Sprite2D" parent="Surface" unique_id=1280196619]
 texture_filter = 1
-position = Vector2(-25.916460, 68.030707)
+position = Vector2(-24, 64)
 rotation = -2.7793012
 texture = ExtResource("8_volcano")
 offset = Vector2(0, -12.96)
@@ -76,7 +76,7 @@ kind = 1
 
 [node name="Volcano3" type="Sprite2D" parent="Surface" unique_id=1036392147]
 texture_filter = 1
-position = Vector2(-67.436804, -27.424759)
+position = Vector2(-67.436806, -27.424759)
 rotation = -1.18455
 texture = ExtResource("8_volcano")
 offset = Vector2(0, -14.4)
@@ -88,7 +88,7 @@ variant = 1
 
 [node name="Rose" type="Sprite2D" parent="Surface" unique_id=240828752]
 texture_filter = 1
-position = Vector2(0.000000, -72.800000)
+position = Vector2(0, -72.8)
 texture = ExtResource("7_rose")
 offset = Vector2(0, -9.2)
 script = ExtResource("3_surface_prop")
@@ -107,7 +107,7 @@ variant = 2
 
 [node name="Baobab2" type="Sprite2D" parent="Surface" unique_id=677575263]
 texture_filter = 1
-position = Vector2(52.040492, -50.908027)
+position = Vector2(52.040493, -50.908028)
 rotation = 0.796398
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -119,7 +119,7 @@ variant = 3
 
 [node name="Baobab3" type="Sprite2D" parent="Surface" unique_id=2117036339]
 texture_filter = 1
-position = Vector2(-31.060057, -65.841574)
+position = Vector2(-30, -62)
 rotation = 5.842401
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -131,7 +131,7 @@ variant = 2
 
 [node name="Baobab4" type="Sprite2D" parent="Surface" unique_id=914275009]
 texture_filter = 1
-position = Vector2(15.792537, 71.066418)
+position = Vector2(13.000001, 64.00001)
 rotation = 2.93024
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -143,7 +143,7 @@ variant = 2
 
 [node name="Baobab5" type="Sprite2D" parent="Surface" unique_id=942940131]
 texture_filter = 1
-position = Vector2(25.578505, -68.158492)
+position = Vector2(25.578505, -68.15849)
 rotation = 0.359016
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -155,7 +155,7 @@ variant = 1
 
 [node name="Baobab6" type="Sprite2D" parent="Surface" unique_id=80811792]
 texture_filter = 1
-position = Vector2(-50.274347, 52.652920)
+position = Vector2(-51.000004, 47.000004)
 rotation = 3.903886
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -167,7 +167,7 @@ variant = 2
 
 [node name="Baobab7" type="Sprite2D" parent="Surface" unique_id=1232238802]
 texture_filter = 1
-position = Vector2(-17.132130, -70.755425)
+position = Vector2(-17.13213, -70.755424)
 rotation = 6.045626
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -179,7 +179,7 @@ variant = 2
 
 [node name="Baobab8" type="Sprite2D" parent="Surface" unique_id=1903417816]
 texture_filter = 1
-position = Vector2(-60.984670, -39.758145)
+position = Vector2(-60.98467, -39.758144)
 rotation = 5.290124
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -191,7 +191,7 @@ variant = 2
 
 [node name="Baobab9" type="Sprite2D" parent="Surface" unique_id=598481963]
 texture_filter = 1
-position = Vector2(33.187763, 64.795157)
+position = Vector2(31.999996, 60.999992)
 rotation = 2.702703
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -203,7 +203,7 @@ variant = 3
 
 [node name="Baobab10" type="Sprite2D" parent="Surface" unique_id=584051714]
 texture_filter = 1
-position = Vector2(66.052212, 30.609561)
+position = Vector2(63.000008, 30.000004)
 rotation = 2.012402
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -215,7 +215,7 @@ variant = 2
 
 [node name="Baobab11" type="Sprite2D" parent="Surface" unique_id=1517630802]
 texture_filter = 1
-position = Vector2(-43.304385, 58.519828)
+position = Vector2(-43.304386, 58.51983)
 rotation = 3.77866
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -227,7 +227,7 @@ variant = 3
 
 [node name="Baobab12" type="Sprite2D" parent="Surface" unique_id=2144153387]
 texture_filter = 1
-position = Vector2(-72.799451, -0.282728)
+position = Vector2(-69, 2.0000002)
 rotation = 4.716273
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -239,7 +239,7 @@ variant = 2
 
 [node name="Baobab13" type="Sprite2D" parent="Surface" unique_id=1877528567]
 texture_filter = 1
-position = Vector2(-70.850507, 16.734566)
+position = Vector2(-70.85051, 16.734566)
 rotation = 4.480444
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -251,7 +251,7 @@ variant = 3
 
 [node name="Baobab14" type="Sprite2D" parent="Surface" unique_id=602724225]
 texture_filter = 1
-position = Vector2(-41.725777, -59.655675)
+position = Vector2(-41.725777, -59.655674)
 rotation = 5.672833
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -263,7 +263,7 @@ variant = 3
 
 [node name="Baobab15" type="Sprite2D" parent="Surface" unique_id=1244439368]
 texture_filter = 1
-position = Vector2(57.470397, -44.687733)
+position = Vector2(57.470398, -44.687733)
 rotation = 0.909878
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -273,7 +273,7 @@ kind = 2
 
 [node name="Baobab16" type="Sprite2D" parent="Surface" unique_id=867214092]
 texture_filter = 1
-position = Vector2(1.582234, 72.782804)
+position = Vector2(1, 69)
 rotation = 3.076368
 texture = ExtResource("9_baobab")
 offset = Vector2(0, -13.44)
@@ -286,5 +286,4 @@ variant = 3
 [node name="Body" type="Sprite2D" parent="." unique_id=1433111694]
 z_index = 4096
 texture_filter = 1
-scale = Vector2(1, 1)
 texture = ExtResource("4_body")
