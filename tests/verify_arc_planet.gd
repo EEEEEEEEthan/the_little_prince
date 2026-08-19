@@ -106,6 +106,21 @@ func _check_constants() -> int:
 			% [WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT]
 		)
 		failed += 1
+	if (
+		WorldConstants.PLAYER_IDLE_FRAME_COUNT < 1
+		or WorldConstants.PLAYER_WALK_FRAME_COUNT < 2
+		or WorldConstants.PLAYER_SPRITE_FRAME_COUNT
+		!= WorldConstants.PLAYER_IDLE_FRAME_COUNT + WorldConstants.PLAYER_WALK_FRAME_COUNT
+	):
+		printerr(
+			"小王子 spritesheet 应为 idle+walk，实际 idle=%d walk=%d total=%d"
+			% [
+				WorldConstants.PLAYER_IDLE_FRAME_COUNT,
+				WorldConstants.PLAYER_WALK_FRAME_COUNT,
+				WorldConstants.PLAYER_SPRITE_FRAME_COUNT,
+			]
+		)
+		failed += 1
 	# 旧伪 3D 常量不得残留在源码中
 	var const_src := FileAccess.get_file_as_string("res://core/world_constants.gd")
 	for legacy in [
@@ -255,6 +270,48 @@ func _check_static_assets() -> int:
 				% [expected_diameter, expected_diameter, body.get_width(), body.get_height()]
 			)
 			failed += 1
+		else:
+			var body_img := body.get_image()
+			var cx := float(body_img.get_width()) * 0.5
+			var cy := float(body_img.get_height()) * 0.5
+			var rmin := 1e9
+			var rmax := 0.0
+			for i in 64:
+				var ang := TAU * float(i) / 64.0
+				var dir := Vector2(sin(ang), -cos(ang))
+				var last_r := 0.0
+				for s in range(int(cx) + 2):
+					var p := Vector2(cx, cy) + dir * float(s)
+					var px := int(p.x)
+					var py := int(p.y)
+					if px < 0 or py < 0 or px >= body_img.get_width() or py >= body_img.get_height():
+						break
+					if body_img.get_pixel(px, py).a > 0.5:
+						last_r = float(s)
+				rmin = minf(rmin, last_r)
+				rmax = maxf(rmax, last_r)
+			if rmax - rmin < 1.0:
+				printerr(
+					"星球轮廓应有起伏，半径极差过小：%s..%s"
+					% [rmin, rmax]
+				)
+				failed += 1
+			# 禁止 Bayer 棋盘渐变：高对比相邻像素不应占主导
+			var checker := 0
+			var opaque_pairs := 0
+			for y in range(1, body_img.get_height()):
+				for x in range(1, body_img.get_width()):
+					var a := body_img.get_pixel(x, y)
+					var bcol := body_img.get_pixel(x - 1, y)
+					if a.a < 0.5 or bcol.a < 0.5:
+						continue
+					opaque_pairs += 1
+					var d := a.r - bcol.r
+					if absf(d) > 0.12:
+						checker += 1
+			if opaque_pairs > 0 and float(checker) / float(opaque_pairs) > 0.18:
+				printerr("星球贴图不应使用 1bit/Bayer 渐变")
+				failed += 1
 	# 精灵尺寸应对齐常量（火山 / 猴面包树为 spritesheet，宽度 = 帧数 × 帧尺寸）
 	var sprite_checks: Array = [
 		[
@@ -268,9 +325,17 @@ func _check_static_assets() -> int:
 			WorldConstants.BAOBAB_SPRITE_SIZE,
 		],
 		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
+<<<<<<< HEAD
 		["res://player/prince.png", WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT],
 		["res://ui/prompt_a.png", 13, 13],
 		["res://ui/portraits/prince.png", 32, 32],
+=======
+		[
+			"res://player/prince.png",
+			WorldConstants.PLAYER_SPRITE_WIDTH * WorldConstants.PLAYER_SPRITE_FRAME_COUNT,
+			WorldConstants.PLAYER_SPRITE_HEIGHT,
+		],
+>>>>>>> origin/main
 	]
 	for item in sprite_checks:
 		var tex: Texture2D = load(item[0]) as Texture2D
@@ -440,6 +505,18 @@ func _check_scene_and_mechanics() -> int:
 		if planet.get_node_or_null("Sky") == null:
 			printerr("找不到 Sky（应为 Planet 子节点）")
 			failed += 1
+		if not planet.body.scale.is_equal_approx(Vector2.ONE):
+			printerr("Body.scale 应为 (1,1)（贴图原尺寸显示），实际 %s" % planet.body.scale)
+			failed += 1
+		for prop in planet.surface_props:
+			var dist := prop.position.length()
+			# 允许沿起伏轮廓略微内缩，但不得停在放大前的旧圆（约 62.4）上。
+			if dist < 64.0 or dist > WorldConstants.PLANET_RADIUS + 1.5:
+				printerr(
+					"地物 %s 应靠近半径 %s，实际 %s"
+					% [prop.name, WorldConstants.PLANET_RADIUS, dist]
+				)
+				failed += 1
 		if scene.get_node_or_null("GameView/GameViewport/Sky") != null:
 			printerr("Sky 不应再作为 GameViewport 直接子节点")
 			failed += 1
@@ -479,10 +556,20 @@ func _check_scene_and_mechanics() -> int:
 			printerr("Sky 应挂载统一天空 ShaderMaterial")
 			failed += 1
 		else:
-			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
-				printerr("Sky 应使用 LINEAR 过滤以平滑采样渐变贴图")
+			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
+				printerr("Sky 应使用 NEAREST 过滤")
 				failed += 1
-			for param in ["zenith_gradient", "starfield_tex", "star_alpha_gradient", "noise_texture"]:
+			if sky.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
+				printerr("Sky 应使用 NEAREST 过滤")
+				failed += 1
+			if sky.texture == null or sky.texture.resource_path != "res://planet/starfield.png":
+				printerr("Sky.texture 应为 starfield.png")
+				failed += 1
+			for line in sky_material.shader.code.split("\n"):
+				if line.begins_with("uniform sampler2D") and not line.contains("filter_nearest"):
+					printerr("Sky shader sampler 应使用 filter_nearest：%s" % line)
+					failed += 1
+			for param in ["zenith_gradient", "star_alpha_gradient", "noise_texture"]:
 				var tex := sky_material.get_shader_parameter(param) as Texture2D
 				if tex == null:
 					printerr("Sky shader 应挂 %s" % param)
@@ -514,6 +601,41 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 		if player.global_position.distance_to(apex) > 0.5:
 			printerr("玩家应在弧顶 %s，实际 %s" % [apex, player.global_position])
+			failed += 1
+		if player.hframes != WorldConstants.PLAYER_SPRITE_FRAME_COUNT:
+			printerr(
+				"Player.hframes 应为 %d，实际 %d"
+				% [WorldConstants.PLAYER_SPRITE_FRAME_COUNT, player.hframes]
+			)
+			failed += 1
+		if not player.scale.is_equal_approx(Vector2.ONE):
+			printerr("Player.scale 应为 (1,1)，实际 %s" % player.scale)
+			failed += 1
+		var expected_offset_y := (
+			-float(WorldConstants.PLAYER_SPRITE_HEIGHT) * 0.5 + WorldConstants.PLAYER_VISUAL_Y_OFFSET
+		)
+		if absf(player.offset.y - expected_offset_y) > 0.01:
+			printerr("玩家视觉 Y 偏移应为 %s，实际 %s" % [expected_offset_y, player.offset.y])
+			failed += 1
+		player._update_animation(0.0, 0.6)
+		if player.frame < 0 or player.frame >= WorldConstants.PLAYER_IDLE_FRAME_COUNT:
+			printerr("静止时应停在 idle 帧，实际 frame=%d" % player.frame)
+			failed += 1
+		planet.move_player(1.0, 0.2)
+		player._update_animation(1.0, 0.2)
+		if not planet.is_moving():
+			printerr("输入右移后星球应仍有角速度")
+			failed += 1
+		if player.frame < WorldConstants.PLAYER_IDLE_FRAME_COUNT:
+			printerr("行走时应切到 walk 帧，实际 frame=%d" % player.frame)
+			failed += 1
+		if player.flip_h:
+			printerr("向右走时 flip_h 应为 false")
+			failed += 1
+		planet.move_player(-1.0, 0.2)
+		player._update_animation(-1.0, 0.05)
+		if not player.flip_h:
+			printerr("向左走时 flip_h 应为 true")
 			failed += 1
 
 		planet.teleport_player(fposmod(-0.2, TAU))
