@@ -875,10 +875,12 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			failed += 1
 		var viewport_height := float((scene.get_node(VIEWPORT_PATH) as SubViewport).size.y)
 		var panel_center_y := panel.position.y + panel.size.y * 0.5
-		if absf(panel_center_y - viewport_height * 0.5) > 1.0:
+		var expected_center_below_midline := 16.0
+		var expected_center_y := viewport_height * 0.5 + expected_center_below_midline
+		if absf(panel_center_y - expected_center_y) > 1.0:
 			printerr(
-					"对话框应垂直居中，视口高度 %s 面板中心 y=%s"
-					% [viewport_height, panel_center_y]
+					"对话框应略低于屏幕中线，期望 y=%s 实际 %s"
+					% [expected_center_y, panel_center_y]
 			)
 			failed += 1
 
