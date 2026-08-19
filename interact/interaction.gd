@@ -26,6 +26,8 @@ func _on_interact() -> void:
 	if lines.is_empty():
 		return
 	dialogue.play(lines)
+	if dialogue.is_open():
+		dialogue.mark_holding(true)
 	_set_focus(null)
 
 func _set_focus(prop: SurfaceProp) -> void:

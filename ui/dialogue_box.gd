@@ -16,27 +16,35 @@ const TYPEWRITER_FAST_VOLUME_DB := -20.0
 var _lines: Array[DialogueLine] = []
 var _index: int = 0
 var _is_holding: bool = false
-var _hold_started_while_typing: bool = false
-var _was_any_input_held: bool = false
+var _advance_on_confirm_release: bool = false
+var _saw_confirm_released_while_idle: bool = false
+var _is_revealing: bool = false
+var _typewriter_accum_seconds: float = 0.0
 
 func _ready() -> void:
 	# tscn 保持可见便于编辑；开局再关。
 	visible = false
 	set_process(false)
 	_timer.wait_time = TYPEWRITER_INTERVAL
-	_timer.timeout.connect(_on_typewriter_tick)
 
-func _process(_delta: float) -> void:
-	var held := Input.is_anything_pressed()
-	if held != _was_any_input_held:
-		mark_holding(held)
-	_was_any_input_held = held
+func _process(delta: float) -> void:
+	if visible and not _is_revealing and not _is_holding:
+		_saw_confirm_released_while_idle = true
+	if not _is_revealing:
+		return
+	var typewriter_interval := (
+		TYPEWRITER_FAST_INTERVAL if _is_holding else TYPEWRITER_INTERVAL
+	)
+	_typewriter_accum_seconds += delta
+	while _is_revealing and _typewriter_accum_seconds >= typewriter_interval:
+		_typewriter_accum_seconds -= typewriter_interval
+		_reveal_next_character()
 
 func is_open() -> bool:
 	return visible
 
 func is_typing() -> bool:
-	return not _timer.is_stopped()
+	return _is_revealing
 
 func play(lines: Array[DialogueLine]) -> void:
 	if lines.is_empty():
@@ -45,8 +53,8 @@ func play(lines: Array[DialogueLine]) -> void:
 	_lines = lines.duplicate()
 	_index = 0
 	_is_holding = false
-	_hold_started_while_typing = false
-	_was_any_input_held = Input.is_anything_pressed()
+	_advance_on_confirm_release = false
+	_saw_confirm_released_while_idle = false
 	_set_accelerating(false)
 	visible = true
 	set_process(true)
@@ -57,18 +65,16 @@ func mark_holding(held: bool) -> void:
 		return
 	_is_holding = held
 	if held:
+		_advance_on_confirm_release = not is_typing() and _saw_confirm_released_while_idle
 		if is_typing():
-			_hold_started_while_typing = true
 			_set_accelerating(true)
-		else:
-			_hold_started_while_typing = false
 		return
 	if is_typing():
 		_set_accelerating(false)
 		return
-	if _hold_started_while_typing:
-		_hold_started_while_typing = false
+	if not _advance_on_confirm_release:
 		return
+	_advance_on_confirm_release = false
 	_index += 1
 	if _index >= _lines.size():
 		close()
@@ -79,8 +85,10 @@ func close() -> void:
 	_timer.stop()
 	_typewriter.stop()
 	_is_holding = false
-	_hold_started_while_typing = false
-	_was_any_input_held = false
+	_advance_on_confirm_release = false
+	_saw_confirm_released_while_idle = false
+	_is_revealing = false
+	_typewriter_accum_seconds = 0.0
 	_set_accelerating(false)
 	%ContinueTriangle.visible = false
 	_lines.clear()
@@ -95,24 +103,28 @@ func _show_line() -> void:
 	_portrait.texture = line.portrait
 	_body.visible_characters = 0
 	%ContinueTriangle.visible = false
-	_timer.start()
-	_on_typewriter_tick()
+	_timer.stop()
+	_is_revealing = true
+	_typewriter_accum_seconds = 0.0
+	_reveal_next_character()
 
 func _set_accelerating(enabled: bool) -> void:
 	_timer.wait_time = TYPEWRITER_FAST_INTERVAL if enabled else TYPEWRITER_INTERVAL
 	_typewriter.volume_db = TYPEWRITER_FAST_VOLUME_DB if enabled else TYPEWRITER_VOLUME_DB
-	if enabled and not _timer.is_stopped():
-		_timer.start()
 
-func _on_typewriter_tick() -> void:
+func _reveal_next_character() -> void:
 	var total := _body.get_total_character_count()
 	if _body.visible_characters < total:
 		_body.visible_characters += 1
 		_play_blip()
 	if _body.visible_characters >= total:
-		_timer.stop()
+		_is_revealing = false
+		_typewriter_accum_seconds = 0.0
 		_set_accelerating(false)
 		%ContinueTriangle.visible = true
+		if _is_holding:
+			_advance_on_confirm_release = false
+			_saw_confirm_released_while_idle = false
 
 func _play_blip() -> void:
 	var shown := _body.visible_characters
