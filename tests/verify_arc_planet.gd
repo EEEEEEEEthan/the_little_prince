@@ -971,6 +971,7 @@ func _check_typewriter_hold(
 		printerr("按住结束再松开后继续三角仍应显示")
 		failed += 1
 
+	await process_frame
 	dialogue.mark_holding(true)
 	if body.text != first_text or not dialogue.is_open() or dialogue.is_typing():
 		printerr("播放结束后按下任意键不应进入下一句")
@@ -1027,6 +1028,7 @@ func _check_typewriter_hold_through_line_then_release(
 	if not continue_triangle.visible:
 		printerr("按住直到打完再松开后继续三角仍应显示")
 		failed += 1
+	await process_frame
 	scene._input(_interact_key_event(true))
 	if body.text != first_text or dialogue.is_typing():
 		printerr("打完后按下不应进入下一句")

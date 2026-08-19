@@ -17,6 +17,7 @@ var _lines: Array[DialogueLine] = []
 var _index: int = 0
 var _is_holding: bool = false
 var _advance_on_confirm_release: bool = false
+var _saw_confirm_released_while_idle: bool = false
 var _is_revealing: bool = false
 var _typewriter_accum_seconds: float = 0.0
 
@@ -27,6 +28,8 @@ func _ready() -> void:
 	_timer.wait_time = TYPEWRITER_INTERVAL
 
 func _process(delta: float) -> void:
+	if visible and not _is_revealing and not _is_holding:
+		_saw_confirm_released_while_idle = true
 	if not _is_revealing:
 		return
 	var typewriter_interval := (
@@ -51,6 +54,7 @@ func play(lines: Array[DialogueLine]) -> void:
 	_index = 0
 	_is_holding = false
 	_advance_on_confirm_release = false
+	_saw_confirm_released_while_idle = false
 	_set_accelerating(false)
 	visible = true
 	set_process(true)
@@ -61,7 +65,7 @@ func mark_holding(held: bool) -> void:
 		return
 	_is_holding = held
 	if held:
-		_advance_on_confirm_release = not is_typing()
+		_advance_on_confirm_release = not is_typing() and _saw_confirm_released_while_idle
 		if is_typing():
 			_set_accelerating(true)
 		return
@@ -82,6 +86,7 @@ func close() -> void:
 	_typewriter.stop()
 	_is_holding = false
 	_advance_on_confirm_release = false
+	_saw_confirm_released_while_idle = false
 	_is_revealing = false
 	_typewriter_accum_seconds = 0.0
 	_set_accelerating(false)
@@ -119,6 +124,7 @@ func _reveal_next_character() -> void:
 		%ContinueTriangle.visible = true
 		if _is_holding:
 			_advance_on_confirm_release = false
+			_saw_confirm_released_while_idle = false
 
 func _play_blip() -> void:
 	var shown := _body.visible_characters
