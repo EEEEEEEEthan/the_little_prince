@@ -248,6 +248,48 @@ func _check_static_assets() -> int:
 				% [expected_diameter, expected_diameter, body.get_width(), body.get_height()]
 			)
 			failed += 1
+		else:
+			var body_img := body.get_image()
+			var cx := float(body_img.get_width()) * 0.5
+			var cy := float(body_img.get_height()) * 0.5
+			var rmin := 1e9
+			var rmax := 0.0
+			for i in 64:
+				var ang := TAU * float(i) / 64.0
+				var dir := Vector2(sin(ang), -cos(ang))
+				var last_r := 0.0
+				for s in range(int(cx) + 2):
+					var p := Vector2(cx, cy) + dir * float(s)
+					var px := int(p.x)
+					var py := int(p.y)
+					if px < 0 or py < 0 or px >= body_img.get_width() or py >= body_img.get_height():
+						break
+					if body_img.get_pixel(px, py).a > 0.5:
+						last_r = float(s)
+				rmin = minf(rmin, last_r)
+				rmax = maxf(rmax, last_r)
+			if rmax - rmin < 2.0:
+				printerr(
+					"星球轮廓应有起伏，半径极差过小：%s..%s"
+					% [rmin, rmax]
+				)
+				failed += 1
+			# 禁止 Bayer 棋盘渐变：高对比相邻像素不应占主导
+			var checker := 0
+			var opaque_pairs := 0
+			for y in range(1, body_img.get_height()):
+				for x in range(1, body_img.get_width()):
+					var a := body_img.get_pixel(x, y)
+					var bcol := body_img.get_pixel(x - 1, y)
+					if a.a < 0.5 or bcol.a < 0.5:
+						continue
+					opaque_pairs += 1
+					var d := a.r - bcol.r
+					if absf(d) > 0.12:
+						checker += 1
+			if opaque_pairs > 0 and float(checker) / float(opaque_pairs) > 0.18:
+				printerr("星球贴图不应使用 1bit/Bayer 渐变")
+				failed += 1
 	# 精灵尺寸应对齐常量（火山 / 猴面包树为 spritesheet，宽度 = 帧数 × 帧尺寸）
 	var sprite_checks: Array = [
 		[
