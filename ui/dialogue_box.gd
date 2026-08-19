@@ -47,6 +47,7 @@ func advance() -> void:
 
 func close() -> void:
 	_timer.stop()
+	_typewriter.stop()
 	_lines.clear()
 	_index = 0
 	visible = false
@@ -62,6 +63,7 @@ func _show_line() -> void:
 
 func _finish_line() -> void:
 	_timer.stop()
+	_typewriter.stop()
 	_body.visible_characters = -1
 
 func _on_typewriter_tick() -> void:
@@ -81,5 +83,9 @@ func _play_blip() -> void:
 	var ch := _body.text[shown - 1]
 	if ch == " " or ch == "\n" or ch == "　":
 		return
+	# headless 下 WAV playback 会在退出时泄漏，且没有实际输出
+	if DisplayServer.get_name() == "headless":
+		return
+	_typewriter.stop()
 	_typewriter.pitch_scale = randf_range(0.94, 1.08)
 	_typewriter.play()
