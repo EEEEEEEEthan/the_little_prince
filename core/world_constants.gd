@@ -19,6 +19,8 @@ const SPAWN_ANGLE_OFFSET: float = 0.12
 const INTERACT_RANGE_PX: float = 16.0
 ## A 键提示跟随点：地物本地坐标 Y（沿半径向外为负），提示本身不继承旋转。
 const INTERACT_PROMPT_LOCAL_Y: float = -38.0
+## 头顶打字机：相对弧顶的本地 Y（向上为负），Label 底边对齐此点。
+const OVERHEAD_TYPEWRITER_LOCAL_Y: float = -24.0
 
 ## 玩家沿线最大速度（像素/秒）；目标角速度 = PLAYER_SPEED / PLANET_RADIUS。
 const PLAYER_SPEED: float = 16.0

@@ -1,0 +1,31 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" uid="uid://lbxe62rq56ta" path="res://ui/overhead_typewriter.gd" id="1_overhead"]
+[ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="2_font"]
+[ext_resource type="AudioStream" uid="uid://cednuam573usk" path="res://ui/typewriter.wav" id="3_blip"]
+
+[node name="OverheadTypewriter" type="Node2D"]
+z_index = 260
+z_as_relative = false
+script = ExtResource("1_overhead")
+
+[node name="Body" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = -96.0
+offset_top = -40.0
+offset_right = 96.0
+offset_bottom = 0.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 8
+theme_override_constants/line_spacing = 1
+horizontal_alignment = 1
+vertical_alignment = 2
+autowrap_mode = 3
+text = "风从沙上走过。"
+
+[node name="Typewriter" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
+stream = ExtResource("3_blip")
+volume_db = -14.0
