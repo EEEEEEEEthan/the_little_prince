@@ -88,8 +88,8 @@ initial_velocity_min = 4.0
 initial_velocity_max = 9.0
 angular_velocity_min = -25.0
 angular_velocity_max = 25.0
-scale_amount_min = 0.7
-scale_amount_max = 1.35
+scale_amount_min = 0.4
+scale_amount_max = 0.85
 color_ramp = SubResource("Gradient_volcano_smoke")
 
 [node name="Volcano2" type="Sprite2D" parent="Surface" unique_id=1280196619]

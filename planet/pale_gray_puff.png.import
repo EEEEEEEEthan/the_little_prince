@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cpalegraypuff"
-path="res://.godot/imported/pale_gray_puff.png-placeholder.ctex"
+path="res://.godot/imported/pale_gray_puff.png-02c403b8dbb0e3917595d8e7f7edd9d9.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://planet/pale_gray_puff.png"
-dest_files=["res://.godot/imported/pale_gray_puff.png-placeholder.ctex"]
+dest_files=["res://.godot/imported/pale_gray_puff.png-02c403b8dbb0e3917595d8e7f7edd9d9.ctex"]
 
 [params]
 

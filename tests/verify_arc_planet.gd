@@ -320,7 +320,7 @@ func _check_static_assets() -> int:
 			WorldConstants.VOLCANO_SPRITE_SIZE * WorldConstants.VOLCANO_VARIANT_COUNT,
 			WorldConstants.VOLCANO_SPRITE_SIZE,
 		],
-		["res://planet/pale_gray_puff.png", 4, 4],
+		["res://planet/pale_gray_puff.png", 8, 8],
 		[
 			"res://planet/baobab.png",
 			WorldConstants.BAOBAB_SPRITE_SIZE * WorldConstants.BAOBAB_VARIANT_COUNT,
