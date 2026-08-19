@@ -14,6 +14,7 @@ var _lines: Array[DialogueLine] = []
 var _index: int = 0
 
 func _ready() -> void:
+	# tscn 保持可见便于编辑；开局再关。
 	visible = false
 	_timer.wait_time = TYPEWRITER_INTERVAL
 	_timer.timeout.connect(_on_typewriter_tick)

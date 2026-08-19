@@ -40,6 +40,7 @@ func _run_tests() -> void:
 	failed += _check_constants()
 	failed += _check_static_assets()
 	failed += _check_no_legacy()
+	failed += _check_tscn_editor_visible()
 	failed += _check_input_map()
 	failed += await _check_scene_and_mechanics()
 	if failed == 0:
@@ -297,6 +298,16 @@ func _check_no_legacy() -> int:
 			printerr("旧文件仍存在：%s" % path)
 			failed += 1
 	print("  无 sphere_fisheye / StackedProp 残留 OK")
+	return failed
+
+func _check_tscn_editor_visible() -> int:
+	var failed := 0
+	for path in ["res://main.tscn", "res://planet/planet.tscn", "res://ui/dialogue_box.tscn"]:
+		var src := FileAccess.get_file_as_string(path)
+		if src.contains("visible = false"):
+			printerr("%s 不应在 tscn 写 visible = false（编辑器要能看见，运行时脚本再关）" % path)
+			failed += 1
+	print("  tscn 编辑器可见 OK")
 	return failed
 
 func _check_input_map() -> int:

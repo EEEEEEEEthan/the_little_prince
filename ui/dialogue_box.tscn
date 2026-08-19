@@ -19,7 +19,6 @@ content_margin_bottom = 4.0
 
 [node name="DialogueBox" type="CanvasLayer"]
 layer = 10
-visible = false
 script = ExtResource("1_dialogue")
 
 [node name="Panel" type="PanelContainer" parent="."]

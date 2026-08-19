@@ -5,6 +5,7 @@ extends Sprite2D
 var _target: SurfaceProp
 
 func _ready() -> void:
+	# tscn 保持可见便于编辑；开局再关。
 	visible = false
 	set_process(false)
 

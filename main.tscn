@@ -52,7 +52,6 @@ script = ExtResource("3_player")
 
 [node name="InteractPrompt" type="Sprite2D" parent="GameView/GameViewport"]
 unique_name_in_owner = true
-visible = false
 z_index = 250
 z_as_relative = false
 texture_filter = 1
