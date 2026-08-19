@@ -12,17 +12,14 @@ func is_busy() -> bool:
 	return dialogue.is_open()
 
 func _process(_delta: float) -> void:
-	if Input.is_action_just_pressed(&"interact"):
-		_on_interact()
 	if is_busy():
 		_set_focus(null)
 		return
+	if Input.is_action_just_pressed(&"interact"):
+		_on_interact()
 	_set_focus(planet.find_nearest_interactable())
 
 func _on_interact() -> void:
-	if dialogue.is_open():
-		dialogue.advance()
-		return
 	if _focus == null:
 		return
 	var lines := DialogueCatalog.lines_for_id(_focus.get_dialogue_id())
