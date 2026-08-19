@@ -578,7 +578,7 @@ func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
 		printerr("猴面包树应为可交互且 dialogue_id=baobab")
 		failed += 1
 
-	await physics_frame
+	await process_frame
 	var prompt: InteractPrompt = scene.get_node_or_null("GameView/GameViewport/InteractPrompt") as InteractPrompt
 	if prompt != null:
 		if prompt.get_parent() == target:
@@ -595,7 +595,7 @@ func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
 			printerr("A 提示应跟在树冠上，期望 %s 实际 %s" % [crown, prompt.global_position])
 			failed += 1
 		planet.teleport_player(fposmod(target.rotation + 0.08, TAU))
-		await physics_frame
+		await process_frame
 		if absf(prompt.global_rotation) > 0.01:
 			printerr("星球转过后 A 提示仍应不旋转，实际 %s" % prompt.global_rotation)
 			failed += 1

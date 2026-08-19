@@ -11,7 +11,7 @@ var _focus: SurfaceProp
 func is_busy() -> bool:
 	return dialogue.is_open()
 
-func _physics_process(_delta: float) -> void:
+func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed(&"interact"):
 		_on_interact()
 	if is_busy():
