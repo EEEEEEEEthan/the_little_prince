@@ -4,6 +4,8 @@ extends Node2D
 
 var planet_rotation: float = 0.0
 var _self_rotation: float = 0.0
+var _instance_local_positions: PackedVector2Array
+var _instance_colors: PackedColorArray
 
 @onready var _cloud_sprites: MultiMeshInstance2D = %CloudSprites
 
@@ -26,7 +28,16 @@ func _process(delta: float) -> void:
 
 
 func _rebuild_instances() -> void:
-	var cloud_multimesh := MultiMesh.new()
+	var frame_material := _cloud_sprites.material as ShaderMaterial
+	frame_material.set_shader_parameter(
+			"frame_columns", float(WorldConstants.CLOUD_FRAME_COLUMNS)
+	)
+	frame_material.set_shader_parameter(
+			"frame_rows", float(WorldConstants.CLOUD_FRAME_ROWS)
+	)
+	_cloud_sprites.multimesh = MultiMesh.new()
+	var cloud_multimesh := _cloud_sprites.multimesh
+	var sprite_count := WorldConstants.CLOUD_INSTANCE_COUNT
 	cloud_multimesh.transform_format = MultiMesh.TRANSFORM_2D
 	cloud_multimesh.use_colors = true
 	var quad_mesh := QuadMesh.new()
@@ -35,15 +46,9 @@ func _rebuild_instances() -> void:
 			WorldConstants.CLOUD_FRAME_WIDTH, WorldConstants.CLOUD_FRAME_HEIGHT
 	)
 	cloud_multimesh.mesh = quad_mesh
-	var frame_material := _cloud_sprites.material as ShaderMaterial
-	frame_material.set_shader_parameter(
-			"frame_columns", float(WorldConstants.CLOUD_FRAME_COLUMNS)
-	)
-	frame_material.set_shader_parameter(
-			"frame_rows", float(WorldConstants.CLOUD_FRAME_ROWS)
-	)
-	var sprite_count := WorldConstants.CLOUD_INSTANCE_COUNT
 	cloud_multimesh.instance_count = sprite_count
+	_instance_local_positions.resize(sprite_count)
+	_instance_colors.resize(sprite_count)
 	var placement_rng := RandomNumberGenerator.new()
 	placement_rng.seed = WorldConstants.CLOUD_PLACEMENT_SEED
 	var instance_index := 0
@@ -78,35 +83,29 @@ func _rebuild_instances() -> void:
 			if orbit_distance < WorldConstants.CLOUD_ORBIT_MIN_RADIUS:
 				local_position *= WorldConstants.CLOUD_ORBIT_MIN_RADIUS / orbit_distance
 				local_position = Vector2(roundf(local_position.x), roundf(local_position.y))
-			var instance_orbit_angle := atan2(local_position.x, -local_position.y)
-			cloud_multimesh.set_instance_transform_2d(
-					instance_index,
-					Transform2D(instance_orbit_angle, local_position),
-			)
 			var row_index := placement_rng.randi_range(
 					0, WorldConstants.CLOUD_FRAME_ROWS - 1
 			)
-			cloud_multimesh.set_instance_color(
-					instance_index,
-					Color(
-							float(row_index) / float(WorldConstants.CLOUD_FRAME_ROWS - 1),
-							placement_rng.randf(),
-							placement_rng.randf(),
-							placement_rng.randf_range(
-									WorldConstants.CLOUD_INSTANCE_ALPHA_MIN,
-									WorldConstants.CLOUD_INSTANCE_ALPHA_MAX,
-							),
+			var instance_color := Color(
+					float(row_index) / float(WorldConstants.CLOUD_FRAME_ROWS - 1),
+					placement_rng.randf(),
+					placement_rng.randf(),
+					placement_rng.randf_range(
+							WorldConstants.CLOUD_INSTANCE_ALPHA_MIN,
+							WorldConstants.CLOUD_INSTANCE_ALPHA_MAX,
 					),
 			)
+			_instance_local_positions[instance_index] = local_position
+			_instance_colors[instance_index] = instance_color
+			cloud_multimesh.set_instance_color(instance_index, instance_color)
 			instance_index += 1
-	_cloud_sprites.multimesh = cloud_multimesh
 
 
 func _sync_transform() -> void:
 	rotation = planet_rotation + _self_rotation
 	var cloud_multimesh := _cloud_sprites.multimesh
-	for instance_index in cloud_multimesh.instance_count:
-		var local_position := cloud_multimesh.get_instance_transform_2d(instance_index).origin
+	for instance_index in _instance_local_positions.size():
+		var local_position := _instance_local_positions[instance_index]
 		var orbital_angle := atan2(local_position.x, -local_position.y)
 		var relative_angle := angle_difference(0.0, rotation + orbital_angle)
 		var instance_scale := Vector2.ONE

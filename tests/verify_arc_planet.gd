@@ -820,6 +820,12 @@ func _check_clouds(planet: Planet) -> int:
 				% [WorldConstants.CLOUD_INSTANCE_COUNT, cloud_multimesh.instance_count]
 		)
 		failed += 1
+	if clouds._instance_local_positions.size() != WorldConstants.CLOUD_INSTANCE_COUNT:
+		printerr(
+				"云朵布局数应为 %d，实际 %d"
+				% [WorldConstants.CLOUD_INSTANCE_COUNT, clouds._instance_local_positions.size()]
+		)
+		failed += 1
 	var cloud_image := cloud_sprites.texture.get_image()
 	var punched_hole_count := 0
 	for pixel_y in range(1, cloud_image.get_height() - 1):
@@ -842,13 +848,13 @@ func _check_clouds(planet: Planet) -> int:
 		)
 		failed += 1
 	var distances: PackedFloat32Array = PackedFloat32Array()
-	distances.resize(cloud_multimesh.instance_count)
+	distances.resize(clouds._instance_local_positions.size())
 	var used_rows := {}
 	var lowest_orbit := INF
 	var highest_orbit := 0.0
-	for instance_index in cloud_multimesh.instance_count:
-		var instance_transform := cloud_multimesh.get_instance_transform_2d(instance_index)
-		var local_position := instance_transform.origin
+	var renderer_keeps_instance_data := cloud_multimesh.buffer.size() > 0
+	for instance_index in clouds._instance_local_positions.size():
+		var local_position: Vector2 = clouds._instance_local_positions[instance_index]
 		var orbit_distance := local_position.length()
 		distances[instance_index] = orbit_distance
 		lowest_orbit = minf(lowest_orbit, orbit_distance)
@@ -859,7 +865,7 @@ func _check_clouds(planet: Planet) -> int:
 					% [instance_index, orbit_distance, WorldConstants.CLOUD_ORBIT_MIN_RADIUS]
 			)
 			failed += 1
-		var instance_color := cloud_multimesh.get_instance_color(instance_index)
+		var instance_color: Color = clouds._instance_colors[instance_index]
 		if (
 				instance_color.a < WorldConstants.CLOUD_INSTANCE_ALPHA_MIN - 0.001
 				or instance_color.a > WorldConstants.CLOUD_INSTANCE_ALPHA_MAX + 0.001
@@ -868,35 +874,41 @@ func _check_clouds(planet: Planet) -> int:
 			failed += 1
 		used_rows[int(round(instance_color.r * float(WorldConstants.CLOUD_FRAME_ROWS - 1)))] = true
 		var expected_rotation := atan2(local_position.x, -local_position.y)
-		if instance_transform.get_scale().x > 0.0:
-			if absf(angle_difference(instance_transform.get_rotation(), expected_rotation)) > 0.02:
-				printerr(
-						"实例 %d 应看向行星，rotation=%s 位置=%s"
-						% [instance_index, instance_transform.get_rotation(), local_position]
-				)
-				failed += 1
+		if renderer_keeps_instance_data:
+			var instance_transform := cloud_multimesh.get_instance_transform_2d(instance_index)
+			if instance_transform.get_scale().x > 0.0:
+				if absf(angle_difference(instance_transform.get_rotation(), expected_rotation)) > 0.02:
+					printerr(
+							"实例 %d 应看向行星，rotation=%s 位置=%s"
+							% [instance_index, instance_transform.get_rotation(), local_position]
+					)
+					failed += 1
 	if highest_orbit - lowest_orbit < 8.0:
 		printerr("云团轨道高度应有差异，极差 %s" % (highest_orbit - lowest_orbit))
 		failed += 1
 	if used_rows.size() < 4:
 		printerr("云朵变体过少：%d" % used_rows.size())
 		failed += 1
-	var sample_local_position := cloud_multimesh.get_instance_transform_2d(0).origin
-	var rotation_before := clouds.rotation
-	var angle_before := clouds.to_global(sample_local_position).angle()
+	var sample_local_position: Vector2 = clouds._instance_local_positions[0]
+	var rotation_before: float = clouds.rotation
+	var angle_before: float = (
+			clouds.to_global(sample_local_position) - clouds.global_position
+	).angle()
 	planet.teleport_player(fposmod(planet.player_angle + 0.4, TAU))
 	if not is_equal_approx(clouds.planet_rotation, -planet.player_angle):
 		printerr("传送后 Clouds 应跟随星球旋转")
 		failed += 1
-	var angle_after := clouds.to_global(sample_local_position).angle()
+	var angle_after: float = (
+			clouds.to_global(sample_local_position) - clouds.global_position
+	).angle()
 	if absf(angle_difference(angle_after, angle_before - 0.4)) > 0.02:
 		printerr(
 				"云朵应随星球旋转，期望角变 %s，实际 %s -> %s"
 				% [-0.4, angle_before, angle_after]
 		)
 		failed += 1
-	for instance_index in cloud_multimesh.instance_count:
-		var orbit_distance := cloud_multimesh.get_instance_transform_2d(instance_index).origin.length()
+	for instance_index in clouds._instance_local_positions.size():
+		var orbit_distance: float = clouds._instance_local_positions[instance_index].length()
 		if absf(orbit_distance - distances[instance_index]) > 0.51:
 			printerr(
 					"实例 %d 轨道半径不应变，期望 %s 实际 %s"
@@ -912,8 +924,8 @@ func _check_clouds(planet: Planet) -> int:
 				% [expected_drift, rotation_before, clouds.rotation]
 		)
 		failed += 1
-	for instance_index in cloud_multimesh.instance_count:
-		var orbit_distance := cloud_multimesh.get_instance_transform_2d(instance_index).origin.length()
+	for instance_index in clouds._instance_local_positions.size():
+		var orbit_distance: float = clouds._instance_local_positions[instance_index].length()
 		if absf(orbit_distance - distances[instance_index]) > 0.51:
 			printerr("实例 %d 飘动后轨道半径不应变" % instance_index)
 			failed += 1
