@@ -866,9 +866,22 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			failed += 1
 
 	if dialogue != null:
-		var panel := dialogue.get_node_or_null("Panel") as Control
-		if panel == null or panel.anchor_top > 0.01 or panel.anchor_bottom > 0.01:
-			printerr("对话框应锚在屏幕上方")
+		var panel := dialogue.get_node("Panel") as Control
+		if (
+				not is_equal_approx(panel.anchor_top, 0.5)
+				or not is_equal_approx(panel.anchor_bottom, 0.5)
+		):
+			printerr("对话框应锚在屏幕中间")
+			failed += 1
+		var viewport_height := float((scene.get_node(VIEWPORT_PATH) as SubViewport).size.y)
+		var panel_center_y := panel.position.y + panel.size.y * 0.5
+		var expected_center_below_midline := 16.0
+		var expected_center_y := viewport_height * 0.5 + expected_center_below_midline
+		if absf(panel_center_y - expected_center_y) > 1.0:
+			printerr(
+					"对话框应略低于屏幕中线，期望 y=%s 实际 %s"
+					% [expected_center_y, panel_center_y]
+			)
 			failed += 1
 
 	for dialogue_id in [&"baobab", &"rose", &"volcano_active", &"volcano_dead"]:
