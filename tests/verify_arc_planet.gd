@@ -23,6 +23,13 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/body.png",
 	"res://planet/starfield.png",
 	"res://planet/day_sky.png",
+	"res://ui/prompt_a.png",
+	"res://ui/portraits/prince.png",
+]
+
+const REQUIRED_OTHER_ASSETS: Array[String] = [
+	"res://ui/typewriter.wav",
+	"res://ui/fonts/fusion-pixel-8px-zh_hans.woff2",
 ]
 
 func _init() -> void:
@@ -77,6 +84,12 @@ func _check_constants() -> int:
 	if WorldConstants.VOLCANO_SPRITE_SIZE < 28 or WorldConstants.VOLCANO_SPRITE_SIZE > 48:
 		printerr("VOLCANO_SPRITE_SIZE 应约 32~40，实际 %d" % WorldConstants.VOLCANO_SPRITE_SIZE)
 		failed += 1
+	if WorldConstants.INTERACT_RANGE_PX < 8.0 or WorldConstants.INTERACT_RANGE_PX > 28.0:
+		printerr("INTERACT_RANGE_PX 应约 8~28，实际 %s" % WorldConstants.INTERACT_RANGE_PX)
+		failed += 1
+	if WorldConstants.INTERACT_PROMPT_LOCAL_Y > -24.0:
+		printerr("INTERACT_PROMPT_LOCAL_Y 应在树冠上方（负值），实际 %s" % WorldConstants.INTERACT_PROMPT_LOCAL_Y)
+		failed += 1
 	if WorldConstants.BAOBAB_SPRITE_SIZE < 24 or WorldConstants.BAOBAB_SPRITE_SIZE > 40:
 		printerr("BAOBAB_SPRITE_SIZE 应约 28~36，实际 %d" % WorldConstants.BAOBAB_SPRITE_SIZE)
 		failed += 1
@@ -118,6 +131,14 @@ func _check_static_assets() -> int:
 			continue
 		if tex.get_width() < 8 or tex.get_height() < 8:
 			printerr("贴图尺寸过小：%s（%dx%d）" % [path, tex.get_width(), tex.get_height()])
+			failed += 1
+	for path in REQUIRED_OTHER_ASSETS:
+		if not FileAccess.file_exists(path):
+			printerr("缺少静态资源：%s" % path)
+			failed += 1
+			continue
+		if load(path) == null:
+			printerr("无法加载资源：%s" % path)
 			failed += 1
 	# 星野应为以球心为中心的正方形
 	var star: Texture2D = load("res://planet/starfield.png") as Texture2D
@@ -247,6 +268,8 @@ func _check_static_assets() -> int:
 		],
 		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
 		["res://player/prince.png", WorldConstants.PLAYER_SPRITE_WIDTH, WorldConstants.PLAYER_SPRITE_HEIGHT],
+		["res://ui/prompt_a.png", 13, 13],
+		["res://ui/portraits/prince.png", 32, 32],
 	]
 	for item in sprite_checks:
 		var tex: Texture2D = load(item[0]) as Texture2D
@@ -278,11 +301,27 @@ func _check_no_legacy() -> int:
 
 func _check_input_map() -> int:
 	var failed := 0
-	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down"]:
+	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down", &"interact"]:
 		if not InputMap.has_action(action) or InputMap.action_get_events(action).is_empty():
 			printerr("InputMap 缺少动作或按键：%s" % action)
 			failed += 1
-	print("  InputMap move_* 动作 OK")
+	if InputMap.has_action(&"interact"):
+		var has_enter := false
+		var has_joy_a := false
+		for event in InputMap.action_get_events(&"interact"):
+			var key := event as InputEventKey
+			if key != null and key.physical_keycode == KEY_ENTER:
+				has_enter = true
+			var joy := event as InputEventJoypadButton
+			if joy != null and joy.button_index == JOY_BUTTON_A:
+				has_joy_a = true
+		if not has_enter:
+			printerr("interact 应绑定键盘 Enter（Submit）")
+			failed += 1
+		if not has_joy_a:
+			printerr("interact 应绑定手柄 A（JOY_BUTTON_A）")
+			failed += 1
+	print("  InputMap move_* / interact 动作 OK")
 	return failed
 
 func _check_scene_and_mechanics() -> int:
@@ -501,7 +540,71 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 
+		failed += _check_baobab_interaction(scene, planet)
+
 	print("  场景与圆弧力学 OK")
 	scene.queue_free()
 	await process_frame
 	return failed
+
+func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
+	var failed := 0
+	if scene.get_node_or_null("GameView/GameViewport/Interaction") == null:
+		printerr("找不到 Interaction")
+		failed += 1
+	if scene.get_node_or_null("GameView/GameViewport/InteractPrompt") == null:
+		printerr("找不到 InteractPrompt")
+		failed += 1
+	var dialogue: DialogueBox = scene.get_node_or_null("GameView/GameViewport/DialogueBox") as DialogueBox
+	if dialogue == null:
+		printerr("找不到 DialogueBox")
+		failed += 1
+
+	var target: SurfaceProp = null
+	for prop in planet.surface_props:
+		if prop.kind == SurfaceProp.Kind.BAOBAB:
+			target = prop
+			break
+	if target == null:
+		printerr("场景中没有猴面包树")
+		return failed + 1
+
+	planet.teleport_player(target.rotation)
+	var found := planet.find_nearest_interactable()
+	if found != target:
+		printerr("站在猴面包树下应选中该树，实际 %s" % found)
+		failed += 1
+	if not target.is_interactable() or target.get_dialogue_id() != &"baobab":
+		printerr("猴面包树应为可交互且 dialogue_id=baobab")
+		failed += 1
+
+	planet.teleport_player(planet.rose_angle)
+	if planet.find_nearest_interactable() != null:
+		printerr("玫瑰处不应出现猴面包树交互")
+		failed += 1
+
+	var lines := DialogueCatalog.lines_for_id(&"baobab")
+	if lines.size() < 1:
+		printerr("baobab placeholder 对话不能为空")
+		failed += 1
+	elif dialogue != null:
+		dialogue.play(lines)
+		if not dialogue.is_open() or not dialogue.is_typing():
+			printerr("play 后对话框应打开且处于打字机中")
+			failed += 1
+		dialogue.advance()
+		if not dialogue.is_open() or dialogue.is_typing():
+			printerr("第一次 advance 应跳过打字机并停留在当前句")
+			failed += 1
+		dialogue.advance()
+		if not dialogue.is_open():
+			printerr("多句 placeholder 在第二句前不应关闭")
+			failed += 1
+		dialogue.close()
+		if dialogue.is_open():
+			printerr("close 后对话框应关闭")
+			failed += 1
+
+	print("  猴面包树交互 / placeholder 对话 OK")
+	return failed
+

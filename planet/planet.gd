@@ -49,6 +49,20 @@ func move_player(direction: float, delta: float) -> void:
 	player_angle = fposmod(player_angle + _angular_velocity * delta, TAU)
 	_sync_rotation()
 
+## 弧顶附近最近的可互动物体；超出 INTERACT_RANGE_PX 则返回 null。
+func find_nearest_interactable() -> SurfaceProp:
+	var max_arc := WorldConstants.INTERACT_RANGE_PX / WorldConstants.PLANET_RADIUS
+	var best: SurfaceProp = null
+	var best_diff := max_arc
+	for prop in surface_props:
+		if not prop.is_interactable():
+			continue
+		var diff := absf(angle_difference(player_angle, prop.rotation))
+		if diff <= best_diff:
+			best_diff = diff
+			best = prop
+	return best
+
 func teleport_player(angle: float) -> void:
 	_angular_velocity = 0.0
 	player_angle = fposmod(angle, TAU)
