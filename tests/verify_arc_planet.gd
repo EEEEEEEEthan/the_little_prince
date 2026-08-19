@@ -669,14 +669,14 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 
-		failed += await _check_baobab_interaction(scene, planet)
+		failed += await _check_prop_interactions(scene, planet)
 
 	print("  场景与圆弧力学 OK")
 	scene.queue_free()
 	await process_frame
 	return failed
 
-func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
+func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 	var failed := 0
 	if scene.get_node_or_null("GameView/GameViewport/Interaction") == null:
 		printerr("找不到 Interaction")
@@ -689,28 +689,45 @@ func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
 		printerr("找不到 DialogueBox")
 		failed += 1
 
-	var target: SurfaceProp = null
+	var baobab: SurfaceProp = null
+	var rose: SurfaceProp = null
+	var active_volcano: SurfaceProp = null
+	var dead_volcano: SurfaceProp = null
 	for prop in planet.surface_props:
-		if prop.kind == SurfaceProp.Kind.BAOBAB:
-			target = prop
-			break
-	if target == null:
+		match prop.kind:
+			SurfaceProp.Kind.BAOBAB:
+				if baobab == null:
+					baobab = prop
+			SurfaceProp.Kind.ROSE:
+				rose = prop
+			SurfaceProp.Kind.VOLCANO:
+				if prop.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT:
+					active_volcano = prop
+				elif dead_volcano == null:
+					dead_volcano = prop
+	if baobab == null:
 		printerr("场景中没有猴面包树")
 		return failed + 1
+	if rose == null:
+		printerr("场景中没有玫瑰")
+		return failed + 1
+	if active_volcano == null:
+		printerr("场景中没有活火山")
+		return failed + 1
+	if dead_volcano == null:
+		printerr("场景中没有死火山")
+		return failed + 1
 
-	planet.teleport_player(target.rotation)
-	var found := planet.find_nearest_interactable()
-	if found != target:
-		printerr("站在猴面包树下应选中该树，实际 %s" % found)
-		failed += 1
-	if not target.is_interactable() or target.get_dialogue_id() != &"baobab":
-		printerr("猴面包树应为可交互且 dialogue_id=baobab")
-		failed += 1
+	failed += _assert_focus(planet, baobab, &"baobab", "猴面包树")
+	failed += _assert_focus(planet, rose, &"rose", "玫瑰")
+	failed += _assert_focus(planet, active_volcano, &"volcano_active", "活火山")
+	failed += _assert_focus(planet, dead_volcano, &"volcano_dead", "死火山")
 
+	planet.teleport_player(baobab.rotation)
 	await process_frame
 	var prompt: InteractPrompt = scene.get_node_or_null("GameView/GameViewport/InteractPrompt") as InteractPrompt
 	if prompt != null:
-		if prompt.get_parent() == target:
+		if prompt.get_parent() == baobab:
 			printerr("A 提示不应挂到地物上（会跟着星球转）")
 			failed += 1
 		if not prompt.visible:
@@ -719,24 +736,19 @@ func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
 		if absf(prompt.global_rotation) > 0.01:
 			printerr("A 提示应保持屏幕朝向，实际 rotation=%s" % prompt.global_rotation)
 			failed += 1
-		var crown := target.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+		var crown := baobab.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
 		if prompt.global_position.distance_to(crown) > 2.5:
 			printerr("A 提示应跟在树冠上，期望 %s 实际 %s" % [crown, prompt.global_position])
 			failed += 1
-		planet.teleport_player(fposmod(target.rotation + 0.08, TAU))
+		planet.teleport_player(fposmod(baobab.rotation + 0.08, TAU))
 		await process_frame
 		if absf(prompt.global_rotation) > 0.01:
 			printerr("星球转过后 A 提示仍应不旋转，实际 %s" % prompt.global_rotation)
 			failed += 1
-		crown = target.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+		crown = baobab.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
 		if prompt.global_position.distance_to(crown) > 2.5:
 			printerr("星球转过后 A 提示应跟着树走，期望 %s 实际 %s" % [crown, prompt.global_position])
 			failed += 1
-
-	planet.teleport_player(planet.rose_angle)
-	if planet.find_nearest_interactable() != null:
-		printerr("玫瑰处不应出现猴面包树交互")
-		failed += 1
 
 	if dialogue != null:
 		var panel := dialogue.get_node_or_null("Panel") as Control
@@ -744,9 +756,14 @@ func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
 			printerr("对话框应锚在屏幕上方")
 			failed += 1
 
-	var lines := DialogueCatalog.lines_for_id(&"baobab")
-	if lines.size() < 1:
-		printerr("baobab placeholder 对话不能为空")
+	for dialogue_id in [&"baobab", &"rose", &"volcano_active", &"volcano_dead"]:
+		if DialogueCatalog.lines_for_id(dialogue_id).size() < 1:
+			printerr("%s 对话不能为空" % dialogue_id)
+			failed += 1
+
+	var lines := DialogueCatalog.lines_for_id(&"rose")
+	if lines.size() < 2:
+		printerr("rose 对话应至少两句，才能覆盖 advance")
 		failed += 1
 	elif dialogue != null:
 		dialogue.play(lines)
@@ -759,13 +776,27 @@ func _check_baobab_interaction(scene: Node, planet: Planet) -> int:
 			failed += 1
 		dialogue.advance()
 		if not dialogue.is_open():
-			printerr("多句 placeholder 在第二句前不应关闭")
+			printerr("多句对话在第二句前不应关闭")
 			failed += 1
 		dialogue.close()
 		if dialogue.is_open():
 			printerr("close 后对话框应关闭")
 			failed += 1
 
-	print("  猴面包树交互 / placeholder 对话 OK")
+	print("  地物交互 / 叙事对话 OK")
+	return failed
+
+func _assert_focus(
+	planet: Planet, target: SurfaceProp, dialogue_id: StringName, label: String
+) -> int:
+	planet.teleport_player(target.rotation)
+	var failed := 0
+	var found := planet.find_nearest_interactable()
+	if found != target:
+		printerr("站在%s旁应选中该地物，实际 %s" % [label, found])
+		failed += 1
+	if not target.is_interactable() or target.get_dialogue_id() != dialogue_id:
+		printerr("%s 应为可交互且 dialogue_id=%s" % [label, dialogue_id])
+		failed += 1
 	return failed
 

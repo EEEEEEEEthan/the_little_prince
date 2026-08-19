@@ -7,14 +7,21 @@ enum Kind { ROSE, VOLCANO, BAOBAB }
 
 @export var kind: Kind = Kind.ROSE
 @export var variant: int = 0
-## 对话目录 id；空则猴面包树回落到 &"baobab"。
+## 对话目录 id；空则按 kind 回落（活火山 / 死火山分开）。
 @export var dialogue_id: StringName = &""
 
 func get_dialogue_id() -> StringName:
 	if dialogue_id != &"":
 		return dialogue_id
-	if kind == Kind.BAOBAB:
-		return &"baobab"
+	match kind:
+		Kind.ROSE:
+			return &"rose"
+		Kind.VOLCANO:
+			if variant == WorldConstants.VOLCANO_ACTIVE_VARIANT:
+				return &"volcano_active"
+			return &"volcano_dead"
+		Kind.BAOBAB:
+			return &"baobab"
 	return &""
 
 func is_interactable() -> bool:
