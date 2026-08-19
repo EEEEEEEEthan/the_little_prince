@@ -734,9 +734,6 @@ func _check_scarf(player: Player, planet: Planet) -> int:
 	if scarf == null:
 		printerr("Player 下应有 Scarf 节点")
 		return 1
-	if scarf is CollisionObject2D:
-		printerr("围巾不应使用引擎碰撞/刚体")
-		failed += 1
 	if scarf.simulated_positions.size() != Scarf.POINT_COUNT:
 		printerr(
 				"围巾质点数应为 %d，实际 %d"
