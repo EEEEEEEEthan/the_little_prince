@@ -485,6 +485,7 @@ func _check_tscn_editor_visible() -> int:
 	for path in [
 		"res://main.tscn",
 		"res://planet/planet.tscn",
+		"res://planet/b612.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
 	]:
@@ -675,10 +676,10 @@ func _check_scene_and_mechanics() -> int:
 		for prop in planet.surface_props:
 			var dist := prop.position.length()
 			# 允许沿起伏轮廓略微内缩，但不得停在放大前的旧圆上。
-			if dist < PREVIOUS_PLANET_RADIUS or dist > WorldConstants.PLANET_RADIUS + 1.5:
+			if dist < PREVIOUS_PLANET_RADIUS or dist > planet.radius + 1.5:
 				printerr(
 					"地物 %s 应靠近半径 %s，实际 %s"
-					% [prop.name, WorldConstants.PLANET_RADIUS, dist]
+					% [prop.name, planet.radius, dist]
 				)
 				failed += 1
 		if scene.get_node_or_null("GameView/GameViewport/Sky") != null:
@@ -715,9 +716,19 @@ func _check_scene_and_mechanics() -> int:
 		if not is_equal_approx(planet.player_angle, 0.75):
 			printerr("云层检查后 player_angle 应恢复为 0.75")
 			failed += 1
-		if WorldConstants.STAR_ROTATION_SPEED <= 0.0:
-			printerr("STAR_ROTATION_SPEED 应大于 0（星空相对星球自转）")
+		if planet.star_rotation_speed <= 0.0:
+			printerr("star_rotation_speed 应大于 0（星空相对星球自转）")
 			failed += 1
+		if not is_equal_approx(sky.star_rotation_speed, planet.star_rotation_speed):
+			printerr("Sky.star_rotation_speed 应与 Planet 导出一致")
+			failed += 1
+		if not is_equal_approx(planet.radius, WorldConstants.PLANET_RADIUS):
+			printerr(
+				"B612 半径应等于默认常量 %s，实际 %s"
+				% [WorldConstants.PLANET_RADIUS, planet.radius]
+			)
+			failed += 1
+		failed += await _check_planet_base_scene()
 		# 统一天空 shader：检查 Sky 节点挂 ShaderMaterial，且关键参数均已绑定
 		var sky_material := sky.material as ShaderMaterial
 		if sky_material == null or sky_material.shader == null:
@@ -828,10 +839,10 @@ func _check_scene_and_mechanics() -> int:
 		if absf(up.x) > 0.5 or up.y >= 0.0:
 			printerr("弧顶应在球心正上方，实际偏移 %s" % up)
 			failed += 1
-		if not is_equal_approx(up.length(), WorldConstants.PLANET_RADIUS):
+		if not is_equal_approx(up.length(), planet.radius):
 			printerr(
 				"弧顶距离应等于半径 %s，实际 %s"
-				% [WorldConstants.PLANET_RADIUS, up.length()]
+				% [planet.radius, up.length()]
 			)
 			failed += 1
 
@@ -940,10 +951,10 @@ func _check_clouds(planet: Planet) -> int:
 		distances[instance_index] = orbit_distance
 		lowest_orbit = minf(lowest_orbit, orbit_distance)
 		highest_orbit = maxf(highest_orbit, orbit_distance)
-		if orbit_distance < WorldConstants.CLOUD_ORBIT_MIN_RADIUS - 1.0:
+		if orbit_distance < planet.cloud_orbit_min_radius - 1.0:
 			printerr(
 					"实例 %d 轨道应更高，距离 %s，下限 %s"
-					% [instance_index, orbit_distance, WorldConstants.CLOUD_ORBIT_MIN_RADIUS]
+					% [instance_index, orbit_distance, planet.cloud_orbit_min_radius]
 			)
 			failed += 1
 		var instance_color: Color = clouds._instance_colors[instance_index]
@@ -998,12 +1009,18 @@ func _check_clouds(planet: Planet) -> int:
 			failed += 1
 	var drift_seconds := 8.0
 	clouds._process(drift_seconds)
-	var expected_drift := WorldConstants.CLOUD_DRIFT_SPEED * drift_seconds
+	var expected_drift := planet.cloud_drift_speed * drift_seconds
 	if absf(angle_difference(clouds.rotation, rotation_before + expected_drift - 0.4)) > 0.02:
 		printerr(
 				"云层应顺时针缓慢飘动，期望转过 %s，实际 %s -> %s"
 				% [expected_drift, rotation_before, clouds.rotation]
 		)
+		failed += 1
+	if not is_equal_approx(clouds.drift_speed, planet.cloud_drift_speed):
+		printerr("Clouds.drift_speed 应与 Planet 导出一致")
+		failed += 1
+	if cloud_sprites.texture.resource_path != planet.cloud_texture.resource_path:
+		printerr("CloudSprites.texture 应与 Planet.cloud_texture 一致")
 		failed += 1
 	for instance_index in clouds._instance_local_positions.size():
 		var orbit_distance: float = clouds._instance_local_positions[instance_index].length()
@@ -1012,6 +1029,39 @@ func _check_clouds(planet: Planet) -> int:
 			failed += 1
 	planet.teleport_player(original_player_angle)
 	print("  云层轨道 / 朝向 / 慢飘 OK")
+	return failed
+
+
+func _check_planet_base_scene() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://planet/planet.tscn")
+	if packed == null:
+		printerr("无法加载可复用基底 planet.tscn")
+		return 1
+	var base := packed.instantiate() as Planet
+	if base == null:
+		printerr("planet.tscn 根节点应为 Planet")
+		return 1
+	root.add_child(base)
+	await process_frame
+	if base.get_node("Surface").get_child_count() != 0:
+		printerr("可复用基底 Surface 应为空，地物放在具体星球场景")
+		failed += 1
+	if base.get_node_or_null("%Body") == null:
+		printerr("基底应有 Body")
+		failed += 1
+	if base.get_node_or_null("%Sky") == null:
+		printerr("基底应有 Sky")
+		failed += 1
+	if base.get_node_or_null("%Clouds") == null:
+		printerr("基底应有 Clouds")
+		failed += 1
+	if base.body_texture == null or base.starfield_texture == null:
+		printerr("基底应导出默认贴图")
+		failed += 1
+	base.queue_free()
+	await process_frame
+	print("  可复用 planet 基底 OK")
 	return failed
 
 

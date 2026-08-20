@@ -1,6 +1,6 @@
 class_name SurfaceProp
 extends Sprite2D
-## 圆弧星球上的地表地物（玫瑰 / 火山 / 猴面包树），静态写在星球场景内，
+## 圆弧星球上的地表地物（玫瑰 / 火山 / 猴面包树），拖到 Planet 的 Surface 下即可。
 ## 位置、贴图、帧均在 tscn 中定死；运行期仅按玩家角更新可见性与前后深度。
 
 enum Kind { ROSE, VOLCANO, BAOBAB }

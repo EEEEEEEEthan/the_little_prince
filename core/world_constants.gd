@@ -1,6 +1,7 @@
 class_name WorldConstants
 extends RefCounted
-## 圆弧星球世界的全局配置：几何、地物规格与贴图生成尺寸。
+## 圆弧星球世界的全局默认配置：几何、地物规格与贴图生成尺寸。
+## 具体星球实例的半径 / 贴图 / 自转等以 Planet 导出参数为准。
 
 ## 星球半径（内部 256×224 像素视口坐标系）。
 const PLANET_RADIUS: float = 87.36

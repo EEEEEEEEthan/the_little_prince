@@ -3,6 +3,9 @@ extends Node2D
 ## 每实例本地 -Y 朝外，蓬松顶朝外、底部对着球心。背面按可见半弧缩到零。
 
 var planet_rotation: float = 0.0
+var drift_speed: float = WorldConstants.CLOUD_DRIFT_SPEED
+var orbit_min_radius: float = WorldConstants.CLOUD_ORBIT_MIN_RADIUS
+var orbit_max_radius: float = WorldConstants.CLOUD_ORBIT_MAX_RADIUS
 var _self_rotation: float = 0.0
 var _instance_local_positions: PackedVector2Array
 var _instance_colors: PackedColorArray
@@ -11,8 +14,12 @@ var _instance_colors: PackedColorArray
 
 
 func _ready() -> void:
-	_rebuild_instances()
-	_sync_transform()
+	var planet := owner as Planet
+	drift_speed = planet.cloud_drift_speed
+	orbit_min_radius = planet.cloud_orbit_min_radius
+	orbit_max_radius = planet.cloud_orbit_max_radius
+	_cloud_sprites.texture = planet.cloud_texture
+	rebuild_instances()
 
 
 func set_planet_rotation(value: float) -> void:
@@ -20,10 +27,13 @@ func set_planet_rotation(value: float) -> void:
 	_sync_transform()
 
 
+func rebuild_instances() -> void:
+	_rebuild_instances()
+	_sync_transform()
+
+
 func _process(delta: float) -> void:
-	_self_rotation = fposmod(
-			_self_rotation + WorldConstants.CLOUD_DRIFT_SPEED * delta, TAU
-	)
+	_self_rotation = fposmod(_self_rotation + drift_speed * delta, TAU)
 	_sync_transform()
 
 
@@ -54,10 +64,7 @@ func _rebuild_instances() -> void:
 	var instance_index := 0
 	while instance_index < sprite_count:
 		var orbital_angle := placement_rng.randf() * TAU
-		var orbit_radius := placement_rng.randf_range(
-				WorldConstants.CLOUD_ORBIT_MIN_RADIUS,
-				WorldConstants.CLOUD_ORBIT_MAX_RADIUS,
-		)
+		var orbit_radius := placement_rng.randf_range(orbit_min_radius, orbit_max_radius)
 		var outward := Vector2(sin(orbital_angle), -cos(orbital_angle))
 		var tangent := Vector2(cos(orbital_angle), sin(orbital_angle))
 		var sprites_in_mass := mini(
@@ -80,8 +87,8 @@ func _rebuild_instances() -> void:
 			)
 			local_position = Vector2(roundf(local_position.x), roundf(local_position.y))
 			var orbit_distance := local_position.length()
-			if orbit_distance < WorldConstants.CLOUD_ORBIT_MIN_RADIUS:
-				local_position *= WorldConstants.CLOUD_ORBIT_MIN_RADIUS / orbit_distance
+			if orbit_distance < orbit_min_radius:
+				local_position *= orbit_min_radius / orbit_distance
 				local_position = Vector2(roundf(local_position.x), roundf(local_position.y))
 			var row_index := placement_rng.randi_range(
 					0, WorldConstants.CLOUD_FRAME_ROWS - 1
