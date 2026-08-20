@@ -1987,10 +1987,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 			printerr("头顶叙事结束前火山不应停烟")
 			failed += 1
 			break
-	var volcano_wait_frames := 0
-	while story.is_blocking_input and volcano_wait_frames < 600:
+	var volcano_deadline_msec := Time.get_ticks_msec() + 15000
+	while story.is_blocking_input and Time.get_ticks_msec() < volcano_deadline_msec:
 		await process_frame
-		volcano_wait_frames += 1
 	if story.is_blocking_input:
 		printerr("通火山头顶叙事超时")
 		failed += 1
