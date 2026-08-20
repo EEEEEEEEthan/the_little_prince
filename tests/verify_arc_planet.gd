@@ -2059,7 +2059,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("告别不应改成数落浇水")
 		failed += 1
 	var story_blob := (
-			opening_overhead_blob
+			"".join(B612Lines.OPENING_OVERHEAD_LINES)
 			+ B612Lines.OVERHEAD_SUNSET
 			+ B612Lines.pull_shoot(0)
 			+ B612Lines.clean_volcano(false, 0)
