@@ -33,7 +33,7 @@ func _on_interact() -> void:
 	if lines.is_empty():
 		return
 	dialogue.play(lines)
-	if dialogue.is_open():
+	if dialogue.is_open() and Input.is_action_pressed(&"interact"):
 		dialogue.mark_holding(true)
 	_set_focus(null)
 

@@ -68,7 +68,7 @@ func start() -> void:
 	player.move_speed_scale = OPENING_MOVE_SPEED_SCALE
 	_lock_input()
 	await _play_dialogue(B612Lines.opening_rose())
-	await _play_overhead(B612Lines.OPENING_OVERHEAD_VANITY)
+	await _play_overhead_after_dialogue(B612Lines.OPENING_OVERHEAD_VANITY)
 	await _play_dialogue(B612Lines.opening_screen())
 	if skip_cinematics:
 		_finish_opening_cover()
@@ -161,11 +161,17 @@ func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float
 func _play_interact(prop: SurfaceProp) -> void:
 	if beat == Beat.FAREWELL:
 		_glass_globe().visible = false
+		var previous_cue_was_dialogue := false
 		for cue in B612Lines.farewell_cues():
 			if not cue.overhead_text.is_empty():
-				await _play_overhead(cue.overhead_text)
+				if previous_cue_was_dialogue:
+					await _play_overhead_after_dialogue(cue.overhead_text)
+				else:
+					await _play_overhead(cue.overhead_text)
+				previous_cue_was_dialogue = false
 			if not cue.dialogue_lines.is_empty():
 				await _play_dialogue(cue.dialogue_lines)
+				previous_cue_was_dialogue = true
 		apply_interact(prop)
 		await _play_departure()
 		return
@@ -198,7 +204,7 @@ func _play_dialogue(lines: Array[DialogueLine]) -> void:
 	if skip_cinematics or lines.is_empty():
 		return
 	dialogue.play(lines)
-	if dialogue.is_open():
+	if dialogue.is_open() and Input.is_action_pressed(&"interact"):
 		dialogue.mark_holding(true)
 	await dialogue.closed
 
@@ -207,6 +213,13 @@ func _play_overhead(display_text: String) -> void:
 	if skip_cinematics or display_text.is_empty():
 		return
 	await overhead.play_queued(display_text)
+
+
+func _play_overhead_after_dialogue(display_text: String) -> void:
+	if skip_cinematics or display_text.is_empty():
+		return
+	await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
+	await _play_overhead(display_text)
 
 
 func _is_current_objective(prop: SurfaceProp) -> bool:

@@ -1488,10 +1488,10 @@ func _check_typewriter_hold(
 		printerr("第二句打完应显示继续三角")
 		failed += 1
 	dialogue.mark_holding(true)
-	dialogue.mark_holding(false)
 	if dialogue.is_open():
-		printerr("最后一句松开后应关闭对话框")
+		printerr("最后一句按下后应立即关闭对话框")
 		failed += 1
+	dialogue.mark_holding(false)
 
 	failed += await _check_typewriter_hold_through_line_then_release(scene, dialogue, lines)
 	failed += await _check_typewriter_hold_follows_confirm_events(scene, dialogue, lines)
@@ -1730,14 +1730,22 @@ func _check_opening_cover_sequence(story: B612Story) -> int:
 			break
 		await process_frame
 	if vanity_visible_msec < 0:
-		printerr("开场对白结束后应立即播放侧写")
+		printerr("开场对白结束后应播放侧写")
 		failed += 1
-	elif vanity_visible_msec - close_msec > 500:
-		printerr(
-				"开场侧写应立即播出，实际延迟 %d ms"
-				% (vanity_visible_msec - close_msec)
+	else:
+		var start_delay_msec := vanity_visible_msec - close_msec
+		var expected_start_delay_msec := int(
+				B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS * 1000.0
 		)
-		failed += 1
+		if start_delay_msec < 400:
+			printerr("对白关闭后对话框应先空一会再播侧写，实际延迟 %d ms" % start_delay_msec)
+			failed += 1
+		elif absi(start_delay_msec - expected_start_delay_msec) > 500:
+			printerr(
+					"对白关闭后侧写起始延迟应为约 %d ms，实际 %d ms"
+					% [expected_start_delay_msec, start_delay_msec]
+			)
+			failed += 1
 	if not story.dialogue.is_open() or not dialogue_body.text.contains("屏风"):
 		printerr("侧写结束后应自动进入要屏风的对白")
 		failed += 1
