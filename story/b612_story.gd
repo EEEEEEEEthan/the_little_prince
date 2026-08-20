@@ -1,6 +1,6 @@
 class_name B612Story
 extends Node
-## B612 故乡剧情：开场 → 拔苗 → 疏通火山 → 侍弄玫瑰 → 告别 → 离星。
+## B612 故乡剧情：开场对白 → 拔苗 → 疏通火山 → 侍弄玫瑰 → 告别 → 离星。
 ## 第一次跨入日落时播头顶叙事，不作为关卡。
 
 enum Beat {
@@ -47,7 +47,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if is_active and not _has_played_first_sunset_narration:
+	if is_active and beat != Beat.OPENING and not _has_played_first_sunset_narration:
 		try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
 
 
@@ -60,9 +60,11 @@ func start() -> void:
 	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 	beat = Beat.OPENING
 	_lock_input()
-	await _play_overhead(B612Lines.OVERHEAD_PLANET_NAME)
-	beat = Beat.PULL_SHOOTS
+	await _play_dialogue(B612Lines.opening_rose())
 	is_blocking_input = false
+	await _play_overhead(B612Lines.OVERHEAD_WANDER)
+	await _play_overhead(B612Lines.OVERHEAD_PULL_HINT)
+	beat = Beat.PULL_SHOOTS
 
 
 func accepts_interact(prop: SurfaceProp) -> bool:
@@ -74,16 +76,11 @@ func accepts_interact(prop: SurfaceProp) -> bool:
 func try_handle_interact(prop: SurfaceProp) -> bool:
 	if not accepts_interact(prop):
 		return false
-	var play_cinematic := not skip_cinematics and (
-			beat == Beat.TEND_ROSE
-			or beat == Beat.FAREWELL
-			or (beat == Beat.PULL_SHOOTS and pulled_shoot_count == 0)
-	)
-	if play_cinematic:
-		_lock_input()
-		_play_interact(prop)
+	if skip_cinematics:
+		apply_interact(prop)
 		return true
-	apply_interact(prop)
+	_lock_input()
+	_play_interact(prop)
 	return true
 
 
@@ -154,7 +151,17 @@ func _play_interact(prop: SurfaceProp) -> void:
 		apply_interact(prop)
 		await _play_departure()
 		return
-	await _play_overhead(B612Lines.OVERHEAD_FIRST_SHOOT)
+	if beat == Beat.PULL_SHOOTS:
+		await _play_overhead(B612Lines.pull_shoot(SHOOT_COUNT - pulled_shoot_count - 1))
+		apply_interact(prop)
+		is_blocking_input = false
+		return
+	await _play_overhead(
+			B612Lines.clean_volcano(
+					prop.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT,
+					WorldConstants.VOLCANO_COUNT - cleaned_volcano_count - 1
+			)
+	)
 	apply_interact(prop)
 	is_blocking_input = false
 

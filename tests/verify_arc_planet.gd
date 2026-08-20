@@ -1658,8 +1658,34 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.is_blocking_input:
 		printerr("开场结束后应允许走动")
 		failed += 1
-	if B612Lines.OVERHEAD_PLANET_NAME != "B-612。":
-		printerr("开场头顶应只报名")
+	var opening := B612Lines.opening_rose()
+	if opening.size() < 2:
+		printerr("开场应直接与玫瑰对白")
+		failed += 1
+	var opening_blob := ""
+	var opening_has_rose := false
+	var opening_has_prince := false
+	for line in opening:
+		opening_blob += line.text
+		if line.speaker == "玫瑰":
+			opening_has_rose = true
+		if line.speaker == "小王子":
+			opening_has_prince = true
+		if line.text.contains("玻璃罩"):
+			printerr("开场对白不应提前罩玻璃罩")
+			failed += 1
+			break
+	if not opening_has_rose or not opening_has_prince:
+		printerr("开场对白应有玫瑰与小王子")
+		failed += 1
+	if not opening_blob.contains("好看") or not opening_blob.contains("水"):
+		printerr("开场对白应先让小王子照顾玫瑰")
+		failed += 1
+	if B612Lines.OVERHEAD_WANDER.is_empty() or B612Lines.OVERHEAD_PULL_HINT.is_empty():
+		printerr("开场对白后应有自由走动叙事，再提示拔苗")
+		failed += 1
+	if not B612Lines.OVERHEAD_PULL_HINT.contains("拔"):
+		printerr("自由走动叙事之后应提示拔苗")
 		failed += 1
 	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
 	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
@@ -1701,8 +1727,13 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.accepts_interact(shoots[0]):
 		printerr("拔苗段应选中嫩芽")
 		failed += 1
-	if B612Lines.OVERHEAD_FIRST_SHOOT.is_empty():
-		printerr("第一棵嫩芽应有头顶台词")
+	for remaining_after_this in range(B612Story.SHOOT_COUNT):
+		if B612Lines.pull_shoot(remaining_after_this).is_empty():
+			printerr("每棵嫩芽都应有头顶叙事")
+			failed += 1
+			break
+	if not B612Lines.pull_shoot(0).contains("喷口"):
+		printerr("拔完嫩芽应转向火山")
 		failed += 1
 
 	story.skip_cinematics = false
@@ -1736,8 +1767,46 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("已拔嫩芽不应再交互")
 		failed += 1
 
+	if (
+			B612Lines.clean_volcano(true, 1).is_empty()
+			or B612Lines.clean_volcano(false, 1).is_empty()
+			or B612Lines.clean_volcano(false, 0).is_empty()
+	):
+		printerr("每座火山都应有头顶叙事")
+		failed += 1
+	if not B612Lines.clean_volcano(false, 0).contains("她"):
+		printerr("通完火山应转向玫瑰")
+		failed += 1
+
+	var active_volcano: SurfaceProp = null
 	for volcano in volcanoes:
-		if not story.accepts_interact(volcano):
+		if volcano.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT:
+			active_volcano = volcano
+			break
+	story.skip_cinematics = false
+	story._lock_input()
+	story._play_interact(active_volcano)
+	await process_frame
+	for child in active_volcano.get_children():
+		var smoke := child as CPUParticles2D
+		if smoke != null and not smoke.emitting:
+			printerr("头顶叙事结束前火山不应停烟")
+			failed += 1
+			break
+	var volcano_wait_frames := 0
+	while story.is_blocking_input and volcano_wait_frames < 600:
+		await process_frame
+		volcano_wait_frames += 1
+	if story.is_blocking_input:
+		printerr("通火山头顶叙事超时")
+		failed += 1
+	if not active_volcano.is_consumed:
+		printerr("可以行走后活火山应记为已完成")
+		failed += 1
+	story.skip_cinematics = true
+
+	for volcano in volcanoes:
+		if not volcano.is_consumed and not story.accepts_interact(volcano):
 			printerr("疏通段应选中火山")
 			failed += 1
 		story.apply_interact(volcano)
@@ -1806,14 +1875,16 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("告别不应改成数落浇水")
 		failed += 1
 	var story_blob := (
-			B612Lines.OVERHEAD_PLANET_NAME
-			+ B612Lines.OVERHEAD_FIRST_SHOOT
+			B612Lines.OVERHEAD_WANDER
+			+ B612Lines.OVERHEAD_PULL_HINT
 			+ B612Lines.OVERHEAD_SUNSET
+			+ B612Lines.pull_shoot(0)
+			+ B612Lines.clean_volcano(false, 0)
 			+ tend_blob
 			+ farewell_blob
 	)
-	if story_blob.contains("去通") or story_blob.contains("去看看她"):
-		printerr("剧情台词不应变成任务提示")
+	if story_blob.contains("去通"):
+		printerr("剧情台词不应写成任务提示")
 		failed += 1
 	story.apply_interact(rose)
 	if story.beat != B612Story.Beat.DEPART:
