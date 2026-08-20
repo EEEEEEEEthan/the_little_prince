@@ -32,6 +32,9 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/day_sky.png",
 	"res://ui/prompt_a.png",
 	"res://ui/portraits/prince.png",
+	"res://ui/portraits/rose.png",
+	"res://planet/glass_globe.png",
+	"res://planet/migratory_bird.png",
 ]
 
 const REQUIRED_OTHER_ASSETS: Array[String] = [
@@ -62,8 +65,8 @@ func _check_constants() -> int:
 	if WorldConstants.VOLCANO_COUNT != 3:
 		printerr("VOLCANO_COUNT 应为 3，实际 %d" % WorldConstants.VOLCANO_COUNT)
 		failed += 1
-	if WorldConstants.BAOBAB_COUNT < 10:
-		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
+	if WorldConstants.BAOBAB_COUNT != 5:
+		printerr("BAOBAB_COUNT 应为 5，实际 %d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
 	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
@@ -429,6 +432,9 @@ func _check_static_assets() -> int:
 		],
 		["res://ui/prompt_a.png", 13, 13],
 		["res://ui/portraits/prince.png", 32, 32],
+		["res://ui/portraits/rose.png", 32, 32],
+		["res://planet/glass_globe.png", 24, 24],
+		["res://planet/migratory_bird.png", 16, 8],
 	]
 	for item in sprite_checks:
 		var tex: Texture2D = load(item[0]) as Texture2D
@@ -531,6 +537,7 @@ func _check_scene_and_mechanics() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
+	(scene.get_node("GameView/GameViewport/B612Story") as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -860,6 +867,7 @@ func _check_scene_and_mechanics() -> int:
 
 		failed += await _check_overhead_typewriter(scene, planet)
 		failed += await _check_prop_interactions(scene, planet)
+		failed += await _check_b612_story(scene, planet)
 
 	print("  场景与圆弧力学 OK")
 	scene.queue_free()
@@ -1230,9 +1238,22 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 	if baobab == null:
 		printerr("场景中没有猴面包树")
 		return failed + 1
-	if rose == null:
-		printerr("场景中没有玫瑰")
-		return failed + 1
+	if rose.get_node_or_null("GlassGlobe") == null:
+		printerr("玫瑰下应有 GlassGlobe")
+		failed += 1
+	var shoot_count := 0
+	for prop in planet.surface_props:
+		if prop.dialogue_id == B612Story.SHOOT_DIALOGUE_ID:
+			shoot_count += 1
+	if shoot_count != B612Story.SHOOT_COUNT:
+		printerr(
+				"猴面包嫩芽数量应为 %d，实际 %d"
+				% [B612Story.SHOOT_COUNT, shoot_count]
+		)
+		failed += 1
+	if shoot_count != WorldConstants.BAOBAB_COUNT:
+		printerr("场景里每棵猴面包树都应是可拔嫩芽")
+		failed += 1
 	if active_volcano == null:
 		printerr("场景中没有活火山")
 		return failed + 1
@@ -1240,7 +1261,7 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 		printerr("场景中没有死火山")
 		return failed + 1
 
-	failed += _assert_focus(planet, baobab, &"baobab", "猴面包树")
+	failed += _assert_focus(planet, baobab, &"baobab_shoot", "猴面包树")
 	failed += _assert_focus(planet, rose, &"rose", "玫瑰")
 	failed += _assert_focus(planet, active_volcano, &"volcano_active", "活火山")
 	failed += _assert_focus(planet, dead_volcano, &"volcano_dead", "死火山")
@@ -1291,7 +1312,7 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			)
 			failed += 1
 
-	for dialogue_id in [&"baobab", &"rose", &"volcano_active", &"volcano_dead"]:
+	for dialogue_id in [&"baobab", &"baobab_shoot", &"rose", &"volcano_active", &"volcano_dead"]:
 		if DialogueCatalog.lines_for_id(dialogue_id).size() < 2:
 			printerr("%s 对话至少两句" % dialogue_id)
 			failed += 1
@@ -1618,4 +1639,212 @@ func _await_dialogue_idle(dialogue: DialogueBox) -> bool:
 	while dialogue.is_typing() and Time.get_ticks_msec() < deadline_msec:
 		await process_frame
 	return not dialogue.is_typing()
+
+
+func _check_b612_story(scene: Node, planet: Planet) -> int:
+	var failed := 0
+	var story := scene.get_node("GameView/GameViewport/B612Story") as B612Story
+	if story == null:
+		printerr("找不到 B612Story")
+		return 1
+	if scene.get_node_or_null("GameView/GameViewport/B612Story/MigratoryFlock") == null:
+		printerr("找不到 MigratoryFlock")
+		failed += 1
+	story.skip_cinematics = true
+	await story.start()
+	if story.beat != B612Story.Beat.PULL_SHOOTS:
+		printerr("开场结束后应进入拔苗，实际 %s" % story.beat)
+		failed += 1
+	if story.is_blocking_input:
+		printerr("开场结束后应允许走动")
+		failed += 1
+	for line in B612Lines.opening():
+		if line.text.contains("两座还活"):
+			printerr("开场不应把两座火山写成还活着")
+			failed += 1
+			break
+	var opening_blob := ""
+	for line in B612Lines.opening():
+		opening_blob += line.text
+	if not opening_blob.contains("一座还活着"):
+		printerr("开场应写明只有一座火山还活着")
+		failed += 1
+	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
+	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
+	if story.beat != B612Story.Beat.PULL_SHOOTS:
+		printerr("第一次日落不应改变任务，实际 %s" % story.beat)
+		failed += 1
+	await process_frame
+	if story.is_blocking_input:
+		printerr("日落叙事结束后应能继续走动")
+		failed += 1
+	if not story._has_played_first_sunset_narration:
+		printerr("跨过日落应播出第一次日落叙事")
+		failed += 1
+	if B612Lines.OVERHEAD_SUNSET.is_empty() or B612Lines.OVERHEAD_SUNSET_LEAVE.is_empty():
+		printerr("第一次日落应有头顶叙事")
+		failed += 1
+
+	var shoots: Array[SurfaceProp] = []
+	var volcanoes: Array[SurfaceProp] = []
+	var rose: SurfaceProp = null
+	for prop in planet.surface_props:
+		match prop.kind:
+			SurfaceProp.Kind.BAOBAB:
+				if prop.dialogue_id == B612Story.SHOOT_DIALOGUE_ID:
+					shoots.append(prop)
+				else:
+					printerr("猴面包树 %s 应可拔除" % prop.name)
+					failed += 1
+			SurfaceProp.Kind.VOLCANO:
+				volcanoes.append(prop)
+			SurfaceProp.Kind.ROSE:
+				rose = prop
+	if shoots.size() != B612Story.SHOOT_COUNT:
+		printerr("剧情嫩芽数应为 %d" % B612Story.SHOOT_COUNT)
+		return failed + 1
+	if not story.accepts_interact(shoots[0]):
+		printerr("拔苗段应选中嫩芽")
+		failed += 1
+	if B612Lines.pull_shoot(1).is_empty() or B612Lines.shoot_walk_lines().is_empty():
+		printerr("拔苗应有头顶台词")
+		failed += 1
+
+	story.skip_cinematics = false
+	story._lock_input()
+	story._play_interact(shoots[0])
+	await process_frame
+	if shoots[0].is_consumed or not shoots[0].visible:
+		printerr("头顶叙事结束前嫩芽不应消失")
+		failed += 1
+	var pull_wait_frames := 0
+	while story.is_blocking_input and pull_wait_frames < 600:
+		await process_frame
+		pull_wait_frames += 1
+	if story.is_blocking_input:
+		printerr("拔苗头顶叙事超时")
+		failed += 1
+	if not shoots[0].is_consumed or shoots[0].visible:
+		printerr("可以行走后嫩芽应消失")
+		failed += 1
+	story.skip_cinematics = true
+	story._walk_chatter_generation += 1
+
+	for shoot in shoots:
+		story.apply_interact(shoot)
+		if not shoot.is_consumed or shoot.visible:
+			printerr("拔掉的嫩芽应消耗并隐藏")
+			failed += 1
+	if story.beat != B612Story.Beat.CLEAN_VOLCANOES:
+		printerr("拔完嫩芽应进入疏通火山，实际 %s" % story.beat)
+		failed += 1
+	if story.accepts_interact(shoots[0]):
+		printerr("已拔嫩芽不应再交互")
+		failed += 1
+
+	for volcano in volcanoes:
+		if not story.accepts_interact(volcano):
+			printerr("疏通段应选中火山")
+			failed += 1
+		story.apply_interact(volcano)
+		if not volcano.is_consumed:
+			printerr("疏通后火山应记为已完成")
+			failed += 1
+		for child in volcano.get_children():
+			var smoke := child as CPUParticles2D
+			if smoke != null and smoke.emitting:
+				printerr("疏通后火山不应再冒烟")
+				failed += 1
+	if story.beat != B612Story.Beat.TEND_ROSE:
+		printerr("火山结束后应去侍弄玫瑰，实际 %s" % story.beat)
+		failed += 1
+
+	var glass_globe := rose.get_node("GlassGlobe") as Sprite2D
+	if glass_globe.visible:
+		printerr("侍弄前玻璃罩不应出现")
+		failed += 1
+	story.apply_interact(rose)
+	if story.beat != B612Story.Beat.FAREWELL:
+		printerr("侍弄玫瑰后应可告别，实际 %s" % story.beat)
+		failed += 1
+	if not glass_globe.visible:
+		printerr("侍弄后应罩上玻璃罩")
+		failed += 1
+	if not story.accepts_interact(rose):
+		printerr("侍弄后玫瑰应可再交互告别")
+		failed += 1
+	if story.flock.visible:
+		printerr("候鸟不应提前出现")
+		failed += 1
+
+	if B612Lines.tend_rose().size() < 2 or B612Lines.farewell().size() < 2:
+		printerr("玫瑰对白过短")
+		failed += 1
+	var asked_to_cover := false
+	var until_cover := B612Lines.tend_rose_until_cover()
+	for line in until_cover:
+		if line.text.contains("玻璃罩"):
+			asked_to_cover = true
+	if not asked_to_cover:
+		printerr("罩上玻璃罩前应对白提到玻璃罩")
+		failed += 1
+	if not until_cover[until_cover.size() - 1].text.contains("玻璃罩"):
+		printerr("玫瑰应先说罩起来，最后一句再提玻璃罩")
+		failed += 1
+	for line in B612Lines.tend_rose_after_cover():
+		if line.text.contains("玻璃罩"):
+			printerr("说完罩起来之后不应再提一次罩上")
+			failed += 1
+			break
+	if B612Lines.volcano_walk_lines().is_empty():
+		printerr("疏通火山路上应有头顶叙事")
+		failed += 1
+	for walk_line in B612Lines.volcano_walk_lines():
+		if walk_line.contains("两座还活"):
+			printerr("火山走路旁白不应把两座写成还活着")
+			failed += 1
+			break
+	var volcano_walk_blob := ""
+	for walk_line in B612Lines.volcano_walk_lines():
+		volcano_walk_blob += walk_line
+	if not volcano_walk_blob.contains("熄"):
+		printerr("火山走路旁白应写明有熄灭的火山")
+		failed += 1
+	if not volcano_walk_blob.contains("该走了"):
+		printerr("火山走路旁白应铺垫离开这颗星球")
+		failed += 1
+	story.apply_interact(rose)
+	if story.beat != B612Story.Beat.DEPART:
+		printerr("告别后应离星，实际 %s" % story.beat)
+		failed += 1
+	if glass_globe.visible:
+		printerr("告别后应拿掉玻璃罩")
+		failed += 1
+	await story._play_departure()
+	if scene.get_node("GameView/GameViewport/Player").modulate.a > 0.01:
+		printerr("离星后小王子应消失")
+		failed += 1
+	if story.get_node("%Dim").color.a < 0.99:
+		printerr("离星后应淡出到黑场")
+		failed += 1
+	if story.get_node("%Epilogue").text != B612Lines.OVERHEAD_PLANET_NAME:
+		printerr("黑场应留下星球名")
+		failed += 1
+	story.flock.arrive_from_offscreen(
+			(scene.get_node(PLAYER_PATH) as Player).global_position
+	)
+	await process_frame
+	var viewport_rect := (scene.get_node(VIEWPORT_PATH) as SubViewport).get_visible_rect()
+	var inner_rect := viewport_rect.grow(-12.0)
+	for child in story.flock.get_children():
+		var bird := child as Sprite2D
+		if bird == null:
+			continue
+		if inner_rect.has_point(bird.global_position):
+			printerr("候鸟起始应在屏外，实际 %s" % bird.global_position)
+			failed += 1
+			break
+	if failed == 0:
+		print("  B612 故乡剧情 OK")
+	return failed
 

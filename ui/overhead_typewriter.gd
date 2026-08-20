@@ -16,7 +16,7 @@ const AMBIENT_LINES: PackedStringArray = [
 	"有一颗星，没有眨眼。",
 ]
 
-@export var play_on_ready: bool = true
+@export var play_on_ready: bool = false
 
 var _play_generation: int = 0
 var _fade_tween: Tween
@@ -72,12 +72,15 @@ func play(display_text: String) -> void:
 		return
 	_fade_tween = create_tween()
 	_fade_tween.tween_property(self, "modulate:a", 0.0, FADE_DURATION_SECONDS)
-	await get_tree().create_timer(FADE_DURATION_SECONDS).timeout
-	if play_generation != _play_generation or not is_inside_tree():
-		return
-	visible = false
-	modulate = Color.WHITE
-	_fade_tween = null
+	_fade_tween.finished.connect(
+			func() -> void:
+				if play_generation != _play_generation or not is_inside_tree():
+					return
+				visible = false
+				modulate = Color.WHITE
+				_fade_tween = null,
+			CONNECT_ONE_SHOT
+	)
 
 
 func _play_ambient_loop() -> void:

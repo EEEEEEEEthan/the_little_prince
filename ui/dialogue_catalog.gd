@@ -7,9 +7,9 @@ const _PRINCE := preload("res://ui/portraits/prince.png")
 static func lines_for_id(id: StringName) -> Array[DialogueLine]:
 	var lines: Array[DialogueLine] = []
 	match id:
-		&"baobab":
-			lines.append(DialogueLine.new("小王子", "这棵猴面包树长得太快了。", _PRINCE))
-			lines.append(DialogueLine.new("小王子", "再不拔掉，会把整颗星球撑裂的。", _PRINCE))
+		&"baobab", &"baobab_shoot":
+			lines.append(DialogueLine.new("小王子", "刚长出来的时候，跟玫瑰差不多。", _PRINCE))
+			lines.append(DialogueLine.new("小王子", "必须每天拔掉。等到太晚，就再也拔不掉了。", _PRINCE))
 		&"rose":
 			lines.append(DialogueLine.new("小王子", "她是我的玫瑰。全宇宙只有这一朵。", _PRINCE))
 			lines.append(DialogueLine.new("小王子", "我每天给她浇水，夜里还要罩上玻璃罩。", _PRINCE))

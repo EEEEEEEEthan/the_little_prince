@@ -2,6 +2,8 @@ class_name DialogueBox
 extends CanvasLayer
 ## 像素风打字机对话框：头像 + 说话人 + 逐字正文，出字时播放提示音。
 
+signal closed
+
 const TYPEWRITER_INTERVAL := 0.045
 const TYPEWRITER_FAST_INTERVAL := 0.012
 const TYPEWRITER_VOLUME_DB := -8.0
@@ -82,6 +84,7 @@ func mark_holding(held: bool) -> void:
 		_show_line()
 
 func close() -> void:
+	var was_open := visible
 	_timer.stop()
 	_typewriter.stop()
 	_is_holding = false
@@ -95,6 +98,8 @@ func close() -> void:
 	_index = 0
 	set_process(false)
 	visible = false
+	if was_open:
+		closed.emit()
 
 func _show_line() -> void:
 	var line := _lines[_index]
