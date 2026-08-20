@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cojn20gna51qe"]
 
 [ext_resource type="Script" uid="uid://cyh14kfr3hytu" path="res://main.gd" id="1_main"]
-[ext_resource type="PackedScene" uid="uid://b612littleprince" path="res://planet/b612.tscn" id="2_planet"]
+[ext_resource type="PackedScene" uid="uid://6a4gvsyrkrea" path="res://planet/b612.tscn" id="2_planet"]
 [ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://player/player.gd" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://mybv7igebkcb" path="res://player/prince.png" id="4_prince"]
 [ext_resource type="Shader" uid="uid://bahfecy4eixc3" path="res://palette.gdshader" id="5_palette_shader"]
@@ -76,26 +76,26 @@ script = ExtResource("7_prompt")
 [node name="DialogueBox" parent="GameView/GameViewport" unique_id=1685094322 instance=ExtResource("9_dialogue")]
 unique_name_in_owner = true
 
-[node name="OverheadTypewriter" parent="GameView/GameViewport" instance=ExtResource("12_overhead")]
+[node name="OverheadTypewriter" parent="GameView/GameViewport" unique_id=1992303185 instance=ExtResource("12_overhead")]
 unique_name_in_owner = true
 
 [node name="Interaction" type="Node" parent="GameView/GameViewport" unique_id=1838989427]
 unique_name_in_owner = true
 script = ExtResource("10_interact")
 
-[node name="B612Story" type="Node" parent="GameView/GameViewport"]
+[node name="B612Story" type="Node" parent="GameView/GameViewport" unique_id=1253671560]
 unique_name_in_owner = true
 script = ExtResource("13_story")
 
-[node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport/B612Story"]
+[node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport/B612Story" unique_id=515559498]
 unique_name_in_owner = true
 z_index = 180
 script = ExtResource("14_flock")
 
-[node name="FadeLayer" type="CanvasLayer" parent="GameView/GameViewport/B612Story"]
+[node name="FadeLayer" type="CanvasLayer" parent="GameView/GameViewport/B612Story" unique_id=1234713668]
 layer = 20
 
-[node name="Dim" type="ColorRect" parent="GameView/GameViewport/B612Story/FadeLayer"]
+[node name="Dim" type="ColorRect" parent="GameView/GameViewport/B612Story/FadeLayer" unique_id=1388500103]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
@@ -105,14 +105,13 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
 
-[node name="Epilogue" type="Label" parent="GameView/GameViewport/B612Story/FadeLayer"]
+[node name="Epilogue" type="Label" parent="GameView/GameViewport/B612Story/FadeLayer" unique_id=222522644]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.968627, 0.819608, 1)
 theme_override_fonts/font = ExtResource("15_font")
 theme_override_font_sizes/font_size = 8

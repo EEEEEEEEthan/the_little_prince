@@ -18,7 +18,7 @@ const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const FADE_TO_BLACK_SECONDS := 1.2
 const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
-const OPENING_MOVE_SPEED_SCALE := 0.5
+const OPENING_MOVE_SPEED_SCALE := 0.8
 
 @export var auto_start: bool = true
 
