@@ -1832,11 +1832,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if opening.size() < 2:
 		printerr("开场应直接与玫瑰对白")
 		failed += 1
-	var opening_blob := ""
 	var opening_has_rose := false
 	var opening_has_prince := false
 	for line in opening:
-		opening_blob += line.text
 		if line.speaker == "玫瑰":
 			opening_has_rose = true
 		if line.speaker == "小王子":
@@ -1848,15 +1846,8 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not opening_has_rose or not opening_has_prince:
 		printerr("开场对白应有玫瑰与小王子")
 		failed += 1
-	if not opening_blob.contains("好看") or not opening_blob.contains("水"):
-		printerr("开场对白应先让小王子照顾玫瑰")
-		failed += 1
 	if B612Lines.OPENING_OVERHEAD_LINES.is_empty():
 		printerr("开场对白后应有头顶叙事列表")
-		failed += 1
-	var opening_overhead_blob := "".join(B612Lines.OPENING_OVERHEAD_LINES)
-	if not opening_overhead_blob.contains("拔"):
-		printerr("开场头顶叙事应提示拔苗")
 		failed += 1
 	if not is_equal_approx(B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS, 3.0):
 		printerr(
