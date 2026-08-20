@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cojn20gna51qe"]
 
 [ext_resource type="Script" uid="uid://cyh14kfr3hytu" path="res://main.gd" id="1_main"]
-[ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="2_planet"]
+[ext_resource type="PackedScene" uid="uid://b612littleprince" path="res://planet/b612.tscn" id="2_planet"]
 [ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://player/player.gd" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://mybv7igebkcb" path="res://player/prince.png" id="4_prince"]
 [ext_resource type="Shader" uid="uid://bahfecy4eixc3" path="res://palette.gdshader" id="5_palette_shader"]

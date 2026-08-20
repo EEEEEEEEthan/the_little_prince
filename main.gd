@@ -29,6 +29,6 @@ func _layout_world() -> void:
 	var viewport_size := Vector2(game_viewport.size)
 	var apex_y := viewport_size.y * WorldConstants.APEX_Y_RATIO
 	planet.global_position = Vector2(
-		viewport_size.x * 0.5, apex_y + WorldConstants.PLANET_RADIUS
+		viewport_size.x * 0.5, apex_y + planet.radius
 	)
 	player.global_position = planet.apex_global_position()

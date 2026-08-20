@@ -65,7 +65,7 @@ func _physics_process(delta: float) -> void:
 
 func _simulate(delta: float) -> void:
 	_pin_neck()
-	var walk_speed := planet.angular_velocity * WorldConstants.PLANET_RADIUS
+	var walk_speed := planet.angular_velocity * planet.radius
 	var motion_weight := clampf(absf(walk_speed) / WorldConstants.PLAYER_SPEED, 0.0, 1.0)
 	var wind_x := lerpf(
 			-_facing_sign() * IDLE_SWAY,
