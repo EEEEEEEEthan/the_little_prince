@@ -65,8 +65,8 @@ func _check_constants() -> int:
 	if WorldConstants.VOLCANO_COUNT != 3:
 		printerr("VOLCANO_COUNT 应为 3，实际 %d" % WorldConstants.VOLCANO_COUNT)
 		failed += 1
-	if WorldConstants.BAOBAB_COUNT < 10:
-		printerr("BAOBAB_COUNT 过少：%d" % WorldConstants.BAOBAB_COUNT)
+	if WorldConstants.BAOBAB_COUNT != 5:
+		printerr("BAOBAB_COUNT 应为 5，实际 %d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
 	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
@@ -315,7 +315,7 @@ func _check_static_assets() -> int:
 			[0.0, Color(0.1646875, 0.1178125, 0.136875), "午夜天顶"],
 			[0.25, Color(0.48663607, 0.59763044, 0.84331489), "日出天顶"],
 			[0.5, Color(0.45926034, 0.61566353, 0.90543872), "正午天顶"],
-			[0.75, Color(0.82, 0.25, 0.16), "日落天顶"],
+			[0.75, Color(0.35299647, 0.35156181, 0.45303002), "日落天顶"],
 			[1.0, Color(0.16470589, 0.11764706, 0.13725491), "午夜天顶"],
 		]
 		for item in zenith_cases:
@@ -334,7 +334,7 @@ func _check_static_assets() -> int:
 			[0.0, Color(0.02, 0.03, 0.08), "午夜地平线"],
 			[0.25, Color(0.45, 0.55, 0.82), "日出地平线"],
 			[0.5, Color(0.78, 0.88, 1.0), "正午地平线"],
-			[0.75, Color(0.82, 0.32, 0.16), "日落地平线"],
+			[0.75, Color(0.3, 0.22, 0.42), "日落地平线"],
 			[1.0, Color(0.02, 0.03, 0.08), "午夜地平线"],
 		]
 		for item in horizon_cases:
@@ -1658,6 +1658,32 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.is_blocking_input:
 		printerr("开场结束后应允许走动")
 		failed += 1
+	for line in B612Lines.opening():
+		if line.text.contains("两座还活"):
+			printerr("开场不应把两座火山写成还活着")
+			failed += 1
+			break
+	var opening_blob := ""
+	for line in B612Lines.opening():
+		opening_blob += line.text
+	if not opening_blob.contains("一座还活着"):
+		printerr("开场应写明只有一座火山还活着")
+		failed += 1
+	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
+	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
+	if story.beat != B612Story.Beat.PULL_SHOOTS:
+		printerr("第一次日落不应改变任务，实际 %s" % story.beat)
+		failed += 1
+	await process_frame
+	if story.is_blocking_input:
+		printerr("日落叙事结束后应能继续走动")
+		failed += 1
+	if not story._has_played_first_sunset_narration:
+		printerr("跨过日落应播出第一次日落叙事")
+		failed += 1
+	if B612Lines.OVERHEAD_SUNSET.is_empty() or B612Lines.OVERHEAD_SUNSET_LEAVE.is_empty():
+		printerr("第一次日落应有头顶叙事")
+		failed += 1
 
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []
@@ -1683,6 +1709,26 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if B612Lines.pull_shoot(1).is_empty() or B612Lines.shoot_walk_lines().is_empty():
 		printerr("拔苗应有头顶台词")
 		failed += 1
+
+	story.skip_cinematics = false
+	story._lock_input()
+	story._play_interact(shoots[0])
+	await process_frame
+	if shoots[0].is_consumed or not shoots[0].visible:
+		printerr("头顶叙事结束前嫩芽不应消失")
+		failed += 1
+	var pull_wait_frames := 0
+	while story.is_blocking_input and pull_wait_frames < 600:
+		await process_frame
+		pull_wait_frames += 1
+	if story.is_blocking_input:
+		printerr("拔苗头顶叙事超时")
+		failed += 1
+	if not shoots[0].is_consumed or shoots[0].visible:
+		printerr("可以行走后嫩芽应消失")
+		failed += 1
+	story.skip_cinematics = true
+	story._walk_chatter_generation += 1
 
 	for shoot in shoots:
 		story.apply_interact(shoot)
@@ -1718,34 +1764,17 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("侍弄前玻璃罩不应出现")
 		failed += 1
 	story.apply_interact(rose)
-	if story.beat != B612Story.Beat.WATCH_SUNSET:
-		printerr("侍弄玫瑰后应去看日落，实际 %s" % story.beat)
+	if story.beat != B612Story.Beat.FAREWELL:
+		printerr("侍弄玫瑰后应可告别，实际 %s" % story.beat)
 		failed += 1
 	if not glass_globe.visible:
 		printerr("侍弄后应罩上玻璃罩")
 		failed += 1
-	if story.accepts_interact(rose):
-		printerr("看日落时玫瑰不应可交互")
-		failed += 1
-
-	story.advance_sunset_if_ready(SkyPhase.NOON_PHASE)
-	if story.beat != B612Story.Beat.WATCH_SUNSET:
-		printerr("正午不应结束看日落")
-		failed += 1
-	story.advance_sunset_if_ready(0.72)
-	if story.beat != B612Story.Beat.WATCH_SUNSET:
-		printerr("天还没红时不应结束看日落")
-		failed += 1
-	story.advance_sunset_if_ready(SkyPhase.SUNSET_PHASE)
-	if story.beat != B612Story.Beat.FAREWELL:
-		printerr("日落后应进入告别，实际 %s" % story.beat)
+	if not story.accepts_interact(rose):
+		printerr("侍弄后玫瑰应可再交互告别")
 		failed += 1
 	if story.flock.visible:
-		printerr("日落时侯鸟不应出现")
-		failed += 1
-	await process_frame
-	if story.is_blocking_input:
-		printerr("日落侧写结束后应允许走向玫瑰")
+		printerr("候鸟不应提前出现")
 		failed += 1
 
 	if B612Lines.tend_rose().size() < 2 or B612Lines.farewell().size() < 2:
@@ -1769,6 +1798,20 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 			break
 	if B612Lines.volcano_walk_lines().is_empty():
 		printerr("疏通火山路上应有头顶叙事")
+		failed += 1
+	for walk_line in B612Lines.volcano_walk_lines():
+		if walk_line.contains("两座还活"):
+			printerr("火山走路旁白不应把两座写成还活着")
+			failed += 1
+			break
+	var volcano_walk_blob := ""
+	for walk_line in B612Lines.volcano_walk_lines():
+		volcano_walk_blob += walk_line
+	if not volcano_walk_blob.contains("熄"):
+		printerr("火山走路旁白应写明有熄灭的火山")
+		failed += 1
+	if not volcano_walk_blob.contains("该走了"):
+		printerr("火山走路旁白应铺垫离开这颗星球")
 		failed += 1
 	story.apply_interact(rose)
 	if story.beat != B612Story.Beat.DEPART:

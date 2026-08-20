@@ -99,20 +99,6 @@ script = ExtResource("3_surface_prop")
 kind = 2
 dialogue_id = &"baobab_shoot"
 
-[node name="Baobab2" type="Sprite2D" parent="Surface" unique_id=677575263]
-texture_filter = 1
-position = Vector2(67.331748, -55.661524)
-rotation = 0.88
-scale = Vector2(0.72, 0.72)
-texture = ExtResource("9_baobab")
-offset = Vector2(0, -13.44)
-hframes = 4
-frame = 1
-script = ExtResource("3_surface_prop")
-kind = 2
-variant = 1
-dialogue_id = &"baobab_shoot"
-
 [node name="Baobab3" type="Sprite2D" parent="Surface" unique_id=2117036339]
 texture_filter = 1
 position = Vector2(83.977002, 24.075564)
@@ -127,20 +113,6 @@ kind = 2
 variant = 2
 dialogue_id = &"baobab_shoot"
 
-[node name="Baobab4" type="Sprite2D" parent="Surface" unique_id=914275009]
-texture_filter = 1
-position = Vector2(62.154312, 61.389014)
-rotation = 2.35
-scale = Vector2(0.72, 0.72)
-texture = ExtResource("9_baobab")
-offset = Vector2(0, -13.44)
-hframes = 4
-frame = 3
-script = ExtResource("3_surface_prop")
-kind = 2
-variant = 3
-dialogue_id = &"baobab_shoot"
-
 [node name="Baobab5" type="Sprite2D" parent="Surface" unique_id=942940131]
 texture_filter = 1
 position = Vector2(20.900821, 84.822905)
@@ -151,20 +123,6 @@ offset = Vector2(0, -13.44)
 hframes = 4
 script = ExtResource("3_surface_prop")
 kind = 2
-dialogue_id = &"baobab_shoot"
-
-[node name="Baobab6" type="Sprite2D" parent="Surface" unique_id=80811792]
-texture_filter = 1
-position = Vector2(-66.114266, 57.102307)
-rotation = 4.0
-scale = Vector2(0.72, 0.72)
-texture = ExtResource("9_baobab")
-offset = Vector2(0, -13.44)
-hframes = 4
-frame = 1
-script = ExtResource("3_surface_prop")
-kind = 2
-variant = 1
 dialogue_id = &"baobab_shoot"
 
 [node name="Baobab7" type="Sprite2D" parent="Surface" unique_id=1232238802]
@@ -181,20 +139,6 @@ kind = 2
 variant = 2
 dialogue_id = &"baobab_shoot"
 
-[node name="Baobab8" type="Sprite2D" parent="Surface" unique_id=1903417816]
-texture_filter = 1
-position = Vector2(-66.386343, -56.785765)
-rotation = 5.42
-scale = Vector2(0.72, 0.72)
-texture = ExtResource("9_baobab")
-offset = Vector2(0, -13.44)
-hframes = 4
-frame = 3
-script = ExtResource("3_surface_prop")
-kind = 2
-variant = 3
-dialogue_id = &"baobab_shoot"
-
 [node name="Baobab9" type="Sprite2D" parent="Surface" unique_id=598481963]
 texture_filter = 1
 position = Vector2(-39.032453, -78.155213)
@@ -205,19 +149,5 @@ offset = Vector2(0, -13.44)
 hframes = 4
 script = ExtResource("3_surface_prop")
 kind = 2
-dialogue_id = &"baobab_shoot"
-
-[node name="Baobab10" type="Sprite2D" parent="Surface" unique_id=584051714]
-texture_filter = 1
-position = Vector2(-15.913716, -85.898331)
-rotation = 6.1
-scale = Vector2(0.72, 0.72)
-texture = ExtResource("9_baobab")
-offset = Vector2(0, -13.44)
-hframes = 4
-frame = 1
-script = ExtResource("3_surface_prop")
-kind = 2
-variant = 1
 dialogue_id = &"baobab_shoot"
 

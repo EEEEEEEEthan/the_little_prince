@@ -1,14 +1,13 @@
 class_name B612Lines
 extends RefCounted
-## B612 剧情台词：对话框与头顶侧写。
+## B612 剧情台词：对话框与头顶侧写。口吻贴近原著的认真与忧伤。
 
 const OVERHEAD_PLANET_NAME := "B-612。"
 const OVERHEAD_MY_PLANET := "我的星球。"
-const OVERHEAD_PULL_HINT := "看见的都要拔掉。"
-const OVERHEAD_ROSE_THANKLESS := "她不会说谢谢。"
-const OVERHEAD_WALK_TO_SUNSET := "往前走。等到天红。"
-const OVERHEAD_SUNSET := "天红了。"
-const OVERHEAD_FAREWELL_HINT := "该去向她告别了。"
+const OVERHEAD_PULL_HINT := "看见一棵，拔一棵。"
+const OVERHEAD_ROSE_THANKLESS := "她没有说谢谢。"
+const OVERHEAD_SUNSET := "人在忧伤的时候，就喜欢看日落。"
+const OVERHEAD_SUNSET_LEAVE := "这颗星球太小了。我该走了。"
 
 const _PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")
 const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
@@ -16,9 +15,9 @@ const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
 
 static func opening() -> Array[DialogueLine]:
 	return _pack([
-		_prince("上面有三座火山。两座还活着。"),
-		_prince("猴面包树的嫩芽，看见一棵拔一棵。"),
-		_prince("留下就会把星球撑裂。"),
+		_prince("我有三座火山。只有一座还活着。"),
+		_prince("两座已经熄了。不过谁知道呢。"),
+		_prince("猴面包树的嫩芽，看见就要拔。等到太晚，就再也拔不掉了。"),
 	])
 
 
@@ -28,43 +27,50 @@ static func pull_shoot(remaining_shoot_count: int) -> String:
 	if remaining_shoot_count == 1:
 		return "还剩一棵。"
 	const pull_lines: PackedStringArray = [
-		"这棵还软。根已经下去了。",
-		"叶子还嫩。根不嫩。",
-		"拔掉。别留下。",
+		"刚长出来，跟玫瑰差不多。",
+		"根已经往下钻了。",
+		"这是纪律。每天都要拔。",
 	]
 	return pull_lines[(remaining_shoot_count - 2) % pull_lines.size()]
 
 
 static func clean_volcano(is_active_volcano: bool, remaining_volcano_count: int) -> String:
 	if remaining_volcano_count <= 0:
-		return "好了。她叶子上有沙。"
+		return "通好了。去看看她。我就要离开了。"
 	if is_active_volcano:
-		return "喷口堵住了。灰还是热的。"
-	return "这座不喷了。里面仍要掏干净。"
+		return "这座还活着。喷口又堵了。"
+	return "已经不喷了。也要掏干净。谁知道呢。"
 
 
 static func shoot_walk_lines() -> PackedStringArray:
 	return PackedStringArray([
-		"昨天还只有两片叶子。",
+		"嫩芽刚长出来，跟玫瑰差不多。",
+		"必须每天拔。这是纪律。",
 		"根会钻到地心去。",
-		"洗完脸就该拔。每天都是。",
-		"别看它现在像玫瑰。",
-		"一棵就能把这块地撑裂。",
+		"一棵就能把星球撑裂。",
 	])
 
 
 static func volcano_walk_lines() -> PackedStringArray:
 	return PackedStringArray([
-		"灰会把喷口堵住。",
-		"两座还活着。一座已经冷了。",
-		"通火山像扫烟囱。每天一次。",
+		"两座已经熄了。一座还热着。",
+		"熄灭的也要扫。谁知道会不会再醒。",
+		"这颗星球太小了。",
+		"我已经看过许多次日落。也许该走了。",
 	])
 
 
 static func rose_walk_lines() -> PackedStringArray:
 	return PackedStringArray([
 		"她叶子上有沙。",
-		"水要晒过才行。",
+		"夜里风会冻着她。",
+	])
+
+
+static func farewell_walk_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"候鸟就要来了。",
+		"该向她告别了。",
 	])
 
 
@@ -76,18 +82,16 @@ static func tend_rose() -> Array[DialogueLine]:
 
 static func tend_rose_until_cover() -> Array[DialogueLine]:
 	return _pack([
-		_rose("你来了。左边这片花瓣，边都卷起来了。"),
+		_rose("你来了。我等了你好久。"),
 		_prince("我给你浇水。"),
-		_rose("太凉了。要晒过的。昨晚那壶，我咳到天亮。"),
-		_rose("叶子上还有沙。把玻璃罩罩上。"),
+		_rose("要晒过的。凉水我会咳。"),
+		_rose("夜里有风。把玻璃罩罩上。"),
 	])
 
 
 static func tend_rose_after_cover() -> Array[DialogueLine]:
 	return _pack([
 		_prince("罩好了。"),
-		_rose("罩子边上有一道灰。擦掉。"),
-		_prince("好。"),
 		_rose("我有四根刺。老虎来了，我会扎它。"),
 		_prince("这里没有老虎。"),
 		_rose("那就去忙你的。"),
@@ -109,9 +113,9 @@ static func farewell_until_uncover() -> Array[DialogueLine]:
 
 static func farewell_after_uncover() -> Array[DialogueLine]:
 	return _pack([
-		_rose("以前你浇凉水，还把罩子扣得太早。"),
-		_prince("我以前不懂。"),
-		_rose("去吧。别再站在这儿。"),
+		_rose("你以前不懂。水浇得太凉，罩子扣得太早。"),
+		_prince("我那时太年轻。"),
+		_rose("去吧。"),
 	])
 
 

@@ -12,7 +12,7 @@ const APEX_Y_RATIO: float = 0.88
 const VISIBLE_HALF_ARC: float = PI * 0.55
 
 const VOLCANO_COUNT: int = 3
-const BAOBAB_COUNT: int = 10
+const BAOBAB_COUNT: int = 5
 
 const SPAWN_ANGLE_OFFSET: float = 0.12
 
