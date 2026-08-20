@@ -2,10 +2,22 @@ class_name B612Lines
 extends RefCounted
 ## B612 剧情台词：对话框与头顶侧写。
 
+const OPENING_OVERHEAD_LINES: PackedStringArray = [
+	"小王子很喜欢玫瑰花",
+	"可是玫瑰的傲娇，尖刺，总是让他恼火"
+]
+const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
+	"小王子的星球总会长出猴面包树",
+	"小王子每天都要拔掉猴面包树苗",
+	"如果不拔的话，星球就会被猴面包树弄得支离破碎",
+	"可是现在他决定要离开了",
+	"这是最后一株",
+]
 const OVERHEAD_PLANET_NAME := "B-612。"
-const OVERHEAD_WANDER := "B-612。走几步，天就会再红一次。"
-const OVERHEAD_PULL_HINT := "有些嫩芽，跟花长得像。看见了，就要拔掉。"
-const OVERHEAD_SUNSET := "人在忧伤的时候，就喜欢看日落。"
+const SUNSET_OVERHEAD_LINES: PackedStringArray = [
+	"人在忧伤的时候，就喜欢看日落。",
+	"有一天小王子看了二十多次日落",
+]
 
 const _PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")
 const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
@@ -13,32 +25,16 @@ const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
 
 static func opening_rose() -> Array[DialogueLine]:
 	return _pack([
-		_rose("我刚醒来。请原谅，花瓣还有点乱。"),
+		_rose("我刚刚睡醒，真对不起，瞧我的头发还是乱蓬蓬的。。。"),
 		_prince("你很好看。"),
-		_rose("给我弄点水来。要晒过的。"),
+		_rose("是吧，我是与太阳同时出生的。。。"),
 	])
 
 
 static func pull_shoot(remaining_after_this: int) -> String:
-	if remaining_after_this <= 0:
-		return "芽尽了。喷口里，还闷着灰。"
-	const lines: PackedStringArray = [
-		"刚冒尖的时候，几乎像一朵玫瑰。",
-		"根已经摸到土的深处。",
-		"再晚一点，整颗星球都会裂开。",
-		"土里还睡着许多。有的不该发芽。",
+	return PULL_SHOOT_OVERHEAD_LINES[
+			PULL_SHOOT_OVERHEAD_LINES.size() - 1 - remaining_after_this
 	]
-	return lines[lines.size() - remaining_after_this]
-
-
-static func clean_volcano(is_active_volcano: bool, remaining_after_this: int) -> String:
-	if remaining_after_this <= 0:
-		return "烟囱通了。风会把沙吹到她叶子上。"
-	if is_active_volcano:
-		return "这座还热着。灰会把热气堵死。"
-	if remaining_after_this == 1:
-		return "冷的喷口，也会自己堵住。"
-	return "已经不喷了。也要掏干净。谁知道呢。"
 
 
 static func tend_rose() -> Array[DialogueLine]:

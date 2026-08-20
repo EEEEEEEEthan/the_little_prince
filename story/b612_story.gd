@@ -1,12 +1,11 @@
 class_name B612Story
 extends Node
-## B612 故乡剧情：开场对白 → 拔苗 → 疏通火山 → 侍弄玫瑰 → 告别 → 离星。
+## B612 故乡剧情：开场对白 → 拔苗 → 侍弄玫瑰 → 告别 → 离星。
 ## 第一次跨入日落时播头顶叙事，不作为关卡。
 
 enum Beat {
 	OPENING,
 	PULL_SHOOTS,
-	CLEAN_VOLCANOES,
 	TEND_ROSE,
 	FAREWELL,
 	DEPART,
@@ -17,6 +16,12 @@ const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
 const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const FADE_TO_BLACK_SECONDS := 1.2
+const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
+const OPENING_MOVE_SPEED_SCALE := 0.8
+const SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS := 0.3
+const SUNSET_CAMERA_LIFT_SECONDS := 1.0
+const SUNSET_CAMERA_LIFT_PIXELS := 16.0
+const SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS := 0.5
 
 @export var auto_start: bool = true
 
@@ -25,7 +30,6 @@ var is_active: bool = false
 var is_blocking_input: bool = false
 var beat: Beat = Beat.OPENING
 var pulled_shoot_count: int = 0
-var cleaned_volcano_count: int = 0
 var _last_sky_phase: float = SkyPhase.NOON_PHASE
 var _has_played_first_sunset_narration: bool = false
 var _is_first_sunset_narration_pending: bool = false
@@ -47,23 +51,26 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if is_active and beat != Beat.OPENING and not _has_played_first_sunset_narration:
+	if is_active and not _has_played_first_sunset_narration:
 		try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
 
 
 func start() -> void:
 	is_active = true
 	pulled_shoot_count = 0
-	cleaned_volcano_count = 0
 	_has_played_first_sunset_narration = false
 	_is_first_sunset_narration_pending = false
 	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 	beat = Beat.OPENING
+	player.can_move_left = false
+	player.move_speed_scale = OPENING_MOVE_SPEED_SCALE
 	_lock_input()
 	await _play_dialogue(B612Lines.opening_rose())
 	is_blocking_input = false
-	await _play_overhead(B612Lines.OVERHEAD_WANDER)
-	await _play_overhead(B612Lines.OVERHEAD_PULL_HINT)
+	if not skip_cinematics:
+		await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
+		for opening_overhead_line in B612Lines.OPENING_OVERHEAD_LINES:
+			await _play_overhead(opening_overhead_line)
 	beat = Beat.PULL_SHOOTS
 
 
@@ -94,16 +101,6 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 			prop.visible = false
 			pulled_shoot_count += 1
 			if pulled_shoot_count >= SHOOT_COUNT:
-				beat = Beat.CLEAN_VOLCANOES
-			return empty
-		Beat.CLEAN_VOLCANOES:
-			prop.is_consumed = true
-			cleaned_volcano_count += 1
-			for child in prop.get_children():
-				var smoke := child as CPUParticles2D
-				if smoke != null:
-					smoke.emitting = false
-			if cleaned_volcano_count >= WorldConstants.VOLCANO_COUNT:
 				beat = Beat.TEND_ROSE
 			return empty
 		Beat.TEND_ROSE:
@@ -132,8 +129,30 @@ func try_first_sunset_narration(phase: float) -> void:
 		return
 	_is_first_sunset_narration_pending = false
 	_has_played_first_sunset_narration = true
+	player.can_move_left = true
+	player.move_speed_scale = 1.0
+	_play_first_sunset_cinematic()
+
+
+func _play_first_sunset_cinematic() -> void:
+	if skip_cinematics:
+		return
 	_lock_input()
-	_play_first_sunset_narration()
+	await get_tree().create_timer(SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS).timeout
+	await _tween_game_camera_offset_y(-SUNSET_CAMERA_LIFT_PIXELS, SUNSET_CAMERA_LIFT_SECONDS)
+	for sunset_overhead_line in B612Lines.SUNSET_OVERHEAD_LINES:
+		await _play_overhead(sunset_overhead_line)
+	await get_tree().create_timer(SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS).timeout
+	is_blocking_input = false
+	await _tween_game_camera_offset_y(0.0, SUNSET_CAMERA_LIFT_SECONDS)
+
+
+func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float) -> void:
+	var camera_tween := create_tween()
+	camera_tween.set_trans(Tween.TRANS_CUBIC)
+	camera_tween.set_ease(Tween.EASE_IN_OUT)
+	camera_tween.tween_property(%GameCamera, "offset:y", target_offset_y, duration_seconds)
+	await camera_tween.finished
 
 
 func _play_interact(prop: SurfaceProp) -> void:
@@ -151,26 +170,8 @@ func _play_interact(prop: SurfaceProp) -> void:
 		apply_interact(prop)
 		await _play_departure()
 		return
-	if beat == Beat.PULL_SHOOTS:
-		await _play_overhead(B612Lines.pull_shoot(SHOOT_COUNT - pulled_shoot_count - 1))
-		apply_interact(prop)
-		is_blocking_input = false
-		return
-	await _play_overhead(
-			B612Lines.clean_volcano(
-					prop.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT,
-					WorldConstants.VOLCANO_COUNT - cleaned_volcano_count - 1
-			)
-	)
+	await _play_overhead(B612Lines.pull_shoot(SHOOT_COUNT - pulled_shoot_count - 1))
 	apply_interact(prop)
-	is_blocking_input = false
-
-
-func _play_first_sunset_narration() -> void:
-	if skip_cinematics:
-		is_blocking_input = false
-		return
-	await _play_overhead(B612Lines.OVERHEAD_SUNSET)
 	is_blocking_input = false
 
 
@@ -206,7 +207,7 @@ func _play_dialogue(lines: Array[DialogueLine]) -> void:
 func _play_overhead(display_text: String) -> void:
 	if skip_cinematics or display_text.is_empty():
 		return
-	await overhead.play(display_text)
+	await overhead.play_queued(display_text)
 
 
 func _is_current_objective(prop: SurfaceProp) -> bool:
@@ -215,8 +216,6 @@ func _is_current_objective(prop: SurfaceProp) -> bool:
 	match beat:
 		Beat.PULL_SHOOTS:
 			return prop.kind == SurfaceProp.Kind.BAOBAB
-		Beat.CLEAN_VOLCANOES:
-			return prop.kind == SurfaceProp.Kind.VOLCANO
 		Beat.TEND_ROSE, Beat.FAREWELL:
 			return prop.kind == SurfaceProp.Kind.ROSE
 		_:

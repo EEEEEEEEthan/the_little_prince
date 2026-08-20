@@ -5,8 +5,9 @@ extends Node2D
 const TYPEWRITER_INTERVAL := 0.08
 const HOLD_DURATION_SECONDS := 1.6
 const FADE_DURATION_SECONDS := 0.9
+const QUEUE_GAP_SECONDS := 1.0
 const AMBIENT_START_DELAY_SECONDS := 1.2
-const AMBIENT_GAP_SECONDS := 1.6
+const AMBIENT_GAP_SECONDS := 1.0
 const TYPEWRITER_VOLUME_DB := -14.0
 
 const AMBIENT_LINES: PackedStringArray = [
@@ -20,6 +21,9 @@ const AMBIENT_LINES: PackedStringArray = [
 
 var _play_generation: int = 0
 var _fade_tween: Tween
+var _queued_plays: Array[QueuedOverheadPlay] = []
+var _is_draining_queued_plays: bool = false
+var _last_queued_play_finished_msec: int = -1
 
 
 func _ready() -> void:
@@ -70,17 +74,26 @@ func play(display_text: String) -> void:
 	await get_tree().create_timer(HOLD_DURATION_SECONDS).timeout
 	if play_generation != _play_generation or not is_inside_tree():
 		return
+	if _fade_tween != null:
+		_fade_tween.kill()
 	_fade_tween = create_tween()
 	_fade_tween.tween_property(self, "modulate:a", 0.0, FADE_DURATION_SECONDS)
-	_fade_tween.finished.connect(
-			func() -> void:
-				if play_generation != _play_generation or not is_inside_tree():
-					return
-				visible = false
-				modulate = Color.WHITE
-				_fade_tween = null,
-			CONNECT_ONE_SHOT
-	)
+	await get_tree().create_timer(FADE_DURATION_SECONDS).timeout
+	if play_generation != _play_generation or not is_inside_tree():
+		return
+	visible = false
+	modulate = Color.WHITE
+	_fade_tween = null
+
+
+func play_queued(display_text: String) -> void:
+	if display_text.is_empty():
+		return
+	var queued_play := QueuedOverheadPlay.new(display_text)
+	_queued_plays.append(queued_play)
+	if not _is_draining_queued_plays:
+		_drain_queued_plays()
+	await queued_play.finished
 
 
 func _play_ambient_loop() -> void:
@@ -93,6 +106,24 @@ func _play_ambient_loop() -> void:
 			await get_tree().create_timer(AMBIENT_GAP_SECONDS).timeout
 
 
+func _drain_queued_plays() -> void:
+	if _is_draining_queued_plays:
+		return
+	_is_draining_queued_plays = true
+	while not _queued_plays.is_empty():
+		if _last_queued_play_finished_msec >= 0:
+			var remaining_gap_seconds := QUEUE_GAP_SECONDS - (
+					float(Time.get_ticks_msec() - _last_queued_play_finished_msec) / 1000.0
+			)
+			if remaining_gap_seconds > 0.0:
+				await get_tree().create_timer(remaining_gap_seconds).timeout
+		var queued_play: QueuedOverheadPlay = _queued_plays.pop_front()
+		await play(queued_play.display_text)
+		_last_queued_play_finished_msec = Time.get_ticks_msec()
+		queued_play.finished.emit()
+	_is_draining_queued_plays = false
+
+
 func _head_global_position() -> Vector2:
 	var viewport_size := get_viewport().get_visible_rect().size
 	return Vector2(
@@ -100,3 +131,11 @@ func _head_global_position() -> Vector2:
 			viewport_size.y * WorldConstants.APEX_Y_RATIO
 			+ WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y,
 	).round()
+
+
+class QueuedOverheadPlay extends RefCounted:
+	signal finished
+	var display_text: String
+
+	func _init(p_display_text: String) -> void:
+		display_text = p_display_text

@@ -1202,7 +1202,55 @@ func _check_overhead_typewriter(scene: Node, planet: Planet) -> int:
 	if overhead.visible:
 		printerr("停留后应渐隐并隐藏")
 		failed += 1
+	failed += await _check_overhead_queue(overhead)
 	print("  头顶打字机 OK")
+	return failed
+
+
+func _check_overhead_queue(overhead: OverheadTypewriter) -> int:
+	var failed := 0
+	var body := overhead.get_node("Body") as Label
+	var first_line := "甲"
+	var second_line := "乙"
+	overhead.play_queued(first_line)
+	await process_frame
+	if body.text != first_line:
+		printerr("队列第一句应立即开始")
+		failed += 1
+	var first_started_msec := Time.get_ticks_msec()
+	overhead.play_queued(second_line)
+	await process_frame
+	if body.text != first_line:
+		printerr("正在播的头顶叙事结束前不应插播下一句")
+		failed += 1
+	var second_started_msec := -1
+	var second_deadline_msec := first_started_msec + 8000
+	while Time.get_ticks_msec() < second_deadline_msec:
+		if overhead.visible and body.text == second_line:
+			second_started_msec = Time.get_ticks_msec()
+			break
+		await process_frame
+	if second_started_msec < 0:
+		printerr("队列第二句未出现")
+		return failed + 1
+	var expected_interval_msec := int(
+			(
+				OverheadTypewriter.HOLD_DURATION_SECONDS
+				+ OverheadTypewriter.FADE_DURATION_SECONDS
+				+ OverheadTypewriter.QUEUE_GAP_SECONDS
+			)
+			* 1000.0
+	)
+	var actual_interval_msec := second_started_msec - first_started_msec
+	if absi(actual_interval_msec - expected_interval_msec) > 500:
+		printerr(
+				"头顶叙事队列间隔应为约 %d ms，实际 %d ms"
+				% [expected_interval_msec, actual_interval_msec]
+		)
+		failed += 1
+	var idle_deadline_msec := Time.get_ticks_msec() + 5000
+	while overhead.visible and Time.get_ticks_msec() < idle_deadline_msec:
+		await process_frame
 	return failed
 
 
@@ -1263,8 +1311,13 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 
 	failed += _assert_focus(planet, baobab, &"baobab_shoot", "猴面包树")
 	failed += _assert_focus(planet, rose, &"rose", "玫瑰")
-	failed += _assert_focus(planet, active_volcano, &"volcano_active", "活火山")
-	failed += _assert_focus(planet, dead_volcano, &"volcano_dead", "死火山")
+	if active_volcano.is_interactable() or dead_volcano.is_interactable():
+		printerr("火山只作为装饰，不应可交互")
+		failed += 1
+	planet.teleport_player(active_volcano.rotation)
+	if planet.find_nearest_interactable() == active_volcano:
+		printerr("站在火山旁不应选中火山")
+		failed += 1
 
 	planet.teleport_player(baobab.rotation)
 	await process_frame
@@ -1312,7 +1365,7 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			)
 			failed += 1
 
-	for dialogue_id in [&"baobab", &"baobab_shoot", &"rose", &"volcano_active", &"volcano_dead"]:
+	for dialogue_id in [&"baobab", &"baobab_shoot", &"rose"]:
 		if DialogueCatalog.lines_for_id(dialogue_id).size() < 2:
 			printerr("%s 对话至少两句" % dialogue_id)
 			failed += 1
@@ -1641,6 +1694,89 @@ func _await_dialogue_idle(dialogue: DialogueBox) -> bool:
 	return not dialogue.is_typing()
 
 
+func _check_opening_overhead_pacing(story: B612Story) -> int:
+	var failed := 0
+	var overhead := story.overhead
+	var body := overhead.get_node("Body") as Label
+	story.skip_cinematics = false
+	story.start()
+	if not story.dialogue.is_open():
+		printerr("开场应对白后再播头顶叙事")
+		story.skip_cinematics = true
+		return 1
+	story.dialogue.close()
+	var close_msec := Time.get_ticks_msec()
+	await process_frame
+	if overhead.visible:
+		printerr("开场对白刚结束时不应立刻弹出头顶叙事")
+		failed += 1
+	if story.is_blocking_input:
+		printerr("等待开场头顶叙事时应能走动")
+		failed += 1
+	var played_overhead_lines: PackedStringArray = []
+	var line_started_msec: Array[int] = []
+	var pull_deadline_msec := close_msec + 25000
+	while (
+			story.beat == B612Story.Beat.OPENING
+			and Time.get_ticks_msec() < pull_deadline_msec
+	):
+		if overhead.visible:
+			if (
+					played_overhead_lines.is_empty()
+					or played_overhead_lines[played_overhead_lines.size() - 1] != body.text
+			):
+				played_overhead_lines.append(body.text)
+				line_started_msec.append(Time.get_ticks_msec())
+		await process_frame
+	if line_started_msec.is_empty():
+		printerr("开场对白结束后应弹出头顶叙事")
+		failed += 1
+	else:
+		var start_delay_msec := line_started_msec[0] - close_msec
+		var expected_start_delay_msec := int(
+				B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS * 1000.0
+		)
+		if absi(start_delay_msec - expected_start_delay_msec) > 500:
+			printerr(
+					"开场头顶叙事起始延迟应为约 %d ms，实际 %d ms"
+					% [expected_start_delay_msec, start_delay_msec]
+			)
+			failed += 1
+		if played_overhead_lines[0] != B612Lines.OPENING_OVERHEAD_LINES[0]:
+			printerr("开场头顶叙事应按列表第一句开始")
+			failed += 1
+	if story.beat != B612Story.Beat.PULL_SHOOTS:
+		printerr("开场头顶叙事列表播完后应进入拔苗，实际 %s" % story.beat)
+		failed += 1
+	if played_overhead_lines != B612Lines.OPENING_OVERHEAD_LINES:
+		printerr(
+				"开场头顶叙事应按列表逐句播放，实际 %s"
+				% ",".join(played_overhead_lines)
+		)
+		failed += 1
+	if line_started_msec.size() >= 2:
+		var first_line := B612Lines.OPENING_OVERHEAD_LINES[0]
+		var expected_interval_msec := int(
+				(
+					maxi(first_line.length() - 1, 0)
+					* OverheadTypewriter.TYPEWRITER_INTERVAL
+					+ OverheadTypewriter.HOLD_DURATION_SECONDS
+					+ OverheadTypewriter.FADE_DURATION_SECONDS
+					+ OverheadTypewriter.QUEUE_GAP_SECONDS
+				)
+				* 1000.0
+		)
+		var actual_interval_msec := line_started_msec[1] - line_started_msec[0]
+		if absi(actual_interval_msec - expected_interval_msec) > 500:
+			printerr(
+					"开场头顶叙事间隔应为约 %d ms，实际 %d ms"
+					% [expected_interval_msec, actual_interval_msec]
+			)
+			failed += 1
+	story.skip_cinematics = true
+	return failed
+
+
 func _check_b612_story(scene: Node, planet: Planet) -> int:
 	var failed := 0
 	var story := scene.get_node("GameView/GameViewport/B612Story") as B612Story
@@ -1650,6 +1786,13 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if scene.get_node_or_null("GameView/GameViewport/B612Story/MigratoryFlock") == null:
 		printerr("找不到 MigratoryFlock")
 		failed += 1
+	var camera := scene.get_node_or_null("GameView/GameViewport/GameCamera") as Camera2D
+	if camera == null:
+		printerr("找不到 GameCamera")
+		return failed + 1
+	if camera.anchor_mode != Camera2D.ANCHOR_MODE_FIXED_TOP_LEFT:
+		printerr("GameCamera 应固定左上，避免改变默认构图")
+		failed += 1
 	story.skip_cinematics = true
 	await story.start()
 	if story.beat != B612Story.Beat.PULL_SHOOTS:
@@ -1658,15 +1801,52 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.is_blocking_input:
 		printerr("开场结束后应允许走动")
 		failed += 1
+	var player := scene.get_node(PLAYER_PATH) as Player
+	if player.can_move_left:
+		printerr("开场应只能向右走")
+		failed += 1
+	if not is_equal_approx(player.move_speed_scale, B612Story.OPENING_MOVE_SPEED_SCALE):
+		printerr(
+				"开场移速倍率应为 %s，实际 %s"
+				% [B612Story.OPENING_MOVE_SPEED_SCALE, player.move_speed_scale]
+		)
+		failed += 1
+	planet.angular_velocity = 0.0
+	Input.action_press("move_left")
+	player._physics_process(0.2)
+	Input.action_release("move_left")
+	if planet.angular_velocity < -0.001:
+		printerr("开场按左不应移动，角速度 %s" % planet.angular_velocity)
+		failed += 1
+	planet.angular_velocity = 0.0
+	Input.action_press("move_right")
+	player._physics_process(0.2)
+	var opening_right_velocity := planet.angular_velocity
+	Input.action_release("move_right")
+	planet.angular_velocity = 0.0
+	player.move_speed_scale = 1.0
+	Input.action_press("move_right")
+	player._physics_process(0.2)
+	var full_right_velocity := planet.angular_velocity
+	Input.action_release("move_right")
+	planet.angular_velocity = 0.0
+	player.move_speed_scale = B612Story.OPENING_MOVE_SPEED_SCALE
+	if opening_right_velocity <= 0.001:
+		printerr("开场按右应能走动")
+		failed += 1
+	elif absf(opening_right_velocity / full_right_velocity - B612Story.OPENING_MOVE_SPEED_SCALE) > 0.1:
+		printerr(
+				"开场右移应更慢，开场角速度 %s，全速 %s"
+				% [opening_right_velocity, full_right_velocity]
+		)
+		failed += 1
 	var opening := B612Lines.opening_rose()
 	if opening.size() < 2:
 		printerr("开场应直接与玫瑰对白")
 		failed += 1
-	var opening_blob := ""
 	var opening_has_rose := false
 	var opening_has_prince := false
 	for line in opening:
-		opening_blob += line.text
 		if line.speaker == "玫瑰":
 			opening_has_rose = true
 		if line.speaker == "小王子":
@@ -1678,15 +1858,21 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not opening_has_rose or not opening_has_prince:
 		printerr("开场对白应有玫瑰与小王子")
 		failed += 1
-	if not opening_blob.contains("好看") or not opening_blob.contains("水"):
-		printerr("开场对白应先让小王子照顾玫瑰")
+	if B612Lines.OPENING_OVERHEAD_LINES.is_empty():
+		printerr("开场对白后应有头顶叙事列表")
 		failed += 1
-	if B612Lines.OVERHEAD_WANDER.is_empty() or B612Lines.OVERHEAD_PULL_HINT.is_empty():
-		printerr("开场对白后应有自由走动叙事，再提示拔苗")
+	if not is_equal_approx(B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS, 3.0):
+		printerr(
+				"开场头顶叙事起始延迟应为 3 秒，实际 %s"
+				% B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS
+		)
 		failed += 1
-	if not B612Lines.OVERHEAD_PULL_HINT.contains("拔"):
-		printerr("自由走动叙事之后应提示拔苗")
+	if not is_equal_approx(OverheadTypewriter.QUEUE_GAP_SECONDS, 1.0):
+		printerr(
+				"头顶叙事间隔应为 1 秒，实际 %s" % OverheadTypewriter.QUEUE_GAP_SECONDS
+		)
 		failed += 1
+	failed += await _check_opening_overhead_pacing(story)
 	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
 	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
 	if story.beat != B612Story.Beat.PULL_SHOOTS:
@@ -1696,15 +1882,55 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.is_blocking_input:
 		printerr("日落叙事结束后应能继续走动")
 		failed += 1
+	if not player.can_move_left:
+		printerr("触发日落后应能左右移动")
+		failed += 1
+	if not is_equal_approx(player.move_speed_scale, 1.0):
+		printerr("触发日落后移速应恢复，实际 %s" % player.move_speed_scale)
+		failed += 1
 	if not story._has_played_first_sunset_narration:
 		printerr("跨过日落应播出第一次日落叙事")
 		failed += 1
-	if B612Lines.OVERHEAD_SUNSET.is_empty():
+	if B612Lines.SUNSET_OVERHEAD_LINES.is_empty():
 		printerr("第一次日落应有头顶叙事")
 		failed += 1
-	if B612Lines.OVERHEAD_SUNSET.contains("该走了"):
+	if "".join(B612Lines.SUNSET_OVERHEAD_LINES).contains("该走了"):
 		printerr("日落叙事不应变成离星任务提示")
 		failed += 1
+	story._has_played_first_sunset_narration = false
+	story._is_first_sunset_narration_pending = false
+	story._last_sky_phase = SkyPhase.NOON_PHASE
+	story.skip_cinematics = false
+	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
+	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
+	await process_frame
+	if not story.is_blocking_input:
+		printerr("日落演出时应禁用输入")
+		failed += 1
+	if not is_equal_approx(camera.offset.y, 0.0):
+		printerr("日落锁输入后应先停顿再抬镜头，实际 offset.y=%s" % camera.offset.y)
+		failed += 1
+	await create_timer(B612Story.SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS).timeout
+	await create_timer(B612Story.SUNSET_CAMERA_LIFT_SECONDS).timeout
+	if absf(camera.offset.y + B612Story.SUNSET_CAMERA_LIFT_PIXELS) > 1.0:
+		printerr(
+				"日落镜头应上抬 %s，实际 %s"
+				% [B612Story.SUNSET_CAMERA_LIFT_PIXELS, camera.offset.y]
+		)
+		failed += 1
+	var sunset_cinematic_deadline_msec := Time.get_ticks_msec() + 20000
+	while (
+			(story.is_blocking_input or absf(camera.offset.y) > 0.5)
+			and Time.get_ticks_msec() < sunset_cinematic_deadline_msec
+	):
+		await process_frame
+	if story.is_blocking_input:
+		printerr("日落演出结束后应恢复输入")
+		failed += 1
+	if absf(camera.offset.y) > 0.5:
+		printerr("日落演出结束后镜头应恢复，实际 offset.y=%s" % camera.offset.y)
+		failed += 1
+	story.skip_cinematics = true
 
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []
@@ -1727,14 +1953,17 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.accepts_interact(shoots[0]):
 		printerr("拔苗段应选中嫩芽")
 		failed += 1
+	if B612Lines.PULL_SHOOT_OVERHEAD_LINES.size() != B612Story.SHOOT_COUNT:
+		printerr(
+				"拔苗头顶叙事列表长度应为 %d，实际 %d"
+				% [B612Story.SHOOT_COUNT, B612Lines.PULL_SHOOT_OVERHEAD_LINES.size()]
+		)
+		failed += 1
 	for remaining_after_this in range(B612Story.SHOOT_COUNT):
 		if B612Lines.pull_shoot(remaining_after_this).is_empty():
 			printerr("每棵嫩芽都应有头顶叙事")
 			failed += 1
 			break
-	if not B612Lines.pull_shoot(0).contains("喷口"):
-		printerr("拔完嫩芽应转向火山")
-		failed += 1
 
 	story.skip_cinematics = false
 	story._lock_input()
@@ -1743,10 +1972,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if shoots[0].is_consumed or not shoots[0].visible:
 		printerr("头顶叙事结束前嫩芽不应消失")
 		failed += 1
-	var pull_wait_frames := 0
-	while story.is_blocking_input and pull_wait_frames < 600:
+	var pull_deadline_msec := Time.get_ticks_msec() + 15000
+	while story.is_blocking_input and Time.get_ticks_msec() < pull_deadline_msec:
 		await process_frame
-		pull_wait_frames += 1
 	if story.is_blocking_input:
 		printerr("拔苗头顶叙事超时")
 		failed += 1
@@ -1760,67 +1988,21 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		if not shoot.is_consumed or shoot.visible:
 			printerr("拔掉的嫩芽应消耗并隐藏")
 			failed += 1
-	if story.beat != B612Story.Beat.CLEAN_VOLCANOES:
-		printerr("拔完嫩芽应进入疏通火山，实际 %s" % story.beat)
+	if story.beat != B612Story.Beat.TEND_ROSE:
+		printerr("拔完嫩芽应去侍弄玫瑰，实际 %s" % story.beat)
 		failed += 1
 	if story.accepts_interact(shoots[0]):
 		printerr("已拔嫩芽不应再交互")
 		failed += 1
-
-	if (
-			B612Lines.clean_volcano(true, 1).is_empty()
-			or B612Lines.clean_volcano(false, 1).is_empty()
-			or B612Lines.clean_volcano(false, 0).is_empty()
-	):
-		printerr("每座火山都应有头顶叙事")
-		failed += 1
-	if not B612Lines.clean_volcano(false, 0).contains("她"):
-		printerr("通完火山应转向玫瑰")
-		failed += 1
-
-	var active_volcano: SurfaceProp = null
 	for volcano in volcanoes:
-		if volcano.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT:
-			active_volcano = volcano
-			break
-	story.skip_cinematics = false
-	story._lock_input()
-	story._play_interact(active_volcano)
-	await process_frame
-	for child in active_volcano.get_children():
-		var smoke := child as CPUParticles2D
-		if smoke != null and not smoke.emitting:
-			printerr("头顶叙事结束前火山不应停烟")
-			failed += 1
-			break
-	var volcano_wait_frames := 0
-	while story.is_blocking_input and volcano_wait_frames < 600:
-		await process_frame
-		volcano_wait_frames += 1
-	if story.is_blocking_input:
-		printerr("通火山头顶叙事超时")
-		failed += 1
-	if not active_volcano.is_consumed:
-		printerr("可以行走后活火山应记为已完成")
-		failed += 1
-	story.skip_cinematics = true
-
-	for volcano in volcanoes:
-		if not volcano.is_consumed and not story.accepts_interact(volcano):
-			printerr("疏通段应选中火山")
-			failed += 1
-		story.apply_interact(volcano)
-		if not volcano.is_consumed:
-			printerr("疏通后火山应记为已完成")
+		if volcano.is_interactable() or story.accepts_interact(volcano):
+			printerr("火山只作为装饰，不应可交互")
 			failed += 1
 		for child in volcano.get_children():
 			var smoke := child as CPUParticles2D
-			if smoke != null and smoke.emitting:
-				printerr("疏通后火山不应再冒烟")
+			if smoke != null and not smoke.emitting:
+				printerr("装饰火山应继续冒烟")
 				failed += 1
-	if story.beat != B612Story.Beat.TEND_ROSE:
-		printerr("火山结束后应去侍弄玫瑰，实际 %s" % story.beat)
-		failed += 1
 
 	var glass_globe := rose.get_node("GlassGlobe") as Sprite2D
 	if glass_globe.visible:
@@ -1875,11 +2057,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("告别不应改成数落浇水")
 		failed += 1
 	var story_blob := (
-			B612Lines.OVERHEAD_WANDER
-			+ B612Lines.OVERHEAD_PULL_HINT
-			+ B612Lines.OVERHEAD_SUNSET
+			"".join(B612Lines.OPENING_OVERHEAD_LINES)
+			+ "".join(B612Lines.SUNSET_OVERHEAD_LINES)
 			+ B612Lines.pull_shoot(0)
-			+ B612Lines.clean_volcano(false, 0)
 			+ tend_blob
 			+ farewell_blob
 	)
