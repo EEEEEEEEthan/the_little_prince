@@ -1311,8 +1311,13 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 
 	failed += _assert_focus(planet, baobab, &"baobab_shoot", "猴面包树")
 	failed += _assert_focus(planet, rose, &"rose", "玫瑰")
-	failed += _assert_focus(planet, active_volcano, &"volcano_active", "活火山")
-	failed += _assert_focus(planet, dead_volcano, &"volcano_dead", "死火山")
+	if active_volcano.is_interactable() or dead_volcano.is_interactable():
+		printerr("火山只作为装饰，不应可交互")
+		failed += 1
+	planet.teleport_player(active_volcano.rotation)
+	if planet.find_nearest_interactable() == active_volcano:
+		printerr("站在火山旁不应选中火山")
+		failed += 1
 
 	planet.teleport_player(baobab.rotation)
 	await process_frame
@@ -1360,7 +1365,7 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			)
 			failed += 1
 
-	for dialogue_id in [&"baobab", &"baobab_shoot", &"rose", &"volcano_active", &"volcano_dead"]:
+	for dialogue_id in [&"baobab", &"baobab_shoot", &"rose"]:
 		if DialogueCatalog.lines_for_id(dialogue_id).size() < 2:
 			printerr("%s 对话至少两句" % dialogue_id)
 			failed += 1
@@ -1959,9 +1964,6 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 			printerr("每棵嫩芽都应有头顶叙事")
 			failed += 1
 			break
-	if not B612Lines.PULL_SHOOT_OVERHEAD_LINES[B612Lines.PULL_SHOOT_OVERHEAD_LINES.size() - 1].contains("喷口"):
-		printerr("拔完嫩芽应转向火山")
-		failed += 1
 
 	story.skip_cinematics = false
 	story._lock_input()
@@ -1986,66 +1988,21 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		if not shoot.is_consumed or shoot.visible:
 			printerr("拔掉的嫩芽应消耗并隐藏")
 			failed += 1
-	if story.beat != B612Story.Beat.CLEAN_VOLCANOES:
-		printerr("拔完嫩芽应进入疏通火山，实际 %s" % story.beat)
+	if story.beat != B612Story.Beat.TEND_ROSE:
+		printerr("拔完嫩芽应去侍弄玫瑰，实际 %s" % story.beat)
 		failed += 1
 	if story.accepts_interact(shoots[0]):
 		printerr("已拔嫩芽不应再交互")
 		failed += 1
-
-	if (
-			B612Lines.clean_volcano(true, 1).is_empty()
-			or B612Lines.clean_volcano(false, 1).is_empty()
-			or B612Lines.clean_volcano(false, 0).is_empty()
-	):
-		printerr("每座火山都应有头顶叙事")
-		failed += 1
-	if not B612Lines.clean_volcano(false, 0).contains("她"):
-		printerr("通完火山应转向玫瑰")
-		failed += 1
-
-	var active_volcano: SurfaceProp = null
 	for volcano in volcanoes:
-		if volcano.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT:
-			active_volcano = volcano
-			break
-	story.skip_cinematics = false
-	story._lock_input()
-	story._play_interact(active_volcano)
-	await process_frame
-	for child in active_volcano.get_children():
-		var smoke := child as CPUParticles2D
-		if smoke != null and not smoke.emitting:
-			printerr("头顶叙事结束前火山不应停烟")
-			failed += 1
-			break
-	var volcano_deadline_msec := Time.get_ticks_msec() + 15000
-	while story.is_blocking_input and Time.get_ticks_msec() < volcano_deadline_msec:
-		await process_frame
-	if story.is_blocking_input:
-		printerr("通火山头顶叙事超时")
-		failed += 1
-	if not active_volcano.is_consumed:
-		printerr("可以行走后活火山应记为已完成")
-		failed += 1
-	story.skip_cinematics = true
-
-	for volcano in volcanoes:
-		if not volcano.is_consumed and not story.accepts_interact(volcano):
-			printerr("疏通段应选中火山")
-			failed += 1
-		story.apply_interact(volcano)
-		if not volcano.is_consumed:
-			printerr("疏通后火山应记为已完成")
+		if volcano.is_interactable() or story.accepts_interact(volcano):
+			printerr("火山只作为装饰，不应可交互")
 			failed += 1
 		for child in volcano.get_children():
 			var smoke := child as CPUParticles2D
-			if smoke != null and smoke.emitting:
-				printerr("疏通后火山不应再冒烟")
+			if smoke != null and not smoke.emitting:
+				printerr("装饰火山应继续冒烟")
 				failed += 1
-	if story.beat != B612Story.Beat.TEND_ROSE:
-		printerr("火山结束后应去侍弄玫瑰，实际 %s" % story.beat)
-		failed += 1
 
 	var glass_globe := rose.get_node("GlassGlobe") as Sprite2D
 	if glass_globe.visible:
@@ -2103,7 +2060,6 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 			"".join(B612Lines.OPENING_OVERHEAD_LINES)
 			+ "".join(B612Lines.SUNSET_OVERHEAD_LINES)
 			+ B612Lines.pull_shoot(0)
-			+ B612Lines.clean_volcano(false, 0)
 			+ tend_blob
 			+ farewell_blob
 	)

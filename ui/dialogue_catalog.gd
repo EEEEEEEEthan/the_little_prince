@@ -14,10 +14,4 @@ static func lines_for_id(id: StringName) -> Array[DialogueLine]:
 		&"rose":
 			lines.append(DialogueLine.new("小王子", "她是我的玫瑰。", _PRINCE))
 			lines.append(DialogueLine.new("小王子", "全宇宙只有这一朵。", _PRINCE))
-		&"volcano_active":
-			lines.append(DialogueLine.new("小王子", "这座还活着。", _PRINCE))
-			lines.append(DialogueLine.new("小王子", "早上热早点很方便。", _PRINCE))
-		&"volcano_dead":
-			lines.append(DialogueLine.new("小王子", "这座已经熄了。", _PRINCE))
-			lines.append(DialogueLine.new("小王子", "谁知道呢。", _PRINCE))
 	return lines

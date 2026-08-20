@@ -7,7 +7,7 @@ enum Kind { ROSE, VOLCANO, BAOBAB }
 
 @export var kind: Kind = Kind.ROSE
 @export var variant: int = 0
-## 对话目录 id；空则按 kind 回落（活火山 / 死火山分开）。
+## 对话目录 id；空则按 kind 回落。火山无对话。
 @export var dialogue_id: StringName = &""
 var is_consumed: bool = false
 
@@ -18,16 +18,12 @@ func get_dialogue_id() -> StringName:
 	match kind:
 		Kind.ROSE:
 			return &"rose"
-		Kind.VOLCANO:
-			if variant == WorldConstants.VOLCANO_ACTIVE_VARIANT:
-				return &"volcano_active"
-			return &"volcano_dead"
 		Kind.BAOBAB:
 			return &"baobab"
 	return &""
 
 func is_interactable() -> bool:
-	return not is_consumed and get_dialogue_id() != &""
+	return kind != Kind.VOLCANO and not is_consumed and get_dialogue_id() != &""
 
 ## 依据相对玩家角的可见性与前后深度更新显示状态。
 func update_visibility(player_angle: float) -> void:

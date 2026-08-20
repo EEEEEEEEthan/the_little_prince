@@ -37,16 +37,6 @@ static func pull_shoot(remaining_after_this: int) -> String:
 	]
 
 
-static func clean_volcano(is_active_volcano: bool, remaining_after_this: int) -> String:
-	if remaining_after_this <= 0:
-		return "烟囱通了。风会把沙吹到她叶子上。"
-	if is_active_volcano:
-		return "这座还热着。灰会把热气堵死。"
-	if remaining_after_this == 1:
-		return "冷的喷口，也会自己堵住。"
-	return "已经不喷了。也要掏干净。谁知道呢。"
-
-
 static func tend_rose() -> Array[DialogueLine]:
 	var lines := tend_rose_until_cover()
 	lines.append_array(tend_rose_after_cover())
