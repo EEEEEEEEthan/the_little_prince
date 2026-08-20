@@ -98,6 +98,10 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 		Beat.CLEAN_VOLCANOES:
 			prop.is_consumed = true
 			cleaned_volcano_count += 1
+			for child in prop.get_children():
+				var smoke := child as CPUParticles2D
+				if smoke != null:
+					smoke.emitting = false
 			var lines := B612Lines.clean_volcano(
 					prop.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT
 			)

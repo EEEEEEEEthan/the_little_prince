@@ -1704,6 +1704,11 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		if not volcano.is_consumed:
 			printerr("疏通后火山应记为已完成")
 			failed += 1
+		for child in volcano.get_children():
+			var smoke := child as CPUParticles2D
+			if smoke != null and smoke.emitting:
+				printerr("疏通后火山不应再冒烟")
+				failed += 1
 	if story.beat != B612Story.Beat.TEND_ROSE:
 		printerr("火山结束后应去侍弄玫瑰，实际 %s" % story.beat)
 		failed += 1
