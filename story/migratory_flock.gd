@@ -6,8 +6,6 @@ const BIRD_COUNT := 7
 const ARRIVE_SECONDS := 1.4
 const WING_FRAME_MILLISECONDS := 140
 
-@onready var planet: Planet = %Planet
-
 var _birds: Array[Sprite2D] = []
 
 
@@ -28,16 +26,21 @@ func _ready() -> void:
 func arrive_from_offscreen(apex_global_position: Vector2) -> void:
 	visible = true
 	set_process(true)
-	var viewport_size := get_viewport().get_visible_rect().size
+	var viewport_rect := get_viewport().get_visible_rect()
+	const offscreen_margin := 28.0
 	for bird_index in _birds.size():
 		var from_left := bird_index % 2 == 0
-		var side := -1.0 if from_left else 1.0
 		var bird := _birds[bird_index]
-		bird.global_position = Vector2(
-				apex_global_position.x + side * (viewport_size.x * 0.62 + float(bird_index) * 6.0),
-				apex_global_position.y - viewport_size.y * 0.58 - float(bird_index) * 5.0
+		var spawn_x := (
+				viewport_rect.position.x - offscreen_margin - float(bird_index) * 10.0
+				if from_left
+				else viewport_rect.end.x + offscreen_margin + float(bird_index) * 10.0
 		)
-		bird.flip_h = from_left
+		bird.global_position = Vector2(
+				spawn_x,
+				viewport_rect.position.y - offscreen_margin - float(bird_index) * 8.0
+		)
+		bird.flip_h = not from_left
 	var gather_tween := create_tween().set_parallel(true)
 	for bird_index in _birds.size():
 		var scatter := Vector2.from_angle(float(bird_index) * 0.9) * 12.0

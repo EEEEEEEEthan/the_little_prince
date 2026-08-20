@@ -27,7 +27,12 @@ static func pull_shoot(remaining_shoot_count: int) -> String:
 		return "好了。去通火山。"
 	if remaining_shoot_count == 1:
 		return "还剩一棵。"
-	return "这棵还软。根已经下去了。"
+	const pull_lines: PackedStringArray = [
+		"这棵还软。根已经下去了。",
+		"叶子还嫩。根不嫩。",
+		"拔掉。别留下。",
+	]
+	return pull_lines[(remaining_shoot_count - 2) % pull_lines.size()]
 
 
 static func clean_volcano(is_active_volcano: bool, remaining_volcano_count: int) -> String:
@@ -43,8 +48,8 @@ static func shoot_walk_lines() -> PackedStringArray:
 		"昨天还只有两片叶子。",
 		"根会钻到地心去。",
 		"洗完脸就该拔。每天都是。",
-		"一棵就能撑破这块地方。",
 		"别看它现在像玫瑰。",
+		"一棵就能把这块地撑裂。",
 	])
 
 
@@ -58,7 +63,8 @@ static func volcano_walk_lines() -> PackedStringArray:
 
 static func rose_walk_lines() -> PackedStringArray:
 	return PackedStringArray([
-		"她比这些树难伺候。",
+		"她叶子上有沙。",
+		"水要晒过才行。",
 	])
 
 
@@ -70,22 +76,21 @@ static func tend_rose() -> Array[DialogueLine]:
 
 static func tend_rose_until_cover() -> Array[DialogueLine]:
 	return _pack([
-		_rose("你来了。风吹了一整夜。"),
-		_rose("左边这片花瓣，边都卷起来了。"),
+		_rose("你来了。左边这片花瓣，边都卷起来了。"),
 		_prince("我给你浇水。"),
-		_rose("水要晒过。昨晚那壶太凉，我咳到天亮。"),
-		_rose("把玻璃罩罩上。沙子会钻进来。"),
+		_rose("太凉了。要晒过的。昨晚那壶，我咳到天亮。"),
+		_rose("叶子上还有沙。把玻璃罩罩上。"),
 	])
 
 
 static func tend_rose_after_cover() -> Array[DialogueLine]:
 	return _pack([
-		_prince("好了。"),
-		_rose("罩子边上有一道灰。你看见没有。"),
-		_prince("看见了。"),
+		_prince("罩好了。"),
+		_rose("罩子边上有一道灰。擦掉。"),
+		_prince("好。"),
 		_rose("我有四根刺。老虎来了，我会扎它。"),
 		_prince("这里没有老虎。"),
-		_rose("那更好。你去忙你的。"),
+		_rose("那就去忙你的。"),
 	])
 
 
@@ -104,8 +109,7 @@ static func farewell_until_uncover() -> Array[DialogueLine]:
 
 static func farewell_after_uncover() -> Array[DialogueLine]:
 	return _pack([
-		_rose("四根刺够用了。"),
-		_rose("你以前浇凉水，还把罩子扣得太早。"),
+		_rose("以前你浇凉水，还把罩子扣得太早。"),
 		_prince("我以前不懂。"),
 		_rose("去吧。别再站在这儿。"),
 	])

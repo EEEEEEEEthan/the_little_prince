@@ -1732,6 +1732,10 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.beat != B612Story.Beat.WATCH_SUNSET:
 		printerr("正午不应结束看日落")
 		failed += 1
+	story.advance_sunset_if_ready(0.72)
+	if story.beat != B612Story.Beat.WATCH_SUNSET:
+		printerr("天还没红时不应结束看日落")
+		failed += 1
 	story.advance_sunset_if_ready(SkyPhase.SUNSET_PHASE)
 	if story.beat != B612Story.Beat.FAREWELL:
 		printerr("日落后应进入告别，实际 %s" % story.beat)
@@ -1748,12 +1752,21 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("玫瑰对白过短")
 		failed += 1
 	var asked_to_cover := false
-	for line in B612Lines.tend_rose_until_cover():
+	var until_cover := B612Lines.tend_rose_until_cover()
+	for line in until_cover:
 		if line.text.contains("玻璃罩"):
 			asked_to_cover = true
 	if not asked_to_cover:
 		printerr("罩上玻璃罩前应对白提到玻璃罩")
 		failed += 1
+	if not until_cover[until_cover.size() - 1].text.contains("玻璃罩"):
+		printerr("玫瑰应先说罩起来，最后一句再提玻璃罩")
+		failed += 1
+	for line in B612Lines.tend_rose_after_cover():
+		if line.text.contains("玻璃罩"):
+			printerr("说完罩起来之后不应再提一次罩上")
+			failed += 1
+			break
 	if B612Lines.volcano_walk_lines().is_empty():
 		printerr("疏通火山路上应有头顶叙事")
 		failed += 1
@@ -1774,6 +1787,20 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.get_node("%Epilogue").text != B612Lines.OVERHEAD_PLANET_NAME:
 		printerr("黑场应留下星球名")
 		failed += 1
+	story.flock.arrive_from_offscreen(
+			(scene.get_node(PLAYER_PATH) as Player).global_position
+	)
+	await process_frame
+	var viewport_rect := (scene.get_node(VIEWPORT_PATH) as SubViewport).get_visible_rect()
+	var inner_rect := viewport_rect.grow(-12.0)
+	for child in story.flock.get_children():
+		var bird := child as Sprite2D
+		if bird == null:
+			continue
+		if inner_rect.has_point(bird.global_position):
+			printerr("候鸟起始应在屏外，实际 %s" % bird.global_position)
+			failed += 1
+			break
 	if failed == 0:
 		print("  B612 故乡剧情 OK")
 	return failed

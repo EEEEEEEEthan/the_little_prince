@@ -14,7 +14,7 @@ enum Beat {
 
 const SHOOT_DIALOGUE_ID := &"baobab_shoot"
 const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
-const SUNSET_PHASE_SLACK := 0.03
+const SUNSET_RED_PHASE_END := 0.80
 const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const BAOBAB_PULL_FADE_SECONDS := 0.28
@@ -28,7 +28,6 @@ var is_blocking_input: bool = false
 var beat: Beat = Beat.OPENING
 var pulled_shoot_count: int = 0
 var cleaned_volcano_count: int = 0
-var _must_leave_sunset_band: bool = false
 var _walk_chatter_generation: int = 0
 var _walk_line_index: int = 0
 
@@ -60,8 +59,7 @@ func start() -> void:
 	_walk_chatter_generation = 0
 	_walk_line_index = 0
 	beat = Beat.OPENING
-	is_blocking_input = true
-	_must_leave_sunset_band = false
+	_lock_input()
 	await _play_overhead(B612Lines.OVERHEAD_PLANET_NAME)
 	await _play_overhead(B612Lines.OVERHEAD_MY_PLANET)
 	await _play_dialogue(B612Lines.opening())
@@ -81,7 +79,7 @@ func try_handle_interact(prop: SurfaceProp) -> bool:
 	if not accepts_interact(prop):
 		return false
 	_walk_chatter_generation += 1
-	is_blocking_input = true
+	_lock_input()
 	_play_interact(prop)
 	return true
 
@@ -110,7 +108,6 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 			return empty
 		Beat.TEND_ROSE:
 			beat = Beat.WATCH_SUNSET
-			_must_leave_sunset_band = true
 			if not _glass_globe().visible:
 				_glass_globe().visible = true
 			return B612Lines.tend_rose()
@@ -126,15 +123,10 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 func advance_sunset_if_ready(phase: float) -> void:
 	if beat != Beat.WATCH_SUNSET:
 		return
-	var in_sunset_band := absf(phase - SkyPhase.SUNSET_PHASE) <= SUNSET_PHASE_SLACK
-	if _must_leave_sunset_band:
-		if not in_sunset_band:
-			_must_leave_sunset_band = false
-		return
-	if not in_sunset_band:
+	if phase < SkyPhase.SUNSET_PHASE or phase > SUNSET_RED_PHASE_END:
 		return
 	beat = Beat.FAREWELL
-	is_blocking_input = true
+	_lock_input()
 	_play_sunset_reached()
 
 
@@ -226,36 +218,34 @@ func _begin_walk_chatter() -> void:
 	var generation := _walk_chatter_generation
 	if skip_cinematics or not is_active:
 		return
-	var pool: PackedStringArray
-	match beat:
-		Beat.PULL_SHOOTS:
-			pool = B612Lines.shoot_walk_lines()
-		Beat.CLEAN_VOLCANOES:
-			pool = B612Lines.volcano_walk_lines()
-		Beat.TEND_ROSE:
-			pool = B612Lines.rose_walk_lines()
-		_:
-			return
-	var walk_seconds := _seconds_to_nearest_objective()
-	var line_count := 1 if walk_seconds < 7.0 else 2
-	if walk_seconds < 2.8 or pool.is_empty():
-		return
-	var lines: PackedStringArray = []
-	var picked_line_count := 0
-	while picked_line_count < line_count:
-		lines.append(pool[_walk_line_index % pool.size()])
-		_walk_line_index += 1
-		picked_line_count += 1
-	var slot_seconds := walk_seconds / float(lines.size() + 1)
-	for line in lines:
-		await get_tree().create_timer(slot_seconds).timeout
+	const walk_chatter_interval_seconds := 3.2
+	const walk_chatter_stop_seconds := 2.0
+	while generation == _walk_chatter_generation and is_inside_tree() and not is_blocking_input:
+		await get_tree().create_timer(walk_chatter_interval_seconds).timeout
 		if (
 				generation != _walk_chatter_generation
 				or is_blocking_input
 				or not is_inside_tree()
 		):
 			return
-		overhead.play(line)
+		if not planet.is_moving():
+			continue
+		if _seconds_to_nearest_objective() < walk_chatter_stop_seconds:
+			return
+		var pool: PackedStringArray
+		match beat:
+			Beat.PULL_SHOOTS:
+				pool = B612Lines.shoot_walk_lines()
+			Beat.CLEAN_VOLCANOES:
+				pool = B612Lines.volcano_walk_lines()
+			Beat.TEND_ROSE:
+				pool = B612Lines.rose_walk_lines()
+			_:
+				return
+		if pool.is_empty():
+			return
+		overhead.play(pool[_walk_line_index % pool.size()])
+		_walk_line_index += 1
 
 
 func _seconds_to_nearest_objective() -> float:
@@ -281,6 +271,11 @@ func _is_current_objective(prop: SurfaceProp) -> bool:
 			return prop.kind == SurfaceProp.Kind.ROSE
 		_:
 			return false
+
+
+func _lock_input() -> void:
+	is_blocking_input = true
+	planet.angular_velocity = 0.0
 
 
 func _glass_globe() -> Sprite2D:
