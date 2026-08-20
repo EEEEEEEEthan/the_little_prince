@@ -48,6 +48,10 @@ canvas_item_default_texture_filter = 0
 size = Vector2i(256, 224)
 render_target_update_mode = 4
 
+[node name="GameCamera" type="Camera2D" parent="GameView/GameViewport"]
+unique_name_in_owner = true
+anchor_mode = 0
+
 [node name="Planet" parent="GameView/GameViewport" unique_id=387248352 instance=ExtResource("2_planet")]
 unique_name_in_owner = true
 
