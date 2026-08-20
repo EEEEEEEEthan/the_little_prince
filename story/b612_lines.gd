@@ -7,11 +7,11 @@ const OPENING_OVERHEAD_LINES: PackedStringArray = [
 	"可是玫瑰的傲娇，尖刺，总是让他恼火"
 ]
 const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
-	"刚冒尖的时候，几乎像一朵玫瑰。",
-	"根已经摸到土的深处。",
-	"再晚一点，整颗星球都会裂开。",
-	"土里还睡着许多。有的不该发芽。",
-	"芽尽了。喷口里，还闷着灰。",
+	"小王子的星球总会长出猴面包树",
+	"小王子每天都要拔掉猴面包树苗",
+	"如果不拔的话，星球就会被猴面包树弄得支离破碎",
+	"可是现在他决定要离开了",
+	"这是最后一株",
 ]
 const OVERHEAD_PLANET_NAME := "B-612。"
 const OVERHEAD_SUNSET := "人在忧伤的时候，就喜欢看日落。"
