@@ -14,7 +14,10 @@ const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
 	"这是最后一株",
 ]
 const OVERHEAD_PLANET_NAME := "B-612。"
-const OVERHEAD_SUNSET := "人在忧伤的时候，就喜欢看日落。"
+const SUNSET_OVERHEAD_LINES: PackedStringArray = [
+	"人在忧伤的时候，就喜欢看日落。",
+	"有一天小王子看了二十多次日落",
+]
 
 const _PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")
 const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")

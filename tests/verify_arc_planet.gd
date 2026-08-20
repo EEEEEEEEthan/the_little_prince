@@ -1886,10 +1886,10 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story._has_played_first_sunset_narration:
 		printerr("跨过日落应播出第一次日落叙事")
 		failed += 1
-	if B612Lines.OVERHEAD_SUNSET.is_empty():
+	if B612Lines.SUNSET_OVERHEAD_LINES.is_empty():
 		printerr("第一次日落应有头顶叙事")
 		failed += 1
-	if B612Lines.OVERHEAD_SUNSET.contains("该走了"):
+	if "".join(B612Lines.SUNSET_OVERHEAD_LINES).contains("该走了"):
 		printerr("日落叙事不应变成离星任务提示")
 		failed += 1
 	story._has_played_first_sunset_narration = false
@@ -2101,7 +2101,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += 1
 	var story_blob := (
 			"".join(B612Lines.OPENING_OVERHEAD_LINES)
-			+ B612Lines.OVERHEAD_SUNSET
+			+ "".join(B612Lines.SUNSET_OVERHEAD_LINES)
 			+ B612Lines.pull_shoot(0)
 			+ B612Lines.clean_volcano(false, 0)
 			+ tend_blob

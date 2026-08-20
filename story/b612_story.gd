@@ -153,7 +153,8 @@ func _play_first_sunset_cinematic() -> void:
 	_lock_input()
 	await get_tree().create_timer(SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS).timeout
 	await _tween_game_camera_offset_y(-SUNSET_CAMERA_LIFT_PIXELS, SUNSET_CAMERA_LIFT_SECONDS)
-	await _play_overhead(B612Lines.OVERHEAD_SUNSET)
+	for sunset_overhead_line in B612Lines.SUNSET_OVERHEAD_LINES:
+		await _play_overhead(sunset_overhead_line)
 	await get_tree().create_timer(SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS).timeout
 	is_blocking_input = false
 	await _tween_game_camera_offset_y(0.0, SUNSET_CAMERA_LIFT_SECONDS)
