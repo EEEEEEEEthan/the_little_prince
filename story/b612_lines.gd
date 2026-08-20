@@ -2,9 +2,11 @@ class_name B612Lines
 extends RefCounted
 ## B612 剧情台词：对话框与头顶侧写。
 
+const OPENING_OVERHEAD_LINES: PackedStringArray = [
+	"B-612。走几步，天就会再红一次。",
+	"有些嫩芽，跟花长得像。看见了，就要拔掉。",
+]
 const OVERHEAD_PLANET_NAME := "B-612。"
-const OVERHEAD_WANDER := "B-612。走几步，天就会再红一次。"
-const OVERHEAD_PULL_HINT := "有些嫩芽，跟花长得像。看见了，就要拔掉。"
 const OVERHEAD_SUNSET := "人在忧伤的时候，就喜欢看日落。"
 
 const _PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")

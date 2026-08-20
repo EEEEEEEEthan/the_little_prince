@@ -17,6 +17,8 @@ const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
 const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const FADE_TO_BLACK_SECONDS := 1.2
+const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
+const OPENING_OVERHEAD_GAP_SECONDS := 2.0
 
 @export var auto_start: bool = true
 
@@ -62,8 +64,13 @@ func start() -> void:
 	_lock_input()
 	await _play_dialogue(B612Lines.opening_rose())
 	is_blocking_input = false
-	await _play_overhead(B612Lines.OVERHEAD_WANDER)
-	await _play_overhead(B612Lines.OVERHEAD_PULL_HINT)
+	if not skip_cinematics:
+		await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
+		var opening_overhead_lines := B612Lines.OPENING_OVERHEAD_LINES
+		for line_index in opening_overhead_lines.size():
+			await _play_overhead(opening_overhead_lines[line_index])
+			if line_index < opening_overhead_lines.size() - 1:
+				await get_tree().create_timer(OPENING_OVERHEAD_GAP_SECONDS).timeout
 	beat = Beat.PULL_SHOOTS
 
 
