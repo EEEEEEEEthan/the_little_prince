@@ -309,11 +309,11 @@ func _check_static_assets() -> int:
 		failed += 1
 	if zenith_gradient != null and horizon_gradient != null:
 		var zenith_cases := [
-			[0.0, Color(0.01, 0.01, 0.04), "午夜天顶"],
-			[0.25, Color(1.0, 0.7, 0.66), "日出天顶"],
-			[0.5, Color(0.36, 0.6, 0.95), "正午天顶"],
-			[0.75, Color(1.0, 0.3, 0.12), "日落天顶"],
-			[1.0, Color(0.01, 0.01, 0.04), "午夜天顶"],
+			[0.0, Color(0.1646875, 0.1178125, 0.136875), "午夜天顶"],
+			[0.25, Color(0.48663607, 0.59763044, 0.84331489), "日出天顶"],
+			[0.5, Color(0.45926034, 0.61566353, 0.90543872), "正午天顶"],
+			[0.75, Color(0.35299647, 0.35156181, 0.45303002), "日落天顶"],
+			[1.0, Color(0.16470589, 0.11764706, 0.13725491), "午夜天顶"],
 		]
 		for item in zenith_cases:
 			var got: Color = zenith_gradient.gradient.sample(item[0])
