@@ -17,6 +17,7 @@ const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const FADE_TO_BLACK_SECONDS := 1.2
 const OPENING_MOVE_SPEED_SCALE := 0.8
+const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
 const SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS := 0.3
 const SUNSET_CAMERA_LIFT_SECONDS := 1.0
 const SUNSET_CAMERA_LIFT_PIXELS := 16.0
@@ -212,7 +213,9 @@ func _is_current_objective(prop: SurfaceProp) -> bool:
 	if prop.is_consumed:
 		return false
 	match beat:
-		Beat.COVER_ROSE, Beat.FAREWELL:
+		Beat.COVER_ROSE:
+			return prop.kind == SurfaceProp.Kind.ROSE and not _glass_globe().visible
+		Beat.FAREWELL:
 			return prop.kind == SurfaceProp.Kind.ROSE
 		Beat.PULL_SHOOTS:
 			return prop.kind == SurfaceProp.Kind.BAOBAB
@@ -224,7 +227,18 @@ func _finish_opening_cover() -> void:
 	_glass_globe().visible = true
 	player.can_move_right = true
 	is_blocking_input = false
-	beat = Beat.PULL_SHOOTS
+	if skip_cinematics:
+		beat = Beat.PULL_SHOOTS
+		return
+	_play_opening_rose_overhead()
+
+
+func _play_opening_rose_overhead() -> void:
+	await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
+	for opening_overhead_line in B612Lines.OPENING_OVERHEAD_LINES:
+		await _play_overhead(opening_overhead_line)
+	if beat == Beat.COVER_ROSE:
+		beat = Beat.PULL_SHOOTS
 
 
 func _lock_input() -> void:

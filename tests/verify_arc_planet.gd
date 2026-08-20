@@ -1766,15 +1766,18 @@ func _check_opening_cover_sequence(story: B612Story) -> int:
 	if glass_globe.visible:
 		printerr("按 A 前玻璃罩不应出现")
 		failed += 1
-	story.skip_cinematics = true
+	var cover_msec := Time.get_ticks_msec()
 	if not story.try_handle_interact(rose):
 		printerr("按 A 应罩上玻璃罩")
 		failed += 1
 	if not glass_globe.visible:
 		printerr("按 A 后应罩上玻璃罩")
 		failed += 1
-	if story.beat != B612Story.Beat.PULL_SHOOTS:
-		printerr("罩上玻璃罩后应进入拔苗，实际 %s" % story.beat)
+	if story.beat != B612Story.Beat.COVER_ROSE:
+		printerr("罩上玻璃罩后应先播旧开场侧写，实际 %s" % story.beat)
+		failed += 1
+	if story.is_blocking_input:
+		printerr("罩上玻璃罩后应能走动")
 		failed += 1
 	if not story.player.can_move_right:
 		printerr("罩上玻璃罩后应能向右走")
@@ -1782,6 +1785,74 @@ func _check_opening_cover_sequence(story: B612Story) -> int:
 	if story.player.can_move_left:
 		printerr("罩上玻璃罩后仍只能向右走")
 		failed += 1
+	if story.accepts_interact(rose):
+		printerr("罩上玻璃罩后玫瑰不应再交互")
+		failed += 1
+	story.planet.angular_velocity = 0.0
+	Input.action_press("move_right")
+	story.player._physics_process(0.2)
+	Input.action_release("move_right")
+	if story.planet.angular_velocity <= 0.001:
+		printerr("罩上玻璃罩后按右应恢复自转")
+		failed += 1
+	var played_overhead_lines: PackedStringArray = []
+	var line_started_msec: Array[int] = []
+	var pull_deadline_msec := cover_msec + 25000
+	while (
+			story.beat == B612Story.Beat.COVER_ROSE
+			and Time.get_ticks_msec() < pull_deadline_msec
+	):
+		if overhead.visible:
+			if (
+					played_overhead_lines.is_empty()
+					or played_overhead_lines[played_overhead_lines.size() - 1] != overhead_body.text
+			):
+				played_overhead_lines.append(overhead_body.text)
+				line_started_msec.append(Time.get_ticks_msec())
+		await process_frame
+	if story.beat != B612Story.Beat.PULL_SHOOTS:
+		printerr("开场头顶叙事播完后应进入拔苗，实际 %s" % story.beat)
+		failed += 1
+	if played_overhead_lines != B612Lines.OPENING_OVERHEAD_LINES:
+		printerr(
+				"罩上玻璃罩后应按旧开场侧写逐句播放，实际 %s"
+				% ",".join(played_overhead_lines)
+		)
+		failed += 1
+	if line_started_msec.is_empty():
+		printerr("罩上玻璃罩后应弹出头顶叙事")
+		failed += 1
+	else:
+		var start_delay_msec := line_started_msec[0] - cover_msec
+		var expected_start_delay_msec := int(
+				B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS * 1000.0
+		)
+		if absi(start_delay_msec - expected_start_delay_msec) > 500:
+			printerr(
+					"罩上后头顶叙事起始延迟应为约 %d ms，实际 %d ms"
+					% [expected_start_delay_msec, start_delay_msec]
+			)
+			failed += 1
+	if line_started_msec.size() >= 2:
+		var first_line := B612Lines.OPENING_OVERHEAD_LINES[0]
+		var expected_interval_msec := int(
+				(
+					maxi(first_line.length() - 1, 0)
+					* OverheadTypewriter.TYPEWRITER_INTERVAL
+					+ OverheadTypewriter.HOLD_DURATION_SECONDS
+					+ OverheadTypewriter.FADE_DURATION_SECONDS
+					+ OverheadTypewriter.QUEUE_GAP_SECONDS
+				)
+				* 1000.0
+		)
+		var actual_interval_msec := line_started_msec[1] - line_started_msec[0]
+		if absi(actual_interval_msec - expected_interval_msec) > 500:
+			printerr(
+					"开场头顶叙事间隔应为约 %d ms，实际 %d ms"
+					% [expected_interval_msec, actual_interval_msec]
+			)
+			failed += 1
+	story.skip_cinematics = true
 	return failed
 
 
@@ -1878,6 +1949,15 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += 1
 	if B612Lines.OPENING_OVERHEAD_VANITY.is_empty():
 		printerr("开场对白后应立即有侧写")
+		failed += 1
+	if B612Lines.OPENING_OVERHEAD_LINES.is_empty():
+		printerr("罩上玻璃罩后应有旧开场头顶叙事")
+		failed += 1
+	if not is_equal_approx(B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS, 3.0):
+		printerr(
+				"罩上后头顶叙事起始延迟应为 3 秒，实际 %s"
+				% B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS
+		)
 		failed += 1
 	if not is_equal_approx(OverheadTypewriter.QUEUE_GAP_SECONDS, 1.0):
 		printerr(
@@ -2050,6 +2130,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += 1
 	var story_blob := (
 			B612Lines.OPENING_OVERHEAD_VANITY
+			+ "".join(B612Lines.OPENING_OVERHEAD_LINES)
 			+ "".join(B612Lines.SUNSET_OVERHEAD_LINES)
 			+ B612Lines.pull_shoot(0)
 			+ farewell_blob

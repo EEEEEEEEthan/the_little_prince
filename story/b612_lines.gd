@@ -3,6 +3,10 @@ extends RefCounted
 ## B612 剧情台词：对话框与头顶侧写。
 
 const OPENING_OVERHEAD_VANITY := "小王子看出了这花儿不太谦逊，可是她确实丽姿动人"
+const OPENING_OVERHEAD_LINES: PackedStringArray = [
+	"小王子很喜欢玫瑰花",
+	"可是玫瑰的傲娇，尖刺，总是让他恼火",
+]
 const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
 	"小王子的星球总会长出猴面包树",
 	"小王子每天都要拔掉猴面包树苗",
