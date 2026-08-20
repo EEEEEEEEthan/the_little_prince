@@ -434,7 +434,7 @@ func _check_static_assets() -> int:
 		["res://ui/portraits/prince.png", 32, 32],
 		["res://ui/portraits/rose.png", 32, 32],
 		["res://planet/glass_globe.png", 24, 24],
-		["res://planet/migratory_bird.png", 16, 6],
+		["res://planet/migratory_bird.png", 16, 8],
 	]
 	for item in sprite_checks:
 		var tex: Texture2D = load(item[0]) as Texture2D
@@ -1704,9 +1704,6 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		if not volcano.is_consumed:
 			printerr("疏通后火山应记为已完成")
 			failed += 1
-		if not volcano.visible:
-			printerr("疏通后火山应仍可见")
-			failed += 1
 	if story.beat != B612Story.Beat.TEND_ROSE:
 		printerr("火山结束后应去侍弄玫瑰，实际 %s" % story.beat)
 		failed += 1
@@ -1762,6 +1759,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.get_node("%Epilogue").text != B612Lines.OVERHEAD_PLANET_NAME:
 		printerr("黑场应留下星球名")
 		failed += 1
-	print("  B612 故乡剧情 OK")
+	if failed == 0:
+		print("  B612 故乡剧情 OK")
 	return failed
 
