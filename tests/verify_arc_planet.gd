@@ -1781,6 +1781,13 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if scene.get_node_or_null("GameView/GameViewport/B612Story/MigratoryFlock") == null:
 		printerr("找不到 MigratoryFlock")
 		failed += 1
+	var camera := scene.get_node_or_null("GameView/GameViewport/GameCamera") as Camera2D
+	if camera == null:
+		printerr("找不到 GameCamera")
+		return failed + 1
+	if camera.anchor_mode != Camera2D.ANCHOR_MODE_FIXED_TOP_LEFT:
+		printerr("GameCamera 应固定左上，避免改变默认构图")
+		failed += 1
 	story.skip_cinematics = true
 	await story.start()
 	if story.beat != B612Story.Beat.PULL_SHOOTS:
@@ -1885,6 +1892,40 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if B612Lines.OVERHEAD_SUNSET.contains("该走了"):
 		printerr("日落叙事不应变成离星任务提示")
 		failed += 1
+	story._has_played_first_sunset_narration = false
+	story._is_first_sunset_narration_pending = false
+	story._last_sky_phase = SkyPhase.NOON_PHASE
+	story.skip_cinematics = false
+	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
+	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
+	await process_frame
+	if not story.is_blocking_input:
+		printerr("日落演出时应禁用输入")
+		failed += 1
+	if not is_equal_approx(camera.offset.y, 0.0):
+		printerr("日落锁输入后应先停顿再抬镜头，实际 offset.y=%s" % camera.offset.y)
+		failed += 1
+	await create_timer(B612Story.SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS).timeout
+	await create_timer(B612Story.SUNSET_CAMERA_LIFT_SECONDS).timeout
+	if absf(camera.offset.y + B612Story.SUNSET_CAMERA_LIFT_PIXELS) > 1.0:
+		printerr(
+				"日落镜头应上抬 %s，实际 %s"
+				% [B612Story.SUNSET_CAMERA_LIFT_PIXELS, camera.offset.y]
+		)
+		failed += 1
+	var sunset_cinematic_deadline_msec := Time.get_ticks_msec() + 20000
+	while (
+			(story.is_blocking_input or absf(camera.offset.y) > 0.5)
+			and Time.get_ticks_msec() < sunset_cinematic_deadline_msec
+	):
+		await process_frame
+	if story.is_blocking_input:
+		printerr("日落演出结束后应恢复输入")
+		failed += 1
+	if absf(camera.offset.y) > 0.5:
+		printerr("日落演出结束后镜头应恢复，实际 offset.y=%s" % camera.offset.y)
+		failed += 1
+	story.skip_cinematics = true
 
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []

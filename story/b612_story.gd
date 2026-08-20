@@ -19,6 +19,10 @@ const DEPART_LIFT_SECONDS := 2.4
 const FADE_TO_BLACK_SECONDS := 1.2
 const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
 const OPENING_MOVE_SPEED_SCALE := 0.8
+const SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS := 0.3
+const SUNSET_CAMERA_LIFT_SECONDS := 0.5
+const SUNSET_CAMERA_LIFT_PIXELS := 16.0
+const SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS := 0.5
 
 @export var auto_start: bool = true
 
@@ -140,7 +144,27 @@ func try_first_sunset_narration(phase: float) -> void:
 	_has_played_first_sunset_narration = true
 	player.can_move_left = true
 	player.move_speed_scale = 1.0
-	_play_overhead(B612Lines.OVERHEAD_SUNSET)
+	_play_first_sunset_cinematic()
+
+
+func _play_first_sunset_cinematic() -> void:
+	if skip_cinematics:
+		return
+	_lock_input()
+	await get_tree().create_timer(SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS).timeout
+	await _tween_game_camera_offset_y(-SUNSET_CAMERA_LIFT_PIXELS, SUNSET_CAMERA_LIFT_SECONDS)
+	await _play_overhead(B612Lines.OVERHEAD_SUNSET)
+	await get_tree().create_timer(SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS).timeout
+	is_blocking_input = false
+	await _tween_game_camera_offset_y(0.0, SUNSET_CAMERA_LIFT_SECONDS)
+
+
+func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float) -> void:
+	var camera_tween := create_tween()
+	camera_tween.set_trans(Tween.TRANS_CUBIC)
+	camera_tween.set_ease(Tween.EASE_IN_OUT)
+	camera_tween.tween_property(%GameCamera, "offset:y", target_offset_y, duration_seconds)
+	await camera_tween.finished
 
 
 func _play_interact(prop: SurfaceProp) -> void:
