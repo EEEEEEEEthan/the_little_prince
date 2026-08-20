@@ -16,9 +16,12 @@ static func angle_to_phase(angle: float) -> float:
 	var a := fposmod(angle, TAU)
 	var dawn := WorldConstants.DAY_HALF_ARC
 	var night := PI - dawn
+	# Node2D.rotation 常把 π 归一成 -π，fposmod 后可能略大于 π。
+	if is_equal_approx(a, PI):
+		return 0.0
 	if a <= dawn:
 		return NOON_PHASE - SUNRISE_PHASE * (a / dawn)
-	if a <= PI:
+	if a < PI:
 		return SUNRISE_PHASE - SUNRISE_PHASE * ((a - dawn) / night)
 	if a <= TAU - dawn:
 		return 1.0 - SUNRISE_PHASE * ((a - PI) / night)
