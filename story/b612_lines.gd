@@ -3,8 +3,8 @@ extends RefCounted
 ## B612 剧情台词：对话框与头顶侧写。
 
 const OPENING_OVERHEAD_LINES: PackedStringArray = [
-	"B-612。走几步，天就会再红一次。",
-	"有些嫩芽，跟花长得像。看见了，就要拔掉。",
+	"小王子很喜欢玫瑰花",
+	"可是玫瑰的傲娇，尖刺，总是让他恼火"
 ]
 const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
 	"刚冒尖的时候，几乎像一朵玫瑰。",
@@ -22,9 +22,9 @@ const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
 
 static func opening_rose() -> Array[DialogueLine]:
 	return _pack([
-		_rose("我刚醒来。请原谅，花瓣还有点乱。"),
+		_rose("我刚刚睡醒，真对不起，瞧我的头发还是乱蓬蓬的。。。"),
 		_prince("你很好看。"),
-		_rose("给我弄点水来。要晒过的。"),
+		_rose("是吧，我是与太阳同时出生的。。。"),
 	])
 
 
