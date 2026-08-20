@@ -14,7 +14,7 @@ enum Beat {
 
 const SHOOT_DIALOGUE_ID := &"baobab_shoot"
 const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
-const SUNSET_RED_PHASE_END := 0.80
+const SUNSET_RED_PHASE_END := 0.88
 const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const BAOBAB_PULL_FADE_SECONDS := 0.28
@@ -28,6 +28,7 @@ var is_blocking_input: bool = false
 var beat: Beat = Beat.OPENING
 var pulled_shoot_count: int = 0
 var cleaned_volcano_count: int = 0
+var _last_sky_phase: float = SkyPhase.NOON_PHASE
 var _walk_chatter_generation: int = 0
 var _walk_line_index: int = 0
 
@@ -108,6 +109,7 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 			return empty
 		Beat.TEND_ROSE:
 			beat = Beat.WATCH_SUNSET
+			_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 			if not _glass_globe().visible:
 				_glass_globe().visible = true
 			return B612Lines.tend_rose()
@@ -123,7 +125,14 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 func advance_sunset_if_ready(phase: float) -> void:
 	if beat != Beat.WATCH_SUNSET:
 		return
-	if phase < SkyPhase.SUNSET_PHASE or phase > SUNSET_RED_PHASE_END:
+	var crossed_into_red := (
+			_last_sky_phase < SkyPhase.SUNSET_PHASE and phase >= SkyPhase.SUNSET_PHASE
+	)
+	_last_sky_phase = phase
+	if (
+			not crossed_into_red
+			and (phase < SkyPhase.SUNSET_PHASE or phase > SUNSET_RED_PHASE_END)
+	):
 		return
 	beat = Beat.FAREWELL
 	_lock_input()
