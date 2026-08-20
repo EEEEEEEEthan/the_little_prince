@@ -12,6 +12,9 @@
 [ext_resource type="Script" uid="uid://ciwt72d3i6fwy" path="res://interact/interaction.gd" id="10_interact"]
 [ext_resource type="Script" uid="uid://pqblm1m4kgms" path="res://player/scarf.gd" id="11_scarf"]
 [ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
+[ext_resource type="Script" uid="uid://8xqecv8g6cek" path="res://story/b612_story.gd" id="13_story"]
+[ext_resource type="Script" uid="uid://wt1e4t3x7gyv" path="res://story/migratory_flock.gd" id="14_flock"]
+[ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
 shader = ExtResource("5_palette_shader")
@@ -79,3 +82,39 @@ unique_name_in_owner = true
 [node name="Interaction" type="Node" parent="GameView/GameViewport" unique_id=1838989427]
 unique_name_in_owner = true
 script = ExtResource("10_interact")
+
+[node name="B612Story" type="Node" parent="GameView/GameViewport"]
+unique_name_in_owner = true
+script = ExtResource("13_story")
+
+[node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport/B612Story"]
+unique_name_in_owner = true
+z_index = 180
+script = ExtResource("14_flock")
+
+[node name="FadeLayer" type="CanvasLayer" parent="GameView/GameViewport/B612Story"]
+layer = 20
+
+[node name="Dim" type="ColorRect" parent="GameView/GameViewport/B612Story/FadeLayer"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Epilogue" type="Label" parent="GameView/GameViewport/B612Story/FadeLayer"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.819608, 1)
+theme_override_fonts/font = ExtResource("15_font")
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+vertical_alignment = 1

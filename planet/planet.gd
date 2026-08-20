@@ -118,12 +118,14 @@ func move_player(direction: float, delta: float) -> void:
 
 
 ## 弧顶附近最近的可互动物体；超出 INTERACT_RANGE_PX 则返回 null。
-func find_nearest_interactable() -> SurfaceProp:
+func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceProp:
 	var max_arc := WorldConstants.INTERACT_RANGE_PX / radius
 	var best: SurfaceProp = null
 	var best_diff := max_arc
 	for prop in surface_props:
 		if not prop.is_interactable():
+			continue
+		if should_accept.is_valid() and not should_accept.call(prop):
 			continue
 		var diff := absf(angle_difference(player_angle, prop.rotation))
 		if diff <= best_diff:

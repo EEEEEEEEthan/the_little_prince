@@ -5,11 +5,12 @@ extends Node
 @onready var planet: Planet = %Planet
 @onready var dialogue: DialogueBox = %DialogueBox
 @onready var prompt: InteractPrompt = %InteractPrompt
+@onready var story: B612Story = %B612Story
 
 var _focus: SurfaceProp
 
 func is_busy() -> bool:
-	return dialogue.is_open()
+	return dialogue.is_open() or story.is_blocking_input
 
 func _process(_delta: float) -> void:
 	if is_busy():
@@ -17,10 +18,16 @@ func _process(_delta: float) -> void:
 		return
 	if Input.is_action_just_pressed(&"interact"):
 		_on_interact()
-	_set_focus(planet.find_nearest_interactable())
+	if story.is_active:
+		_set_focus(planet.find_nearest_interactable(story.accepts_interact))
+	else:
+		_set_focus(planet.find_nearest_interactable())
 
 func _on_interact() -> void:
 	if _focus == null:
+		return
+	if story.try_handle_interact(_focus):
+		_set_focus(null)
 		return
 	var lines := DialogueCatalog.lines_for_id(_focus.get_dialogue_id())
 	if lines.is_empty():

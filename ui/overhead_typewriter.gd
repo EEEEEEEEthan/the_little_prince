@@ -16,7 +16,7 @@ const AMBIENT_LINES: PackedStringArray = [
 	"有一颗星，没有眨眼。",
 ]
 
-@export var play_on_ready: bool = true
+@export var play_on_ready: bool = false
 
 var _play_generation: int = 0
 var _fade_tween: Tween

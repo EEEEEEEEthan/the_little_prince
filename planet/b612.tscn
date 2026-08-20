@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://duk1gaik3krys" path="res://planet/volcano.png" id="8_volcano"]
 [ext_resource type="Texture2D" uid="uid://bblja4kg8jkmg" path="res://planet/baobab.png" id="9_baobab"]
 [ext_resource type="Texture2D" uid="uid://cpalegraypuff" path="res://planet/pale_gray_puff.png" id="12_puff"]
+[ext_resource type="Texture2D" uid="uid://6xcbiii2i2t3" path="res://planet/glass_globe.png" id="13_globe"]
 
 [sub_resource type="Gradient" id="Gradient_volcano_smoke"]
 offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
@@ -80,6 +81,12 @@ texture = ExtResource("7_rose")
 offset = Vector2(0, -9.2)
 script = ExtResource("3_surface_prop")
 
+[node name="GlassGlobe" type="Sprite2D" parent="Surface/Rose"]
+texture_filter = 1
+z_index = 2
+texture = ExtResource("13_globe")
+offset = Vector2(0, -11)
+
 [node name="Baobab" type="Sprite2D" parent="Surface" unique_id=1796814090]
 texture_filter = 1
 position = Vector2(-86.809277, -9.793828)
@@ -115,6 +122,7 @@ frame = 2
 script = ExtResource("3_surface_prop")
 kind = 2
 variant = 2
+dialogue_id = &"baobab_shoot"
 
 [node name="Baobab4" type="Sprite2D" parent="Surface" unique_id=914275009]
 texture_filter = 1
@@ -139,6 +147,7 @@ frame = 1
 script = ExtResource("3_surface_prop")
 kind = 2
 variant = 1
+dialogue_id = &"baobab_shoot"
 
 [node name="Baobab6" type="Sprite2D" parent="Surface" unique_id=80811792]
 texture_filter = 1
@@ -257,6 +266,7 @@ offset = Vector2(0, -13.44)
 hframes = 4
 script = ExtResource("3_surface_prop")
 kind = 2
+dialogue_id = &"baobab_shoot"
 
 [node name="Baobab16" type="Sprite2D" parent="Surface" unique_id=867214092]
 texture_filter = 1
