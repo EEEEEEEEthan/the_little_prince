@@ -9,14 +9,14 @@ extends Node2D
 	set(value):
 		radius = value
 
-@export var body_texture: Texture2D = preload("res://planet/body.png"):
+@export var body_texture: Texture2D:
 	set(value):
 		body_texture = value
 		if not is_node_ready():
 			await ready
 		%Body.texture = body_texture
 
-@export var starfield_texture: Texture2D = preload("res://planet/starfield.png"):
+@export var starfield_texture: Texture2D:
 	set(value):
 		starfield_texture = value
 		if not is_node_ready():
@@ -30,7 +30,7 @@ extends Node2D
 			await ready
 		%Sky.star_rotation_speed = star_rotation_speed
 
-@export var cloud_texture: Texture2D = preload("res://planet/white_lavender_puff_frames.png"):
+@export var cloud_texture: Texture2D:
 	set(value):
 		cloud_texture = value
 		if not is_node_ready():
