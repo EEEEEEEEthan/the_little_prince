@@ -13,8 +13,8 @@ enum Beat {
 }
 
 const SHOOT_DIALOGUE_ID := &"baobab_shoot"
-const SHOOT_COUNT := 3
-const SUNSET_PHASE_SLACK := 0.08
+const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
+const SUNSET_PHASE_SLACK := 0.03
 const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const BAOBAB_PULL_FADE_SECONDS := 0.28
@@ -29,6 +29,8 @@ var beat: Beat = Beat.OPENING
 var pulled_shoot_count: int = 0
 var cleaned_volcano_count: int = 0
 var _must_leave_sunset_band: bool = false
+var _walk_chatter_generation: int = 0
+var _walk_line_index: int = 0
 
 @onready var planet: Planet = %Planet
 @onready var player: Player = %Player
@@ -55,6 +57,8 @@ func start() -> void:
 	is_active = true
 	pulled_shoot_count = 0
 	cleaned_volcano_count = 0
+	_walk_chatter_generation = 0
+	_walk_line_index = 0
 	beat = Beat.OPENING
 	is_blocking_input = true
 	_must_leave_sunset_band = false
@@ -62,9 +66,9 @@ func start() -> void:
 	await _play_overhead(B612Lines.OVERHEAD_MY_PLANET)
 	await _play_dialogue(B612Lines.opening())
 	beat = Beat.PULL_SHOOTS
+	await _play_overhead(B612Lines.OVERHEAD_PULL_HINT)
 	is_blocking_input = false
-	if not skip_cinematics:
-		overhead.play(B612Lines.OVERHEAD_PULL_HINT)
+	_begin_walk_chatter()
 
 
 func accepts_interact(prop: SurfaceProp) -> bool:
@@ -76,6 +80,7 @@ func accepts_interact(prop: SurfaceProp) -> bool:
 func try_handle_interact(prop: SurfaceProp) -> bool:
 	if not accepts_interact(prop):
 		return false
+	_walk_chatter_generation += 1
 	is_blocking_input = true
 	_play_interact(prop)
 	return true
@@ -90,11 +95,9 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 			prop.is_consumed = true
 			prop.visible = false
 			pulled_shoot_count += 1
-			var remaining_shoot_count := SHOOT_COUNT - pulled_shoot_count
-			if remaining_shoot_count > 0:
-				return B612Lines.pull_shoot(remaining_shoot_count)
-			beat = Beat.CLEAN_VOLCANOES
-			return B612Lines.shoots_finished()
+			if pulled_shoot_count >= SHOOT_COUNT:
+				beat = Beat.CLEAN_VOLCANOES
+			return empty
 		Beat.CLEAN_VOLCANOES:
 			prop.is_consumed = true
 			cleaned_volcano_count += 1
@@ -102,17 +105,14 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 				var smoke := child as CPUParticles2D
 				if smoke != null:
 					smoke.emitting = false
-			var lines := B612Lines.clean_volcano(
-					prop.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT
-			)
 			if cleaned_volcano_count >= WorldConstants.VOLCANO_COUNT:
 				beat = Beat.TEND_ROSE
-				lines.append_array(B612Lines.volcanoes_finished())
-			return lines
+			return empty
 		Beat.TEND_ROSE:
 			beat = Beat.WATCH_SUNSET
-			_glass_globe().visible = true
 			_must_leave_sunset_band = true
+			if not _glass_globe().visible:
+				_glass_globe().visible = true
 			return B612Lines.tend_rose()
 		Beat.FAREWELL:
 			prop.is_consumed = true
@@ -134,25 +134,47 @@ func advance_sunset_if_ready(phase: float) -> void:
 	if not in_sunset_band:
 		return
 	beat = Beat.FAREWELL
-	flock.appear()
 	is_blocking_input = true
 	_play_sunset_reached()
 
 
 func _play_interact(prop: SurfaceProp) -> void:
-	if not skip_cinematics and prop.dialogue_id == SHOOT_DIALOGUE_ID:
+	if beat == Beat.TEND_ROSE:
+		await _play_dialogue(B612Lines.tend_rose_until_cover())
+		_glass_globe().visible = true
+		await _play_dialogue(B612Lines.tend_rose_after_cover())
+		apply_interact(prop)
+		await _play_overhead(B612Lines.OVERHEAD_ROSE_THANKLESS)
+		await _play_overhead(B612Lines.OVERHEAD_WALK_TO_SUNSET)
+		is_blocking_input = false
+		return
+	if beat == Beat.FAREWELL:
+		await _play_dialogue(B612Lines.farewell_until_uncover())
+		_glass_globe().visible = false
+		await _play_dialogue(B612Lines.farewell_after_uncover())
+		apply_interact(prop)
+		await _play_departure()
+		return
+	if not skip_cinematics and prop.kind == SurfaceProp.Kind.BAOBAB:
 		var pull_tween := create_tween()
 		pull_tween.tween_property(prop, "modulate:a", 0.0, BAOBAB_PULL_FADE_SECONDS)
 		await pull_tween.finished
-	var lines := apply_interact(prop)
-	await _play_dialogue(lines)
-	if beat == Beat.WATCH_SUNSET:
-		await _play_overhead(B612Lines.OVERHEAD_ROSE_THANKLESS)
-		await _play_overhead(B612Lines.OVERHEAD_WALK_TO_SUNSET)
-	if beat == Beat.DEPART:
-		await _play_departure()
-		return
+	var was_active_volcano := (
+			prop.kind == SurfaceProp.Kind.VOLCANO
+			and prop.variant == WorldConstants.VOLCANO_ACTIVE_VARIANT
+	)
+	apply_interact(prop)
+	if prop.kind == SurfaceProp.Kind.BAOBAB:
+		await _play_overhead(B612Lines.pull_shoot(SHOOT_COUNT - pulled_shoot_count))
+	elif prop.kind == SurfaceProp.Kind.VOLCANO:
+		await _play_overhead(
+				B612Lines.clean_volcano(
+						was_active_volcano,
+						WorldConstants.VOLCANO_COUNT - cleaned_volcano_count
+				)
+		)
 	is_blocking_input = false
+	_begin_walk_chatter()
 
 
 func _play_sunset_reached() -> void:
@@ -165,13 +187,12 @@ func _play_sunset_reached() -> void:
 
 
 func _play_departure() -> void:
-	flock.appear()
 	if skip_cinematics:
 		player.modulate.a = 0.0
 		%Dim.color = Color(0, 0, 0, 1)
 		%Epilogue.text = B612Lines.OVERHEAD_PLANET_NAME
 		return
-	await flock.gather_to_apex(player.global_position)
+	await flock.arrive_from_offscreen(player.global_position)
 	flock.lift(DEPART_LIFT_PIXELS, DEPART_LIFT_SECONDS)
 	var lift_tween := create_tween().set_parallel(true)
 	lift_tween.tween_property(
@@ -200,12 +221,60 @@ func _play_overhead(display_text: String) -> void:
 	await overhead.play(display_text)
 
 
+func _begin_walk_chatter() -> void:
+	_walk_chatter_generation += 1
+	var generation := _walk_chatter_generation
+	if skip_cinematics or not is_active:
+		return
+	var pool: PackedStringArray
+	match beat:
+		Beat.PULL_SHOOTS:
+			pool = B612Lines.shoot_walk_lines()
+		Beat.CLEAN_VOLCANOES:
+			pool = B612Lines.volcano_walk_lines()
+		Beat.TEND_ROSE:
+			pool = B612Lines.rose_walk_lines()
+		_:
+			return
+	var walk_seconds := _seconds_to_nearest_objective()
+	var line_count := 1 if walk_seconds < 7.0 else 2
+	if walk_seconds < 2.8 or pool.is_empty():
+		return
+	var lines: PackedStringArray = []
+	var picked_line_count := 0
+	while picked_line_count < line_count:
+		lines.append(pool[_walk_line_index % pool.size()])
+		_walk_line_index += 1
+		picked_line_count += 1
+	var slot_seconds := walk_seconds / float(lines.size() + 1)
+	for line in lines:
+		await get_tree().create_timer(slot_seconds).timeout
+		if (
+				generation != _walk_chatter_generation
+				or is_blocking_input
+				or not is_inside_tree()
+		):
+			return
+		overhead.play(line)
+
+
+func _seconds_to_nearest_objective() -> float:
+	var nearest_arc := TAU
+	for prop in planet.surface_props:
+		if not _is_current_objective(prop):
+			continue
+		var diff := absf(angle_difference(planet.player_angle, prop.rotation))
+		if diff < nearest_arc:
+			nearest_arc = diff
+	return nearest_arc * planet.radius / WorldConstants.PLAYER_SPEED
+
+
 func _is_current_objective(prop: SurfaceProp) -> bool:
 	if prop.is_consumed:
 		return false
 	match beat:
 		Beat.PULL_SHOOTS:
-			return prop.dialogue_id == SHOOT_DIALOGUE_ID
+			return prop.kind == SurfaceProp.Kind.BAOBAB
 		Beat.CLEAN_VOLCANOES:
 			return prop.kind == SurfaceProp.Kind.VOLCANO
 		Beat.TEND_ROSE, Beat.FAREWELL:

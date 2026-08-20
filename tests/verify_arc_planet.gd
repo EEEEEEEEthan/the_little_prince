@@ -315,7 +315,7 @@ func _check_static_assets() -> int:
 			[0.0, Color(0.1646875, 0.1178125, 0.136875), "午夜天顶"],
 			[0.25, Color(0.48663607, 0.59763044, 0.84331489), "日出天顶"],
 			[0.5, Color(0.45926034, 0.61566353, 0.90543872), "正午天顶"],
-			[0.75, Color(0.35299647, 0.35156181, 0.45303002), "日落天顶"],
+			[0.75, Color(0.82, 0.25, 0.16), "日落天顶"],
 			[1.0, Color(0.16470589, 0.11764706, 0.13725491), "午夜天顶"],
 		]
 		for item in zenith_cases:
@@ -334,7 +334,7 @@ func _check_static_assets() -> int:
 			[0.0, Color(0.02, 0.03, 0.08), "午夜地平线"],
 			[0.25, Color(0.45, 0.55, 0.82), "日出地平线"],
 			[0.5, Color(0.78, 0.88, 1.0), "正午地平线"],
-			[0.75, Color(0.3, 0.22, 0.42), "日落地平线"],
+			[0.75, Color(0.82, 0.32, 0.16), "日落地平线"],
 			[1.0, Color(0.02, 0.03, 0.08), "午夜地平线"],
 		]
 		for item in horizon_cases:
@@ -1251,6 +1251,9 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 				% [B612Story.SHOOT_COUNT, shoot_count]
 		)
 		failed += 1
+	if shoot_count != WorldConstants.BAOBAB_COUNT:
+		printerr("场景里每棵猴面包树都应是可拔嫩芽")
+		failed += 1
 	if active_volcano == null:
 		printerr("场景中没有活火山")
 		return failed + 1
@@ -1258,7 +1261,7 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 		printerr("场景中没有死火山")
 		return failed + 1
 
-	failed += _assert_focus(planet, baobab, &"baobab", "猴面包树")
+	failed += _assert_focus(planet, baobab, &"baobab_shoot", "猴面包树")
 	failed += _assert_focus(planet, rose, &"rose", "玫瑰")
 	failed += _assert_focus(planet, active_volcano, &"volcano_active", "活火山")
 	failed += _assert_focus(planet, dead_volcano, &"volcano_dead", "死火山")
@@ -1659,14 +1662,14 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []
 	var rose: SurfaceProp = null
-	var mature_baobab: SurfaceProp = null
 	for prop in planet.surface_props:
 		match prop.kind:
 			SurfaceProp.Kind.BAOBAB:
 				if prop.dialogue_id == B612Story.SHOOT_DIALOGUE_ID:
 					shoots.append(prop)
-				elif mature_baobab == null:
-					mature_baobab = prop
+				else:
+					printerr("猴面包树 %s 应可拔除" % prop.name)
+					failed += 1
 			SurfaceProp.Kind.VOLCANO:
 				volcanoes.append(prop)
 			SurfaceProp.Kind.ROSE:
@@ -1674,18 +1677,15 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if shoots.size() != B612Story.SHOOT_COUNT:
 		printerr("剧情嫩芽数应为 %d" % B612Story.SHOOT_COUNT)
 		return failed + 1
-	if story.accepts_interact(mature_baobab):
-		printerr("拔苗段不应选中已长大的猴面包树")
-		failed += 1
 	if not story.accepts_interact(shoots[0]):
 		printerr("拔苗段应选中嫩芽")
 		failed += 1
+	if B612Lines.pull_shoot(1).is_empty() or B612Lines.shoot_walk_lines().is_empty():
+		printerr("拔苗应有头顶台词")
+		failed += 1
 
 	for shoot in shoots:
-		var lines := story.apply_interact(shoot)
-		if lines.is_empty():
-			printerr("拔苗应有台词")
-			failed += 1
+		story.apply_interact(shoot)
 		if not shoot.is_consumed or shoot.visible:
 			printerr("拔掉的嫩芽应消耗并隐藏")
 			failed += 1
@@ -1736,8 +1736,8 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.beat != B612Story.Beat.FAREWELL:
 		printerr("日落后应进入告别，实际 %s" % story.beat)
 		failed += 1
-	if not story.flock.visible:
-		printerr("日落时应出现候鸟")
+	if story.flock.visible:
+		printerr("日落时侯鸟不应出现")
 		failed += 1
 	await process_frame
 	if story.is_blocking_input:
@@ -1746,6 +1746,16 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 
 	if B612Lines.tend_rose().size() < 2 or B612Lines.farewell().size() < 2:
 		printerr("玫瑰对白过短")
+		failed += 1
+	var asked_to_cover := false
+	for line in B612Lines.tend_rose_until_cover():
+		if line.text.contains("玻璃罩"):
+			asked_to_cover = true
+	if not asked_to_cover:
+		printerr("罩上玻璃罩前应对白提到玻璃罩")
+		failed += 1
+	if B612Lines.volcano_walk_lines().is_empty():
+		printerr("疏通火山路上应有头顶叙事")
 		failed += 1
 	story.apply_interact(rose)
 	if story.beat != B612Story.Beat.DEPART:
