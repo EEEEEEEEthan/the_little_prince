@@ -18,7 +18,7 @@ const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const FADE_TO_BLACK_SECONDS := 1.2
 const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
-const OPENING_OVERHEAD_GAP_SECONDS := 2.0
+const OPENING_MOVE_SPEED_SCALE := 0.5
 
 @export var auto_start: bool = true
 
@@ -49,7 +49,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if is_active and beat != Beat.OPENING and not _has_played_first_sunset_narration:
+	if is_active and not _has_played_first_sunset_narration:
 		try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
 
 
@@ -61,16 +61,15 @@ func start() -> void:
 	_is_first_sunset_narration_pending = false
 	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 	beat = Beat.OPENING
+	player.can_move_left = false
+	player.move_speed_scale = OPENING_MOVE_SPEED_SCALE
 	_lock_input()
 	await _play_dialogue(B612Lines.opening_rose())
 	is_blocking_input = false
 	if not skip_cinematics:
 		await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
-		var opening_overhead_lines := B612Lines.OPENING_OVERHEAD_LINES
-		for line_index in opening_overhead_lines.size():
-			await _play_overhead(opening_overhead_lines[line_index])
-			if line_index < opening_overhead_lines.size() - 1:
-				await get_tree().create_timer(OPENING_OVERHEAD_GAP_SECONDS).timeout
+		for opening_overhead_line in B612Lines.OPENING_OVERHEAD_LINES:
+			await _play_overhead(opening_overhead_line)
 	beat = Beat.PULL_SHOOTS
 
 
@@ -139,8 +138,9 @@ func try_first_sunset_narration(phase: float) -> void:
 		return
 	_is_first_sunset_narration_pending = false
 	_has_played_first_sunset_narration = true
-	_lock_input()
-	_play_first_sunset_narration()
+	player.can_move_left = true
+	player.move_speed_scale = 1.0
+	_play_overhead(B612Lines.OVERHEAD_SUNSET)
 
 
 func _play_interact(prop: SurfaceProp) -> void:
@@ -170,14 +170,6 @@ func _play_interact(prop: SurfaceProp) -> void:
 			)
 	)
 	apply_interact(prop)
-	is_blocking_input = false
-
-
-func _play_first_sunset_narration() -> void:
-	if skip_cinematics:
-		is_blocking_input = false
-		return
-	await _play_overhead(B612Lines.OVERHEAD_SUNSET)
 	is_blocking_input = false
 
 
@@ -213,7 +205,7 @@ func _play_dialogue(lines: Array[DialogueLine]) -> void:
 func _play_overhead(display_text: String) -> void:
 	if skip_cinematics or display_text.is_empty():
 		return
-	await overhead.play(display_text)
+	await overhead.play_queued(display_text)
 
 
 func _is_current_objective(prop: SurfaceProp) -> bool:

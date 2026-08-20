@@ -6,6 +6,13 @@ const OPENING_OVERHEAD_LINES: PackedStringArray = [
 	"B-612。走几步，天就会再红一次。",
 	"有些嫩芽，跟花长得像。看见了，就要拔掉。",
 ]
+const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
+	"刚冒尖的时候，几乎像一朵玫瑰。",
+	"根已经摸到土的深处。",
+	"再晚一点，整颗星球都会裂开。",
+	"土里还睡着许多。有的不该发芽。",
+	"芽尽了。喷口里，还闷着灰。",
+]
 const OVERHEAD_PLANET_NAME := "B-612。"
 const OVERHEAD_SUNSET := "人在忧伤的时候，就喜欢看日落。"
 
@@ -22,15 +29,9 @@ static func opening_rose() -> Array[DialogueLine]:
 
 
 static func pull_shoot(remaining_after_this: int) -> String:
-	if remaining_after_this <= 0:
-		return "芽尽了。喷口里，还闷着灰。"
-	const lines: PackedStringArray = [
-		"刚冒尖的时候，几乎像一朵玫瑰。",
-		"根已经摸到土的深处。",
-		"再晚一点，整颗星球都会裂开。",
-		"土里还睡着许多。有的不该发芽。",
+	return PULL_SHOOT_OVERHEAD_LINES[
+			PULL_SHOOT_OVERHEAD_LINES.size() - 1 - remaining_after_this
 	]
-	return lines[lines.size() - remaining_after_this]
 
 
 static func clean_volcano(is_active_volcano: bool, remaining_after_this: int) -> String:

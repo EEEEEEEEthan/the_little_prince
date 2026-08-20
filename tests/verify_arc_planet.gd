@@ -1202,7 +1202,55 @@ func _check_overhead_typewriter(scene: Node, planet: Planet) -> int:
 	if overhead.visible:
 		printerr("停留后应渐隐并隐藏")
 		failed += 1
+	failed += await _check_overhead_queue(overhead)
 	print("  头顶打字机 OK")
+	return failed
+
+
+func _check_overhead_queue(overhead: OverheadTypewriter) -> int:
+	var failed := 0
+	var body := overhead.get_node("Body") as Label
+	var first_line := "甲"
+	var second_line := "乙"
+	overhead.play_queued(first_line)
+	await process_frame
+	if body.text != first_line:
+		printerr("队列第一句应立即开始")
+		failed += 1
+	var first_started_msec := Time.get_ticks_msec()
+	overhead.play_queued(second_line)
+	await process_frame
+	if body.text != first_line:
+		printerr("正在播的头顶叙事结束前不应插播下一句")
+		failed += 1
+	var second_started_msec := -1
+	var second_deadline_msec := first_started_msec + 8000
+	while Time.get_ticks_msec() < second_deadline_msec:
+		if overhead.visible and body.text == second_line:
+			second_started_msec = Time.get_ticks_msec()
+			break
+		await process_frame
+	if second_started_msec < 0:
+		printerr("队列第二句未出现")
+		return failed + 1
+	var expected_interval_msec := int(
+			(
+				OverheadTypewriter.HOLD_DURATION_SECONDS
+				+ OverheadTypewriter.FADE_DURATION_SECONDS
+				+ OverheadTypewriter.QUEUE_GAP_SECONDS
+			)
+			* 1000.0
+	)
+	var actual_interval_msec := second_started_msec - first_started_msec
+	if absi(actual_interval_msec - expected_interval_msec) > 500:
+		printerr(
+				"头顶叙事队列间隔应为约 %d ms，实际 %d ms"
+				% [expected_interval_msec, actual_interval_msec]
+		)
+		failed += 1
+	var idle_deadline_msec := Time.get_ticks_msec() + 5000
+	while overhead.visible and Time.get_ticks_msec() < idle_deadline_msec:
+		await process_frame
 	return failed
 
 
@@ -1708,7 +1756,8 @@ func _check_opening_overhead_pacing(story: B612Story) -> int:
 					maxi(first_line.length() - 1, 0)
 					* OverheadTypewriter.TYPEWRITER_INTERVAL
 					+ OverheadTypewriter.HOLD_DURATION_SECONDS
-					+ B612Story.OPENING_OVERHEAD_GAP_SECONDS
+					+ OverheadTypewriter.FADE_DURATION_SECONDS
+					+ OverheadTypewriter.QUEUE_GAP_SECONDS
 				)
 				* 1000.0
 		)
@@ -1739,6 +1788,45 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += 1
 	if story.is_blocking_input:
 		printerr("开场结束后应允许走动")
+		failed += 1
+	var player := scene.get_node(PLAYER_PATH) as Player
+	if player.can_move_left:
+		printerr("开场应只能向右走")
+		failed += 1
+	if not is_equal_approx(player.move_speed_scale, B612Story.OPENING_MOVE_SPEED_SCALE):
+		printerr(
+				"开场移速倍率应为 %s，实际 %s"
+				% [B612Story.OPENING_MOVE_SPEED_SCALE, player.move_speed_scale]
+		)
+		failed += 1
+	planet.angular_velocity = 0.0
+	Input.action_press("move_left")
+	player._physics_process(0.2)
+	Input.action_release("move_left")
+	if planet.angular_velocity < -0.001:
+		printerr("开场按左不应移动，角速度 %s" % planet.angular_velocity)
+		failed += 1
+	planet.angular_velocity = 0.0
+	Input.action_press("move_right")
+	player._physics_process(0.2)
+	var opening_right_velocity := planet.angular_velocity
+	Input.action_release("move_right")
+	planet.angular_velocity = 0.0
+	player.move_speed_scale = 1.0
+	Input.action_press("move_right")
+	player._physics_process(0.2)
+	var full_right_velocity := planet.angular_velocity
+	Input.action_release("move_right")
+	planet.angular_velocity = 0.0
+	player.move_speed_scale = B612Story.OPENING_MOVE_SPEED_SCALE
+	if opening_right_velocity <= 0.001:
+		printerr("开场按右应能走动")
+		failed += 1
+	elif absf(opening_right_velocity / full_right_velocity - B612Story.OPENING_MOVE_SPEED_SCALE) > 0.1:
+		printerr(
+				"开场右移应更慢，开场角速度 %s，全速 %s"
+				% [opening_right_velocity, full_right_velocity]
+		)
 		failed += 1
 	var opening := B612Lines.opening_rose()
 	if opening.size() < 2:
@@ -1776,9 +1864,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 				% B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS
 		)
 		failed += 1
-	if not is_equal_approx(B612Story.OPENING_OVERHEAD_GAP_SECONDS, 2.0):
+	if not is_equal_approx(OverheadTypewriter.QUEUE_GAP_SECONDS, 1.0):
 		printerr(
-				"开场头顶叙事间隔应为 2 秒，实际 %s" % B612Story.OPENING_OVERHEAD_GAP_SECONDS
+				"头顶叙事间隔应为 1 秒，实际 %s" % OverheadTypewriter.QUEUE_GAP_SECONDS
 		)
 		failed += 1
 	failed += await _check_opening_overhead_pacing(story)
@@ -1790,6 +1878,12 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	await process_frame
 	if story.is_blocking_input:
 		printerr("日落叙事结束后应能继续走动")
+		failed += 1
+	if not player.can_move_left:
+		printerr("触发日落后应能左右移动")
+		failed += 1
+	if not is_equal_approx(player.move_speed_scale, 1.0):
+		printerr("触发日落后移速应恢复，实际 %s" % player.move_speed_scale)
 		failed += 1
 	if not story._has_played_first_sunset_narration:
 		printerr("跨过日落应播出第一次日落叙事")
@@ -1822,12 +1916,18 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.accepts_interact(shoots[0]):
 		printerr("拔苗段应选中嫩芽")
 		failed += 1
+	if B612Lines.PULL_SHOOT_OVERHEAD_LINES.size() != B612Story.SHOOT_COUNT:
+		printerr(
+				"拔苗头顶叙事列表长度应为 %d，实际 %d"
+				% [B612Story.SHOOT_COUNT, B612Lines.PULL_SHOOT_OVERHEAD_LINES.size()]
+		)
+		failed += 1
 	for remaining_after_this in range(B612Story.SHOOT_COUNT):
 		if B612Lines.pull_shoot(remaining_after_this).is_empty():
 			printerr("每棵嫩芽都应有头顶叙事")
 			failed += 1
 			break
-	if not B612Lines.pull_shoot(0).contains("喷口"):
+	if not B612Lines.PULL_SHOOT_OVERHEAD_LINES[B612Lines.PULL_SHOOT_OVERHEAD_LINES.size() - 1].contains("喷口"):
 		printerr("拔完嫩芽应转向火山")
 		failed += 1
 
