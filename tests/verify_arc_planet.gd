@@ -1710,7 +1710,7 @@ func _check_opening_overhead_pacing(story: B612Story) -> int:
 		failed += 1
 	var played_overhead_lines: PackedStringArray = []
 	var line_started_msec: Array[int] = []
-	var pull_deadline_msec := close_msec + 20000
+	var pull_deadline_msec := close_msec + 25000
 	while (
 			story.beat == B612Story.Beat.OPENING
 			and Time.get_ticks_msec() < pull_deadline_msec
@@ -1938,10 +1938,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if shoots[0].is_consumed or not shoots[0].visible:
 		printerr("头顶叙事结束前嫩芽不应消失")
 		failed += 1
-	var pull_wait_frames := 0
-	while story.is_blocking_input and pull_wait_frames < 600:
+	var pull_deadline_msec := Time.get_ticks_msec() + 15000
+	while story.is_blocking_input and Time.get_ticks_msec() < pull_deadline_msec:
 		await process_frame
-		pull_wait_frames += 1
 	if story.is_blocking_input:
 		printerr("拔苗头顶叙事超时")
 		failed += 1

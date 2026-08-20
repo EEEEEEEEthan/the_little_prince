@@ -21,9 +21,9 @@ const AMBIENT_LINES: PackedStringArray = [
 
 var _play_generation: int = 0
 var _fade_tween: Tween
-var _queued_plays: Array = []
+var _queued_plays: Array[QueuedOverheadPlay] = []
 var _is_draining_queued_plays: bool = false
-var _has_finished_queued_play: bool = false
+var _last_queued_play_finished_msec: int = -1
 
 
 func _ready() -> void:
@@ -111,11 +111,15 @@ func _drain_queued_plays() -> void:
 		return
 	_is_draining_queued_plays = true
 	while not _queued_plays.is_empty():
-		if _has_finished_queued_play:
-			await get_tree().create_timer(QUEUE_GAP_SECONDS).timeout
+		if _last_queued_play_finished_msec >= 0:
+			var remaining_gap_seconds := QUEUE_GAP_SECONDS - (
+					float(Time.get_ticks_msec() - _last_queued_play_finished_msec) / 1000.0
+			)
+			if remaining_gap_seconds > 0.0:
+				await get_tree().create_timer(remaining_gap_seconds).timeout
 		var queued_play: QueuedOverheadPlay = _queued_plays.pop_front()
 		await play(queued_play.display_text)
-		_has_finished_queued_play = true
+		_last_queued_play_finished_msec = Time.get_ticks_msec()
 		queued_play.finished.emit()
 	_is_draining_queued_plays = false
 
