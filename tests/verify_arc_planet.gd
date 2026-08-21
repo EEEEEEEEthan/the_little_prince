@@ -58,6 +58,10 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/black_coat_lamplighter.png",
 	"res://planet/black_post_street_lamp.png",
 	"res://ui/portraits/black_coat_lamplighter.png",
+	"res://planet/cream_ink_parchment_disk.png",
+	"res://planet/gray_beard_parchment_scholar.png",
+	"res://planet/stacked_cream_ink_pages.png",
+	"res://ui/portraits/gray_beard_parchment_scholar.png",
 ]
 
 const REQUIRED_OTHER_ASSETS: Array[String] = [
@@ -69,6 +73,7 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://audio/narrow_cpenta_toy_waltz.ogg",
 	"res://audio/sparse_ledger_tally.ogg",
 	"res://audio/rapid_lamp_duty_tick.ogg",
+	"res://audio/dry_folio_rest.ogg",
 	"res://audio/muffled_dirt_thud_a.wav",
 	"res://audio/muffled_dirt_thud_b.wav",
 	"res://audio/dry_grass_rustle_a.wav",
@@ -88,6 +93,7 @@ func _run_tests() -> void:
 	failed += _check_drunkard_scene_resource_uids()
 	failed += _check_merchant_scene_resource_uids()
 	failed += _check_lamplighter_scene_resource_uids()
+	failed += _check_geographer_scene_resource_uids()
 	failed += _check_input_map()
 	failed += await _check_main_story_starts_with_sky_ready()
 	failed += await _check_story_not_active_before_planet_ready()
@@ -103,6 +109,8 @@ func _run_tests() -> void:
 	failed += await _check_drunkard_departed_travels_to_merchant()
 	failed += await _check_lamplighter_chapter()
 	failed += await _check_merchant_departed_travels_to_lamplighter()
+	failed += await _check_geographer_chapter()
+	failed += await _check_lamplighter_departed_travels_to_geographer()
 	if failed == 0:
 		print("[verify_arc_planet] 全部通过")
 		quit(0)
@@ -132,6 +140,9 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.LAMPLIGHTER_STAR_ROTATION_SPEED <= WorldConstants.STAR_ROTATION_SPEED * 20.0:
 		printerr("点灯人昼夜自转应明显快于默认星空")
+		failed += 1
+	if WorldConstants.GEOGRAPHER_REPORT_STACK_COUNT != 3:
+		printerr("书房报告堆应为 3，实际 %d" % WorldConstants.GEOGRAPHER_REPORT_STACK_COUNT)
 		failed += 1
 	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
@@ -557,6 +568,23 @@ func _check_static_assets() -> int:
 				% [ledger_diameter, ledger_diameter, ledger_body.get_width(), ledger_body.get_height()]
 			)
 			failed += 1
+	var parchment_body: Texture2D = load("res://planet/cream_ink_parchment_disk.png") as Texture2D
+	if parchment_body != null:
+		var parchment_diameter: int = int(ceil(WorldConstants.PLANET_RADIUS)) * 2
+		if (
+				parchment_body.get_width() != parchment_diameter
+				or parchment_body.get_height() != parchment_diameter
+		):
+			printerr(
+				"cream_ink_parchment_disk.png 应为 %dx%d，实际 %dx%d"
+				% [
+					parchment_diameter,
+					parchment_diameter,
+					parchment_body.get_width(),
+					parchment_body.get_height(),
+				]
+			)
+			failed += 1
 	var ash_body: Texture2D = load("res://planet/ash_gray_mottled_disk.png") as Texture2D
 	if ash_body != null:
 		var ash_diameter: int = int(ceil(WorldConstants.LAMPLIGHTER_PLANET_RADIUS)) * 2
@@ -619,6 +647,17 @@ func _check_static_assets() -> int:
 			WorldConstants.BLACK_POST_STREET_LAMP_HEIGHT,
 		],
 		["res://ui/portraits/black_coat_lamplighter.png", 32, 32],
+		[
+			"res://planet/gray_beard_parchment_scholar.png",
+			WorldConstants.GRAY_BEARD_PARCHMENT_SCHOLAR_WIDTH,
+			WorldConstants.GRAY_BEARD_PARCHMENT_SCHOLAR_HEIGHT,
+		],
+		[
+			"res://planet/stacked_cream_ink_pages.png",
+			WorldConstants.STACKED_CREAM_INK_PAGES_WIDTH,
+			WorldConstants.STACKED_CREAM_INK_PAGES_HEIGHT,
+		],
+		["res://ui/portraits/gray_beard_parchment_scholar.png", 32, 32],
 		["res://planet/glass_globe.png", 24, 24],
 		["res://planet/migratory_bird.png", 16, 8],
 		["res://planet/butterfly.png", 8, 3],
@@ -705,6 +744,7 @@ func _check_tscn_editor_visible() -> int:
 		"res://planet/drunkard.tscn",
 		"res://planet/merchant.tscn",
 		"res://planet/lamplighter.tscn",
+		"res://planet/geographer.tscn",
 		"res://planet/butterfly.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
@@ -850,6 +890,40 @@ func _check_lamplighter_scene_resource_uids() -> int:
 		failed += 1
 	if failed == 0:
 		print("  点灯人场景资源 UID 与文件一致 OK")
+	return failed
+
+
+func _check_geographer_scene_resource_uids() -> int:
+	var failed := 0
+	var uid_and_path := RegEx.new()
+	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
+	var geographer_scene := FileAccess.get_file_as_string("res://planet/geographer.tscn")
+	for match_ in uid_and_path.search_all(geographer_scene):
+		var declared_uid := match_.get_string(1)
+		var resource_path := match_.get_string(2)
+		var canonical_uid := ResourceUID.id_to_text(
+				ResourceLoader.get_resource_uid(resource_path)
+		)
+		if declared_uid != canonical_uid:
+			printerr(
+					"geographer.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					% [resource_path, declared_uid, canonical_uid]
+			)
+			failed += 1
+	var zenith_header := FileAccess.get_file_as_string(
+			"res://planet/parchment_study_zenith_gradient.tres"
+	).get_slice("\n", 0)
+	var zenith_canonical := ResourceUID.id_to_text(
+			ResourceLoader.get_resource_uid("res://planet/parchment_study_zenith_gradient.tres")
+	)
+	if not zenith_header.contains(zenith_canonical):
+		printerr(
+				"parchment_study_zenith_gradient.tres 头 UID 应为 %s"
+				% zenith_canonical
+		)
+		failed += 1
+	if failed == 0:
+		print("  地理学家场景资源 UID 与文件一致 OK")
 	return failed
 
 
@@ -3520,6 +3594,12 @@ func _check_standalone_planet_scenes() -> int:
 			"res://audio/rapid_lamp_duty_tick.ogg",
 			"点灯人星球单独运行"
 	)
+	failed += await _assert_standalone_planet_run(
+			"res://planet/geographer.tscn",
+			GeographerStory,
+			"res://audio/dry_folio_rest.ogg",
+			"地理学家星球单独运行"
+	)
 	var base_planet := (load("res://planet/planet.tscn") as PackedScene).instantiate() as Planet
 	root.add_child(base_planet)
 	await process_frame
@@ -3659,6 +3739,8 @@ func _assert_standalone_planet_run(
 					SurfaceProp.Kind.BOTTLE,
 					SurfaceProp.Kind.MERCHANT,
 					SurfaceProp.Kind.STAR_JAR,
+					SurfaceProp.Kind.GEOGRAPHER,
+					SurfaceProp.Kind.INK_REPORT,
 			]:
 				has_foreign_chapter = true
 		if lamplighter_count != 1:
@@ -3678,6 +3760,44 @@ func _assert_standalone_planet_run(
 				WorldConstants.LAMPLIGHTER_STAR_ROTATION_SPEED
 		):
 			printerr("点灯人单独运行星空应极快自转")
+			failed += 1
+	if planet_path == "res://planet/geographer.tscn":
+		var geographer_count := 0
+		var report_count := 0
+		var has_foreign_chapter := false
+		for prop in planet.surface_props:
+			if prop.kind == SurfaceProp.Kind.GEOGRAPHER:
+				geographer_count += 1
+			if prop.kind == SurfaceProp.Kind.INK_REPORT:
+				report_count += 1
+			if prop.kind in [
+					SurfaceProp.Kind.KING,
+					SurfaceProp.Kind.ROSE,
+					SurfaceProp.Kind.DRUNKARD,
+					SurfaceProp.Kind.BOTTLE,
+					SurfaceProp.Kind.MERCHANT,
+					SurfaceProp.Kind.STAR_JAR,
+					SurfaceProp.Kind.LAMPLIGHTER,
+					SurfaceProp.Kind.STREET_LAMP,
+					SurfaceProp.Kind.VOLCANO,
+					SurfaceProp.Kind.BAOBAB,
+					SurfaceProp.Kind.FLORA,
+			]:
+				has_foreign_chapter = true
+		if geographer_count != 1:
+			printerr("地理学家单独运行应有一名地理学家")
+			failed += 1
+		if report_count != WorldConstants.GEOGRAPHER_REPORT_STACK_COUNT:
+			printerr(
+					"地理学家单独运行报告堆应为 %d，实际 %d"
+					% [WorldConstants.GEOGRAPHER_REPORT_STACK_COUNT, report_count]
+			)
+			failed += 1
+		if has_foreign_chapter:
+			printerr("地理学家单独运行不应有风景或其它章地物")
+			failed += 1
+		if FileAccess.file_exists("res://planet/earth.tscn"):
+			printerr("地球关卡这轮仍不应存在")
 			failed += 1
 	failed += _assert_playing_stream(
 			shell,
@@ -4926,6 +5046,265 @@ func _check_merchant_departed_travels_to_lamplighter() -> int:
 		failed += 1
 	if failed == 0:
 		print("  商人离星后进入点灯人星球 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_geographer_chapter() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	scene.travel_to_king_planet(false)
+	await process_frame
+	scene.travel_to_drunkard_planet(false)
+	await process_frame
+	scene.travel_to_merchant_planet(false)
+	await process_frame
+	scene.travel_to_lamplighter_planet(false)
+	await process_frame
+	scene.travel_to_geographer_planet(false)
+	await process_frame
+
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
+	var story := scene.get_node_or_null("%GeographerStory") as GeographerStory
+	if planet == null or player == null or story == null:
+		printerr("地理学家章缺少 Planet / Player / GeographerStory")
+		scene.queue_free()
+		await process_frame
+		return 1
+	if planet.scene_file_path != "res://planet/geographer.tscn":
+		printerr("点灯人之后星球应为 geographer.tscn，实际 %s" % planet.scene_file_path)
+		failed += 1
+	failed += _assert_playing_music(scene, "geographer_day_music", "换到地理学家星球")
+	if story.planet != planet:
+		printerr("换星后 GeographerStory 应绑定地理学家星球")
+		failed += 1
+	if (scene.get_node("%Interaction") as Interaction).story != story:
+		printerr("换星后 Interaction 应绑定 GeographerStory")
+		failed += 1
+	if FileAccess.file_exists("res://planet/earth.tscn"):
+		printerr("地球关卡这轮仍不应存在")
+		failed += 1
+
+	var geographer: SurfaceProp = null
+	var report_count := 0
+	for prop in planet.surface_props:
+		match prop.kind:
+			SurfaceProp.Kind.GEOGRAPHER:
+				geographer = prop
+			SurfaceProp.Kind.INK_REPORT:
+				report_count += 1
+				if prop.is_interactable() or story.accepts_interact(prop):
+					printerr("报告堆只是书房陈设，不应可交互")
+					failed += 1
+			SurfaceProp.Kind.KING, SurfaceProp.Kind.ROSE, SurfaceProp.Kind.DRUNKARD, SurfaceProp.Kind.BOTTLE, SurfaceProp.Kind.MERCHANT, SurfaceProp.Kind.STAR_JAR, SurfaceProp.Kind.LAMPLIGHTER, SurfaceProp.Kind.STREET_LAMP, SurfaceProp.Kind.VOLCANO, SurfaceProp.Kind.BAOBAB, SurfaceProp.Kind.FLORA:
+				printerr("地理学家星球不应有风景或其它章地物 %s" % prop.name)
+				failed += 1
+	if geographer == null:
+		printerr("地理学家星球应有地理学家")
+		failed += 1
+	if report_count != WorldConstants.GEOGRAPHER_REPORT_STACK_COUNT:
+		printerr(
+				"书房报告堆应为 %d，实际 %d"
+				% [WorldConstants.GEOGRAPHER_REPORT_STACK_COUNT, report_count]
+		)
+		failed += 1
+
+	var body_image := (planet.body.texture as Texture2D).get_image()
+	var cream_pixels := 0
+	var ink_pixels := 0
+	var cool_pixels := 0
+	var gray_pixels := 0
+	var amber_like_pixels := 0
+	var dark_ink_ground_pixels := 0
+	var opaque_pixels := 0
+	for pixel_y in range(0, body_image.get_height(), 4):
+		for pixel_x in range(0, body_image.get_width(), 4):
+			var pixel := body_image.get_pixel(pixel_x, pixel_y)
+			if pixel.a < 0.5:
+				continue
+			opaque_pixels += 1
+			var luma := pixel.r * 0.3 + pixel.g * 0.59 + pixel.b * 0.11
+			var chroma := absf(pixel.r - pixel.g) + absf(pixel.g - pixel.b) + absf(pixel.b - pixel.r)
+			if pixel.r > 0.55 and pixel.g > 0.42 and pixel.r > pixel.b and pixel.g > pixel.b:
+				cream_pixels += 1
+			if pixel.r > pixel.g + 0.04 and pixel.g > pixel.b and luma < 0.45:
+				ink_pixels += 1
+			if pixel.b > pixel.r + 0.04 or pixel.g > pixel.r + 0.08:
+				cool_pixels += 1
+			if chroma < 0.08:
+				gray_pixels += 1
+			if pixel.r > pixel.g + 0.12 and pixel.r > 0.55 and pixel.b < 0.28:
+				amber_like_pixels += 1
+			if luma < 0.22:
+				dark_ink_ground_pixels += 1
+	if opaque_pixels == 0 or float(cream_pixels) / float(opaque_pixels) < 0.45:
+		printerr("地理学家星球地面应是羊皮纸")
+		failed += 1
+	if ink_pixels == 0:
+		printerr("羊皮纸上应有墨迹报告")
+		failed += 1
+	if float(cool_pixels) / float(opaque_pixels) > 0.2:
+		printerr("羊皮纸地面不应偏国王那颗的绿蓝")
+		failed += 1
+	if float(gray_pixels) / float(opaque_pixels) > 0.25:
+		printerr("羊皮纸地面不应像点灯人灰地")
+		failed += 1
+	if float(amber_like_pixels) / float(opaque_pixels) > 0.35:
+		printerr("羊皮纸地面不应像酒鬼琥珀")
+		failed += 1
+	if float(dark_ink_ground_pixels) / float(opaque_pixels) > 0.35:
+		printerr("羊皮纸地面不应像商人墨色账本")
+		failed += 1
+	var parchment_zenith := (
+			planet.sky.material as ShaderMaterial
+	).get_shader_parameter("zenith_gradient") as GradientTexture1D
+	if parchment_zenith == null:
+		printerr("地理学家星球应有羊皮纸书房天空")
+		failed += 1
+	else:
+		var midnight := parchment_zenith.gradient.sample(0.0)
+		var noon := parchment_zenith.gradient.sample(SkyPhase.NOON_PHASE)
+		if noon.g > noon.r and noon.g > noon.b:
+			printerr("地理学家天空不应像国王正午绿天，实际 %s" % noon)
+			failed += 1
+		if noon.r > noon.g + 0.2 and noon.r > 0.45:
+			printerr("地理学家天空不应像酒鬼琥珀傍晚，实际 %s" % noon)
+			failed += 1
+		if midnight.r < 0.05 and midnight.g < 0.05 and midnight.b < 0.05:
+			printerr("地理学家午夜不应是商人那种墨黑")
+			failed += 1
+		var noon_chroma := absf(noon.r - noon.g) + absf(noon.g - noon.b) + absf(noon.b - noon.r)
+		if noon_chroma < 0.08:
+			printerr("地理学家天空不应是点灯人灰阶")
+			failed += 1
+
+	if geographer == null:
+		scene.queue_free()
+		await process_frame
+		return failed + 1
+
+	failed += _assert_focus(planet, geographer, &"geographer", "地理学家")
+	planet.teleport_player(planet.spawn_angle)
+	story.skip_cinematics = true
+	await story.start()
+	if not story.has_crossed_sunset:
+		printerr("地理学家章不应再追日落")
+		failed += 1
+	if not story.has_finished_opening:
+		printerr("地理学家开场结束后应能走动")
+		failed += 1
+	if story.is_blocking_input:
+		printerr("地理学家开场结束后应允许走动")
+		failed += 1
+	if not player.can_move_left or not player.can_move_right:
+		printerr("地理学家开场后应能左右移动")
+		failed += 1
+	if not story.accepts_interact(geographer):
+		printerr("开场后应能与地理学家说话")
+		failed += 1
+	if not story.try_handle_interact(geographer):
+		printerr("开场后应能与地理学家说话")
+		failed += 1
+	if not geographer.is_consumed:
+		printerr("说完后不应把玫瑰记进报告")
+		failed += 1
+	if player.modulate.a > 0.01:
+		printerr("指向地球后戏应停，小王子应消失")
+		failed += 1
+	if story.get_node("%Epilogue").text != "330。":
+		printerr("黑场应留下 330。，实际 %s" % story.get_node("%Epilogue").text)
+		failed += 1
+	if planet.scene_file_path == "res://planet/earth.tscn":
+		printerr("指向地球后不应载入地球关卡")
+		failed += 1
+	var story_source := FileAccess.get_file_as_string("res://story/geographer_story.gd")
+	if not story_source.contains("我不记"):
+		printerr("地理学家应拒绝记下玫瑰")
+		failed += 1
+	if not story_source.contains("他指向地球。"):
+		printerr("演出应在指向地球时停")
+		failed += 1
+	if story_source.find("我不记") > story_source.find("他指向地球。"):
+		printerr("应先拒绝玫瑰，再指向地球")
+		failed += 1
+	if story_source.count("_interact(") != 1:
+		printerr("地理学家章只与地理学家谈一次")
+		failed += 1
+	if failed == 0:
+		print("  地理学家星球演出 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_lamplighter_departed_travels_to_geographer() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("%Story") as B612Story).auto_start = false
+	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
+	(scene.get_node("%DrunkardStory") as DrunkardStory).skip_cinematics = true
+	(scene.get_node("%MerchantStory") as MerchantStory).skip_cinematics = true
+	(scene.get_node("%LamplighterStory") as LamplighterStory).skip_cinematics = true
+	(scene.get_node("%GeographerStory") as GeographerStory).skip_cinematics = true
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	scene.travel_to_lamplighter_planet(true)
+	await process_frame
+	await process_frame
+	var lamplighter_story := scene.get_node("%LamplighterStory") as LamplighterStory
+	lamplighter_story._story_generation += 1
+	lamplighter_story.is_active = false
+	lamplighter_story.set_process(false)
+	lamplighter_story.departed.emit()
+	await process_frame
+	await process_frame
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var geographer_story := scene.get_node("%GeographerStory") as GeographerStory
+	if planet == null or planet.scene_file_path != "res://planet/geographer.tscn":
+		printerr(
+				"点灯人离星后应换到地理学家星球，实际 %s"
+				% (planet.scene_file_path if planet != null else "null")
+		)
+		failed += 1
+	if geographer_story.planet != planet:
+		printerr("离星换星后 GeographerStory 应绑定地理学家星球")
+		failed += 1
+	failed += _assert_playing_music(scene, "geographer_day_music", "点灯人离星换星")
+	var opening_deadline_msec := Time.get_ticks_msec() + 5000
+	while (
+			not geographer_story.has_finished_opening
+			and Time.get_ticks_msec() < opening_deadline_msec
+	):
+		await process_frame
+	if not geographer_story.has_finished_opening:
+		printerr("换星后地理学家开场应自动开始")
+		failed += 1
+	if planet != null and planet.scene_file_path == "res://planet/earth.tscn":
+		printerr("点灯人之后不应进入地球关卡")
+		failed += 1
+	if failed == 0:
+		print("  点灯人离星后进入地理学家星球 OK")
 	scene.queue_free()
 	await process_frame
 	return failed

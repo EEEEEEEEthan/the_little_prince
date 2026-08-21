@@ -21,6 +21,8 @@ enum Kind {
 	STAR_JAR,
 	LAMPLIGHTER,
 	STREET_LAMP,
+	GEOGRAPHER,
+	INK_REPORT,
 }
 
 @export var kind: Kind = Kind.ROSE
@@ -66,12 +68,14 @@ func get_dialogue_id() -> StringName:
 			return &"star_jar"
 		Kind.STREET_LAMP:
 			return &"street_lamp"
+		Kind.GEOGRAPHER:
+			return &"geographer"
 	return &""
 
 
 func is_interactable() -> bool:
 	match kind:
-		Kind.VOLCANO, Kind.FLORA, Kind.RAT, Kind.EDICT, Kind.BORDER, Kind.RAT_TRACE, Kind.THRONE, Kind.CAPE, Kind.BOTTLE, Kind.MERCHANT, Kind.LAMPLIGHTER:
+		Kind.VOLCANO, Kind.FLORA, Kind.RAT, Kind.EDICT, Kind.BORDER, Kind.RAT_TRACE, Kind.THRONE, Kind.CAPE, Kind.BOTTLE, Kind.MERCHANT, Kind.LAMPLIGHTER, Kind.INK_REPORT:
 			return false
 	return not is_consumed and get_dialogue_id() != &""
 
