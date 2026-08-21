@@ -69,6 +69,7 @@ func _run_tests() -> void:
 	failed += _check_king_scene_resource_uids()
 	failed += _check_input_map()
 	failed += await _check_main_story_starts_with_sky_ready()
+	failed += await _check_story_not_active_before_planet_ready()
 	failed += await _check_scene_and_mechanics()
 	failed += await _check_standalone_planet_scenes()
 	failed += await _check_b612_depart_lift_halfway_overhead()
@@ -744,6 +745,54 @@ func _check_main_story_starts_with_sky_ready() -> int:
 		failed += 1
 	if failed == 0:
 		print("  main 开场等星球 ready 后再读天空 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_story_not_active_before_planet_ready() -> int:
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	scene.travel_to_next_planet = false
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	var viewport := scene.get_node("GameView/GameViewport")
+	var story := viewport.get_node("Story") as B612Story
+	var planet := viewport.get_node("Planet") as Planet
+	var watcher := Node.new()
+	watcher.name = "PlanetReadyOrderWatcher"
+	var activated_before_planet_ready: Array[bool] = [false]
+	watcher.ready.connect(
+			func() -> void:
+				if story.is_active and not planet.is_node_ready():
+					activated_before_planet_ready[0] = true
+	)
+	viewport.add_child(watcher)
+	viewport.move_child(story, 0)
+	viewport.move_child(watcher, 1)
+	viewport.move_child(planet, 2)
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	var failed := 0
+	if activated_before_planet_ready[0]:
+		printerr("Story 不应在 Planet ready 前 is_active（_process 会读到空 sky）")
+		failed += 1
+	if not planet.is_node_ready():
+		printerr("开场后 Planet 应已 ready")
+		failed += 1
+	elif not is_equal_approx(
+			(scene.get_node(PLAYER_PATH) as Player).move_speed_scale,
+			0.8
+	):
+		printerr("B612 开场应在 Planet ready 后 _prepare_start")
+		failed += 1
+	if failed == 0:
+		print("  Story 在 Planet ready 后才 is_active OK")
 	scene.queue_free()
 	await process_frame
 	return failed

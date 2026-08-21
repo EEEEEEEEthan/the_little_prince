@@ -42,8 +42,9 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if is_active and not has_crossed_sunset:
-		try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
+	if not is_active or has_crossed_sunset or not planet.is_node_ready():
+		return
+	try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
 
 
 func start() -> void:
@@ -56,11 +57,11 @@ func start() -> void:
 	if _story_tween != null:
 		_story_tween.kill()
 		_story_tween = null
+	if not planet.is_node_ready():
+		await planet.ready
 	is_active = true
 	has_finished_opening = false
 	has_crossed_sunset = false
-	if not planet.is_node_ready():
-		await planet.ready
 	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 	_waiting_interact_kind = -1
 	_dialogue_closed_early = false
