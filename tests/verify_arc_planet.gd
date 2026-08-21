@@ -46,8 +46,8 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://ui/typewriter.wav",
 	"res://ui/fonts/fusion-pixel-8px-zh_hans.woff2",
 	"res://ui/fonts/fusion-pixel-10px-zh_hans.woff2",
-	"res://audio/first_light_particles.ogg",
-	"res://audio/the_one_who_stands_distant.ogg",
+	"res://audio/i_want_to_go_home.ogg",
+	"res://audio/tiny_sad_lonely_theme.ogg",
 	"res://audio/narrow_cpenta_toy_waltz.ogg",
 ]
 

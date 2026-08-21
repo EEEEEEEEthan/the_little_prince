@@ -18,8 +18,8 @@
 [ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]
 [ext_resource type="PackedScene" uid="uid://dkingplanet01" path="res://planet/king.tscn" id="17_king_planet"]
 [ext_resource type="Script" uid="uid://ckingstoryg01" path="res://story/king_story.gd" id="18_king_story"]
-[ext_resource type="AudioStream" uid="uid://q8yku5qv5pqf" path="res://audio/first_light_particles.ogg" id="19_home_day_music"]
-[ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="20_sunset_music"]
+[ext_resource type="AudioStream" uid="uid://04l4uya0khhs" path="res://audio/i_want_to_go_home.ogg" id="19_home_day_music"]
+[ext_resource type="AudioStream" uid="uid://bjv75rclnrfga" path="res://audio/tiny_sad_lonely_theme.ogg" id="20_sunset_music"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="21_king_day_music"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
