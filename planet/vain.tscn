@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cvainplanet01"]
+
+[ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
+[ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="2_playable"]
+[ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet_run_shell.tscn" id="3_run_shell"]
+[ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="4_day_music"]
+
+[node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
+
+[node name="Config" type="Node" parent="."]
+process_mode = 4
+script = ExtResource("2_playable")
+metadata/run_shell_scene = ExtResource("3_run_shell")
+metadata/day_music = ExtResource("4_day_music")
+
+[node name="Sky" parent="." index="0" unique_id=852054590]
+z_index = -4096

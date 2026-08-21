@@ -62,6 +62,7 @@ func _run_tests() -> void:
 	failed += _check_tscn_editor_visible()
 	failed += _check_input_map()
 	failed += await _check_scene_and_mechanics()
+	failed += await _check_standalone_planet_scenes()
 	failed += await _check_b612_depart_lift_halfway_overhead()
 	failed += await _check_king_chapter()
 	failed += await _check_b612_departed_travels_to_king()
@@ -575,9 +576,11 @@ func _check_tscn_editor_visible() -> int:
 	var failed := 0
 	for path in [
 		"res://main.tscn",
+		"res://planet_run_shell.tscn",
 		"res://planet/planet.tscn",
 		"res://planet/b612.tscn",
 		"res://planet/king.tscn",
+		"res://planet/vain.tscn",
 		"res://planet/butterfly.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
@@ -2883,6 +2886,111 @@ func _check_king_chapter() -> int:
 	if failed == 0:
 		print("  国王星球演出 OK")
 	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_standalone_planet_scenes() -> int:
+	var failed := 0
+	failed += await _assert_standalone_planet_run(
+			"res://planet/b612.tscn",
+			B612Story,
+			"res://audio/the_one_who_stands_distant.ogg",
+			"B612 单独运行"
+	)
+	failed += await _assert_standalone_planet_run(
+			"res://planet/king.tscn",
+			KingStory,
+			"res://audio/narrow_cpenta_toy_waltz.ogg",
+			"国王星球单独运行"
+	)
+	failed += await _assert_standalone_planet_run(
+			"res://planet/vain.tscn",
+			PlanetStory,
+			"res://audio/the_one_who_stands_distant.ogg",
+			"虚荣者星球单独运行"
+	)
+	var base_planet := (load("res://planet/planet.tscn") as PackedScene).instantiate() as Planet
+	root.add_child(base_planet)
+	await process_frame
+	await process_frame
+	if base_planet.get_parent() != root:
+		printerr("planet.tscn 基底不应套运行壳")
+		failed += 1
+		var wrapped_shell := base_planet.get_parent().get_parent().get_parent()
+		wrapped_shell.queue_free()
+	else:
+		base_planet.queue_free()
+	await process_frame
+	if failed == 0:
+		print("  星球 tscn 单独运行壳 OK")
+	return failed
+
+
+func _assert_standalone_planet_run(
+		planet_path: String,
+		expected_story_type: GDScript,
+		expected_music_path: String,
+		label: String,
+) -> int:
+	var failed := 0
+	var planet := (load(planet_path) as PackedScene).instantiate() as Planet
+	root.add_child(planet)
+	await process_frame
+	await process_frame
+	if not planet.is_inside_tree() or planet.get_parent() == root:
+		printerr("%s 应套上运行壳" % label)
+		if planet.is_inside_tree():
+			planet.queue_free()
+			await process_frame
+		return 1
+	var shell := planet.get_parent().get_parent().get_parent() as PlanetRunShell
+	if shell == null:
+		printerr("%s 运行壳应为 PlanetRunShell" % label)
+		planet.get_parent().get_parent().get_parent().queue_free()
+		await process_frame
+		return 1
+	if planet.scene_file_path != planet_path:
+		printerr("%s 星球应为 %s，实际 %s" % [label, planet_path, planet.scene_file_path])
+		failed += 1
+	var player := shell.get_node_or_null(PLAYER_PATH) as Player
+	if player == null:
+		printerr("%s 应看见玩家" % label)
+		failed += 1
+	elif player.planet != planet:
+		printerr("%s 玩家应绑定该星" % label)
+		failed += 1
+	var story := shell.get_node("%Story")
+	if story.get_script() != expected_story_type:
+		printerr("%s 故事脚本应为 %s" % [label, expected_story_type.resource_path])
+		failed += 1
+	if planet_path == "res://planet/king.tscn":
+		var has_king := false
+		var has_rose := false
+		for prop in planet.surface_props:
+			if prop.kind == SurfaceProp.Kind.KING:
+				has_king = true
+			if prop.kind == SurfaceProp.Kind.ROSE:
+				has_rose = true
+		if not has_king:
+			printerr("国王单独运行应有国王")
+			failed += 1
+		if has_rose:
+			printerr("国王单独运行不应有玫瑰")
+			failed += 1
+	if planet_path == "res://planet/vain.tscn":
+		if player != null and (not player.can_move_left or not player.can_move_right):
+			printerr("虚荣者星球应能走动")
+			failed += 1
+		if (story as B612Story) != null or (story as KingStory) != null:
+			printerr("虚荣者星球不应挂 B612/国王演出")
+			failed += 1
+	failed += _assert_playing_stream(
+			shell,
+			load(expected_music_path) as AudioStream,
+			"%s应播放配乐" % label
+	)
+	shell.queue_free()
 	await process_frame
 	return failed
 
