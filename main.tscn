@@ -35,7 +35,7 @@ shader_parameter/fill_ratio = 0.0
 
 [sub_resource type="GDScript" id="GDScript_footstep"]
 script/source = "extends AudioStreamPlayer
-## 小王子落地脚步：按是否在草丛区选土地/草地 one-shot。
+## 行走落地 one-shot：默认土地；进草丛 Area 后改播草地。
 
 const META_DIRT_FOOTSTEP_A := \"dirt_footstep_a\"
 const META_DIRT_FOOTSTEP_B := \"dirt_footstep_b\"
@@ -46,17 +46,17 @@ var played_step_count: int = 0
 var last_step_was_grass: bool = false
 
 
-func play_step(is_in_grass: bool) -> void:
-	var config := owner.get_node(\"Config\")
+func play_step() -> void:
 	var variant_is_first := (played_step_count % 2) == 0
 	played_step_count += 1
+	var use_grass := (%Player as Player).is_in_grass()
 	var meta_name: String
-	if is_in_grass:
+	if use_grass:
 		meta_name = META_GRASS_FOOTSTEP_A if variant_is_first else META_GRASS_FOOTSTEP_B
 	else:
 		meta_name = META_DIRT_FOOTSTEP_A if variant_is_first else META_DIRT_FOOTSTEP_B
-	stream = config.get_meta(meta_name) as AudioStream
-	last_step_was_grass = is_in_grass
+	stream = owner.get_node(\"Config\").get_meta(meta_name) as AudioStream
+	last_step_was_grass = use_grass
 	play()
 "
 

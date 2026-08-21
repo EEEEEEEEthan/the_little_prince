@@ -56,7 +56,7 @@ func _update_animation(direction: float, delta: float) -> void:
 		if walk_index != _last_walk_frame_index:
 			_last_walk_frame_index = walk_index
 			if walk_index % 2 == 0 and not interaction.is_busy():
-				%Footstep.play_step(is_in_grass())
+				%Footstep.play_step()
 	else:
 		var idle_count := WorldConstants.PLAYER_IDLE_FRAME_COUNT
 		var idx := int(_anim_time * WorldConstants.PLAYER_IDLE_FPS) % idle_count

@@ -3136,6 +3136,74 @@ func _check_footsteps() -> int:
 		scene.queue_free()
 		await process_frame
 		return 1
+
+	failed += _assert_walking_footstep_playback(planet, player, footstep, story)
+	failed += await _assert_flora_grass_areas(planet, player, footprint)
+	failed += await _assert_dirt_grass_footstep_switch(planet, player, footstep)
+
+	if failed == 0:
+		print("  行走脚步通路 / FLORA 草丛 Area / 土草切换 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _plant_walk_step(player: Player, planet: Planet, move_direction: float) -> void:
+	planet.angular_velocity = 0.4 if move_direction >= 0.0 else -0.4
+	player._was_moving = false
+	player._last_walk_frame_index = -1
+	player._anim_time = 0.0
+	player._update_animation(move_direction, 0.0)
+
+
+func _halt_walk(player: Player, planet: Planet) -> void:
+	planet.angular_velocity = 0.0
+	player._was_moving = true
+	player._update_animation(0.0, 0.0)
+
+
+func _assert_walking_footstep_playback(
+		planet: Planet, player: Player, footstep: Node, story: PlanetStory
+) -> int:
+	var failed := 0
+	planet.teleport_player(planet.rose_angle)
+	_plant_walk_step(player, planet, 1.0)
+	if footstep.played_step_count != 1:
+		printerr("向右走落地应播放脚步，实际 %d" % footstep.played_step_count)
+		failed += 1
+	planet.angular_velocity = 0.0
+	player._update_animation(0.0, 0.05)
+	if footstep.playing:
+		printerr("停下应立刻停止脚步")
+		failed += 1
+	var count_after_stop: int = footstep.played_step_count
+	player._update_animation(0.0, 0.5)
+	if footstep.played_step_count != count_after_stop:
+		printerr("静止不应继续响脚步")
+		failed += 1
+	player.flip_h = false
+	_plant_walk_step(player, planet, -1.0)
+	if not player.flip_h:
+		printerr("向左走时 flip_h 应为 true")
+		failed += 1
+	if footstep.played_step_count != count_after_stop + 1:
+		printerr("向左走落地也应播放脚步")
+		failed += 1
+	story.is_blocking_input = true
+	var count_before_lock: int = footstep.played_step_count
+	_plant_walk_step(player, planet, 1.0)
+	if footstep.played_step_count != count_before_lock:
+		printerr("对话锁输入时不应响脚步")
+		failed += 1
+	story.is_blocking_input = false
+	_halt_walk(player, planet)
+	if failed == 0:
+		print("  行走脚步通路 OK")
+	return failed
+
+
+func _assert_flora_grass_areas(planet: Planet, player: Player, footprint: Area2D) -> int:
+	var failed := 0
 	if footprint.collision_layer != 0:
 		printerr("脚底 Area 不应占据实心碰撞层")
 		failed += 1
@@ -3195,135 +3263,101 @@ func _check_footsteps() -> int:
 	if player.is_in_grass():
 		printerr("玫瑰旁默认不应判定在草丛")
 		failed += 1
+	if flora_props.is_empty():
+		printerr("应有 FLORA 用于草丛 Area 验证")
+		return failed + 1
 
-	planet.angular_velocity = 0.4
-	player._was_moving = false
-	player._last_walk_frame_index = -1
-	player._anim_time = 0.0
-	player._update_animation(1.0, 0.0)
-	if footstep.played_step_count != 1:
-		printerr("向右走落地应播放脚步，实际 %d" % footstep.played_step_count)
+	planet.teleport_player(flora_props[0].rotation)
+	await _await_physics_queries()
+	if not player.is_in_grass():
+		printerr("走进 FLORA Area 应判定在草丛")
 		failed += 1
+	planet.teleport_player(planet.rose_angle)
+	await _await_physics_queries()
+	if player.is_in_grass():
+		printerr("离开草丛后应恢复不在草丛")
+		failed += 1
+
+	var clump_a: SurfaceProp = flora_props[0]
+	var clump_b: SurfaceProp = flora_props[0]
+	var closest_arc := INF
+	for first_index in flora_props.size():
+		for second_index in range(first_index + 1, flora_props.size()):
+			var arc_px := (
+					absf(angle_difference(
+							flora_props[first_index].rotation,
+							flora_props[second_index].rotation
+					))
+					* planet.radius
+			)
+			if arc_px < closest_arc:
+				closest_arc = arc_px
+				clump_a = flora_props[first_index]
+				clump_b = flora_props[second_index]
+	var overlap_span := (
+			WorldConstants.FLORA_GRASS_TRIGGER_RADIUS * 2.0
+			+ WorldConstants.PLAYER_FOOTPRINT_RADIUS
+	)
+	if closest_arc > overlap_span:
+		printerr("找不到可重叠的草丛 Area 对，最近弧长 %s" % closest_arc)
+		failed += 1
+	else:
+		var overlap_flickered := false
+		for sample_index in 5:
+			var sample_weight := float(sample_index) / 4.0
+			planet.teleport_player(
+					lerp_angle(clump_a.rotation, clump_b.rotation, sample_weight)
+			)
+			await _await_physics_queries()
+			if not player.is_in_grass():
+				overlap_flickered = true
+		if overlap_flickered:
+			printerr("重叠多个草丛 Area 时应保持在草丛，不要抖切")
+			failed += 1
+	if failed == 0:
+		print("  FLORA 草丛 Area OK")
+	return failed
+
+
+func _assert_dirt_grass_footstep_switch(
+		planet: Planet, player: Player, footstep: Node
+) -> int:
+	var failed := 0
+	var flora_prop: SurfaceProp = null
+	for prop in planet.surface_props:
+		if prop.kind == SurfaceProp.Kind.FLORA:
+			flora_prop = prop
+			break
+	if flora_prop == null:
+		printerr("土/草切换需要已存在的 FLORA Area 通路")
+		return 1
+
+	planet.teleport_player(planet.rose_angle)
+	await _await_physics_queries()
+	_plant_walk_step(player, planet, 1.0)
 	if footstep.last_step_was_grass:
 		printerr("不在草丛时应为土地脚步")
 		failed += 1
+	_halt_walk(player, planet)
 
-	planet.angular_velocity = 0.0
-	player._update_animation(0.0, 0.05)
-	if footstep.playing:
-		printerr("停下应立刻停止脚步")
+	planet.teleport_player(flora_prop.rotation)
+	await _await_physics_queries()
+	if not player.is_in_grass():
+		printerr("土/草切换前应先能判定在草丛 Area 内")
 		failed += 1
-	var count_after_stop: int = footstep.played_step_count
-	player._update_animation(0.0, 0.5)
-	if footstep.played_step_count != count_after_stop:
-		printerr("静止不应继续响脚步")
+	_plant_walk_step(player, planet, 1.0)
+	if not footstep.last_step_was_grass:
+		printerr("草丛内应为草地脚步")
 		failed += 1
+	_halt_walk(player, planet)
 
-	planet.angular_velocity = -0.4
-	player._was_moving = false
-	player._last_walk_frame_index = -1
-	player._anim_time = 0.0
-	player.flip_h = false
-	player._update_animation(-1.0, 0.0)
-	if not player.flip_h:
-		printerr("向左走时 flip_h 应为 true")
+	planet.teleport_player(planet.rose_angle)
+	await _await_physics_queries()
+	_plant_walk_step(player, planet, 1.0)
+	if footstep.last_step_was_grass:
+		printerr("离开草丛后应切回土地脚步")
 		failed += 1
-	if footstep.played_step_count != count_after_stop + 1:
-		printerr("向左走落地也应播放脚步")
-		failed += 1
-
-	story.is_blocking_input = true
-	var count_before_lock: int = footstep.played_step_count
-	planet.angular_velocity = 0.4
-	player._was_moving = false
-	player._last_walk_frame_index = -1
-	player._anim_time = 0.0
-	player._update_animation(1.0, 0.0)
-	if footstep.played_step_count != count_before_lock:
-		printerr("对话锁输入时不应响脚步")
-		failed += 1
-	story.is_blocking_input = false
-	planet.angular_velocity = 0.0
-	player._was_moving = true
-	player._update_animation(0.0, 0.0)
-
-	if flora_props.is_empty():
-		printerr("应有 FLORA 用于草丛 Area 验证")
-		failed += 1
-	else:
-		planet.teleport_player(flora_props[0].rotation)
-		await _await_physics_queries()
-		if not player.is_in_grass():
-			printerr("走进 FLORA Area 应判定在草丛")
-			failed += 1
-		planet.angular_velocity = 0.4
-		player._was_moving = false
-		player._last_walk_frame_index = -1
-		player._anim_time = 0.0
-		player._update_animation(1.0, 0.0)
-		if not footstep.last_step_was_grass:
-			printerr("草丛内应为草地脚步")
-			failed += 1
-		planet.angular_velocity = 0.0
-		player._was_moving = true
-		player._update_animation(0.0, 0.0)
-
-		planet.teleport_player(planet.rose_angle)
-		await _await_physics_queries()
-		if player.is_in_grass():
-			printerr("离开草丛后应恢复不在草丛")
-			failed += 1
-		planet.angular_velocity = 0.4
-		player._was_moving = false
-		player._last_walk_frame_index = -1
-		player._anim_time = 0.0
-		player._update_animation(1.0, 0.0)
-		if footstep.last_step_was_grass:
-			printerr("离开草丛后应切回土地脚步")
-			failed += 1
-		planet.angular_velocity = 0.0
-		player._was_moving = true
-		player._update_animation(0.0, 0.0)
-
-		var clump_a: SurfaceProp = flora_props[0]
-		var clump_b: SurfaceProp = flora_props[0]
-		var closest_arc := INF
-		for first_index in flora_props.size():
-			for second_index in range(first_index + 1, flora_props.size()):
-				var arc_px := (
-						absf(angle_difference(
-								flora_props[first_index].rotation,
-								flora_props[second_index].rotation
-						))
-						* planet.radius
-				)
-				if arc_px < closest_arc:
-					closest_arc = arc_px
-					clump_a = flora_props[first_index]
-					clump_b = flora_props[second_index]
-		var overlap_span := (
-				WorldConstants.FLORA_GRASS_TRIGGER_RADIUS * 2.0
-				+ WorldConstants.PLAYER_FOOTPRINT_RADIUS
-		)
-		if closest_arc > overlap_span:
-			printerr("找不到可重叠的草丛 Area 对，最近弧长 %s" % closest_arc)
-			failed += 1
-		else:
-			var overlap_flickered := false
-			for sample_index in 5:
-				var sample_weight := float(sample_index) / 4.0
-				planet.teleport_player(
-						lerp_angle(clump_a.rotation, clump_b.rotation, sample_weight)
-				)
-				await _await_physics_queries()
-				if not player.is_in_grass():
-					overlap_flickered = true
-			if overlap_flickered:
-				printerr("重叠多个草丛 Area 时应保持在草丛，不要抖切")
-				failed += 1
-
+	_halt_walk(player, planet)
 	if failed == 0:
-		print("  脚步声 / FLORA 草丛 Area OK")
-	scene.queue_free()
-	await process_frame
+		print("  土/草脚步切换 OK")
 	return failed
