@@ -49,6 +49,10 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://audio/the_one_who_stands_distant.ogg",
 	"res://audio/i_want_to_go_home.ogg",
 	"res://audio/narrow_cpenta_toy_waltz.ogg",
+	"res://audio/muffled_dirt_thud_a.wav",
+	"res://audio/muffled_dirt_thud_b.wav",
+	"res://audio/dry_grass_rustle_a.wav",
+	"res://audio/dry_grass_rustle_b.wav",
 ]
 
 func _init() -> void:
@@ -62,6 +66,7 @@ func _run_tests() -> void:
 	failed += _check_tscn_editor_visible()
 	failed += _check_input_map()
 	failed += await _check_scene_and_mechanics()
+	failed += await _check_footsteps()
 	failed += await _check_b612_depart_lift_halfway_overhead()
 	failed += await _check_king_chapter()
 	failed += await _check_b612_departed_travels_to_king()
@@ -3095,6 +3100,231 @@ func _check_b612_departed_travels_to_king() -> int:
 		failed += 1
 	if failed == 0:
 		print("  B612 离星后进入国王星球 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _await_physics_queries() -> void:
+	for _frame_index in 4:
+		await physics_frame
+	PhysicsServer2D.flush_queries()
+
+
+func _check_footsteps() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	scene.travel_to_next_planet = false
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+
+	var planet: Planet = scene.get_node(PLANET_PATH) as Planet
+	var player: Player = scene.get_node(PLAYER_PATH) as Player
+	var footprint := scene.get_node("%Footprint") as Area2D
+	var footstep := scene.get_node("%Footstep")
+	var story := scene.get_node("%Story") as PlanetStory
+	if footprint == null or footstep == null:
+		printerr("Player 下应有 Footprint 与 Footstep")
+		scene.queue_free()
+		await process_frame
+		return 1
+	if footprint.collision_layer != 0:
+		printerr("脚底 Area 不应占据实心碰撞层")
+		failed += 1
+	if not footprint.get_collision_mask_value(WorldConstants.FLORA_GRASS_PHYSICS_LAYER_INDEX):
+		printerr("脚底 Area 应只检测草丛触发层")
+		failed += 1
+	if footprint.monitorable or footprint.input_pickable:
+		printerr("脚底 Area 不应挡互动或被其它 Area 当成障碍")
+		failed += 1
+	var footprint_shape := footprint.get_child(0) as CollisionShape2D
+	var footprint_circle := footprint_shape.shape as CircleShape2D
+	if not is_equal_approx(footprint_circle.radius, WorldConstants.PLAYER_FOOTPRINT_RADIUS):
+		printerr(
+				"脚底圆半径应为 %s，实际 %s"
+				% [WorldConstants.PLAYER_FOOTPRINT_RADIUS, footprint_circle.radius]
+		)
+		failed += 1
+
+	var flora_props: Array[SurfaceProp] = []
+	for prop in planet.surface_props:
+		if prop.kind == SurfaceProp.Kind.FLORA:
+			flora_props.append(prop)
+			var trigger := prop.get_node_or_null("GrassClumpTrigger") as Area2D
+			if trigger == null:
+				printerr("FLORA %s 应挂一份草丛 Area" % prop.name)
+				failed += 1
+				continue
+			if trigger.get_child_count() != 1:
+				printerr("FLORA %s 应为每丛一份 Area，不要按每根草切" % prop.name)
+				failed += 1
+			if trigger.monitoring or trigger.input_pickable:
+				printerr("草丛 Area 不应扫描或拦截输入：%s" % prop.name)
+				failed += 1
+			if trigger.collision_mask != 0:
+				printerr("草丛 Area 不应检测其它层：%s" % prop.name)
+				failed += 1
+			if not trigger.get_collision_layer_value(WorldConstants.FLORA_GRASS_PHYSICS_LAYER_INDEX):
+				printerr("草丛 Area 应挂在草丛触发层：%s" % prop.name)
+				failed += 1
+			var trigger_shape := trigger.get_child(0) as CollisionShape2D
+			var trigger_circle := trigger_shape.shape as CircleShape2D
+			if trigger_circle.radius <= WorldConstants.FLORA_SPRITE_SIZE * 0.5:
+				printerr("草丛 Area 应比视觉稍大：%s" % prop.name)
+				failed += 1
+			if not is_equal_approx(trigger_circle.radius, WorldConstants.FLORA_GRASS_TRIGGER_RADIUS):
+				printerr(
+						"草丛 Area 半径应为 %s，实际 %s（%s）"
+						% [WorldConstants.FLORA_GRASS_TRIGGER_RADIUS, trigger_circle.radius, prop.name]
+				)
+				failed += 1
+		elif prop.get_node_or_null("GrassClumpTrigger") != null:
+			printerr("非 FLORA 地物不应挂草丛 Area：%s" % prop.name)
+			failed += 1
+
+	planet.teleport_player(planet.rose_angle)
+	await _await_physics_queries()
+	if player.is_in_grass():
+		printerr("玫瑰旁默认不应判定在草丛")
+		failed += 1
+
+	planet.angular_velocity = 0.4
+	player._was_moving = false
+	player._last_walk_frame_index = -1
+	player._anim_time = 0.0
+	player._update_animation(1.0, 0.0)
+	if footstep.played_step_count != 1:
+		printerr("向右走落地应播放脚步，实际 %d" % footstep.played_step_count)
+		failed += 1
+	if footstep.last_step_was_grass:
+		printerr("不在草丛时应为土地脚步")
+		failed += 1
+
+	planet.angular_velocity = 0.0
+	player._update_animation(0.0, 0.05)
+	if footstep.playing:
+		printerr("停下应立刻停止脚步")
+		failed += 1
+	var count_after_stop: int = footstep.played_step_count
+	player._update_animation(0.0, 0.5)
+	if footstep.played_step_count != count_after_stop:
+		printerr("静止不应继续响脚步")
+		failed += 1
+
+	planet.angular_velocity = -0.4
+	player._was_moving = false
+	player._last_walk_frame_index = -1
+	player._anim_time = 0.0
+	player.flip_h = false
+	player._update_animation(-1.0, 0.0)
+	if not player.flip_h:
+		printerr("向左走时 flip_h 应为 true")
+		failed += 1
+	if footstep.played_step_count != count_after_stop + 1:
+		printerr("向左走落地也应播放脚步")
+		failed += 1
+
+	story.is_blocking_input = true
+	var count_before_lock: int = footstep.played_step_count
+	planet.angular_velocity = 0.4
+	player._was_moving = false
+	player._last_walk_frame_index = -1
+	player._anim_time = 0.0
+	player._update_animation(1.0, 0.0)
+	if footstep.played_step_count != count_before_lock:
+		printerr("对话锁输入时不应响脚步")
+		failed += 1
+	story.is_blocking_input = false
+	planet.angular_velocity = 0.0
+	player._was_moving = true
+	player._update_animation(0.0, 0.0)
+
+	if flora_props.is_empty():
+		printerr("应有 FLORA 用于草丛 Area 验证")
+		failed += 1
+	else:
+		planet.teleport_player(flora_props[0].rotation)
+		await _await_physics_queries()
+		if not player.is_in_grass():
+			printerr("走进 FLORA Area 应判定在草丛")
+			failed += 1
+		planet.angular_velocity = 0.4
+		player._was_moving = false
+		player._last_walk_frame_index = -1
+		player._anim_time = 0.0
+		player._update_animation(1.0, 0.0)
+		if not footstep.last_step_was_grass:
+			printerr("草丛内应为草地脚步")
+			failed += 1
+		planet.angular_velocity = 0.0
+		player._was_moving = true
+		player._update_animation(0.0, 0.0)
+
+		planet.teleport_player(planet.rose_angle)
+		await _await_physics_queries()
+		if player.is_in_grass():
+			printerr("离开草丛后应恢复不在草丛")
+			failed += 1
+		planet.angular_velocity = 0.4
+		player._was_moving = false
+		player._last_walk_frame_index = -1
+		player._anim_time = 0.0
+		player._update_animation(1.0, 0.0)
+		if footstep.last_step_was_grass:
+			printerr("离开草丛后应切回土地脚步")
+			failed += 1
+		planet.angular_velocity = 0.0
+		player._was_moving = true
+		player._update_animation(0.0, 0.0)
+
+		var clump_a: SurfaceProp = flora_props[0]
+		var clump_b: SurfaceProp = flora_props[0]
+		var closest_arc := INF
+		for first_index in flora_props.size():
+			for second_index in range(first_index + 1, flora_props.size()):
+				var arc_px := (
+						absf(angle_difference(
+								flora_props[first_index].rotation,
+								flora_props[second_index].rotation
+						))
+						* planet.radius
+				)
+				if arc_px < closest_arc:
+					closest_arc = arc_px
+					clump_a = flora_props[first_index]
+					clump_b = flora_props[second_index]
+		var overlap_span := (
+				WorldConstants.FLORA_GRASS_TRIGGER_RADIUS * 2.0
+				+ WorldConstants.PLAYER_FOOTPRINT_RADIUS
+		)
+		if closest_arc > overlap_span:
+			printerr("找不到可重叠的草丛 Area 对，最近弧长 %s" % closest_arc)
+			failed += 1
+		else:
+			var overlap_flickered := false
+			for sample_index in 5:
+				var sample_weight := float(sample_index) / 4.0
+				planet.teleport_player(
+						lerp_angle(clump_a.rotation, clump_b.rotation, sample_weight)
+				)
+				await _await_physics_queries()
+				if not player.is_in_grass():
+					overlap_flickered = true
+			if overlap_flickered:
+				printerr("重叠多个草丛 Area 时应保持在草丛，不要抖切")
+				failed += 1
+
+	if failed == 0:
+		print("  脚步声 / FLORA 草丛 Area OK")
 	scene.queue_free()
 	await process_frame
 	return failed
