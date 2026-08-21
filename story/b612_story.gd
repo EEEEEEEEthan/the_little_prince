@@ -113,12 +113,9 @@ func _play_story() -> void:
 		is_blocking_input = false
 		await _interact_rose()
 		_show_glass()
-	await _wait(1.0)
-	await _overhead("小王子有点失落")
-	await _overhead("但是小王子还是起身开始打扫星球")
-	_overhead("-->")
 	player.can_move_right = true
 	is_blocking_input = false
+	await _wait_move_right()
 	await _wait(3.0)
 	await _overhead("小王子很喜欢玫瑰花")
 	await _overhead("可是她的傲娇，她的尖刺，总是让他恼火")
@@ -212,6 +209,20 @@ func _wait(duration_seconds: float) -> void:
 		await _halt_if_stale(generation)
 		return
 	await get_tree().create_timer(duration_seconds).timeout
+	await _halt_if_stale(generation)
+
+
+func _wait_move_right() -> void:
+	var generation := _story_generation
+	_end_dialogue()
+	if skip_cinematics:
+		await _halt_if_stale(generation)
+		return
+	while is_inside_tree() and Input.get_action_strength(&"move_right") <= 0.0:
+		await get_tree().process_frame
+		if generation != _story_generation:
+			await _halt
+			return
 	await _halt_if_stale(generation)
 
 
