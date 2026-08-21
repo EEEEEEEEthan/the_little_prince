@@ -24,6 +24,7 @@ func _process(delta: float) -> void:
 	else:
 		_set_focus(planet.find_nearest_interactable())
 	if _focus == null:
+		_clear_hold()
 		return
 	var required_hold_seconds := story.interact_hold_seconds(_focus)
 	if required_hold_seconds > 0.0:
@@ -38,6 +39,7 @@ func _process(delta: float) -> void:
 		else:
 			_clear_hold()
 		return
+	_clear_hold()
 	if Input.is_action_just_pressed(&"interact"):
 		_on_interact()
 
@@ -69,5 +71,7 @@ func _set_focus(prop: SurfaceProp) -> void:
 
 
 func _clear_hold() -> void:
+	if _hold_elapsed_seconds == 0.0 and is_zero_approx(prompt.hold_fill_ratio):
+		return
 	_hold_elapsed_seconds = 0.0
 	prompt.hold_fill_ratio = 0.0

@@ -2083,6 +2083,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 			failed += 1
 			break
 
+	var interaction := scene.get_node("GameView/GameViewport/Interaction") as Interaction
 	var prompt := scene.get_node("GameView/GameViewport/InteractPrompt") as InteractPrompt
 	var overhead := story.overhead
 	var overhead_body := overhead.get_node("Body") as Label
@@ -2097,18 +2098,18 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not is_zero_approx(story.interact_hold_seconds(rose)):
 		printerr("拔苗段玫瑰不应长按")
 		failed += 1
+	interaction.set_process(false)
 	planet.teleport_player(shoots[0].rotation)
 	planet.angular_velocity = 0.0
-	await process_frame
-	await process_frame
+	interaction._process(0.0)
 	if not prompt.visible:
 		printerr("拔苗时应显示 A 提示")
 		failed += 1
 	Input.action_release("interact")
 	Input.action_press("interact")
-	await process_frame
+	interaction._process(0.0)
 	Input.action_release("interact")
-	await process_frame
+	interaction._process(0.0)
 	if shoots[0].is_consumed:
 		printerr("点按不应拔掉嫩芽")
 		failed += 1
@@ -2116,8 +2117,8 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("点按松开后进度应归零，实际 %s" % prompt.hold_fill_ratio)
 		failed += 1
 	Input.action_press("interact")
-	await create_timer(B612Story.PULL_SHOOT_HOLD_SECONDS * 0.5).timeout
-	if absf(prompt.hold_fill_ratio - 0.5) > 0.25:
+	interaction._process(B612Story.PULL_SHOOT_HOLD_SECONDS * 0.5)
+	if absf(prompt.hold_fill_ratio - 0.5) > 0.01:
 		printerr("长按一半时进度应接近一半，实际 %s" % prompt.hold_fill_ratio)
 		failed += 1
 	if shoots[0].is_consumed:
@@ -2130,7 +2131,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("长按拔苗时应不能走动，角速度 %s" % planet.angular_velocity)
 		failed += 1
 	Input.action_release("interact")
-	await process_frame
+	interaction._process(0.0)
 	if not is_equal_approx(prompt.hold_fill_ratio, 0.0):
 		printerr("长按中途松开后进度应归零，实际 %s" % prompt.hold_fill_ratio)
 		failed += 1
@@ -2138,9 +2139,8 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("长按中途松开不应拔掉嫩芽")
 		failed += 1
 	Input.action_press("interact")
-	await create_timer(B612Story.PULL_SHOOT_HOLD_SECONDS + 0.15).timeout
+	interaction._process(B612Story.PULL_SHOOT_HOLD_SECONDS)
 	Input.action_release("interact")
-	await process_frame
 	if not shoots[0].is_consumed or shoots[0].visible:
 		printerr("长按结束后嫩芽应立即消失")
 		failed += 1
@@ -2169,6 +2169,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.is_blocking_input:
 		printerr("拔苗头顶叙事超时")
 		failed += 1
+	interaction.set_process(true)
 	story.skip_cinematics = true
 
 	for shoot in shoots:
