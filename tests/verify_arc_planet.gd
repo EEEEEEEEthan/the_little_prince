@@ -69,8 +69,8 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT != 5:
 		printerr("BAOBAB_COUNT 应为 5，实际 %d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if WorldConstants.FLORA_COUNT != 14:
-		printerr("FLORA_COUNT 应为 14，实际 %d" % WorldConstants.FLORA_COUNT)
+	if WorldConstants.FLORA_COUNT != 80:
+		printerr("FLORA_COUNT 应为 80，实际 %d" % WorldConstants.FLORA_COUNT)
 		failed += 1
 	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
