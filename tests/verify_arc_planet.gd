@@ -1757,7 +1757,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	elif rose_delay_msec > 1800:
 		printerr("玫瑰开口过晚，淡入已 %d ms" % rose_delay_msec)
 		failed += 1
-	var dim_alpha := story.get_node("%Dim").color.a
+	var dim_alpha := (story.get_node("%Dim") as ColorRect).color.a
 	if dim_alpha < 0.25 or dim_alpha > 0.75:
 		printerr("玫瑰开口时黑场应淡入过半，实际 alpha=%s" % dim_alpha)
 		failed += 1
