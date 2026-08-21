@@ -44,4 +44,8 @@ static func lines_for_id(id: StringName) -> Array[DialogueLine]:
 			lines.append(DialogueLine.new(
 					PRINCE_SPEAKER, "他把星星锁进玻璃罐。", PRINCE_PORTRAIT
 			))
+		&"street_lamp":
+			lines.append(DialogueLine.new(
+					PRINCE_SPEAKER, "帮他点一次。", PRINCE_PORTRAIT
+			))
 	return lines

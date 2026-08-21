@@ -12,6 +12,10 @@ const SUNRISE_PHASE: float = 0.25
 ## 日落（中心与右端的中点）在贴图上的 X 坐标。
 const SUNSET_PHASE: float = 0.75
 
+static func is_night_phase(phase: float) -> bool:
+	return phase <= SUNRISE_PHASE or phase >= SUNSET_PHASE
+
+
 static func angle_to_phase(angle: float) -> float:
 	var a := fposmod(angle, TAU)
 	var dawn := WorldConstants.DAY_HALF_ARC

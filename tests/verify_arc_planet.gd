@@ -54,6 +54,10 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/hunched_ledger_merchant.png",
 	"res://planet/gold_star_glass_jar.png",
 	"res://ui/portraits/hunched_ledger_merchant.png",
+	"res://planet/ash_gray_mottled_disk.png",
+	"res://planet/black_coat_lamplighter.png",
+	"res://planet/black_post_street_lamp.png",
+	"res://ui/portraits/black_coat_lamplighter.png",
 ]
 
 const REQUIRED_OTHER_ASSETS: Array[String] = [
@@ -64,6 +68,7 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://audio/i_want_to_go_home.ogg",
 	"res://audio/narrow_cpenta_toy_waltz.ogg",
 	"res://audio/sparse_ledger_tally.ogg",
+	"res://audio/rapid_lamp_duty_tick.ogg",
 	"res://audio/muffled_dirt_thud_a.wav",
 	"res://audio/muffled_dirt_thud_b.wav",
 	"res://audio/dry_grass_rustle_a.wav",
@@ -82,6 +87,7 @@ func _run_tests() -> void:
 	failed += _check_king_scene_resource_uids()
 	failed += _check_drunkard_scene_resource_uids()
 	failed += _check_merchant_scene_resource_uids()
+	failed += _check_lamplighter_scene_resource_uids()
 	failed += _check_input_map()
 	failed += await _check_main_story_starts_with_sky_ready()
 	failed += await _check_story_not_active_before_planet_ready()
@@ -95,6 +101,8 @@ func _run_tests() -> void:
 	failed += await _check_king_departed_travels_to_drunkard()
 	failed += await _check_merchant_chapter()
 	failed += await _check_drunkard_departed_travels_to_merchant()
+	failed += await _check_lamplighter_chapter()
+	failed += await _check_merchant_departed_travels_to_lamplighter()
 	if failed == 0:
 		print("[verify_arc_planet] 全部通过")
 		quit(0)
@@ -118,6 +126,12 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.DRUNKARD_BOTTLE_COUNT != 17:
 		printerr("DRUNKARD_BOTTLE_COUNT 应为 17，实际 %d" % WorldConstants.DRUNKARD_BOTTLE_COUNT)
+		failed += 1
+	if WorldConstants.LAMPLIGHTER_PLANET_RADIUS >= WorldConstants.PLANET_RADIUS:
+		printerr("点灯人星球应比故乡更小")
+		failed += 1
+	if WorldConstants.LAMPLIGHTER_STAR_ROTATION_SPEED <= WorldConstants.STAR_ROTATION_SPEED * 20.0:
+		printerr("点灯人昼夜自转应明显快于默认星空")
 		failed += 1
 	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
@@ -543,6 +557,15 @@ func _check_static_assets() -> int:
 				% [ledger_diameter, ledger_diameter, ledger_body.get_width(), ledger_body.get_height()]
 			)
 			failed += 1
+	var ash_body: Texture2D = load("res://planet/ash_gray_mottled_disk.png") as Texture2D
+	if ash_body != null:
+		var ash_diameter: int = int(ceil(WorldConstants.LAMPLIGHTER_PLANET_RADIUS)) * 2
+		if ash_body.get_width() != ash_diameter or ash_body.get_height() != ash_diameter:
+			printerr(
+				"ash_gray_mottled_disk.png 应为 %dx%d，实际 %dx%d"
+				% [ash_diameter, ash_diameter, ash_body.get_width(), ash_body.get_height()]
+			)
+			failed += 1
 	# 精灵尺寸应对齐常量（火山 / 猴面包树为 spritesheet，宽度 = 帧数 × 帧尺寸）
 	var sprite_checks: Array = [
 		[
@@ -589,6 +612,13 @@ func _check_static_assets() -> int:
 		["res://planet/hunched_ledger_merchant.png", WorldConstants.HUNCHED_LEDGER_MERCHANT_WIDTH, WorldConstants.HUNCHED_LEDGER_MERCHANT_HEIGHT],
 		["res://planet/gold_star_glass_jar.png", WorldConstants.GOLD_STAR_GLASS_JAR_WIDTH, WorldConstants.GOLD_STAR_GLASS_JAR_HEIGHT],
 		["res://ui/portraits/hunched_ledger_merchant.png", 32, 32],
+		["res://planet/black_coat_lamplighter.png", WorldConstants.BLACK_COAT_LAMPLIGHTER_WIDTH, WorldConstants.BLACK_COAT_LAMPLIGHTER_HEIGHT],
+		[
+			"res://planet/black_post_street_lamp.png",
+			WorldConstants.BLACK_POST_STREET_LAMP_WIDTH * WorldConstants.BLACK_POST_STREET_LAMP_FRAME_COUNT,
+			WorldConstants.BLACK_POST_STREET_LAMP_HEIGHT,
+		],
+		["res://ui/portraits/black_coat_lamplighter.png", 32, 32],
 		["res://planet/glass_globe.png", 24, 24],
 		["res://planet/migratory_bird.png", 16, 8],
 		["res://planet/butterfly.png", 8, 3],
@@ -674,6 +704,7 @@ func _check_tscn_editor_visible() -> int:
 		"res://planet/vain.tscn",
 		"res://planet/drunkard.tscn",
 		"res://planet/merchant.tscn",
+		"res://planet/lamplighter.tscn",
 		"res://planet/butterfly.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
@@ -785,6 +816,40 @@ func _check_merchant_scene_resource_uids() -> int:
 		failed += 1
 	if failed == 0:
 		print("  商人场景资源 UID 与文件一致 OK")
+	return failed
+
+
+func _check_lamplighter_scene_resource_uids() -> int:
+	var failed := 0
+	var uid_and_path := RegEx.new()
+	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
+	var lamplighter_scene := FileAccess.get_file_as_string("res://planet/lamplighter.tscn")
+	for match_ in uid_and_path.search_all(lamplighter_scene):
+		var declared_uid := match_.get_string(1)
+		var resource_path := match_.get_string(2)
+		var canonical_uid := ResourceUID.id_to_text(
+				ResourceLoader.get_resource_uid(resource_path)
+		)
+		if declared_uid != canonical_uid:
+			printerr(
+					"lamplighter.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					% [resource_path, declared_uid, canonical_uid]
+			)
+			failed += 1
+	var zenith_header := FileAccess.get_file_as_string(
+			"res://planet/gray_day_night_zenith_gradient.tres"
+	).get_slice("\n", 0)
+	var zenith_canonical := ResourceUID.id_to_text(
+			ResourceLoader.get_resource_uid("res://planet/gray_day_night_zenith_gradient.tres")
+	)
+	if not zenith_header.contains(zenith_canonical):
+		printerr(
+				"gray_day_night_zenith_gradient.tres 头 UID 应为 %s"
+				% zenith_canonical
+		)
+		failed += 1
+	if failed == 0:
+		print("  点灯人场景资源 UID 与文件一致 OK")
 	return failed
 
 
@@ -3449,6 +3514,12 @@ func _check_standalone_planet_scenes() -> int:
 			"res://audio/sparse_ledger_tally.ogg",
 			"商人星球单独运行"
 	)
+	failed += await _assert_standalone_planet_run(
+			"res://planet/lamplighter.tscn",
+			LamplighterStory,
+			"res://audio/rapid_lamp_duty_tick.ogg",
+			"点灯人星球单独运行"
+	)
 	var base_planet := (load("res://planet/planet.tscn") as PackedScene).instantiate() as Planet
 	root.add_child(base_planet)
 	await process_frame
@@ -3571,6 +3642,42 @@ func _assert_standalone_planet_run(
 			failed += 1
 		if has_foreign_chapter:
 			printerr("商人单独运行不应有其它章地物")
+			failed += 1
+	if planet_path == "res://planet/lamplighter.tscn":
+		var lamplighter_count := 0
+		var lamp_count := 0
+		var has_foreign_chapter := false
+		for prop in planet.surface_props:
+			if prop.kind == SurfaceProp.Kind.LAMPLIGHTER:
+				lamplighter_count += 1
+			if prop.kind == SurfaceProp.Kind.STREET_LAMP:
+				lamp_count += 1
+			if prop.kind in [
+					SurfaceProp.Kind.KING,
+					SurfaceProp.Kind.ROSE,
+					SurfaceProp.Kind.DRUNKARD,
+					SurfaceProp.Kind.BOTTLE,
+					SurfaceProp.Kind.MERCHANT,
+					SurfaceProp.Kind.STAR_JAR,
+			]:
+				has_foreign_chapter = true
+		if lamplighter_count != 1:
+			printerr("点灯人单独运行应有一名点灯人")
+			failed += 1
+		if lamp_count != 1:
+			printerr("点灯人单独运行应只有一盏灯")
+			failed += 1
+		if has_foreign_chapter:
+			printerr("点灯人单独运行不应有其它章地物")
+			failed += 1
+		if not is_equal_approx(planet.radius, WorldConstants.LAMPLIGHTER_PLANET_RADIUS):
+			printerr("点灯人单独运行半径应是最小那颗")
+			failed += 1
+		if not is_equal_approx(
+				planet.sky.star_rotation_speed,
+				WorldConstants.LAMPLIGHTER_STAR_ROTATION_SPEED
+		):
+			printerr("点灯人单独运行星空应极快自转")
 			failed += 1
 	failed += _assert_playing_stream(
 			shell,
@@ -4558,6 +4665,267 @@ func _check_drunkard_departed_travels_to_merchant() -> int:
 		failed += 1
 	if failed == 0:
 		print("  酒鬼离星后进入商人星球 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_lamplighter_chapter() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	scene.travel_to_king_planet(false)
+	await process_frame
+	scene.travel_to_drunkard_planet(false)
+	await process_frame
+	scene.travel_to_merchant_planet(false)
+	await process_frame
+	scene.travel_to_lamplighter_planet(false)
+	await process_frame
+
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
+	var story := scene.get_node_or_null("%LamplighterStory") as LamplighterStory
+	if planet == null or player == null or story == null:
+		printerr("点灯人章缺少 Planet / Player / LamplighterStory")
+		scene.queue_free()
+		await process_frame
+		return 1
+	if planet.scene_file_path != "res://planet/lamplighter.tscn":
+		printerr("商人之后星球应为 lamplighter.tscn，实际 %s" % planet.scene_file_path)
+		failed += 1
+	failed += _assert_playing_music(scene, "lamplighter_day_music", "换到点灯人星球")
+	if story.planet != planet:
+		printerr("换星后 LamplighterStory 应绑定点灯人星球")
+		failed += 1
+	if (scene.get_node("%Interaction") as Interaction).story != story:
+		printerr("换星后 Interaction 应绑定 LamplighterStory")
+		failed += 1
+	if not is_equal_approx(planet.radius, WorldConstants.LAMPLIGHTER_PLANET_RADIUS):
+		printerr("点灯人星球半径应更小")
+		failed += 1
+	if not is_equal_approx(
+			planet.sky.star_rotation_speed,
+			WorldConstants.LAMPLIGHTER_STAR_ROTATION_SPEED
+	):
+		printerr("点灯人星空自转应极快")
+		failed += 1
+
+	var lamplighter: SurfaceProp = null
+	var street_lamp: SurfaceProp = null
+	var lamp_count := 0
+	for prop in planet.surface_props:
+		match prop.kind:
+			SurfaceProp.Kind.LAMPLIGHTER:
+				lamplighter = prop
+				if prop.is_interactable() or story.accepts_interact(prop):
+					printerr("点灯人不应可交互")
+					failed += 1
+			SurfaceProp.Kind.STREET_LAMP:
+				street_lamp = prop
+				lamp_count += 1
+			SurfaceProp.Kind.KING, SurfaceProp.Kind.ROSE, SurfaceProp.Kind.DRUNKARD, SurfaceProp.Kind.BOTTLE, SurfaceProp.Kind.MERCHANT, SurfaceProp.Kind.STAR_JAR, SurfaceProp.Kind.VOLCANO, SurfaceProp.Kind.BAOBAB, SurfaceProp.Kind.FLORA:
+				printerr("点灯人星球不应有其它章地物 %s" % prop.name)
+				failed += 1
+	if lamplighter == null:
+		printerr("点灯人星球应有点灯人")
+		failed += 1
+	if lamp_count != 1 or street_lamp == null:
+		printerr("点灯人星球应只有一盏灯")
+		failed += 1
+
+	var body_image := (planet.body.texture as Texture2D).get_image()
+	var chroma_pixels := 0
+	var opaque_pixels := 0
+	for pixel_y in range(0, body_image.get_height(), 4):
+		for pixel_x in range(0, body_image.get_width(), 4):
+			var pixel := body_image.get_pixel(pixel_x, pixel_y)
+			if pixel.a < 0.5:
+				continue
+			opaque_pixels += 1
+			var chroma := absf(pixel.r - pixel.g) + absf(pixel.g - pixel.b) + absf(pixel.b - pixel.r)
+			if chroma > 0.08:
+				chroma_pixels += 1
+	if opaque_pixels == 0 or float(chroma_pixels) / float(opaque_pixels) > 0.05:
+		printerr("点灯人星球地面应是黑白灰")
+		failed += 1
+	var gray_zenith := (
+			planet.sky.material as ShaderMaterial
+	).get_shader_parameter("zenith_gradient") as GradientTexture1D
+	if gray_zenith == null:
+		printerr("点灯人星球应有灰阶天空")
+		failed += 1
+	else:
+		var midnight := gray_zenith.gradient.sample(0.0)
+		var noon := gray_zenith.gradient.sample(SkyPhase.NOON_PHASE)
+		var midnight_chroma := (
+				absf(midnight.r - midnight.g)
+				+ absf(midnight.g - midnight.b)
+				+ absf(midnight.b - midnight.r)
+		)
+		var noon_chroma := absf(noon.r - noon.g) + absf(noon.g - noon.b) + absf(noon.b - noon.r)
+		if midnight_chroma > 0.04 or noon_chroma > 0.04:
+			printerr("点灯人天空应为灰阶，午夜 %s 正午 %s" % [midnight, noon])
+			failed += 1
+		if noon.r <= midnight.r + 0.2:
+			printerr("点灯人正午应明显亮于午夜")
+			failed += 1
+		if noon.g > noon.r and noon.g > noon.b:
+			printerr("点灯人天空不应像国王正午绿天")
+			failed += 1
+		if noon.r > noon.b + 0.2 and noon.r > 0.45:
+			printerr("点灯人天空不应像酒鬼琥珀傍晚")
+			failed += 1
+
+	if lamplighter == null or street_lamp == null:
+		scene.queue_free()
+		await process_frame
+		return failed + 1
+
+	var night_started_count := 0
+	var was_night := SkyPhase.is_night_phase(planet.sky.daylight_phase())
+	var simulated_seconds := 0.0
+	var step_seconds := 0.05
+	var three_days_seconds := (
+			TAU / WorldConstants.LAMPLIGHTER_STAR_ROTATION_SPEED
+			* float(LamplighterStory.ACCOMPANY_DAY_NIGHT_ROUND_COUNT)
+	)
+	while simulated_seconds < three_days_seconds + step_seconds:
+		planet.sky._process(step_seconds)
+		simulated_seconds += step_seconds
+		var is_night := SkyPhase.is_night_phase(planet.sky.daylight_phase())
+		if is_night and not was_night:
+			night_started_count += 1
+		was_night = is_night
+	if night_started_count < LamplighterStory.ACCOMPANY_DAY_NIGHT_ROUND_COUNT:
+		printerr(
+				"极快昼夜应能陪过几轮，实际入夜 %d"
+				% night_started_count
+		)
+		failed += 1
+
+	failed += _assert_focus(planet, street_lamp, &"street_lamp", "路灯")
+	planet.teleport_player(planet.spawn_angle)
+	story.skip_cinematics = true
+	await story.start()
+	if not story.has_finished_opening:
+		printerr("点灯人开场结束后应能走动")
+		failed += 1
+	if story.is_blocking_input:
+		printerr("点灯人开场结束后应允许走动")
+		failed += 1
+	if not player.can_move_left or not player.can_move_right:
+		printerr("点灯人开场后应能左右移动")
+		failed += 1
+	if not story.accepts_interact(street_lamp):
+		printerr("开场后应能帮点一次灯")
+		failed += 1
+	if story.accepts_interact(lamplighter):
+		printerr("不应把点灯人做成修好作息的对象")
+		failed += 1
+	if not story.try_handle_interact(street_lamp):
+		printerr("开场后应能帮点一次灯")
+		failed += 1
+	if not street_lamp.is_consumed:
+		printerr("帮点一次后灯交互应消耗")
+		failed += 1
+	if story.accepts_interact(street_lamp):
+		printerr("不能反复点灯当成把灯点完的关卡")
+		failed += 1
+	if not is_equal_approx(
+			planet.sky.star_rotation_speed,
+			WorldConstants.LAMPLIGHTER_STAR_ROTATION_SPEED
+	):
+		printerr("帮点一次后作息不应被调慢")
+		failed += 1
+	planet.sky.is_self_rotating = false
+	planet.sky.commanded_daylight_phase = SkyPhase.NOON_PHASE
+	await process_frame
+	if street_lamp.frame != 0:
+		printerr("白天灯应熄，作息没有被修好")
+		failed += 1
+	planet.sky.commanded_daylight_phase = 0.0
+	await process_frame
+	if street_lamp.frame != 1:
+		printerr("夜里灯应亮，离开时作息仍在转")
+		failed += 1
+	if player.modulate.a > 0.01:
+		printerr("离星后小王子应消失")
+		failed += 1
+	if story.get_node("%Epilogue").text != "329。":
+		printerr("黑场应留下 329。，实际 %s" % story.get_node("%Epilogue").text)
+		failed += 1
+	if FileAccess.get_file_as_string("res://story/lamplighter_story.gd").count("_interact(") != 1:
+		printerr("点灯人章只能帮点一次灯")
+		failed += 1
+	if failed == 0:
+		print("  点灯人星球演出 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_merchant_departed_travels_to_lamplighter() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("%Story") as B612Story).auto_start = false
+	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
+	(scene.get_node("%DrunkardStory") as DrunkardStory).skip_cinematics = true
+	(scene.get_node("%MerchantStory") as MerchantStory).skip_cinematics = true
+	(scene.get_node("%LamplighterStory") as LamplighterStory).skip_cinematics = true
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	scene.travel_to_merchant_planet(true)
+	await process_frame
+	await process_frame
+	var merchant_story := scene.get_node("%MerchantStory") as MerchantStory
+	merchant_story._story_generation += 1
+	merchant_story.is_active = false
+	merchant_story.set_process(false)
+	merchant_story.departed.emit()
+	await process_frame
+	await process_frame
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var lamplighter_story := scene.get_node("%LamplighterStory") as LamplighterStory
+	if planet == null or planet.scene_file_path != "res://planet/lamplighter.tscn":
+		printerr(
+				"商人离星后应换到点灯人星球，实际 %s"
+				% (planet.scene_file_path if planet != null else "null")
+		)
+		failed += 1
+	if lamplighter_story.planet != planet:
+		printerr("离星换星后 LamplighterStory 应绑定点灯人星球")
+		failed += 1
+	failed += _assert_playing_music(scene, "lamplighter_day_music", "商人离星换星")
+	var opening_deadline_msec := Time.get_ticks_msec() + 5000
+	while (
+			not lamplighter_story.has_finished_opening
+			and Time.get_ticks_msec() < opening_deadline_msec
+	):
+		await process_frame
+	if not lamplighter_story.has_finished_opening:
+		printerr("换星后点灯人开场应自动开始")
+		failed += 1
+	if failed == 0:
+		print("  商人离星后进入点灯人星球 OK")
 	scene.queue_free()
 	await process_frame
 	return failed

@@ -18,6 +18,9 @@
 [ext_resource type="PackedScene" uid="uid://bvjewowvb2ter" path="res://planet/merchant.tscn" id="16_merchant"]
 [ext_resource type="Script" uid="uid://bw54dtm61dbg5" path="res://story/merchant_story.gd" id="17_merchant_story"]
 [ext_resource type="AudioStream" uid="uid://cqwx6juhnepo3" path="res://audio/sparse_ledger_tally.ogg" id="18_merchant_music"]
+[ext_resource type="PackedScene" uid="uid://ng34d2r5t0gd" path="res://planet/lamplighter.tscn" id="19_lamplighter"]
+[ext_resource type="Script" uid="uid://dpepijvfb0qlv" path="res://story/lamplighter_story.gd" id="20_lamplighter_story"]
+[ext_resource type="AudioStream" uid="uid://cciq03byi16e0" path="res://audio/rapid_lamp_duty_tick.ogg" id="21_lamplighter_music"]
 
 [node name="Main" unique_id=134579991 instance=ExtResource("1_shell")]
 script = ExtResource("2_main")
@@ -26,10 +29,12 @@ script = ExtResource("2_main")
 metadata/king_planet_scene = ExtResource("4_king")
 metadata/drunkard_planet_scene = ExtResource("13_drunkard")
 metadata/merchant_planet_scene = ExtResource("16_merchant")
+metadata/lamplighter_planet_scene = ExtResource("19_lamplighter")
 metadata/home_day_music = ExtResource("7_home_day_music")
 metadata/king_day_music = ExtResource("8_king_day_music")
 metadata/drunkard_day_music = ExtResource("15_drunkard_music")
 metadata/merchant_day_music = ExtResource("18_merchant_music")
+metadata/lamplighter_day_music = ExtResource("21_lamplighter_music")
 metadata/dirt_footstep_a = ExtResource("9_dirt_a")
 metadata/dirt_footstep_b = ExtResource("10_dirt_b")
 metadata/grass_footstep_a = ExtResource("11_grass_a")
@@ -55,4 +60,9 @@ auto_start = false
 [node name="MerchantStory" type="Node" parent="GameView/GameViewport" index="9"]
 unique_name_in_owner = true
 script = ExtResource("17_merchant_story")
+auto_start = false
+
+[node name="LamplighterStory" type="Node" parent="GameView/GameViewport" index="10"]
+unique_name_in_owner = true
+script = ExtResource("20_lamplighter_story")
 auto_start = false
