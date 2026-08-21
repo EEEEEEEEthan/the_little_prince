@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://cojn20gna51qe"]
+[gd_scene format=3 uid="uid://cb612playstage"]
 
 [ext_resource type="Script" uid="uid://cyh14kfr3hytu" path="res://main.gd" id="1_main"]
-[ext_resource type="PackedScene" uid="uid://dkingplanet01" path="res://planet/king.tscn" id="2_planet"]
+[ext_resource type="PackedScene" uid="uid://6a4gvsyrkrea" path="res://planet/b612.tscn" id="2_planet"]
 [ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://player/player.gd" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://mybv7igebkcb" path="res://player/prince.png" id="4_prince"]
 [ext_resource type="Shader" uid="uid://bahfecy4eixc3" path="res://palette.gdshader" id="5_palette_shader"]
@@ -12,7 +12,7 @@
 [ext_resource type="Script" uid="uid://ciwt72d3i6fwy" path="res://interact/interaction.gd" id="10_interact"]
 [ext_resource type="Script" uid="uid://pqblm1m4kgms" path="res://player/scarf.gd" id="11_scarf"]
 [ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
-[ext_resource type="Script" uid="uid://ckingstoryg01" path="res://story/king_story.gd" id="13_story"]
+[ext_resource type="Script" uid="uid://8xqecv8g6cek" path="res://story/b612_story.gd" id="13_story"]
 [ext_resource type="Script" uid="uid://wt1e4t3x7gyv" path="res://story/migratory_flock.gd" id="14_flock"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
 [ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]

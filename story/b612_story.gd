@@ -1,82 +1,16 @@
 class_name B612Story
-extends Node
+extends PlanetStory
 ## B612 故乡剧情：一条协程串起对白、侧写、交互与离星。
-
-signal prop_interacted(prop)
-signal sunset_crossed
-signal _halt
 
 const PULL_SHOOT_HOLD_SECONDS := 0.8
 const GLASS_GLOBE_HOLD_SECONDS := 0.8
 
-@export var auto_start: bool = true
-
-var skip_cinematics: bool = false
-var is_active: bool = false
-var is_blocking_input: bool = false
-var has_finished_opening: bool = false
-var has_crossed_sunset: bool = false
-
 var _is_glass_interact: bool = false
-var _story_generation: int = 0
-var _last_sky_phase: float = SkyPhase.NOON_PHASE
-var _waiting_interact_kind: int = -1
-var _dialogue_closed_early: bool = false
-var _story_tween: Tween
-
-@onready var planet: Planet = %Planet
-@onready var player: Player = %Player
-@onready var dialogue: DialogueBox = %DialogueBox
-@onready var overhead: OverheadTypewriter = %OverheadTypewriter
-@onready var flock: MigratoryFlock = %MigratoryFlock
 
 
 func _ready() -> void:
-	overhead.play_on_ready = false
 	_glass_globe().visible = false
-	%Epilogue.text = ""
-	if auto_start:
-		%Dim.color = Color(0, 0, 0, 1)
-		start()
-	else:
-		%Dim.color = Color(0, 0, 0, 0)
-
-
-func _process(_delta: float) -> void:
-	if is_active and not has_crossed_sunset:
-		try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
-
-
-func start() -> void:
-	_story_generation += 1
-	sunset_crossed.emit()
-	prop_interacted.emit(null)
-	if dialogue.is_open():
-		dialogue.close()
-	overhead.play("")
-	if _story_tween != null:
-		_story_tween.kill()
-		_story_tween = null
-	is_active = true
-	has_finished_opening = false
-	has_crossed_sunset = false
-	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
-	_waiting_interact_kind = -1
-	_is_glass_interact = false
-	_dialogue_closed_early = false
-	_glass_globe().visible = false
-	player.can_move_left = false
-	player.can_move_right = false
-	player.move_speed_scale = 0.8
-	_play_story()
-	while not has_finished_opening and is_inside_tree():
-		await get_tree().process_frame
-
-
-func accepts_interact(prop: SurfaceProp) -> bool:
-	if not is_active or is_blocking_input or prop.is_consumed:
-		return false
-	return int(prop.kind) == _waiting_interact_kind
+	super._ready()
 
 
 func interact_hold_seconds(prop: SurfaceProp) -> float:
@@ -89,34 +23,14 @@ func interact_hold_seconds(prop: SurfaceProp) -> float:
 	return 0.0
 
 
-func try_handle_interact(prop: SurfaceProp) -> bool:
-	if not accepts_interact(prop):
-		return false
-	_lock_input()
-	_waiting_interact_kind = -1
-	prop_interacted.emit(prop)
-	return true
-
-
-func try_first_sunset_narration(phase: float) -> void:
-	if has_crossed_sunset:
-		return
-	if _last_sky_phase < SkyPhase.SUNSET_PHASE and phase >= SkyPhase.SUNSET_PHASE:
-		has_crossed_sunset = true
-		sunset_crossed.emit()
-	_last_sky_phase = phase
+func _prepare_start() -> void:
+	_is_glass_interact = false
+	_glass_globe().visible = false
+	player.move_speed_scale = 0.8
 
 
 func _play_story() -> void:
-	_lock_input()
-	%Dim.color = Color(0, 0, 0, 1)
-	if skip_cinematics:
-		%Dim.color.a = 0.0
-	else:
-		var fade_in_from_black_seconds := 2.4
-		_story_tween = create_tween()
-		_story_tween.tween_property(%Dim, "color:a", 0.0, fade_in_from_black_seconds)
-		await _wait(fade_in_from_black_seconds * 0.5)
+	await _fade_in_from_black()
 	await _rose("我刚刚睡醒，真对不起，我的头发还是乱蓬蓬的。。。")
 	await _prince("可你还是很美丽")
 	await _rose("是吧，我是与太阳同时出生的。。。")
@@ -208,35 +122,11 @@ func _play_story() -> void:
 	await _overhead("玫瑰不想小王子看见她在哭")
 	_overhead("她总是这么傲娇")
 	rose.is_consumed = true
-	await _depart()
+	await _depart("B-612。")
 
 
 func _rose(text: String) -> void:
 	await _line(DialogueCatalog.ROSE_SPEAKER, text, DialogueCatalog.ROSE_PORTRAIT)
-
-
-func _prince(text: String) -> void:
-	await _line(DialogueCatalog.PRINCE_SPEAKER, text, DialogueCatalog.PRINCE_PORTRAIT)
-
-
-func _overhead(display_text: String) -> void:
-	var generation := _story_generation
-	_end_dialogue()
-	if skip_cinematics or display_text.is_empty():
-		await _halt_if_stale(generation)
-		return
-	await overhead.play_queued(display_text)
-	await _halt_if_stale(generation)
-
-
-func _wait(duration_seconds: float) -> void:
-	var generation := _story_generation
-	_end_dialogue()
-	if skip_cinematics:
-		await _halt_if_stale(generation)
-		return
-	await get_tree().create_timer(duration_seconds).timeout
-	await _halt_if_stale(generation)
 
 
 func _wait_move_right() -> void:
@@ -261,109 +151,12 @@ func _interact_baobab() -> SurfaceProp:
 	return await _interact(SurfaceProp.Kind.BAOBAB)
 
 
-func _meet_sunset() -> void:
-	var generation := _story_generation
-	if not has_crossed_sunset:
-		await sunset_crossed
-	await _halt_if_stale(generation)
-
-
-func _camera_up() -> void:
-	await _tween_game_camera_offset_y(-16.0, 1.0)
-
-
-func _camera_down() -> void:
-	await _tween_game_camera_offset_y(0.0, 1.0)
-
-
 func _show_glass() -> void:
 	_glass_globe().visible = true
 
 
 func _hide_glass() -> void:
 	_glass_globe().visible = false
-
-
-func _line(speaker: String, text: String, portrait: Texture2D) -> void:
-	var generation := _story_generation
-	if skip_cinematics or _dialogue_closed_early:
-		await _halt_if_stale(generation)
-		return
-	_lock_input()
-	var already_open := dialogue.is_open()
-	dialogue.play_line(DialogueLine.new(speaker, text, portrait))
-	if dialogue.is_open() and not already_open and Input.is_action_pressed(&"interact"):
-		dialogue.mark_holding(true)
-	await dialogue.line_advanced
-	if not dialogue.is_open():
-		_dialogue_closed_early = true
-	await _halt_if_stale(generation)
-
-
-func _interact(kind: SurfaceProp.Kind) -> SurfaceProp:
-	var generation := _story_generation
-	_end_dialogue()
-	_waiting_interact_kind = int(kind)
-	var prop: SurfaceProp = await prop_interacted
-	_waiting_interact_kind = -1
-	await _halt_if_stale(generation)
-	return prop
-
-
-func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float) -> void:
-	var generation := _story_generation
-	if skip_cinematics:
-		await _halt_if_stale(generation)
-		return
-	if _story_tween != null:
-		_story_tween.kill()
-	_story_tween = create_tween()
-	_story_tween.set_trans(Tween.TRANS_CUBIC)
-	_story_tween.set_ease(Tween.EASE_IN_OUT)
-	_story_tween.tween_property(%GameCamera, "offset:y", target_offset_y, duration_seconds)
-	await _story_tween.finished
-	_story_tween = null
-	await _halt_if_stale(generation)
-
-
-func _depart() -> void:
-	var generation := _story_generation
-	_end_dialogue()
-	if skip_cinematics:
-		player.modulate.a = 0.0
-		%Dim.color = Color(0, 0, 0, 1)
-		%Epilogue.text = "B-612。"
-		await _halt_if_stale(generation)
-		return
-	await flock.arrive_from_offscreen(player.global_position)
-	flock.lift(72.0, 2.4)
-	var lift_tween := create_tween().set_parallel(true)
-	lift_tween.tween_property(player, "position:y", player.position.y - 72.0, 2.4)
-	lift_tween.tween_property(player, "modulate:a", 0.0, 2.4)
-	await lift_tween.finished
-	_story_tween = create_tween()
-	_story_tween.tween_property(%Dim, "color:a", 1.0, 1.2)
-	await _story_tween.finished
-	_story_tween = null
-	%Epilogue.text = "B-612。"
-	await _halt_if_stale(generation)
-
-
-func _end_dialogue() -> void:
-	_dialogue_closed_early = false
-	if dialogue.is_open():
-		dialogue.close()
-
-
-func _halt_if_stale(generation: int) -> void:
-	if generation == _story_generation:
-		return
-	await _halt
-
-
-func _lock_input() -> void:
-	is_blocking_input = true
-	planet.angular_velocity = 0.0
 
 
 func _rose_prop() -> SurfaceProp:

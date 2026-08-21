@@ -1,13 +1,13 @@
 class_name SurfaceProp
 extends Sprite2D
-## 圆弧星球上的地表地物（玫瑰 / 火山 / 猴面包树 / 地表植物），拖到 Planet 的 Surface 下即可。
+## 圆弧星球上的地表地物，拖到 Planet 的 Surface 下即可。
 ## 位置、贴图、帧、层级均在 tscn 中定死；运行期仅按玩家角更新可见性。
 
-enum Kind { ROSE, VOLCANO, BAOBAB, FLORA }
+enum Kind { ROSE, VOLCANO, BAOBAB, FLORA, KING, RAT }
 
 @export var kind: Kind = Kind.ROSE
 @export var variant: int = 0
-## 对话目录 id；空则按 kind 回落。火山与地表植物无对话。
+## 对话目录 id；空则按 kind 回落。装饰性地物无对话。
 @export var dialogue_id: StringName = &""
 var is_consumed: bool = false
 
@@ -20,12 +20,14 @@ func get_dialogue_id() -> StringName:
 			return &"rose"
 		Kind.BAOBAB:
 			return &"baobab"
+		Kind.KING:
+			return &"king"
 	return &""
 
 
 func is_interactable() -> bool:
 	match kind:
-		Kind.VOLCANO, Kind.FLORA:
+		Kind.VOLCANO, Kind.FLORA, Kind.RAT:
 			return false
 	return not is_consumed and get_dialogue_id() != &""
 
