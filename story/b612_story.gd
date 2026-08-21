@@ -269,6 +269,7 @@ func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 
 func _interact(kind: SurfaceProp.Kind) -> SurfaceProp:
 	var generation := _story_generation
+	_end_dialogue()
 	_waiting_interact_kind = int(kind)
 	var prop: SurfaceProp = await prop_interacted
 	_waiting_interact_kind = -1
