@@ -68,6 +68,12 @@ const PLAYER_WALK_FRAME_COUNT: int = 4
 const PLAYER_SPRITE_FRAME_COUNT: int = PLAYER_IDLE_FRAME_COUNT + PLAYER_WALK_FRAME_COUNT
 const PLAYER_IDLE_FPS: float = 2.0
 const PLAYER_WALK_FPS: float = 8.0
+## 脚底探测圆半径（像素），用于与草丛 Area 重叠。
+const PLAYER_FOOTPRINT_RADIUS: float = 6.0
+## 草丛触发区物理层；Area 仅挂此层，不挡行走与互动。
+const FLORA_GRASS_PHYSICS_LAYER_INDEX: int = 2
+## 每丛 FLORA 一份圆形 Area，比半幅视觉略大。
+const FLORA_GRASS_TRIGGER_RADIUS: float = FLORA_SPRITE_SIZE * 0.5 * 1.35
 
 ## 火山 spritesheet：死火山变体在前，活火山在后（熔岩发光；烟雾由粒子绘制）。
 const VOLCANO_VARIANT_COUNT: int = 3

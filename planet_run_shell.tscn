@@ -17,6 +17,10 @@
 [ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="19_home_day_music"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="21_king_day_music"]
+[ext_resource type="AudioStream" uid="uid://o7js72pawqgm" path="res://audio/muffled_dirt_thud_a.wav" id="22_dirt_a"]
+[ext_resource type="AudioStream" uid="uid://cb5s0bvsmamf5" path="res://audio/muffled_dirt_thud_b.wav" id="23_dirt_b"]
+[ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="24_grass_a"]
+[ext_resource type="AudioStream" uid="uid://cuivhluijhgxn" path="res://audio/dry_grass_rustle_b.wav" id="25_grass_b"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
 shader = ExtResource("5_palette_shader")
@@ -25,6 +29,36 @@ shader_parameter/palette = ExtResource("6_palette")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
 shader = ExtResource("16_prompt_shader")
 shader_parameter/fill_ratio = 0.0
+
+[sub_resource type="GDScript" id="GDScript_footstep"]
+script/source = "extends AudioStreamPlayer
+## 行走落地 one-shot：默认土地；进草丛 Area 后改播草地。
+
+const META_DIRT_FOOTSTEP_A := \"dirt_footstep_a\"
+const META_DIRT_FOOTSTEP_B := \"dirt_footstep_b\"
+const META_GRASS_FOOTSTEP_A := \"grass_footstep_a\"
+const META_GRASS_FOOTSTEP_B := \"grass_footstep_b\"
+
+var played_step_count: int = 0
+var last_step_was_grass: bool = false
+
+
+func play_step() -> void:
+	var variant_is_first := (played_step_count % 2) == 0
+	played_step_count += 1
+	var use_grass := (%Player as Player).is_in_grass()
+	var meta_name: String
+	if use_grass:
+		meta_name = META_GRASS_FOOTSTEP_A if variant_is_first else META_GRASS_FOOTSTEP_B
+	else:
+		meta_name = META_DIRT_FOOTSTEP_A if variant_is_first else META_DIRT_FOOTSTEP_B
+	stream = owner.get_node(\"Config\").get_meta(meta_name) as AudioStream
+	last_step_was_grass = use_grass
+	play()
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_footprint"]
+radius = 6.0
 
 [sub_resource type="GDScript" id="GDScript_music"]
 script/source = "extends Node
@@ -117,6 +151,10 @@ script = ExtResource("1_shell")
 process_mode = 4
 metadata/home_day_music = ExtResource("19_home_day_music")
 metadata/king_day_music = ExtResource("21_king_day_music")
+metadata/dirt_footstep_a = ExtResource("22_dirt_a")
+metadata/dirt_footstep_b = ExtResource("23_dirt_b")
+metadata/grass_footstep_a = ExtResource("24_grass_a")
+metadata/grass_footstep_b = ExtResource("25_grass_b")
 
 [node name="Music" type="Node" parent="."]
 unique_name_in_owner = true
@@ -159,6 +197,21 @@ texture = ExtResource("4_prince")
 flip_h = true
 hframes = 6
 script = ExtResource("3_player")
+
+[node name="Footprint" type="Area2D" parent="GameView/GameViewport/Player"]
+unique_name_in_owner = true
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+input_pickable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GameView/GameViewport/Player/Footprint"]
+shape = SubResource("CircleShape2D_footprint")
+
+[node name="Footstep" type="AudioStreamPlayer" parent="GameView/GameViewport/Player"]
+unique_name_in_owner = true
+volume_db = -12.0412
+script = SubResource("GDScript_footstep")
 
 [node name="Scarf" type="Sprite2D" parent="GameView/GameViewport/Player" unique_id=1847293651]
 unique_name_in_owner = true

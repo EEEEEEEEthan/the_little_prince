@@ -271,6 +271,10 @@ joypads/ignore_joypad_on_unfocused_application=true
 
 3d/physics_engine="Jolt Physics"
 
+[layer_names]
+
+2d_physics/layer_2="flora_grass"
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

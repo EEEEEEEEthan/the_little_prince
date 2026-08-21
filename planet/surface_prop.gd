@@ -12,6 +12,26 @@ enum Kind { ROSE, VOLCANO, BAOBAB, FLORA, KING, RAT }
 var is_consumed: bool = false
 
 
+func _ready() -> void:
+	if kind != Kind.FLORA:
+		return
+	var trigger := Area2D.new()
+	trigger.name = "GrassClumpTrigger"
+	trigger.monitoring = false
+	trigger.monitorable = true
+	trigger.input_pickable = false
+	trigger.collision_layer = 0
+	trigger.set_collision_layer_value(WorldConstants.FLORA_GRASS_PHYSICS_LAYER_INDEX, true)
+	trigger.collision_mask = 0
+	trigger.position = offset
+	var collision_shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = WorldConstants.FLORA_GRASS_TRIGGER_RADIUS
+	collision_shape.shape = circle
+	trigger.add_child(collision_shape)
+	add_child(trigger)
+
+
 func get_dialogue_id() -> StringName:
 	if dialogue_id != &"":
 		return dialogue_id

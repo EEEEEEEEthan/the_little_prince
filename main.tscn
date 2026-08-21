@@ -8,6 +8,10 @@
 [ext_resource type="Script" uid="uid://ckingstoryg01" path="res://story/king_story.gd" id="6_king_story"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="7_home_day_music"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="8_king_day_music"]
+[ext_resource type="AudioStream" uid="uid://o7js72pawqgm" path="res://audio/muffled_dirt_thud_a.wav" id="9_dirt_a"]
+[ext_resource type="AudioStream" uid="uid://cb5s0bvsmamf5" path="res://audio/muffled_dirt_thud_b.wav" id="10_dirt_b"]
+[ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="11_grass_a"]
+[ext_resource type="AudioStream" uid="uid://cuivhluijhgxn" path="res://audio/dry_grass_rustle_b.wav" id="12_grass_b"]
 
 [node name="Main" unique_id=134579991 instance=ExtResource("1_shell")]
 script = ExtResource("2_main")
@@ -16,6 +20,10 @@ script = ExtResource("2_main")
 metadata/king_planet_scene = ExtResource("4_king")
 metadata/home_day_music = ExtResource("7_home_day_music")
 metadata/king_day_music = ExtResource("8_king_day_music")
+metadata/dirt_footstep_a = ExtResource("9_dirt_a")
+metadata/dirt_footstep_b = ExtResource("10_dirt_b")
+metadata/grass_footstep_a = ExtResource("11_grass_a")
+metadata/grass_footstep_b = ExtResource("12_grass_b")
 
 [node name="Planet" parent="GameView/GameViewport" index="1" instance=ExtResource("3_b612")]
 unique_name_in_owner = true

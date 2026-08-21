@@ -11,6 +11,7 @@ var can_move_right: bool = true
 var move_speed_scale: float = 1.0
 var _anim_time: float = 0.0
 var _was_moving: bool = false
+var _last_walk_frame_index: int = -1
 
 func _ready() -> void:
 	hframes = WorldConstants.PLAYER_SPRITE_FRAME_COUNT
@@ -33,18 +34,29 @@ func _physics_process(delta: float) -> void:
 	planet.move_player(direction, delta)
 	_update_animation(direction, delta)
 
+func is_in_grass() -> bool:
+	return not %Footprint.get_overlapping_areas().is_empty()
+
+
 func _update_animation(direction: float, delta: float) -> void:
 	if absf(direction) > 0.01:
 		flip_h = direction < 0.0
 	var moving := planet.is_moving()
 	if moving != _was_moving:
 		_anim_time = 0.0
+		_last_walk_frame_index = -1
+		if not moving:
+			%Footstep.stop()
 		_was_moving = moving
 	_anim_time += delta
 	if moving:
 		var walk_count := WorldConstants.PLAYER_WALK_FRAME_COUNT
-		var idx := int(_anim_time * WorldConstants.PLAYER_WALK_FPS) % walk_count
-		frame = WorldConstants.PLAYER_IDLE_FRAME_COUNT + idx
+		var walk_index := int(_anim_time * WorldConstants.PLAYER_WALK_FPS) % walk_count
+		frame = WorldConstants.PLAYER_IDLE_FRAME_COUNT + walk_index
+		if walk_index != _last_walk_frame_index:
+			_last_walk_frame_index = walk_index
+			if walk_index % 2 == 0 and not interaction.is_busy():
+				%Footstep.play_step()
 	else:
 		var idle_count := WorldConstants.PLAYER_IDLE_FRAME_COUNT
 		var idx := int(_anim_time * WorldConstants.PLAYER_IDLE_FPS) % idle_count
