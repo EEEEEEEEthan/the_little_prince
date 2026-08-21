@@ -27,7 +27,6 @@ shader_parameter/world_frequency = 0.08
 z_index = -4096
 
 [node name="Volcano" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320]
-z_index = -1097
 texture_filter = 1
 position = Vector2(-67.00001, 54.000008)
 rotation = 4.07983
@@ -64,7 +63,6 @@ scale_amount_min = 0.5
 color_ramp = SubResource("Gradient_volcano_smoke")
 
 [node name="Volcano2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=1280196619]
-z_index = -1097
 texture_filter = 1
 position = Vector2(-28.8, 76.8)
 rotation = -2.7793012
@@ -75,7 +73,6 @@ script = ExtResource("3_surface_prop")
 kind = 1
 
 [node name="Volcano3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147]
-z_index = -1097
 texture_filter = 1
 position = Vector2(-80.924164, -32.90971)
 rotation = -1.18455
@@ -174,6 +171,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=398885020]
 texture_filter = 1
@@ -186,6 +184,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=1070219591]
@@ -199,6 +198,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora4" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=463101933]
@@ -211,6 +211,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora5" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=388052583]
 texture_filter = 1
@@ -223,6 +224,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora6" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=1802157156]
@@ -236,6 +238,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora7" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=1833898605]
@@ -249,6 +252,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora8" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=1821203273]
@@ -261,6 +265,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora9" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=1724662820]
 texture_filter = 1
@@ -273,6 +278,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora10" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="18" unique_id=1507662876]
@@ -286,6 +292,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora11" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="19" unique_id=1615133110]
@@ -299,6 +306,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora12" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="20" unique_id=1882337607]
@@ -311,6 +319,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora13" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="21" unique_id=989443731]
 texture_filter = 1
@@ -322,6 +331,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora14" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="22" unique_id=861472560]
 texture_filter = 1
@@ -334,6 +344,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora15" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="23" unique_id=2042476698]
@@ -347,6 +358,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora16" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="24" unique_id=315838329]
@@ -359,6 +371,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora17" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="25" unique_id=229909561]
 texture_filter = 1
@@ -371,6 +384,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora18" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="26" unique_id=335268583]
@@ -384,6 +398,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora19" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="27" unique_id=647566336]
@@ -397,6 +412,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora20" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="28" unique_id=689785374]
@@ -410,6 +426,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora21" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="29" unique_id=654175941]
@@ -423,6 +440,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora22" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="30" unique_id=1043564877]
@@ -436,6 +454,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora23" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="31" unique_id=2088623713]
@@ -448,6 +467,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora24" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="32" unique_id=282634140]
 texture_filter = 1
@@ -459,6 +479,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora25" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="33" unique_id=722334181]
 texture_filter = 1
@@ -471,6 +492,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora26" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="34" unique_id=442799933]
@@ -484,6 +506,7 @@ hframes = 6
 frame = 3
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 3
 
 [node name="Flora27" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="35" unique_id=1810473853]
@@ -496,6 +519,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora28" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="36" unique_id=1141713434]
 texture_filter = 1
@@ -508,6 +532,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora29" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="37" unique_id=485630022]
@@ -521,6 +546,7 @@ hframes = 6
 frame = 3
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 3
 
 [node name="Flora30" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="38" unique_id=1837105977]
@@ -534,6 +560,7 @@ hframes = 6
 frame = 3
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 3
 
 [node name="Flora31" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="39" unique_id=1505521420]
@@ -546,6 +573,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora32" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="40" unique_id=778244427]
 texture_filter = 1
@@ -557,6 +585,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora33" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="41" unique_id=1124788353]
 texture_filter = 1
@@ -569,6 +598,7 @@ hframes = 6
 frame = 4
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 4
 
 [node name="Flora34" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="42" unique_id=2078258734]
@@ -581,6 +611,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora35" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="43" unique_id=836405867]
 texture_filter = 1
@@ -593,6 +624,7 @@ hframes = 6
 frame = 4
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 4
 
 [node name="Flora36" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="44" unique_id=1704846315]
@@ -606,6 +638,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora37" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="45" unique_id=1385227417]
@@ -619,6 +652,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora38" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="46" unique_id=931287754]
@@ -631,6 +665,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora39" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="47" unique_id=388786012]
 texture_filter = 1
@@ -642,6 +677,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora40" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="48" unique_id=534819703]
 texture_filter = 1
@@ -654,6 +690,7 @@ hframes = 6
 frame = 4
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 4
 
 [node name="Flora41" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="49" unique_id=2084744278]
@@ -667,6 +704,7 @@ hframes = 6
 frame = 4
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 4
 
 [node name="Flora42" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="50" unique_id=1556194772]
@@ -679,6 +717,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora43" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="51" unique_id=448772937]
 texture_filter = 1
@@ -691,6 +730,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora44" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="52" unique_id=1636513168]
@@ -704,6 +744,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora45" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="53" unique_id=1057653890]
@@ -716,6 +757,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora46" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="54" unique_id=1414343510]
 texture_filter = 1
@@ -728,6 +770,7 @@ hframes = 6
 frame = 4
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 4
 
 [node name="Flora47" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="55" unique_id=2030056016]
@@ -741,6 +784,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora48" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="56" unique_id=495178667]
@@ -754,6 +798,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora49" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="57" unique_id=972478685]
@@ -767,6 +812,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora50" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="58" unique_id=1449462354]
@@ -780,6 +826,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora51" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="59" unique_id=625842898]
@@ -792,6 +839,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora52" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="60" unique_id=994777400]
 texture_filter = 1
@@ -803,6 +851,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora53" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="61" unique_id=1408950166]
 texture_filter = 1
@@ -814,6 +863,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora54" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="62" unique_id=1339358498]
 texture_filter = 1
@@ -826,6 +876,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora55" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="63" unique_id=518546626]
@@ -838,6 +889,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora56" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="64" unique_id=1420276685]
 texture_filter = 1
@@ -850,6 +902,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora57" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="65" unique_id=270044752]
@@ -863,6 +916,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora58" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="66" unique_id=1606376688]
@@ -875,6 +929,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora59" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="67" unique_id=1913705764]
 texture_filter = 1
@@ -886,6 +941,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora60" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="68" unique_id=606904363]
 texture_filter = 1
@@ -898,6 +954,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora61" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="69" unique_id=2082438370]
@@ -910,6 +967,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora62" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="70" unique_id=1833791263]
 texture_filter = 1
@@ -921,6 +979,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora63" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="71" unique_id=1353793688]
 texture_filter = 1
@@ -932,6 +991,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora64" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="72" unique_id=1357537124]
 texture_filter = 1
@@ -944,6 +1004,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora65" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="73" unique_id=1209480988]
@@ -957,6 +1018,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora66" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="74" unique_id=2002104007]
@@ -970,6 +1032,7 @@ hframes = 6
 frame = 5
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 5
 
 [node name="Flora67" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="75" unique_id=968969174]
@@ -983,6 +1046,7 @@ hframes = 6
 frame = 5
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 5
 
 [node name="Flora68" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="76" unique_id=2037000280]
@@ -995,6 +1059,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora69" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="77" unique_id=1521571395]
 texture_filter = 1
@@ -1007,6 +1072,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora70" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="78" unique_id=598939892]
@@ -1020,6 +1086,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora71" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="79" unique_id=1172511183]
@@ -1032,6 +1099,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora72" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="80" unique_id=1498475045]
 texture_filter = 1
@@ -1043,6 +1111,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora73" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="81" unique_id=1303028433]
 texture_filter = 1
@@ -1054,6 +1123,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora74" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="82" unique_id=1916349663]
 texture_filter = 1
@@ -1065,6 +1135,7 @@ offset = Vector2(0, -7)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora75" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="83" unique_id=212153021]
 texture_filter = 1
@@ -1076,6 +1147,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora76" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="84" unique_id=886096523]
 texture_filter = 1
@@ -1087,6 +1159,7 @@ offset = Vector2(0, -6)
 hframes = 6
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 
 [node name="Flora77" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="85" unique_id=735027206]
 texture_filter = 1
@@ -1099,6 +1172,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora78" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="86" unique_id=1672022584]
@@ -1112,6 +1186,7 @@ hframes = 6
 frame = 1
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 1
 
 [node name="Flora79" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="87" unique_id=966860992]
@@ -1125,6 +1200,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Flora80" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="88" unique_id=909034296]
@@ -1138,6 +1214,7 @@ hframes = 6
 frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
+z_index = 5
 variant = 2
 
 [node name="Butterfly" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="89" unique_id=2101847701 instance=ExtResource("16_butterfly")]
