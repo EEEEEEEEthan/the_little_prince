@@ -758,6 +758,50 @@ func _check_scene_and_mechanics() -> int:
 				% [WorldConstants.FLORA_COUNT, flora_props.size()]
 			)
 			failed += 1
+		const FLORA_CLOSE_NEIGHBOR_ARC_PX := 4.5
+		const FLORA_CLUSTER_JOIN_ARC_PX := 6.0
+		const FLORA_MIN_CLUSTERED_RATIO := 0.55
+		const FLORA_MIN_CLUSTER_COUNT := 6
+		const FLORA_MAX_CLUSTER_COUNT := 18
+		const FLORA_ROSE_CLEARANCE_RAD := 0.18
+		var sorted_flora_angles: Array[float] = planet.flora_angles.duplicate()
+		sorted_flora_angles.sort()
+		var flora_count := sorted_flora_angles.size()
+		var close_neighbor_count := 0
+		var flora_cluster_count := 0
+		var close_neighbor_rad := FLORA_CLOSE_NEIGHBOR_ARC_PX / planet.radius
+		var cluster_join_rad := FLORA_CLUSTER_JOIN_ARC_PX / planet.radius
+		for flora_index in flora_count:
+			var flora_angle: float = sorted_flora_angles[flora_index]
+			if absf(angle_difference(flora_angle, planet.rose_angle)) < FLORA_ROSE_CLEARANCE_RAD:
+				printerr("地表植物不应贴住玫瑰")
+				failed += 1
+			var previous_angle: float = sorted_flora_angles[flora_index - 1]
+			var next_angle: float = sorted_flora_angles[(flora_index + 1) % flora_count]
+			var nearest_gap := minf(
+					absf(angle_difference(flora_angle, previous_angle)),
+					absf(angle_difference(flora_angle, next_angle)),
+			)
+			if nearest_gap < close_neighbor_rad:
+				close_neighbor_count += 1
+			if absf(angle_difference(flora_angle, next_angle)) > cluster_join_rad:
+				flora_cluster_count += 1
+		var clustered_ratio := float(close_neighbor_count) / float(flora_count)
+		if clustered_ratio < FLORA_MIN_CLUSTERED_RATIO:
+			printerr(
+				"地表植物应成簇分布，近邻成簇比例应为至少 %s，实际 %s"
+				% [FLORA_MIN_CLUSTERED_RATIO, clustered_ratio]
+			)
+			failed += 1
+		if (
+			flora_cluster_count < FLORA_MIN_CLUSTER_COUNT
+			or flora_cluster_count > FLORA_MAX_CLUSTER_COUNT
+		):
+			printerr(
+				"地表植物应分成多簇，簇数应在 %d~%d，实际 %d"
+				% [FLORA_MIN_CLUSTER_COUNT, FLORA_MAX_CLUSTER_COUNT, flora_cluster_count]
+			)
+			failed += 1
 		var expected_props: int = (
 			1 + WorldConstants.VOLCANO_COUNT + WorldConstants.BAOBAB_COUNT
 			+ WorldConstants.FLORA_COUNT
