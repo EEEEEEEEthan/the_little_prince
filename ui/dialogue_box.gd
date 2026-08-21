@@ -3,6 +3,7 @@ extends CanvasLayer
 ## 像素风打字机对话框：头像 + 说话人 + 逐字正文，出字时播放提示音。
 
 signal closed
+signal line_advanced
 
 const TYPEWRITER_INTERVAL := 0.045
 const TYPEWRITER_FAST_INTERVAL := 0.012
@@ -22,6 +23,7 @@ var _advance_on_confirm_release: bool = false
 var _saw_confirm_released_while_idle: bool = false
 var _is_revealing: bool = false
 var _typewriter_accum_seconds: float = 0.0
+var _close_after_last: bool = true
 
 func _ready() -> void:
 	# tscn 保持可见便于编辑；开局再关。
@@ -52,6 +54,7 @@ func play(lines: Array[DialogueLine]) -> void:
 	if lines.is_empty():
 		close()
 		return
+	_close_after_last = true
 	_lines = lines.duplicate()
 	_index = 0
 	_is_holding = false
@@ -62,13 +65,27 @@ func play(lines: Array[DialogueLine]) -> void:
 	set_process(true)
 	_show_line()
 
+
+func play_line(line: DialogueLine) -> void:
+	_close_after_last = false
+	_lines = [line]
+	_index = 0
+	_is_holding = false
+	_advance_on_confirm_release = false
+	_saw_confirm_released_while_idle = false
+	_set_accelerating(false)
+	visible = true
+	set_process(true)
+	_show_line()
+
+
 func mark_holding(held: bool) -> void:
 	if not visible or held == _is_holding:
 		return
 	_is_holding = held
 	if held:
 		if _index >= _lines.size() - 1 and _saw_confirm_released_while_idle:
-			close()
+			_finish_current_line()
 			return
 		_advance_on_confirm_release = not is_typing() and _saw_confirm_released_while_idle
 		if is_typing():
@@ -82,12 +99,14 @@ func mark_holding(held: bool) -> void:
 	_advance_on_confirm_release = false
 	_index += 1
 	if _index >= _lines.size():
-		close()
+		_finish_current_line()
 	else:
 		_show_line()
 
+
 func close() -> void:
 	var was_open := visible
+	var should_advance_line := was_open and not _close_after_last
 	_timer.stop()
 	_typewriter.stop()
 	_is_holding = false
@@ -101,8 +120,18 @@ func close() -> void:
 	_index = 0
 	set_process(false)
 	visible = false
+	if should_advance_line:
+		line_advanced.emit()
 	if was_open:
 		closed.emit()
+
+
+func _finish_current_line() -> void:
+	if _close_after_last:
+		close()
+		return
+	line_advanced.emit()
+
 
 func _show_line() -> void:
 	var line := _lines[_index]
