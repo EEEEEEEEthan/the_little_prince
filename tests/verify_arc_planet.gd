@@ -2030,10 +2030,15 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("GameCamera 应固定左上，避免改变默认构图")
 		failed += 1
 	var player := scene.get_node(PLAYER_PATH) as Player
+	var rose := planet.get_node("Surface/Rose") as SurfaceProp
 	var dialogue_body := story.dialogue.get_node("%Body") as Label
 	var fade_layer := story.get_node("FadeLayer") as CanvasLayer
 	if fade_layer.layer >= story.dialogue.layer:
 		printerr("开场淡入时对话框应叠在黑场之上")
+		failed += 1
+	planet.teleport_player(planet.spawn_angle)
+	if player.global_position.x <= rose.global_position.x:
+		printerr("出生点小王子应在玫瑰右边")
 		failed += 1
 	story.skip_cinematics = false
 	var fade_started_msec := Time.get_ticks_msec()
@@ -2162,7 +2167,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []
 	var flora_props: Array[SurfaceProp] = []
-	var rose: SurfaceProp = null
+	rose = null
 	for prop in planet.surface_props:
 		match prop.kind:
 			SurfaceProp.Kind.BAOBAB:
