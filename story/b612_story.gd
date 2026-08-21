@@ -13,6 +13,7 @@ enum Beat {
 
 const SHOOT_DIALOGUE_ID := &"baobab_shoot"
 const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
+const PULL_SHOOT_HOLD_SECONDS := 0.8
 const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const FADE_TO_BLACK_SECONDS := 1.2
@@ -81,6 +82,14 @@ func accepts_interact(prop: SurfaceProp) -> bool:
 	if not is_active or is_blocking_input:
 		return false
 	return _is_current_objective(prop)
+
+
+func interact_hold_seconds(prop: SurfaceProp) -> float:
+	if skip_cinematics or not accepts_interact(prop):
+		return 0.0
+	if beat == Beat.PULL_SHOOTS:
+		return PULL_SHOOT_HOLD_SECONDS
+	return 0.0
 
 
 func try_handle_interact(prop: SurfaceProp) -> bool:
@@ -175,8 +184,9 @@ func _play_interact(prop: SurfaceProp) -> void:
 		apply_interact(prop)
 		await _play_departure()
 		return
-	await _play_overhead(B612Lines.pull_shoot(SHOOT_COUNT - pulled_shoot_count - 1))
+	var remaining_after_this := SHOOT_COUNT - pulled_shoot_count - 1
 	apply_interact(prop)
+	await _play_overhead(B612Lines.pull_shoot(remaining_after_this))
 	is_blocking_input = false
 
 

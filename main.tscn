@@ -15,10 +15,15 @@
 [ext_resource type="Script" uid="uid://8xqecv8g6cek" path="res://story/b612_story.gd" id="13_story"]
 [ext_resource type="Script" uid="uid://wt1e4t3x7gyv" path="res://story/migratory_flock.gd" id="14_flock"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
+[ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
 shader = ExtResource("5_palette_shader")
 shader_parameter/palette = ExtResource("6_palette")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
+shader = ExtResource("16_prompt_shader")
+shader_parameter/fill_ratio = 0.0
 
 [node name="Main" type="Control" unique_id=134579991]
 layout_mode = 3
@@ -74,6 +79,7 @@ unique_name_in_owner = true
 z_index = 250
 z_as_relative = false
 texture_filter = 1
+material = SubResource("ShaderMaterial_prompt_fill")
 texture = ExtResource("8_prompt_tex")
 script = ExtResource("7_prompt")
 
