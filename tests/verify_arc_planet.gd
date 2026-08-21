@@ -2982,7 +2982,7 @@ func _assert_standalone_planet_run(
 		if player != null and (not player.can_move_left or not player.can_move_right):
 			printerr("虚荣者星球应能走动")
 			failed += 1
-		if story as B612Story != null or story as KingStory != null:
+		if (story as B612Story) != null or (story as KingStory) != null:
 			printerr("虚荣者星球不应挂 B612/国王演出")
 			failed += 1
 	failed += _assert_playing_stream(

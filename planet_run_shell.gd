@@ -84,15 +84,12 @@ static func present_standalone_planet(
 		story.set_script(story_script)
 		(story as PlanetStory).auto_start = true
 	var viewport := shell.get_node("GameView/GameViewport") as SubViewport
-	var placeholder_planet := viewport.get_node("Planet")
-	var planet_index := placeholder_planet.get_index()
-	viewport.remove_child(placeholder_planet)
-	placeholder_planet.free()
+	var camera := viewport.get_node("GameCamera")
 	scene_root.remove_child(standalone_planet)
 	standalone_planet.name = "Planet"
 	standalone_planet.unique_name_in_owner = true
 	viewport.add_child(standalone_planet)
-	viewport.move_child(standalone_planet, planet_index)
+	viewport.move_child(standalone_planet, camera.get_index() + 1)
 	standalone_planet.owner = shell
 	scene_root.add_child(shell)
 	tree.current_scene = shell

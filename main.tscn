@@ -17,14 +17,14 @@ metadata/king_planet_scene = ExtResource("4_king")
 metadata/home_day_music = ExtResource("7_home_day_music")
 metadata/king_day_music = ExtResource("8_king_day_music")
 
-[node name="Planet" parent="GameView/GameViewport" index="1" unique_id=387248352 instance=ExtResource("3_b612")]
+[node name="Planet" parent="GameView/GameViewport" index="1" instance=ExtResource("3_b612")]
 unique_name_in_owner = true
 
-[node name="Story" parent="GameView/GameViewport" index="7"]
+[node name="Story" parent="GameView/GameViewport" index="6"]
 script = ExtResource("5_b612_story")
 auto_start = true
 
-[node name="KingStory" type="Node" parent="GameView/GameViewport" index="8" unique_id=1253671561]
+[node name="KingStory" type="Node" parent="GameView/GameViewport" index="7"]
 unique_name_in_owner = true
 script = ExtResource("6_king_story")
 auto_start = false
