@@ -1212,6 +1212,7 @@ func _check_butterflies(planet: Planet) -> int:
 		planet.teleport_player(original_player_angle)
 		return failed + 1
 	var packed_scene_path := "res://planet/butterfly.tscn"
+	var opening_guide: Butterfly = null
 	for butterfly in butterflies:
 		if butterfly.scene_file_path != packed_scene_path:
 			printerr("蝴蝶 %s 应实例化 butterfly.tscn" % butterfly.name)
@@ -1219,9 +1220,9 @@ func _check_butterflies(planet: Planet) -> int:
 		if butterfly.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
 			printerr("蝴蝶 %s 应为 Nearest 过滤" % butterfly.name)
 			failed += 1
-		if butterfly.position.length() <= planet.radius + 8.0:
+		if butterfly.position.length() < planet.radius:
 			printerr(
-					"蝴蝶 %s 应在草地上空，半径 %s 星球 %s"
+					"蝴蝶 %s 应在地表外，半径 %s 星球 %s"
 					% [butterfly.name, butterfly.position.length(), planet.radius]
 			)
 			failed += 1
@@ -1234,27 +1235,135 @@ func _check_butterflies(planet: Planet) -> int:
 		):
 			printerr("蝴蝶 %s 应待在家园附近" % butterfly.name)
 			failed += 1
+		if not butterfly.is_playing():
+			printerr("蝴蝶 %s 应在播放振翅动画" % butterfly.name)
+			failed += 1
+		if butterfly.guide_target_local_position != Vector2.ZERO:
+			opening_guide = butterfly
+			var tscn_home_position := Vector2(
+					sin(butterfly._home_orbital_angle),
+					-cos(butterfly._home_orbital_angle),
+			) * butterfly._home_orbit_radius
+			if butterfly.position.distance_to(tscn_home_position) > 0.02:
+				printerr(
+						"引导前 %s 应停在 tscn 坐标 %s，实际 %s"
+						% [butterfly.name, tscn_home_position, butterfly.position]
+				)
+				failed += 1
+			var held_position := butterfly.position
+			butterfly._process(0.8)
+			if butterfly.position.distance_to(held_position) > 0.02:
+				printerr("引导前 %s 不应离开 tscn 坐标" % butterfly.name)
+				failed += 1
+			continue
 		var position_before := butterfly.position
 		butterfly._process(0.8)
 		if butterfly.position.distance_to(position_before) < 0.05:
 			printerr("蝴蝶 %s 应飞离原位" % butterfly.name)
 			failed += 1
-		if butterfly.position.length() <= planet.radius + 8.0:
-			printerr("蝴蝶 %s 飞行后仍应高于草地" % butterfly.name)
+		if butterfly.position.length() < planet.radius:
+			printerr("蝴蝶 %s 飞行后仍应在地表外" % butterfly.name)
 			failed += 1
-		if not butterfly.is_playing():
-			printerr("蝴蝶 %s 应在播放振翅动画" % butterfly.name)
+	if opening_guide == null:
+		printerr("应有一只开场引导蝴蝶")
+		failed += 1
+	else:
+		if opening_guide.name != "Butterfly3":
+			printerr("开场引导应为 Butterfly3，实际 %s" % opening_guide.name)
 			failed += 1
+		if opening_guide.modulate.a > 0.01:
+			printerr("Butterfly3 开场应透明")
+			failed += 1
+		if opening_guide.guide_target_local_position.distance_to(Vector2(92, -38)) > 0.5:
+			printerr(
+					"Butterfly3 引导目标应为 (92, -38)，实际 %s"
+					% opening_guide.guide_target_local_position
+			)
+			failed += 1
+		opening_guide.modulate.a = 0.4
+		opening_guide._guide_flight_progress = 0.0
+		opening_guide._elapsed_seconds = 0.0
+		opening_guide._process(1.0)
+		if opening_guide._guide_flight_progress > 0.001:
+			printerr("淡入未完成时 Butterfly3 不应开始飞向目标")
+			failed += 1
+		opening_guide.modulate.a = 1.0
+		opening_guide._guide_flight_progress = 0.0
+		opening_guide._elapsed_seconds = 0.0
+		var guide_target_orbital_angle := atan2(
+				opening_guide.guide_target_local_position.x,
+				-opening_guide.guide_target_local_position.y,
+		)
+		var guide_target_orbit_radius := opening_guide.guide_target_local_position.length()
+		var guide_path_length := hypot(
+				absf(angle_difference(
+						opening_guide._home_orbital_angle,
+						guide_target_orbital_angle,
+				))
+				* (opening_guide._home_orbit_radius + guide_target_orbit_radius)
+				* 0.5,
+				absf(guide_target_orbit_radius - opening_guide._home_orbit_radius),
+		)
+		opening_guide._process(1.0)
+		var expected_guide_progress := WorldConstants.PLAYER_SPEED / guide_path_length
+		if absf(opening_guide._guide_flight_progress - expected_guide_progress) > 0.02:
+			printerr(
+					"引导飞速应等于行走速度 %s px/s，进度期望 %s 实际 %s"
+					% [
+						WorldConstants.PLAYER_SPEED,
+						expected_guide_progress,
+						opening_guide._guide_flight_progress,
+					]
+			)
+			failed += 1
+		opening_guide._guide_flight_progress = 1.0
+		opening_guide._elapsed_seconds = (PI - 0.6) / 1.4
+		opening_guide._process(0.0)
+		if (
+				opening_guide.position.distance_to(
+						opening_guide.guide_target_local_position
+				)
+				> 0.5
+		):
+			printerr(
+					"引导结束应到达 %s，实际 %s"
+					% [opening_guide.guide_target_local_position, opening_guide.position]
+			)
+			failed += 1
+		opening_guide._elapsed_seconds = 0.6
+		var guided_position_before_bob := opening_guide.position
+		opening_guide._process(0.0)
+		if opening_guide.position.is_equal_approx(guided_position_before_bob):
+			printerr("引导飞行时应保留上下浮动")
+			failed += 1
+		if (
+				opening_guide.position.distance_to(
+						opening_guide.guide_target_local_position
+				)
+				> 4.0
+		):
+			printerr("上下浮动应仍靠近引导目标")
+			failed += 1
+		opening_guide._guide_flight_progress = 0.0
+		opening_guide._elapsed_seconds = 0.0
+		opening_guide.modulate.a = 0.0
+		opening_guide.position = Vector2(
+				sin(opening_guide._home_orbital_angle),
+				-cos(opening_guide._home_orbital_angle),
+		) * opening_guide._home_orbit_radius
+		opening_guide.rotation = opening_guide._home_orbital_angle
 	for _step_index in 24:
-		var fell_below_grass := false
+		var fell_inside_planet := false
 		for butterfly in butterflies:
+			if butterfly.guide_target_local_position != Vector2.ZERO:
+				continue
 			butterfly._process(0.25)
-			if butterfly.position.length() <= planet.radius + 8.0:
-				printerr("蝴蝶 %s 盘旋时落到了草下" % butterfly.name)
+			if butterfly.position.length() < planet.radius:
+				printerr("蝴蝶 %s 盘旋时落到了地表内" % butterfly.name)
 				failed += 1
-				fell_below_grass = true
+				fell_inside_planet = true
 				break
-		if fell_below_grass:
+		if fell_inside_planet:
 			break
 	var sample := butterflies[0]
 	var sample_orbital_angle := atan2(sample.position.x, -sample.position.y)
@@ -2047,6 +2156,10 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += 1
 	if not story._glass_globe().visible:
 		printerr("开场罩上玻璃罩后才应拔苗")
+		failed += 1
+	var opening_guide := planet.get_node("%Butterfly3") as Butterfly
+	if opening_guide.modulate.a > 0.01:
+		printerr("跳过演出时 Butterfly3 不应开始引导")
 		failed += 1
 	if not player.can_move_right:
 		printerr("罩上玻璃罩后应能向右走")

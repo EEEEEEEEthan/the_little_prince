@@ -1145,9 +1145,12 @@ rotation = -2.938601
 autoplay = "default"
 
 [node name="Butterfly3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="91" unique_id=2101847703 instance=ExtResource("16_butterfly")]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
 position = Vector2(34.511806, -97.42805)
 rotation = 0.340437
 autoplay = "default"
+guide_target_local_position = Vector2(92, -38)
 
 [node name="Butterfly4" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="92" unique_id=2101847704 instance=ExtResource("16_butterfly")]
 position = Vector2(-69.01107, 82.24136)
