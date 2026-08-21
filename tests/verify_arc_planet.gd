@@ -42,6 +42,7 @@ const REQUIRED_ASSETS: Array[String] = [
 const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://ui/typewriter.wav",
 	"res://ui/fonts/fusion-pixel-8px-zh_hans.woff2",
+	"res://ui/fonts/fusion-pixel-10px-zh_hans.woff2",
 ]
 
 func _init() -> void:
@@ -1019,6 +1020,7 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 
+		failed += _check_ui_pixel_fonts(scene)
 		failed += await _check_overhead_typewriter(scene, planet)
 		failed += await _check_prop_interactions(scene, planet)
 		failed += await _check_b612_story(scene, planet)
@@ -1479,6 +1481,60 @@ func _assert_scarf_integer_display(scarf: Scarf) -> int:
 			printerr("围巾抽帧坐标应为整数，实际 %s" % point)
 			return 1
 	return 0
+
+
+func _check_ui_pixel_fonts(scene: Node) -> int:
+	var failed := 0
+	var dialogue := scene.get_node("GameView/GameViewport/DialogueBox") as DialogueBox
+	var overhead := scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	var epilogue := scene.get_node("%Epilogue") as Label
+	var dialogue_font_path := "res://ui/fonts/fusion-pixel-10px-zh_hans.woff2"
+	var narrative_font_path := "res://ui/fonts/fusion-pixel-8px-zh_hans.woff2"
+	failed += _assert_label_pixel_font(
+			dialogue.get_node("%Speaker") as Label,
+			dialogue_font_path,
+			10,
+			"对话说话人",
+	)
+	failed += _assert_label_pixel_font(
+			dialogue.get_node("%Body") as Label,
+			dialogue_font_path,
+			10,
+			"对话正文",
+	)
+	failed += _assert_label_pixel_font(
+			overhead.get_node("%Body") as Label,
+			narrative_font_path,
+			8,
+			"头顶叙事",
+	)
+	failed += _assert_label_pixel_font(
+			epilogue,
+			narrative_font_path,
+			8,
+			"结尾叙事",
+	)
+	print("  对话 10px / 头顶叙事 8px OK")
+	return failed
+
+
+func _assert_label_pixel_font(
+		label: Label,
+		expected_font_path: String,
+		expected_font_size: int,
+		label_name: String,
+) -> int:
+	var failed := 0
+	var font_size: int = label.get("theme_override_font_sizes/font_size")
+	if font_size != expected_font_size:
+		printerr("%s 字号应为 %d，实际 %s" % [label_name, expected_font_size, font_size])
+		failed += 1
+	var font: Font = label.get("theme_override_fonts/font")
+	if font == null or font.resource_path != expected_font_path:
+		var actual_path := font.resource_path if font != null else "null"
+		printerr("%s 字体应为 %s，实际 %s" % [label_name, expected_font_path, actual_path])
+		failed += 1
+	return failed
 
 
 func _check_overhead_typewriter(scene: Node, planet: Planet) -> int:
