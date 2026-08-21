@@ -23,7 +23,11 @@ shader_parameter/world_frequency = 0.08
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 
+[node name="Sky" parent="." index="0" unique_id=852054590]
+z_index = -4096
+
 [node name="Volcano" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320]
+z_index = -1097
 texture_filter = 1
 position = Vector2(-67.00001, 54.000008)
 rotation = 4.07983
@@ -60,6 +64,7 @@ scale_amount_min = 0.5
 color_ramp = SubResource("Gradient_volcano_smoke")
 
 [node name="Volcano2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=1280196619]
+z_index = -1097
 texture_filter = 1
 position = Vector2(-28.8, 76.8)
 rotation = -2.7793012
@@ -70,6 +75,7 @@ script = ExtResource("3_surface_prop")
 kind = 1
 
 [node name="Volcano3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147]
+z_index = -1097
 texture_filter = 1
 position = Vector2(-80.924164, -32.90971)
 rotation = -1.18455

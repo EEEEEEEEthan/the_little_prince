@@ -7,6 +7,7 @@ signal sunset_crossed
 signal _halt
 
 const PULL_SHOOT_HOLD_SECONDS := 0.8
+const GLASS_GLOBE_HOLD_SECONDS := 0.8
 
 @export var auto_start: bool = true
 
@@ -16,6 +17,7 @@ var is_blocking_input: bool = false
 var has_finished_opening: bool = false
 var has_crossed_sunset: bool = false
 
+var _is_glass_interact: bool = false
 var _story_generation: int = 0
 var _last_sky_phase: float = SkyPhase.NOON_PHASE
 var _waiting_interact_kind: int = -1
@@ -60,6 +62,7 @@ func start() -> void:
 	has_crossed_sunset = false
 	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 	_waiting_interact_kind = -1
+	_is_glass_interact = false
 	_dialogue_closed_early = false
 	_glass_globe().visible = false
 	player.can_move_left = false
@@ -81,6 +84,8 @@ func interact_hold_seconds(prop: SurfaceProp) -> float:
 		return 0.0
 	if prop.kind == SurfaceProp.Kind.BAOBAB:
 		return PULL_SHOOT_HOLD_SECONDS
+	if _is_glass_interact:
+		return GLASS_GLOBE_HOLD_SECONDS
 	return 0.0
 
 
@@ -119,7 +124,7 @@ func _play_story() -> void:
 	await _overhead("咳..咳..")
 	await _rose("我有点冷，你有屏风吗")
 	await _prince("屏风?")
-	await _rose("我原来住的那个地方是又屏风的")
+	await _rose("我原来住的那个地方是有屏风的")
 	await _rose("那里可不像这里...")
 	await _overhead("她从没住过别的地方")
 	await _rose("...")
@@ -135,7 +140,9 @@ func _play_story() -> void:
 	else:
 		await _wait(0.2)
 		is_blocking_input = false
+		_is_glass_interact = true
 		await _interact_rose()
+		_is_glass_interact = false
 		_show_glass()
 	player.can_move_right = true
 	is_blocking_input = false
