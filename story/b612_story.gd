@@ -6,20 +6,6 @@ signal prop_interacted(prop)
 signal sunset_crossed
 signal _halt
 
-const SHOOT_DIALOGUE_ID := &"baobab_shoot"
-const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
-const DEPART_LIFT_PIXELS := 72.0
-const DEPART_LIFT_SECONDS := 2.4
-const FADE_TO_BLACK_SECONDS := 1.2
-const OPENING_MOVE_SPEED_SCALE := 0.8
-const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
-const SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS := 0.3
-const SUNSET_CAMERA_LIFT_SECONDS := 1.0
-const SUNSET_CAMERA_LIFT_PIXELS := 16.0
-const SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS := 0.5
-const _PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")
-const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
-
 @export var auto_start: bool = true
 
 var skip_cinematics: bool = false
@@ -74,7 +60,7 @@ func start() -> void:
 	_glass_globe().visible = false
 	player.can_move_left = false
 	player.can_move_right = false
-	player.move_speed_scale = OPENING_MOVE_SPEED_SCALE
+	player.move_speed_scale = 0.8
 	_play_story()
 	while not has_finished_opening and is_inside_tree():
 		await get_tree().process_frame
@@ -109,7 +95,7 @@ func _play_story() -> void:
 	await _rose("我刚刚睡醒，真对不起，瞧我的头发还是乱蓬蓬的。。。")
 	await _prince("你很好看。")
 	await _rose("是吧，我是与太阳同时出生的。。。")
-	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _wait(3.0)
 	await _overhead("小王子看出了这花儿不太谦逊，可是她确实丽姿动人")
 	await _rose("我有点冷，难道你没有屏风吗")
 	if skip_cinematics:
@@ -120,18 +106,18 @@ func _play_story() -> void:
 		_show_glass()
 	player.can_move_right = true
 	is_blocking_input = false
-	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _wait(3.0)
 	await _overhead("小王子很喜欢玫瑰花")
 	await _overhead("可是玫瑰的傲娇，尖刺，总是让他恼火")
 	has_finished_opening = true
 	await _meet_sunset()
 	player.can_move_right = false
 	_lock_input()
-	await _wait(SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS)
+	await _wait(0.3)
 	await _camera_up()
 	await _overhead("人在忧伤的时候，就喜欢看日落。")
 	await _overhead("有一天小王子看了二十多次日落")
-	await _wait(SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS)
+	await _wait(0.5)
 	await _camera_down()
 	is_blocking_input = false
 	player.can_move_left = true
@@ -160,13 +146,13 @@ func _play_story() -> void:
 	_hide_glass()
 	await _overhead("小王子最后一次浇花，他发觉自己要哭出来")
 	await _prince("再见了")
-	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _wait(3.0)
 	await _overhead("花儿没有答应他")
 	await _prince("再见了")
-	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _wait(3.0)
 	await _overhead("花儿咳嗽了一阵，但并不是由于感冒")
 	await _rose("我真蠢，请你原谅我。希望你能幸福。")
-	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _wait(3.0)
 	await _overhead("小王子不知所措，不明白她为什么突然这样温柔恬静")
 	await _rose("的确，我爱你")
 	await _rose("但由于我的过错，你一点也没有理会")
@@ -178,22 +164,22 @@ func _play_story() -> void:
 	await _rose("我的感冒并不那么重")
 	await _prince("要是有虫子野兽呢？")
 	await _rose("我有爪子")
-	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _wait(3.0)
 	await _overhead("玫瑰天真地露出她那四根刺")
 	await _rose("别这么磨蹭了。真烦人！")
 	await _rose("既然决定离开这儿，那么，快走吧！")
-	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _wait(3.0)
 	await _overhead("玫瑰怕小王子看见她在哭。她总是这么傲娇")
 	rose.is_consumed = true
 	await _depart()
 
 
 func _rose(text: String) -> void:
-	await _line("玫瑰", text, _ROSE_PORTRAIT)
+	await _line("玫瑰", text, preload("res://ui/portraits/rose.png"))
 
 
 func _prince(text: String) -> void:
-	await _line("小王子", text, _PRINCE_PORTRAIT)
+	await _line("小王子", text, preload("res://ui/portraits/prince.png"))
 
 
 func _overhead(display_text: String) -> void:
@@ -232,11 +218,11 @@ func _meet_sunset() -> void:
 
 
 func _camera_up() -> void:
-	await _tween_game_camera_offset_y(-SUNSET_CAMERA_LIFT_PIXELS, SUNSET_CAMERA_LIFT_SECONDS)
+	await _tween_game_camera_offset_y(-16.0, 1.0)
 
 
 func _camera_down() -> void:
-	await _tween_game_camera_offset_y(0.0, SUNSET_CAMERA_LIFT_SECONDS)
+	await _tween_game_camera_offset_y(0.0, 1.0)
 
 
 func _show_glass() -> void:
@@ -299,15 +285,13 @@ func _depart() -> void:
 		await _halt_if_stale(generation)
 		return
 	await flock.arrive_from_offscreen(player.global_position)
-	flock.lift(DEPART_LIFT_PIXELS, DEPART_LIFT_SECONDS)
+	flock.lift(72.0, 2.4)
 	var lift_tween := create_tween().set_parallel(true)
-	lift_tween.tween_property(
-			player, "position:y", player.position.y - DEPART_LIFT_PIXELS, DEPART_LIFT_SECONDS
-	)
-	lift_tween.tween_property(player, "modulate:a", 0.0, DEPART_LIFT_SECONDS)
+	lift_tween.tween_property(player, "position:y", player.position.y - 72.0, 2.4)
+	lift_tween.tween_property(player, "modulate:a", 0.0, 2.4)
 	await lift_tween.finished
 	var fade_tween := create_tween()
-	fade_tween.tween_property(%Dim, "color:a", 1.0, FADE_TO_BLACK_SECONDS)
+	fade_tween.tween_property(%Dim, "color:a", 1.0, 1.2)
 	await fade_tween.finished
 	%Epilogue.text = "B-612。"
 	await _halt_if_stale(generation)
