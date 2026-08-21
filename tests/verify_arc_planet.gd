@@ -1582,8 +1582,8 @@ func _check_dialogue_portrait_sides(
 		printerr("站位夹具：小王子应在玫瑰左边")
 		failed += 1
 	dialogue.play(DialogueCatalog.lines_for_id(&"rose"), player, rose)
-	failed += _assert_dialogue_portraits(
-			dialogue, prince_portrait_path, rose_portrait_path, true, "站玫瑰左边旁白"
+	failed += _assert_dialogue_portrait_side(
+			dialogue, prince_portrait_path, true, "站玫瑰左边旁白"
 	)
 	dialogue.play_line(
 			DialogueLine.new(
@@ -1592,8 +1592,8 @@ func _check_dialogue_portrait_sides(
 			player,
 			rose,
 	)
-	failed += _assert_dialogue_portraits(
-			dialogue, prince_portrait_path, rose_portrait_path, false, "站玫瑰左边听花"
+	failed += _assert_dialogue_portrait_side(
+			dialogue, rose_portrait_path, false, "站玫瑰左边听花"
 	)
 	dialogue.close()
 
@@ -1602,8 +1602,8 @@ func _check_dialogue_portrait_sides(
 		printerr("站位夹具：小王子应在玫瑰右边")
 		failed += 1
 	dialogue.play(DialogueCatalog.lines_for_id(&"rose"), player, rose)
-	failed += _assert_dialogue_portraits(
-			dialogue, rose_portrait_path, prince_portrait_path, false, "站玫瑰右边旁白"
+	failed += _assert_dialogue_portrait_side(
+			dialogue, prince_portrait_path, false, "站玫瑰右边旁白"
 	)
 	dialogue.play_line(
 			DialogueLine.new(
@@ -1612,22 +1612,22 @@ func _check_dialogue_portrait_sides(
 			player,
 			rose,
 	)
-	failed += _assert_dialogue_portraits(
-			dialogue, rose_portrait_path, prince_portrait_path, true, "站玫瑰右边听花"
+	failed += _assert_dialogue_portrait_side(
+			dialogue, rose_portrait_path, true, "站玫瑰右边听花"
 	)
 	dialogue.close()
 
 	planet.teleport_player(fposmod(baobab.rotation - beside_radians, TAU))
 	dialogue.play(DialogueCatalog.lines_for_id(&"baobab"), player, baobab)
-	failed += _assert_dialogue_portraits(
-			dialogue, prince_portrait_path, "", true, "站树左边旁白"
+	failed += _assert_dialogue_portrait_side(
+			dialogue, prince_portrait_path, true, "站树左边旁白"
 	)
 	dialogue.close()
 
 	planet.teleport_player(fposmod(baobab.rotation + beside_radians, TAU))
 	dialogue.play(DialogueCatalog.lines_for_id(&"baobab"), player, baobab)
-	failed += _assert_dialogue_portraits(
-			dialogue, "", prince_portrait_path, false, "站树右边旁白"
+	failed += _assert_dialogue_portrait_side(
+			dialogue, prince_portrait_path, false, "站树右边旁白"
 	)
 	dialogue.close()
 
@@ -1640,62 +1640,39 @@ func _check_dialogue_portrait_sides(
 		printerr("站玫瑰左边按确认应打开对话")
 		failed += 1
 	else:
-		failed += _assert_dialogue_portraits(
-				dialogue, prince_portrait_path, rose_portrait_path, true, "交互站玫瑰左边"
+		failed += _assert_dialogue_portrait_side(
+				dialogue, prince_portrait_path, true, "交互站玫瑰左边"
 		)
 	dialogue.close()
 	return failed
 
 
-func _assert_dialogue_portraits(
+func _assert_dialogue_portrait_side(
 		dialogue: DialogueBox,
-		left_resource_path: String,
-		right_resource_path: String,
-		left_is_speaking: bool,
+		resource_path: String,
+		portrait_on_left: bool,
 		label: String,
 ) -> int:
 	var failed := 0
-	var left := dialogue.get_node("%LeftPortrait") as TextureRect
-	var right := dialogue.get_node("%RightPortrait") as TextureRect
+	var portrait := dialogue.get_node("%Portrait") as TextureRect
+	var row := dialogue.get_node("%ContentRow") as HBoxContainer
 	var speaker := dialogue.get_node("%Speaker") as Label
-	var assert_portrait := func(
-			portrait: TextureRect,
-			resource_path: String,
-			is_speaking: bool,
-			side_label: String,
-	) -> int:
-		if resource_path.is_empty():
-			if portrait.visible:
-				printerr("%s头像应隐藏" % side_label)
-				return 1
-			return 0
-		if (
-				not portrait.visible
-				or portrait.texture == null
-				or portrait.texture.resource_path != resource_path
-		):
-			printerr("%s头像应为 %s" % [side_label, resource_path])
-			return 1
-		var expected_modulate := (
-				DialogueBox.SPEAKING_PORTRAIT_MODULATE if is_speaking
-				else DialogueBox.LISTENING_PORTRAIT_MODULATE
-		)
-		if portrait.modulate != expected_modulate:
-			printerr("%s头像明暗不对" % side_label)
-			return 1
-		return 0
-	failed += assert_portrait.call(
-			left, left_resource_path, left_is_speaking, "%s 左侧" % label
-	)
-	failed += assert_portrait.call(
-			right, right_resource_path, not left_is_speaking, "%s 右侧" % label
-	)
+	if portrait.texture == null or portrait.texture.resource_path != resource_path:
+		printerr("%s 头像应为 %s" % [label, resource_path])
+		failed += 1
+	var portrait_index := portrait.get_index()
+	if portrait_on_left and portrait_index != 0:
+		printerr("%s 头像应在左侧，实际 index=%s" % [label, portrait_index])
+		failed += 1
+	if not portrait_on_left and portrait_index != row.get_child_count() - 1:
+		printerr("%s 头像应在右侧，实际 index=%s" % [label, portrait_index])
+		failed += 1
 	var expected_alignment := (
-			HORIZONTAL_ALIGNMENT_LEFT if left_is_speaking
+			HORIZONTAL_ALIGNMENT_LEFT if portrait_on_left
 			else HORIZONTAL_ALIGNMENT_RIGHT
 	)
 	if speaker.horizontal_alignment != expected_alignment:
-		printerr("%s 说话人应对齐到说话一侧" % label)
+		printerr("%s 说话人应对齐到头像一侧" % label)
 		failed += 1
 	return failed
 
@@ -2092,10 +2069,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("玫瑰开口后仍应禁止走动")
 		failed += 1
 	if story.dialogue.is_open() and dialogue_body.text.contains("我刚刚睡醒"):
-		failed += _assert_dialogue_portraits(
+		failed += _assert_dialogue_portrait_side(
 				story.dialogue,
 				"res://ui/portraits/rose.png",
-				"res://ui/portraits/prince.png",
 				true,
 				"开场玫瑰开口",
 		)

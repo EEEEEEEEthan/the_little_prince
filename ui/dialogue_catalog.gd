@@ -26,11 +26,3 @@ static func lines_for_id(id: StringName) -> Array[DialogueLine]:
 					PRINCE_SPEAKER, "全宇宙只有这一朵。", PRINCE_PORTRAIT
 			))
 	return lines
-
-
-static func partner_portrait_for(prop: SurfaceProp) -> Texture2D:
-	match prop.kind:
-		SurfaceProp.Kind.ROSE:
-			return ROSE_PORTRAIT
-		_:
-			return null

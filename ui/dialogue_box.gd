@@ -1,6 +1,6 @@
 class_name DialogueBox
 extends CanvasLayer
-## 像素风打字机对话框：双侧头像随站位左右，说话人 + 逐字正文。
+## 像素风打字机对话框：说话人头像跟站位左右，逐字正文。
 
 signal closed
 signal line_advanced
@@ -9,8 +9,6 @@ const TYPEWRITER_INTERVAL := 0.045
 const TYPEWRITER_FAST_INTERVAL := 0.012
 const TYPEWRITER_VOLUME_DB := -8.0
 const TYPEWRITER_FAST_VOLUME_DB := -20.0
-const SPEAKING_PORTRAIT_MODULATE := Color.WHITE
-const LISTENING_PORTRAIT_MODULATE := Color(0.55, 0.55, 0.55)
 
 @onready var _body: Label = %Body
 @onready var _typewriter: AudioStreamPlayer = $Typewriter
@@ -25,7 +23,6 @@ var _is_revealing: bool = false
 var _typewriter_accum_seconds: float = 0.0
 var _close_after_last: bool = true
 var _prince_stands_on_left: bool = true
-var _partner_portrait: Texture2D
 
 
 func _ready() -> void:
@@ -137,15 +134,6 @@ func _play_lines(
 			or partner == null
 			or prince.global_position.x <= partner.global_position.x
 	)
-	_partner_portrait = (
-			null if partner == null
-			else DialogueCatalog.partner_portrait_for(partner)
-	)
-	if _partner_portrait == null:
-		for line in lines:
-			if line.speaker != DialogueCatalog.PRINCE_SPEAKER:
-				_partner_portrait = line.portrait
-				break
 	_lines = lines.duplicate()
 	_index = 0
 	_is_holding = false
@@ -166,42 +154,22 @@ func _finish_current_line() -> void:
 
 func _show_line() -> void:
 	var line := _lines[_index]
+	var prince_is_speaking := line.speaker == DialogueCatalog.PRINCE_SPEAKER
+	var portrait_on_left := prince_is_speaking == _prince_stands_on_left
+	%Portrait.texture = line.portrait
+	%ContentRow.move_child(%Portrait, 0 if portrait_on_left else 1)
+	%Speaker.text = line.speaker
+	%Speaker.horizontal_alignment = (
+			HORIZONTAL_ALIGNMENT_LEFT if portrait_on_left
+			else HORIZONTAL_ALIGNMENT_RIGHT
+	)
 	_body.text = line.text
-	_apply_portraits(line)
 	_body.visible_characters = 0
 	%ContinueTriangle.visible = false
 	_timer.stop()
 	_is_revealing = true
 	_typewriter_accum_seconds = 0.0
 	_reveal_next_character()
-
-
-func _apply_portraits(line: DialogueLine) -> void:
-	var left_texture := DialogueCatalog.PRINCE_PORTRAIT
-	var right_texture := _partner_portrait
-	if not _prince_stands_on_left:
-		left_texture = _partner_portrait
-		right_texture = DialogueCatalog.PRINCE_PORTRAIT
-	var bind_portrait := func(portrait: TextureRect, texture: Texture2D) -> void:
-		portrait.texture = texture
-		portrait.visible = texture != null
-	bind_portrait.call(%LeftPortrait, left_texture)
-	bind_portrait.call(%RightPortrait, right_texture)
-	var prince_is_speaking := line.speaker == DialogueCatalog.PRINCE_SPEAKER
-	var left_is_speaking := prince_is_speaking == _prince_stands_on_left
-	%LeftPortrait.modulate = (
-			SPEAKING_PORTRAIT_MODULATE if left_is_speaking
-			else LISTENING_PORTRAIT_MODULATE
-	)
-	%RightPortrait.modulate = (
-			SPEAKING_PORTRAIT_MODULATE if not left_is_speaking
-			else LISTENING_PORTRAIT_MODULATE
-	)
-	%Speaker.text = line.speaker
-	%Speaker.horizontal_alignment = (
-			HORIZONTAL_ALIGNMENT_LEFT if left_is_speaking
-			else HORIZONTAL_ALIGNMENT_RIGHT
-	)
 
 
 func _set_accelerating(enabled: bool) -> void:
