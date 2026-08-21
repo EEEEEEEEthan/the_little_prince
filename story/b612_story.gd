@@ -58,6 +58,7 @@ func _play_story() -> void:
 	if not skip_cinematics:
 		(planet.get_node("%Butterfly3") as Butterfly).begin_guide_flight()
 	await _overhead("她安静了下来...")
+	planet.sky.is_self_rotating = true
 	await _wait_move_right()
 	await _wait(3.0)
 	await _overhead("小王子很喜欢玫瑰花")
@@ -148,7 +149,6 @@ func _interact_baobab() -> SurfaceProp:
 
 func _show_glass() -> void:
 	_glass_globe().visible = true
-	planet.sky.is_self_rotating = true
 
 
 func _hide_glass() -> void:
