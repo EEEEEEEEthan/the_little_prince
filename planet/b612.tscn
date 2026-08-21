@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://6xcbiii2i2t3" path="res://planet/glass_globe.png" id="13_globe"]
 [ext_resource type="Texture2D" uid="uid://cflora16sheet" path="res://planet/flora.png" id="14_flora"]
 [ext_resource type="Shader" uid="uid://dfloraswayshd" path="res://planet/flora_sway.gdshader" id="15_flora_sway"]
+[ext_resource type="PackedScene" uid="uid://cq8yj7f7g7sj1" path="res://planet/butterfly.tscn" id="16_butterfly"]
 
 [sub_resource type="Gradient" id="Gradient_volcano_smoke"]
 offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
@@ -1132,3 +1133,35 @@ frame = 2
 script = ExtResource("3_surface_prop")
 kind = 3
 variant = 2
+
+[node name="Butterfly" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="89" unique_id=2101847701 instance=ExtResource("16_butterfly")]
+position = Vector2(-41.577526, -96.809292)
+rotation = -0.405658
+
+[node name="Butterfly2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="90" unique_id=2101847702 instance=ExtResource("16_butterfly")]
+position = Vector2(-20.635823, 100.258328)
+rotation = -2.938601
+
+[node name="Butterfly3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="91" unique_id=2101847703 instance=ExtResource("16_butterfly")]
+position = Vector2(34.511805, -97.428050)
+rotation = 0.340437
+
+[node name="Butterfly4" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="92" unique_id=2101847704 instance=ExtResource("16_butterfly")]
+position = Vector2(-69.011072, 82.241361)
+rotation = -2.443444
+
+[node name="Butterfly5" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="93" unique_id=2101847705 instance=ExtResource("16_butterfly")]
+position = Vector2(95.048269, -40.609311)
+rotation = 1.167022
+
+[node name="Butterfly6" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="94" unique_id=2101847706 instance=ExtResource("16_butterfly")]
+position = Vector2(-95.551767, 41.962716)
+rotation = -1.984601
+
+[node name="Butterfly7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="95" unique_id=2101847707 instance=ExtResource("16_butterfly")]
+position = Vector2(-78.844297, -71.386458)
+rotation = -0.835000
+
+[node name="Butterfly8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="96" unique_id=2101847708 instance=ExtResource("16_butterfly")]
+position = Vector2(11.814273, 101.675919)
+rotation = 3.025916

@@ -28,6 +28,7 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/white_lavender_puff_frames.png",
 	"res://planet/baobab.png",
 	"res://planet/flora.png",
+	"res://planet/butterfly.png",
 	"res://planet/body.png",
 	"res://planet/starfield.png",
 	"res://planet/day_sky.png",
@@ -71,6 +72,9 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.FLORA_COUNT != 80:
 		printerr("FLORA_COUNT 应为 80，实际 %d" % WorldConstants.FLORA_COUNT)
+		failed += 1
+	if WorldConstants.BUTTERFLY_COUNT != 8:
+		printerr("BUTTERFLY_COUNT 应为 8，实际 %d" % WorldConstants.BUTTERFLY_COUNT)
 		failed += 1
 	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
@@ -249,7 +253,7 @@ func _check_static_assets() -> int:
 			printerr("无法加载贴图：%s" % path)
 			failed += 1
 			continue
-		if tex.get_width() < 8 or tex.get_height() < 8:
+		if path != "res://planet/butterfly.png" and (tex.get_width() < 8 or tex.get_height() < 8):
 			printerr("贴图尺寸过小：%s（%dx%d）" % [path, tex.get_width(), tex.get_height()])
 			failed += 1
 	for path in REQUIRED_OTHER_ASSETS:
@@ -450,6 +454,7 @@ func _check_static_assets() -> int:
 		["res://ui/portraits/rose.png", 32, 32],
 		["res://planet/glass_globe.png", 24, 24],
 		["res://planet/migratory_bird.png", 16, 8],
+		["res://planet/butterfly.png", 8, 3],
 	]
 	for item in sprite_checks:
 		var tex: Texture2D = load(item[0]) as Texture2D
@@ -527,6 +532,7 @@ func _check_tscn_editor_visible() -> int:
 		"res://main.tscn",
 		"res://planet/planet.tscn",
 		"res://planet/b612.tscn",
+		"res://planet/butterfly.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
 	]:
@@ -867,6 +873,7 @@ func _check_scene_and_mechanics() -> int:
 			)
 			failed += 1
 		failed += _check_clouds(planet)
+		failed += _check_butterflies(planet)
 		if not is_equal_approx(planet.player_angle, 0.75):
 			printerr("云层检查后 player_angle 应恢复为 0.75")
 			failed += 1
@@ -1184,6 +1191,88 @@ func _check_clouds(planet: Planet) -> int:
 			failed += 1
 	planet.teleport_player(original_player_angle)
 	print("  云层轨道 / 朝向 / 慢飘 OK")
+	return failed
+
+
+func _check_butterflies(planet: Planet) -> int:
+	var failed := 0
+	var original_player_angle := planet.player_angle
+	var butterflies: Array[Butterfly] = []
+	for child in planet.surface.get_children():
+		var butterfly := child as Butterfly
+		if butterfly != null:
+			butterflies.append(butterfly)
+	if butterflies.size() != WorldConstants.BUTTERFLY_COUNT:
+		printerr(
+				"蝴蝶数量应为 %d，实际 %d"
+				% [WorldConstants.BUTTERFLY_COUNT, butterflies.size()]
+		)
+		failed += 1
+	if butterflies.is_empty():
+		planet.teleport_player(original_player_angle)
+		return failed + 1
+	var packed_scene_path := "res://planet/butterfly.tscn"
+	for butterfly in butterflies:
+		if butterfly.scene_file_path != packed_scene_path:
+			printerr("蝴蝶 %s 应实例化 butterfly.tscn" % butterfly.name)
+			failed += 1
+		if butterfly.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
+			printerr("蝴蝶 %s 应为 Nearest 过滤" % butterfly.name)
+			failed += 1
+		if butterfly.position.length() <= planet.radius + 8.0:
+			printerr(
+					"蝴蝶 %s 应在草地上空，半径 %s 星球 %s"
+					% [butterfly.name, butterfly.position.length(), planet.radius]
+			)
+			failed += 1
+		if (
+				absf(angle_difference(
+						atan2(butterfly.position.x, -butterfly.position.y),
+						butterfly._home_orbital_angle
+				))
+				> 0.25
+		):
+			printerr("蝴蝶 %s 应待在家园附近" % butterfly.name)
+			failed += 1
+		var position_before := butterfly.position
+		butterfly._process(0.8)
+		if butterfly.position.distance_to(position_before) < 0.05:
+			printerr("蝴蝶 %s 应飞离原位" % butterfly.name)
+			failed += 1
+		if butterfly.position.length() <= planet.radius + 8.0:
+			printerr("蝴蝶 %s 飞行后仍应高于草地" % butterfly.name)
+			failed += 1
+		if not butterfly.is_playing():
+			printerr("蝴蝶 %s 应在播放振翅动画" % butterfly.name)
+			failed += 1
+	for _step_index in 24:
+		var fell_below_grass := false
+		for butterfly in butterflies:
+			butterfly._process(0.25)
+			if butterfly.position.length() <= planet.radius + 8.0:
+				printerr("蝴蝶 %s 盘旋时落到了草下" % butterfly.name)
+				failed += 1
+				fell_below_grass = true
+				break
+		if fell_below_grass:
+			break
+	var sample := butterflies[0]
+	var sample_orbital_angle := atan2(sample.position.x, -sample.position.y)
+	planet.teleport_player(sample_orbital_angle)
+	sample._process(0.0)
+	if not sample.visible:
+		printerr("弧顶处的蝴蝶应可见")
+		failed += 1
+	if sample.z_index < 90:
+		printerr("弧顶处的蝴蝶应叠在草地前，z_index=%d" % sample.z_index)
+		failed += 1
+	planet.teleport_player(fposmod(sample_orbital_angle + PI, TAU))
+	sample._process(0.0)
+	if sample.visible:
+		printerr("背面的蝴蝶应隐藏")
+		failed += 1
+	planet.teleport_player(original_player_angle)
+	print("  草地蝴蝶盘旋 / 显隐 OK")
 	return failed
 
 

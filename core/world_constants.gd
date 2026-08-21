@@ -14,6 +14,7 @@ const VISIBLE_HALF_ARC: float = PI * 0.55
 const VOLCANO_COUNT: int = 3
 const BAOBAB_COUNT: int = 5
 const FLORA_COUNT: int = 80
+const BUTTERFLY_COUNT: int = 8
 
 const SPAWN_ANGLE_OFFSET: float = 0.12
 

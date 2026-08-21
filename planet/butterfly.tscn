@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cq8yj7f7g7sj1"]
 
 [ext_resource type="Texture2D" uid="uid://bwd838ur2l7sx" path="res://planet/butterfly.png" id="1_bssmx"]
+[ext_resource type="Script" uid="uid://b8flyw3n9k2qp" path="res://planet/butterfly.gd" id="2_butterfly"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_kad4g"]
 atlas = ExtResource("1_bssmx")
@@ -32,5 +33,7 @@ animations = [{
 }]
 
 [node name="Butterfly" type="AnimatedSprite2D" unique_id=931806215]
+texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_in7if")
-frame_progress = 0.34522095
+autoplay = &"default"
+script = ExtResource("2_butterfly")
