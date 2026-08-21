@@ -1,0 +1,227 @@
+[gd_scene format=3 uid="uid://cprshellscn01"]
+
+[ext_resource type="Script" uid="uid://cprshellgd001" path="res://planet_run_shell.gd" id="1_shell"]
+[ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="2_planet"]
+[ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://player/player.gd" id="3_player"]
+[ext_resource type="Texture2D" uid="uid://mybv7igebkcb" path="res://player/prince.png" id="4_prince"]
+[ext_resource type="Shader" uid="uid://bahfecy4eixc3" path="res://palette.gdshader" id="5_palette_shader"]
+[ext_resource type="Texture2D" uid="uid://cop81vwashvr5" path="res://palette.png" id="6_palette"]
+[ext_resource type="Script" uid="uid://cr35jjjk4jfxm" path="res://ui/interact_prompt.gd" id="7_prompt"]
+[ext_resource type="Texture2D" uid="uid://bcculx3lqeq03" path="res://ui/prompt_a.png" id="8_prompt_tex"]
+[ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="9_dialogue"]
+[ext_resource type="Script" uid="uid://ciwt72d3i6fwy" path="res://interact/interaction.gd" id="10_interact"]
+[ext_resource type="Script" uid="uid://pqblm1m4kgms" path="res://player/scarf.gd" id="11_scarf"]
+[ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
+[ext_resource type="Script" uid="uid://cplanetstor01" path="res://story/planet_story.gd" id="13_story"]
+[ext_resource type="Script" uid="uid://wt1e4t3x7gyv" path="res://story/migratory_flock.gd" id="14_flock"]
+[ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
+[ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]
+[ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="19_home_day_music"]
+[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="21_king_day_music"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
+shader = ExtResource("5_palette_shader")
+shader_parameter/palette = ExtResource("6_palette")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
+shader = ExtResource("16_prompt_shader")
+shader_parameter/fill_ratio = 0.0
+
+[sub_resource type="GDScript" id="GDScript_music"]
+script/source = "extends Node
+## 循环配乐：故乡、国王星球，交叉淡化切换。
+
+const META_HOME_DAY_MUSIC := \"home_day_music\"
+const META_KING_DAY_MUSIC := \"king_day_music\"
+const META_OPENING_DAY_MUSIC := \"opening_day_music\"
+const CROSSFADE_SECONDS := 1.6
+const PLAYING_VOLUME_DB := -10.0
+const SILENT_VOLUME_DB := -80.0
+
+var playing_stream: AudioStream:
+	get:
+		return _active.stream
+
+var _active: AudioStreamPlayer
+var _idle: AudioStreamPlayer
+var _fade_tween: Tween
+
+
+func _ready() -> void:
+	_active = $Playing
+	_idle = $Incoming
+	for meta_name in [META_HOME_DAY_MUSIC, META_KING_DAY_MUSIC]:
+		(_config_music(meta_name) as AudioStreamOggVorbis).loop = true
+	_active.volume_db = SILENT_VOLUME_DB
+	_idle.volume_db = SILENT_VOLUME_DB
+	_active.stream = _opening_music()
+	_active.play()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(_active, \"volume_db\", PLAYING_VOLUME_DB, CROSSFADE_SECONDS)
+
+
+func play_king_day_loop() -> void:
+	_crossfade_to(_config_music(META_KING_DAY_MUSIC))
+
+
+func fade_out() -> void:
+	_crossfade_to(null)
+
+
+func _opening_music() -> AudioStream:
+	var config := owner.get_node(\"Config\")
+	if config.has_meta(META_OPENING_DAY_MUSIC):
+		var opening := config.get_meta(META_OPENING_DAY_MUSIC) as AudioStream
+		var vorbis := opening as AudioStreamOggVorbis
+		if vorbis != null:
+			vorbis.loop = true
+		return opening
+	return _config_music(META_HOME_DAY_MUSIC)
+
+
+func _crossfade_to(music: AudioStream) -> void:
+	if music != null and _active.stream == music and _active.playing:
+		return
+	if _fade_tween != null:
+		_fade_tween.kill()
+	var outgoing := _active
+	var incoming := _idle
+	_active = incoming
+	_idle = outgoing
+	incoming.stop()
+	incoming.stream = music
+	incoming.volume_db = SILENT_VOLUME_DB
+	if music != null:
+		incoming.play()
+	_fade_tween = create_tween()
+	_fade_tween.set_parallel(true)
+	_fade_tween.tween_property(outgoing, \"volume_db\", SILENT_VOLUME_DB, CROSSFADE_SECONDS)
+	if music != null:
+		_fade_tween.tween_property(incoming, \"volume_db\", PLAYING_VOLUME_DB, CROSSFADE_SECONDS)
+	_fade_tween.chain().tween_callback(outgoing.stop)
+
+
+func _config_music(meta_name: String) -> AudioStream:
+	return owner.get_node(\"Config\").get_meta(meta_name) as AudioStream
+"
+
+[node name="PlanetRunShell" type="Control" unique_id=134579991]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shell")
+
+[node name="Config" type="Node" parent="."]
+process_mode = 4
+metadata/home_day_music = ExtResource("19_home_day_music")
+metadata/king_day_music = ExtResource("21_king_day_music")
+
+[node name="Music" type="Node" parent="."]
+unique_name_in_owner = true
+script = SubResource("GDScript_music")
+
+[node name="Playing" type="AudioStreamPlayer" parent="Music"]
+bus = &"Music"
+
+[node name="Incoming" type="AudioStreamPlayer" parent="Music"]
+bus = &"Music"
+
+[node name="GameView" type="SubViewportContainer" parent="." unique_id=1849713084]
+texture_filter = 1
+material = SubResource("ShaderMaterial_palette")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="GameViewport" type="SubViewport" parent="GameView" unique_id=877318439]
+handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+canvas_item_default_texture_filter = 0
+size = Vector2i(256, 224)
+render_target_update_mode = 4
+
+[node name="GameCamera" type="Camera2D" parent="GameView/GameViewport"]
+unique_name_in_owner = true
+anchor_mode = 0
+
+[node name="Planet" parent="GameView/GameViewport" unique_id=387248352 instance=ExtResource("2_planet")]
+unique_name_in_owner = true
+
+[node name="Player" type="Sprite2D" parent="GameView/GameViewport" unique_id=232581758]
+unique_name_in_owner = true
+z_index = 200
+texture_filter = 1
+texture = ExtResource("4_prince")
+flip_h = true
+hframes = 6
+script = ExtResource("3_player")
+
+[node name="Scarf" type="Sprite2D" parent="GameView/GameViewport/Player" unique_id=1847293651]
+unique_name_in_owner = true
+z_index = 1
+texture_filter = 1
+centered = false
+script = ExtResource("11_scarf")
+
+[node name="InteractPrompt" type="Sprite2D" parent="GameView/GameViewport" unique_id=1871861395]
+unique_name_in_owner = true
+z_index = 250
+z_as_relative = false
+texture_filter = 1
+material = SubResource("ShaderMaterial_prompt_fill")
+texture = ExtResource("8_prompt_tex")
+script = ExtResource("7_prompt")
+
+[node name="DialogueBox" parent="GameView/GameViewport" unique_id=1685094322 instance=ExtResource("9_dialogue")]
+unique_name_in_owner = true
+
+[node name="OverheadTypewriter" parent="GameView/GameViewport" unique_id=1992303185 instance=ExtResource("12_overhead")]
+unique_name_in_owner = true
+
+[node name="Interaction" type="Node" parent="GameView/GameViewport" unique_id=1838989427]
+unique_name_in_owner = true
+script = ExtResource("10_interact")
+
+[node name="Story" type="Node" parent="GameView/GameViewport" unique_id=1253671560]
+unique_name_in_owner = true
+script = ExtResource("13_story")
+auto_start = false
+
+[node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport/Story" unique_id=515559498]
+unique_name_in_owner = true
+z_index = 180
+script = ExtResource("14_flock")
+
+[node name="FadeLayer" type="CanvasLayer" parent="GameView/GameViewport/Story" unique_id=1234713668]
+layer = 5
+
+[node name="Dim" type="ColorRect" parent="GameView/GameViewport/Story/FadeLayer" unique_id=1388500103]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Epilogue" type="Label" parent="GameView/GameViewport/Story/FadeLayer" unique_id=222522644]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.819608, 1)
+theme_override_fonts/font = ExtResource("15_font")
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+vertical_alignment = 1
