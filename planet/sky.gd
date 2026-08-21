@@ -6,6 +6,7 @@ extends Sprite2D
 ## 星球旋转分量，由 Planet 同步写入。
 var planet_rotation: float = 0.0
 var star_rotation_speed: float = WorldConstants.STAR_ROTATION_SPEED
+var is_self_rotating: bool = true
 var _self_rotation: float = 0.0
 
 
@@ -15,9 +16,10 @@ func set_planet_rotation(value: float) -> void:
 
 
 func _process(delta: float) -> void:
-	_self_rotation = fposmod(
-			_self_rotation - star_rotation_speed * delta, TAU
-	)
+	if is_self_rotating:
+		_self_rotation = fposmod(
+				_self_rotation - star_rotation_speed * delta, TAU
+		)
 	rotation = planet_rotation + _self_rotation
 	_update_daylight()
 
