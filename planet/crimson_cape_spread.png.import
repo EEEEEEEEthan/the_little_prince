@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccrimsoncape01"
-path="res://.godot/imported/crimson_cape_spread.png-pending.ctex"
+uid="uid://65x6n3r32nea"
+path="res://.godot/imported/crimson_cape_spread.png-084199b721a8c7de4d24febe77b84375.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://planet/crimson_cape_spread.png"
-dest_files=["res://.godot/imported/crimson_cape_spread.png-pending.ctex"]
+dest_files=["res://.godot/imported/crimson_cape_spread.png-084199b721a8c7de4d24febe77b84375.ctex"]
 
 [params]
 

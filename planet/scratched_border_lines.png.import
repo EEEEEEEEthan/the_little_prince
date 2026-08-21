@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cscratchedbr01"
-path="res://.godot/imported/scratched_border_lines.png-pending.ctex"
+uid="uid://bbr4t28twujc7"
+path="res://.godot/imported/scratched_border_lines.png-3f46b437bbc74dd7fda3aa85d89b2184.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://planet/scratched_border_lines.png"
-dest_files=["res://.godot/imported/scratched_border_lines.png-pending.ctex"]
+dest_files=["res://.godot/imported/scratched_border_lines.png-3f46b437bbc74dd7fda3aa85d89b2184.ctex"]
 
 [params]
 

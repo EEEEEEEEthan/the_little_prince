@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgoldspireth01"
-path="res://.godot/imported/gold_spired_throne.png-pending.ctex"
+uid="uid://8ttlm1ynyumi"
+path="res://.godot/imported/gold_spired_throne.png-ff9340b51ece574715a703769105fb28.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://planet/gold_spired_throne.png"
-dest_files=["res://.godot/imported/gold_spired_throne.png-pending.ctex"]
+dest_files=["res://.godot/imported/gold_spired_throne.png-ff9340b51ece574715a703769105fb28.ctex"]
 
 [params]
 
