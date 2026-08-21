@@ -6,6 +6,8 @@ signal prop_interacted(prop)
 signal sunset_crossed
 signal _halt
 
+const PULL_SHOOT_HOLD_SECONDS := 0.8
+
 @export var auto_start: bool = true
 
 var skip_cinematics: bool = false
@@ -72,6 +74,14 @@ func accepts_interact(prop: SurfaceProp) -> bool:
 	if not is_active or is_blocking_input or prop.is_consumed:
 		return false
 	return int(prop.kind) == _waiting_interact_kind
+
+
+func interact_hold_seconds(prop: SurfaceProp) -> float:
+	if skip_cinematics or not accepts_interact(prop):
+		return 0.0
+	if prop.kind == SurfaceProp.Kind.BAOBAB:
+		return PULL_SHOOT_HOLD_SECONDS
+	return 0.0
 
 
 func try_handle_interact(prop: SurfaceProp) -> bool:
@@ -143,25 +153,17 @@ func _play_story() -> void:
 	player.can_move_left = true
 	player.can_move_right = true
 	player.move_speed_scale = 1.0
-	var finish_baobab := func(pulled_baobab: SurfaceProp) -> void:
+	var pull_baobab_then_narrate := func(overhead_text: String) -> void:
+		var pulled_baobab := await _interact_baobab()
 		pulled_baobab.is_consumed = true
 		pulled_baobab.visible = false
-		self.is_blocking_input = false
-	var baobab := await _interact_baobab()
-	await _overhead("小王子的星球总会长出猴面包树")
-	finish_baobab.call(baobab)
-	baobab = await _interact_baobab()
-	await _overhead("小王子每天都要拔掉猴面包树苗")
-	finish_baobab.call(baobab)
-	baobab = await _interact_baobab()
-	await _overhead("不拔的话，星球就会被猴面包树弄得支离破碎")
-	finish_baobab.call(baobab)
-	baobab = await _interact_baobab()
-	await _overhead("可是现在他决定要离开了")
-	finish_baobab.call(baobab)
-	baobab = await _interact_baobab()
-	await _overhead("这是最后一株")
-	finish_baobab.call(baobab)
+		await _overhead(overhead_text)
+		is_blocking_input = false
+	await pull_baobab_then_narrate.call("小王子的星球总会长出猴面包树")
+	await pull_baobab_then_narrate.call("小王子每天都要拔掉猴面包树苗")
+	await pull_baobab_then_narrate.call("不拔的话，星球就会被猴面包树弄得支离破碎")
+	await pull_baobab_then_narrate.call("可是现在他决定要离开了")
+	await pull_baobab_then_narrate.call("这是最后一株")
 	var rose := await _interact_rose()
 	_hide_glass()
 	await _overhead("小王子最后一次浇花，他发觉自己要哭出来")
@@ -193,6 +195,7 @@ func _play_story() -> void:
 	_overhead("她总是这么傲娇")
 	rose.is_consumed = true
 	await _depart()
+
 
 func _rose(text: String) -> void:
 	await _line("玫瑰", text, preload("res://ui/portraits/rose.png"))

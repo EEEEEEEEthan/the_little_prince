@@ -1342,6 +1342,24 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 		if prompt.global_position.distance_to(crown) > 2.5:
 			printerr("星球转过后 A 提示应跟着树走，期望 %s 实际 %s" % [crown, prompt.global_position])
 			failed += 1
+		var prompt_material := prompt.material as ShaderMaterial
+		if prompt_material == null or prompt_material.shader == null:
+			printerr("A 提示应挂长按进度 ShaderMaterial")
+			failed += 1
+		elif prompt_material.shader.resource_path != "res://ui/interact_prompt.gdshader":
+			printerr("A 提示 shader 应为 interact_prompt.gdshader")
+			failed += 1
+		else:
+			prompt.hold_fill_ratio = 0.4
+			var fill_ratio: float = prompt_material.get_shader_parameter("fill_ratio")
+			if not is_equal_approx(fill_ratio, prompt.hold_fill_ratio):
+				printerr("A 提示长按进度应为 %s，实际 %s" % [prompt.hold_fill_ratio, fill_ratio])
+				failed += 1
+			prompt.hold_fill_ratio = 0.0
+			fill_ratio = prompt_material.get_shader_parameter("fill_ratio")
+			if not is_equal_approx(fill_ratio, 0.0):
+				printerr("松开后 A 提示长按进度应归零，实际 %s" % fill_ratio)
+				failed += 1
 
 	if dialogue != null:
 		var panel := dialogue.get_node("Panel") as Control
@@ -1846,7 +1864,98 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.accepts_interact(shoots[0]):
 		printerr("拔苗段应选中嫩芽")
 		failed += 1
+	var interaction := scene.get_node("GameView/GameViewport/Interaction") as Interaction
+	var prompt := scene.get_node("GameView/GameViewport/InteractPrompt") as InteractPrompt
+	var overhead := story.overhead
+	var overhead_body := overhead.get_node("Body") as Label
+	const FIRST_PULL_OVERHEAD := "小王子的星球总会长出猴面包树"
+	story.skip_cinematics = false
+	if not is_equal_approx(story.interact_hold_seconds(shoots[0]), B612Story.PULL_SHOOT_HOLD_SECONDS):
+		printerr(
+				"拔苗长按时长应为 %s，实际 %s"
+				% [B612Story.PULL_SHOOT_HOLD_SECONDS, story.interact_hold_seconds(shoots[0])]
+		)
+		failed += 1
+	if not is_zero_approx(story.interact_hold_seconds(rose)):
+		printerr("拔苗段玫瑰不应长按")
+		failed += 1
+	interaction.set_process(false)
+	planet.teleport_player(shoots[0].rotation)
+	planet.angular_velocity = 0.0
+	interaction._process(0.0)
+	if not prompt.visible:
+		printerr("拔苗时应显示 A 提示")
+		failed += 1
+	Input.action_release("interact")
+	Input.action_press("interact")
+	interaction._process(0.0)
+	Input.action_release("interact")
+	interaction._process(0.0)
+	if shoots[0].is_consumed:
+		printerr("点按不应拔掉嫩芽")
+		failed += 1
+	if not is_equal_approx(prompt.hold_fill_ratio, 0.0):
+		printerr("点按松开后进度应归零，实际 %s" % prompt.hold_fill_ratio)
+		failed += 1
+	Input.action_press("interact")
+	interaction._process(B612Story.PULL_SHOOT_HOLD_SECONDS * 0.5)
+	if absf(prompt.hold_fill_ratio - 0.5) > 0.01:
+		printerr("长按一半时进度应接近一半，实际 %s" % prompt.hold_fill_ratio)
+		failed += 1
+	if shoots[0].is_consumed:
+		printerr("长按未结束时嫩芽不应消失")
+		failed += 1
+	Input.action_press("move_right")
+	player._physics_process(0.2)
+	Input.action_release("move_right")
+	if absf(planet.angular_velocity) > 0.001:
+		printerr("长按拔苗时应不能走动，角速度 %s" % planet.angular_velocity)
+		failed += 1
+	Input.action_release("interact")
+	interaction._process(0.0)
+	if not is_equal_approx(prompt.hold_fill_ratio, 0.0):
+		printerr("长按中途松开后进度应归零，实际 %s" % prompt.hold_fill_ratio)
+		failed += 1
+	if shoots[0].is_consumed:
+		printerr("长按中途松开不应拔掉嫩芽")
+		failed += 1
+	Input.action_press("interact")
+	interaction._process(B612Story.PULL_SHOOT_HOLD_SECONDS)
+	Input.action_release("interact")
+	if not shoots[0].is_consumed or shoots[0].visible:
+		printerr("长按结束后嫩芽应立即消失")
+		failed += 1
+	if not story.is_blocking_input:
+		printerr("拔苗头顶叙事时应禁用输入")
+		failed += 1
+	var overhead_start_deadline_msec := Time.get_ticks_msec() + 3000
+	while (
+			not overhead.visible
+			and Time.get_ticks_msec() < overhead_start_deadline_msec
+	):
+		if shoots[0].visible:
+			printerr("头顶叙事出现前嫩芽应保持消失")
+			failed += 1
+			break
+		await process_frame
+	if not overhead.visible or overhead_body.text != FIRST_PULL_OVERHEAD:
+		printerr(
+				"拔掉后应播放头顶叙事，实际 %s"
+				% overhead_body.text
+		)
+		failed += 1
+	var pull_deadline_msec := Time.get_ticks_msec() + 15000
+	while story.is_blocking_input and Time.get_ticks_msec() < pull_deadline_msec:
+		await process_frame
+	if story.is_blocking_input:
+		printerr("拔苗头顶叙事超时")
+		failed += 1
+	interaction.set_process(true)
+	story.skip_cinematics = true
+
 	for shoot in shoots:
+		if shoot.is_consumed:
+			continue
 		if not story.try_handle_interact(shoot):
 			printerr("拔苗段应能拔除嫩芽")
 			failed += 1
