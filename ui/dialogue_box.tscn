@@ -1,8 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" uid="uid://bvmu7yfjsqvgp" path="res://ui/dialogue_box.gd" id="1_dialogue"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="2_font"]
 [ext_resource type="AudioStream" uid="uid://cednuam573usk" path="res://ui/typewriter.wav" id="3_blip"]
+[ext_resource type="Texture2D" uid="uid://c0k7tc4gwunhx" path="res://ui/portraits/prince.png" id="4_prince"]
+[ext_resource type="Texture2D" uid="uid://waotbopyre6t" path="res://ui/portraits/rose.png" id="5_rose"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.0470588, 0.0705882, 0.14902, 1)
@@ -64,21 +66,30 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Portrait" type="TextureRect" parent="Panel/HBox"]
+[node name="LeftPortrait" type="TextureRect" parent="Panel/HBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 0
 texture_filter = 1
+texture = ExtResource("4_prince")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="VBox" type="VBoxContainer" parent="Panel/HBox"]
+[node name="TextColumn" type="Control" parent="Panel/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="Panel/HBox/TextColumn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 2
 
-[node name="Speaker" type="Label" parent="Panel/HBox/VBox"]
+[node name="Speaker" type="Label" parent="Panel/HBox/TextColumn/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.878431, 0.670588, 0.290196, 1)
@@ -86,7 +97,7 @@ theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 8
 text = "小王子"
 
-[node name="Body" type="Label" parent="Panel/HBox/VBox"]
+[node name="Body" type="Label" parent="Panel/HBox/TextColumn/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
@@ -97,22 +108,31 @@ theme_override_constants/line_spacing = 1
 autowrap_mode = 3
 text = "placeholder"
 
-[node name="ContinueTriangle" type="Control" parent="."]
+[node name="ContinueTriangle" type="Control" parent="Panel/HBox/TextColumn"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(5, 3)
-anchors_preset = 6
+layout_mode = 1
+anchors_preset = 3
 anchor_left = 1.0
-anchor_top = 0.5
+anchor_top = 1.0
 anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -15.0
-offset_top = 35.0
-offset_right = -10.0
-offset_bottom = 38.0
+anchor_bottom = 1.0
+offset_left = -5.0
+offset_top = -3.0
 grow_horizontal = 0
-grow_vertical = 2
+grow_vertical = 0
 mouse_filter = 2
 script = SubResource("GDScript_continue_triangle")
+
+[node name="RightPortrait" type="TextureRect" parent="Panel/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 0
+texture_filter = 1
+texture = ExtResource("5_rose")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Typewriter" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_blip")

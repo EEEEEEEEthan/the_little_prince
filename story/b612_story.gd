@@ -198,11 +198,11 @@ func _play_story() -> void:
 
 
 func _rose(text: String) -> void:
-	await _line("玫瑰", text, preload("res://ui/portraits/rose.png"))
+	await _line(DialogueCatalog.ROSE_SPEAKER, text, DialogueCatalog.ROSE_PORTRAIT)
 
 
 func _prince(text: String) -> void:
-	await _line("小王子", text, preload("res://ui/portraits/prince.png"))
+	await _line(DialogueCatalog.PRINCE_SPEAKER, text, DialogueCatalog.PRINCE_PORTRAIT)
 
 
 func _overhead(display_text: String) -> void:
@@ -277,7 +277,11 @@ func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 		return
 	_lock_input()
 	var already_open := dialogue.is_open()
-	dialogue.play_line(DialogueLine.new(speaker, text, portrait))
+	dialogue.play_line(
+			DialogueLine.new(speaker, text, portrait),
+			player,
+			_rose_prop(),
+	)
 	if dialogue.is_open() and not already_open and Input.is_action_pressed(&"interact"):
 		dialogue.mark_holding(true)
 	await dialogue.line_advanced
@@ -352,5 +356,9 @@ func _lock_input() -> void:
 	planet.angular_velocity = 0.0
 
 
+func _rose_prop() -> SurfaceProp:
+	return planet.get_node("Surface/Rose") as SurfaceProp
+
+
 func _glass_globe() -> Sprite2D:
-	return planet.get_node("Surface/Rose/GlassGlobe") as Sprite2D
+	return _rose_prop().get_node("GlassGlobe") as Sprite2D

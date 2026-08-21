@@ -1556,8 +1556,149 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			printerr("close 后对话框应关闭")
 			failed += 1
 
+	if dialogue != null and rose != null and baobab != null:
+		failed += await _check_dialogue_portrait_sides(scene, planet, dialogue, rose, baobab)
+
 	print("  地物交互 / 叙事对话 OK")
 	return failed
+
+
+func _check_dialogue_portrait_sides(
+		scene: Node,
+		planet: Planet,
+		dialogue: DialogueBox,
+		rose: SurfaceProp,
+		baobab: SurfaceProp,
+) -> int:
+	var failed := 0
+	var player := scene.get_node(PLAYER_PATH) as Player
+	var prince_portrait_path := "res://ui/portraits/prince.png"
+	var rose_portrait_path := "res://ui/portraits/rose.png"
+	var beside_radians := 0.1
+	Input.action_release("interact")
+
+	planet.teleport_player(fposmod(rose.rotation - beside_radians, TAU))
+	if player.global_position.x >= rose.global_position.x:
+		printerr("站位夹具：小王子应在玫瑰左边")
+		failed += 1
+	dialogue.play(DialogueCatalog.lines_for_id(&"rose"), player, rose)
+	failed += _assert_dialogue_portraits(
+			dialogue, prince_portrait_path, rose_portrait_path, true, "站玫瑰左边旁白"
+	)
+	dialogue.play_line(
+			DialogueLine.new(
+					DialogueCatalog.ROSE_SPEAKER, "开口", DialogueCatalog.ROSE_PORTRAIT
+			),
+			player,
+			rose,
+	)
+	failed += _assert_dialogue_portraits(
+			dialogue, prince_portrait_path, rose_portrait_path, false, "站玫瑰左边听花"
+	)
+	dialogue.close()
+
+	planet.teleport_player(fposmod(rose.rotation + beside_radians, TAU))
+	if player.global_position.x <= rose.global_position.x:
+		printerr("站位夹具：小王子应在玫瑰右边")
+		failed += 1
+	dialogue.play(DialogueCatalog.lines_for_id(&"rose"), player, rose)
+	failed += _assert_dialogue_portraits(
+			dialogue, rose_portrait_path, prince_portrait_path, false, "站玫瑰右边旁白"
+	)
+	dialogue.play_line(
+			DialogueLine.new(
+					DialogueCatalog.ROSE_SPEAKER, "开口", DialogueCatalog.ROSE_PORTRAIT
+			),
+			player,
+			rose,
+	)
+	failed += _assert_dialogue_portraits(
+			dialogue, rose_portrait_path, prince_portrait_path, true, "站玫瑰右边听花"
+	)
+	dialogue.close()
+
+	planet.teleport_player(fposmod(baobab.rotation - beside_radians, TAU))
+	dialogue.play(DialogueCatalog.lines_for_id(&"baobab"), player, baobab)
+	failed += _assert_dialogue_portraits(
+			dialogue, prince_portrait_path, "", true, "站树左边旁白"
+	)
+	dialogue.close()
+
+	planet.teleport_player(fposmod(baobab.rotation + beside_radians, TAU))
+	dialogue.play(DialogueCatalog.lines_for_id(&"baobab"), player, baobab)
+	failed += _assert_dialogue_portraits(
+			dialogue, "", prince_portrait_path, false, "站树右边旁白"
+	)
+	dialogue.close()
+
+	planet.teleport_player(fposmod(rose.rotation - beside_radians, TAU))
+	await process_frame
+	Input.action_press("interact")
+	await process_frame
+	Input.action_release("interact")
+	if not dialogue.is_open():
+		printerr("站玫瑰左边按确认应打开对话")
+		failed += 1
+	else:
+		failed += _assert_dialogue_portraits(
+				dialogue, prince_portrait_path, rose_portrait_path, true, "交互站玫瑰左边"
+		)
+	dialogue.close()
+	return failed
+
+
+func _assert_dialogue_portraits(
+		dialogue: DialogueBox,
+		left_resource_path: String,
+		right_resource_path: String,
+		left_is_speaking: bool,
+		label: String,
+) -> int:
+	var failed := 0
+	var left := dialogue.get_node("%LeftPortrait") as TextureRect
+	var right := dialogue.get_node("%RightPortrait") as TextureRect
+	var speaker := dialogue.get_node("%Speaker") as Label
+	var assert_portrait := func(
+			portrait: TextureRect,
+			resource_path: String,
+			is_speaking: bool,
+			side_label: String,
+	) -> int:
+		if resource_path.is_empty():
+			if portrait.visible:
+				printerr("%s头像应隐藏" % side_label)
+				return 1
+			return 0
+		if (
+				not portrait.visible
+				or portrait.texture == null
+				or portrait.texture.resource_path != resource_path
+		):
+			printerr("%s头像应为 %s" % [side_label, resource_path])
+			return 1
+		var expected_modulate := (
+				DialogueBox.SPEAKING_PORTRAIT_MODULATE if is_speaking
+				else DialogueBox.LISTENING_PORTRAIT_MODULATE
+		)
+		if portrait.modulate != expected_modulate:
+			printerr("%s头像明暗不对" % side_label)
+			return 1
+		return 0
+	failed += assert_portrait.call(
+			left, left_resource_path, left_is_speaking, "%s 左侧" % label
+	)
+	failed += assert_portrait.call(
+			right, right_resource_path, not left_is_speaking, "%s 右侧" % label
+	)
+	var expected_alignment := (
+			HORIZONTAL_ALIGNMENT_LEFT if left_is_speaking
+			else HORIZONTAL_ALIGNMENT_RIGHT
+	)
+	if speaker.horizontal_alignment != expected_alignment:
+		printerr("%s 说话人应对齐到说话一侧" % label)
+		failed += 1
+	return failed
+
 
 func _assert_focus(
 	planet: Planet, target: SurfaceProp, dialogue_id: StringName, label: String
@@ -1578,10 +1719,10 @@ func _check_typewriter_hold(
 	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
 ) -> int:
 	var failed := 0
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var body := dialogue.get_node("%Body") as Label
 	var timer := dialogue.get_node("Timer") as Timer
 	var typewriter := dialogue.get_node("Typewriter") as AudioStreamPlayer
-	var continue_triangle := dialogue.get_node("ContinueTriangle") as Control
+	var continue_triangle := dialogue.get_node("%ContinueTriangle") as Control
 	var first_text := lines[0].text
 	var second_text := lines[1].text
 
@@ -1680,8 +1821,8 @@ func _check_typewriter_hold_through_line_then_release(
 	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
 ) -> int:
 	var failed := 0
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
-	var continue_triangle := dialogue.get_node("ContinueTriangle") as Control
+	var body := dialogue.get_node("%Body") as Label
+	var continue_triangle := dialogue.get_node("%ContinueTriangle") as Control
 	var first_text := lines[0].text
 	var second_text := lines[1].text
 
@@ -1718,7 +1859,7 @@ func _check_typewriter_hold_follows_confirm_events(
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var body := dialogue.get_node("%Body") as Label
 	var first_text := lines[0].text
 
 	dialogue.play(lines)
@@ -1771,7 +1912,7 @@ func _check_typewriter_hold_restores_after_key_release(
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var body := dialogue.get_node("%Body") as Label
 	dialogue.play(lines)
 	scene._input(_interact_key_event(true))
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
@@ -1798,7 +1939,7 @@ func _check_typewriter_hold_joypad_confirm(
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var body := dialogue.get_node("%Body") as Label
 
 	dialogue.play(lines)
 	scene._input(_interact_joy_event(true))
@@ -1889,7 +2030,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("GameCamera 应固定左上，避免改变默认构图")
 		failed += 1
 	var player := scene.get_node(PLAYER_PATH) as Player
-	var dialogue_body := story.dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var dialogue_body := story.dialogue.get_node("%Body") as Label
 	var fade_layer := story.get_node("FadeLayer") as CanvasLayer
 	if fade_layer.layer >= story.dialogue.layer:
 		printerr("开场淡入时对话框应叠在黑场之上")
@@ -1945,6 +2086,14 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.is_blocking_input:
 		printerr("玫瑰开口后仍应禁止走动")
 		failed += 1
+	if story.dialogue.is_open() and dialogue_body.text.contains("我刚刚睡醒"):
+		failed += _assert_dialogue_portraits(
+				story.dialogue,
+				"res://ui/portraits/rose.png",
+				"res://ui/portraits/prince.png",
+				true,
+				"开场玫瑰开口",
+		)
 	story.skip_cinematics = true
 	await story.start()
 	if story.get_node("%Dim").color.a > 0.01:

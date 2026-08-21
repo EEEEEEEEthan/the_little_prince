@@ -1,6 +1,6 @@
 class_name DialogueBox
 extends CanvasLayer
-## 像素风打字机对话框：头像 + 说话人 + 逐字正文，出字时播放提示音。
+## 像素风打字机对话框：双侧头像随站位左右，说话人 + 逐字正文。
 
 signal closed
 signal line_advanced
@@ -9,9 +9,9 @@ const TYPEWRITER_INTERVAL := 0.045
 const TYPEWRITER_FAST_INTERVAL := 0.012
 const TYPEWRITER_VOLUME_DB := -8.0
 const TYPEWRITER_FAST_VOLUME_DB := -20.0
+const SPEAKING_PORTRAIT_MODULATE := Color.WHITE
+const LISTENING_PORTRAIT_MODULATE := Color(0.55, 0.55, 0.55)
 
-@onready var _portrait: TextureRect = %Portrait
-@onready var _speaker: Label = %Speaker
 @onready var _body: Label = %Body
 @onready var _typewriter: AudioStreamPlayer = $Typewriter
 @onready var _timer: Timer = $Timer
@@ -24,12 +24,16 @@ var _saw_confirm_released_while_idle: bool = false
 var _is_revealing: bool = false
 var _typewriter_accum_seconds: float = 0.0
 var _close_after_last: bool = true
+var _prince_stands_on_left: bool = true
+var _partner_portrait: Texture2D
+
 
 func _ready() -> void:
 	# tscn 保持可见便于编辑；开局再关。
 	visible = false
 	set_process(false)
 	_timer.wait_time = TYPEWRITER_INTERVAL
+
 
 func _process(delta: float) -> void:
 	if visible and not _is_revealing and not _is_holding:
@@ -44,39 +48,31 @@ func _process(delta: float) -> void:
 		_typewriter_accum_seconds -= typewriter_interval
 		_reveal_next_character()
 
+
 func is_open() -> bool:
 	return visible
+
 
 func is_typing() -> bool:
 	return _is_revealing
 
-func play(lines: Array[DialogueLine]) -> void:
-	if lines.is_empty():
-		close()
-		return
-	_close_after_last = true
-	_lines = lines.duplicate()
-	_index = 0
-	_is_holding = false
-	_advance_on_confirm_release = false
-	_saw_confirm_released_while_idle = false
-	_set_accelerating(false)
-	visible = true
-	set_process(true)
-	_show_line()
+
+func play(
+		lines: Array[DialogueLine],
+		prince: Node2D = null,
+		partner: SurfaceProp = null,
+) -> void:
+	_play_lines(lines, true, prince, partner)
 
 
-func play_line(line: DialogueLine) -> void:
-	_close_after_last = false
-	_lines = [line]
-	_index = 0
-	_is_holding = false
-	_advance_on_confirm_release = false
-	_saw_confirm_released_while_idle = false
-	_set_accelerating(false)
-	visible = true
-	set_process(true)
-	_show_line()
+func play_line(
+		line: DialogueLine,
+		prince: Node2D = null,
+		partner: SurfaceProp = null,
+) -> void:
+	var lines: Array[DialogueLine] = []
+	lines.append(line)
+	_play_lines(lines, false, prince, partner)
 
 
 func mark_holding(held: bool) -> void:
@@ -126,6 +122,41 @@ func close() -> void:
 		closed.emit()
 
 
+func _play_lines(
+		lines: Array[DialogueLine],
+		close_after_last: bool,
+		prince: Node2D,
+		partner: SurfaceProp,
+) -> void:
+	if lines.is_empty():
+		close()
+		return
+	_close_after_last = close_after_last
+	_prince_stands_on_left = (
+			prince == null
+			or partner == null
+			or prince.global_position.x <= partner.global_position.x
+	)
+	_partner_portrait = (
+			null if partner == null
+			else DialogueCatalog.partner_portrait_for(partner)
+	)
+	if _partner_portrait == null:
+		for line in lines:
+			if line.speaker != DialogueCatalog.PRINCE_SPEAKER:
+				_partner_portrait = line.portrait
+				break
+	_lines = lines.duplicate()
+	_index = 0
+	_is_holding = false
+	_advance_on_confirm_release = false
+	_saw_confirm_released_while_idle = false
+	_set_accelerating(false)
+	visible = true
+	set_process(true)
+	_show_line()
+
+
 func _finish_current_line() -> void:
 	if _close_after_last:
 		close()
@@ -135,9 +166,8 @@ func _finish_current_line() -> void:
 
 func _show_line() -> void:
 	var line := _lines[_index]
-	_speaker.text = line.speaker
 	_body.text = line.text
-	_portrait.texture = line.portrait
+	_apply_portraits(line)
 	_body.visible_characters = 0
 	%ContinueTriangle.visible = false
 	_timer.stop()
@@ -145,9 +175,39 @@ func _show_line() -> void:
 	_typewriter_accum_seconds = 0.0
 	_reveal_next_character()
 
+
+func _apply_portraits(line: DialogueLine) -> void:
+	var left_texture := DialogueCatalog.PRINCE_PORTRAIT
+	var right_texture := _partner_portrait
+	if not _prince_stands_on_left:
+		left_texture = _partner_portrait
+		right_texture = DialogueCatalog.PRINCE_PORTRAIT
+	var bind_portrait := func(portrait: TextureRect, texture: Texture2D) -> void:
+		portrait.texture = texture
+		portrait.visible = texture != null
+	bind_portrait.call(%LeftPortrait, left_texture)
+	bind_portrait.call(%RightPortrait, right_texture)
+	var prince_is_speaking := line.speaker == DialogueCatalog.PRINCE_SPEAKER
+	var left_is_speaking := prince_is_speaking == _prince_stands_on_left
+	%LeftPortrait.modulate = (
+			SPEAKING_PORTRAIT_MODULATE if left_is_speaking
+			else LISTENING_PORTRAIT_MODULATE
+	)
+	%RightPortrait.modulate = (
+			SPEAKING_PORTRAIT_MODULATE if not left_is_speaking
+			else LISTENING_PORTRAIT_MODULATE
+	)
+	%Speaker.text = line.speaker
+	%Speaker.horizontal_alignment = (
+			HORIZONTAL_ALIGNMENT_LEFT if left_is_speaking
+			else HORIZONTAL_ALIGNMENT_RIGHT
+	)
+
+
 func _set_accelerating(enabled: bool) -> void:
 	_timer.wait_time = TYPEWRITER_FAST_INTERVAL if enabled else TYPEWRITER_INTERVAL
 	_typewriter.volume_db = TYPEWRITER_FAST_VOLUME_DB if enabled else TYPEWRITER_VOLUME_DB
+
 
 func _reveal_next_character() -> void:
 	var total := _body.get_total_character_count()
@@ -162,6 +222,7 @@ func _reveal_next_character() -> void:
 		if _is_holding:
 			_advance_on_confirm_release = false
 			_saw_confirm_released_while_idle = false
+
 
 func _play_blip() -> void:
 	var shown := _body.visible_characters
