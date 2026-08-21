@@ -85,8 +85,8 @@ func _check_constants() -> int:
 	if WorldConstants.BAOBAB_COUNT != 9:
 		printerr("BAOBAB_COUNT 应为 9，实际 %d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
-	if WorldConstants.FLORA_COUNT != 80:
-		printerr("FLORA_COUNT 应为 80，实际 %d" % WorldConstants.FLORA_COUNT)
+	if WorldConstants.FLORA_COUNT != 75:
+		printerr("FLORA_COUNT 应为 75，实际 %d" % WorldConstants.FLORA_COUNT)
 		failed += 1
 	if WorldConstants.BUTTERFLY_COUNT != 8:
 		printerr("BUTTERFLY_COUNT 应为 8，实际 %d" % WorldConstants.BUTTERFLY_COUNT)
@@ -542,7 +542,7 @@ func _check_static_assets() -> int:
 	if flora_tex != null:
 		var flora_img := flora_tex.get_image()
 		var found_leaf := false
-		var found_blossom := false
+		var found_cool_dry_grass := false
 		for pixel_y in range(flora_img.get_height()):
 			for pixel_x in range(flora_img.get_width()):
 				var pixel := flora_img.get_pixel(pixel_x, pixel_y)
@@ -550,13 +550,13 @@ func _check_static_assets() -> int:
 					continue
 				if pixel.g > pixel.r and pixel.g > pixel.b:
 					found_leaf = true
-				if pixel.r > pixel.b + 0.15 and pixel.g > pixel.b + 0.1 and pixel.s > 0.35:
-					found_blossom = true
+				if pixel.b > pixel.r + 0.08 and pixel.g > pixel.r and pixel.s > 0.2:
+					found_cool_dry_grass = true
 		if not found_leaf:
 			printerr("地表植物贴图应含绿色叶片")
 			failed += 1
-		if not found_blossom:
-			printerr("地表植物贴图应含小花等非草色变体")
+		if not found_cool_dry_grass:
+			printerr("地表植物贴图应含冷青等非草色变体")
 			failed += 1
 	print("  静态 assets PNG 可加载 OK")
 	return failed
