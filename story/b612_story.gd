@@ -65,6 +65,7 @@ func start() -> void:
 	_is_glass_interact = false
 	_dialogue_closed_early = false
 	_glass_globe().visible = false
+	planet.sky.is_self_rotating = false
 	player.can_move_left = false
 	player.can_move_right = false
 	player.move_speed_scale = 0.8
@@ -278,6 +279,7 @@ func _camera_down() -> void:
 
 func _show_glass() -> void:
 	_glass_globe().visible = true
+	planet.sky.is_self_rotating = true
 
 
 func _hide_glass() -> void:
