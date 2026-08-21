@@ -1165,8 +1165,8 @@ rotation = -1.984601
 autoplay = "default"
 
 [node name="Butterfly7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="95" unique_id=2101847707 instance=ExtResource("16_butterfly")]
-position = Vector2(-78.8443, -71.38646)
-rotation = -0.835
+position = Vector2(-95, 31)
+rotation = -2.0110188
 autoplay = "default"
 
 [node name="Butterfly8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="96" unique_id=2101847708 instance=ExtResource("16_butterfly")]
