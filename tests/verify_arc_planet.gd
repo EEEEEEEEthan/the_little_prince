@@ -911,6 +911,15 @@ func _check_scene_and_mechanics() -> int:
 		if not is_equal_approx(sky.star_rotation_speed, planet.star_rotation_speed):
 			printerr("Sky.star_rotation_speed 应与 Planet 导出一致")
 			failed += 1
+		if not sky.is_self_rotating:
+			printerr("默认星空应相对星球自转")
+			failed += 1
+		else:
+			var rotation_before_self: float = sky.rotation
+			sky._process(10.0)
+			if is_equal_approx(sky.rotation, rotation_before_self):
+				printerr("默认星空应相对星球自转")
+				failed += 1
 		if not is_equal_approx(planet.radius, WorldConstants.PLANET_RADIUS):
 			printerr(
 				"B612 半径应等于默认常量 %s，实际 %s"
@@ -2308,6 +2317,16 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.is_blocking_input:
 		printerr("玫瑰开口后仍应禁止走动")
 		failed += 1
+	var measure_star_self_rotation := func(delta_seconds: float) -> float:
+		var rotation_before: float = planet.sky.rotation
+		planet.sky._process(delta_seconds)
+		return angle_difference(rotation_before, planet.sky.rotation)
+	if planet.sky.is_self_rotating:
+		printerr("罩玻璃罩前星空不应自转")
+		failed += 1
+	elif absf(measure_star_self_rotation.call(10.0)) > 0.0001:
+		printerr("罩玻璃罩前星空不应自转")
+		failed += 1
 	if story.dialogue.is_open() and dialogue_body.text.contains("我刚刚睡醒"):
 		failed += _assert_dialogue_portrait_side(
 				story.dialogue,
@@ -2328,6 +2347,12 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += 1
 	if not story._glass_globe().visible:
 		printerr("开场罩上玻璃罩后才应拔苗")
+		failed += 1
+	if not planet.sky.is_self_rotating:
+		printerr("罩上玻璃罩后星空应开始自转")
+		failed += 1
+	elif absf(measure_star_self_rotation.call(10.0)) < 0.0001:
+		printerr("罩上玻璃罩后星空应开始自转")
 		failed += 1
 	var opening_guide := planet.get_node("%Butterfly3") as Butterfly
 	if opening_guide.modulate.a > 0.01:
@@ -2533,6 +2558,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += 1
 	if glass_globe.visible:
 		printerr("告别后应拿掉玻璃罩")
+		failed += 1
+	if not planet.sky.is_self_rotating:
+		printerr("拿掉玻璃罩后星空应继续自转")
 		failed += 1
 	if player.modulate.a > 0.01:
 		printerr("离星后小王子应消失")

@@ -26,6 +26,7 @@ func interact_hold_seconds(prop: SurfaceProp) -> float:
 func _prepare_start() -> void:
 	_is_glass_interact = false
 	_glass_globe().visible = false
+	planet.sky.is_self_rotating = false
 	player.move_speed_scale = 0.8
 
 
@@ -153,6 +154,7 @@ func _interact_baobab() -> SurfaceProp:
 
 func _show_glass() -> void:
 	_glass_globe().visible = true
+	planet.sky.is_self_rotating = true
 
 
 func _hide_glass() -> void:
