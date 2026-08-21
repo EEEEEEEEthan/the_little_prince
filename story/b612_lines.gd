@@ -2,9 +2,10 @@ class_name B612Lines
 extends RefCounted
 ## B612 剧情台词：对话框与头顶侧写。
 
+const OPENING_OVERHEAD_VANITY := "小王子看出了这花儿不太谦逊，可是她确实丽姿动人"
 const OPENING_OVERHEAD_LINES: PackedStringArray = [
 	"小王子很喜欢玫瑰花",
-	"可是玫瑰的傲娇，尖刺，总是让他恼火"
+	"可是玫瑰的傲娇，尖刺，总是让他恼火",
 ]
 const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
 	"小王子的星球总会长出猴面包树",
@@ -31,49 +32,53 @@ static func opening_rose() -> Array[DialogueLine]:
 	])
 
 
+static func opening_screen() -> Array[DialogueLine]:
+	return _pack([
+		_rose("我有点冷，难道你没有屏风吗"),
+	])
+
+
 static func pull_shoot(remaining_after_this: int) -> String:
 	return PULL_SHOOT_OVERHEAD_LINES[
 			PULL_SHOOT_OVERHEAD_LINES.size() - 1 - remaining_after_this
 	]
 
 
-static func tend_rose() -> Array[DialogueLine]:
-	var lines := tend_rose_until_cover()
-	lines.append_array(tend_rose_after_cover())
-	return lines
-
-
-static func tend_rose_until_cover() -> Array[DialogueLine]:
-	return _pack([
-		_rose("夜里有风。把玻璃罩罩上。"),
-	])
-
-
-static func tend_rose_after_cover() -> Array[DialogueLine]:
-	return _pack([
-		_rose("我有四根刺。老虎来了，我会扎它。"),
-		_prince("这里没有老虎。"),
-	])
+static func farewell_cues() -> Array[StoryCue]:
+	return [
+		_overhead("小王子最后一次浇花，他发觉自己要哭出来"),
+		_dialogue([_prince("再见了")]),
+		_overhead("花儿没有答应他"),
+		_dialogue([_prince("再见了")]),
+		_overhead("花儿咳嗽了一阵，但并不是由于感冒"),
+		_dialogue([_rose("我真蠢，请你原谅我。希望你能幸福。")]),
+		_overhead("小王子不知所措，不明白她为什么突然这样温柔恬静"),
+		_dialogue([
+			_rose("的确，我爱你"),
+			_rose("但由于我的过错，你一点也没有理会"),
+			_rose("这丝毫不重要"),
+			_rose("不过，你也和我一样的蠢"),
+			_rose("希望你今后能幸福"),
+			_rose("把罩子放一边吧，我用不着他了"),
+			_prince("要是风来了怎么办？"),
+			_rose("我的感冒并不那么重"),
+			_prince("要是有虫子野兽呢？"),
+			_rose("我有爪子"),
+		]),
+		_overhead("玫瑰天真地露出她那四根刺"),
+		_dialogue([
+			_rose("别这么磨蹭了。真烦人！"),
+			_rose("既然决定离开这儿，那么，快走吧！"),
+		]),
+		_overhead("玫瑰怕小王子看见她在哭。她总是这么傲娇"),
+	]
 
 
 static func farewell() -> Array[DialogueLine]:
-	var lines := farewell_until_uncover()
-	lines.append_array(farewell_after_uncover())
+	var lines: Array[DialogueLine] = []
+	for cue in farewell_cues():
+		lines.append_array(cue.dialogue_lines)
 	return lines
-
-
-static func farewell_until_uncover() -> Array[DialogueLine]:
-	return _pack([
-		_prince("再见。"),
-		_rose("玻璃罩拿走吧。我不需要了。"),
-	])
-
-
-static func farewell_after_uncover() -> Array[DialogueLine]:
-	return _pack([
-		_rose("我当然爱你。你一直不知道，是我的错。"),
-		_rose("去吧。你已经决定了。"),
-	])
 
 
 static func _prince(text: String) -> DialogueLine:
@@ -89,3 +94,20 @@ static func _pack(parts: Array) -> Array[DialogueLine]:
 	for part in parts:
 		lines.append(part)
 	return lines
+
+
+static func _overhead(text: String) -> StoryCue:
+	var cue := StoryCue.new()
+	cue.overhead_text = text
+	return cue
+
+
+static func _dialogue(parts: Array) -> StoryCue:
+	var cue := StoryCue.new()
+	cue.dialogue_lines = _pack(parts)
+	return cue
+
+
+class StoryCue extends RefCounted:
+	var overhead_text := ""
+	var dialogue_lines: Array[DialogueLine] = []

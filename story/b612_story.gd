@@ -1,12 +1,12 @@
 class_name B612Story
 extends Node
-## B612 故乡剧情：开场对白 → 拔苗 → 侍弄玫瑰 → 告别 → 离星。
+## B612 故乡剧情：开场对白 → 罩玻璃罩 → 拔苗 → 告别 → 离星。
 ## 第一次跨入日落时播头顶叙事，不作为关卡。
 
 enum Beat {
 	OPENING,
+	COVER_ROSE,
 	PULL_SHOOTS,
-	TEND_ROSE,
 	FAREWELL,
 	DEPART,
 }
@@ -16,8 +16,8 @@ const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
 const DEPART_LIFT_PIXELS := 72.0
 const DEPART_LIFT_SECONDS := 2.4
 const FADE_TO_BLACK_SECONDS := 1.2
-const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
 const OPENING_MOVE_SPEED_SCALE := 0.8
+const OPENING_OVERHEAD_START_DELAY_SECONDS := 3.0
 const SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS := 0.3
 const SUNSET_CAMERA_LIFT_SECONDS := 1.0
 const SUNSET_CAMERA_LIFT_PIXELS := 16.0
@@ -62,16 +62,19 @@ func start() -> void:
 	_is_first_sunset_narration_pending = false
 	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 	beat = Beat.OPENING
+	_glass_globe().visible = false
 	player.can_move_left = false
+	player.can_move_right = false
 	player.move_speed_scale = OPENING_MOVE_SPEED_SCALE
 	_lock_input()
 	await _play_dialogue(B612Lines.opening_rose())
+	await _play_overhead_after_dialogue(B612Lines.OPENING_OVERHEAD_VANITY)
+	await _play_dialogue(B612Lines.opening_screen())
+	if skip_cinematics:
+		_finish_opening_cover()
+		return
 	is_blocking_input = false
-	if not skip_cinematics:
-		await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
-		for opening_overhead_line in B612Lines.OPENING_OVERHEAD_LINES:
-			await _play_overhead(opening_overhead_line)
-	beat = Beat.PULL_SHOOTS
+	beat = Beat.COVER_ROSE
 
 
 func accepts_interact(prop: SurfaceProp) -> bool:
@@ -83,7 +86,7 @@ func accepts_interact(prop: SurfaceProp) -> bool:
 func try_handle_interact(prop: SurfaceProp) -> bool:
 	if not accepts_interact(prop):
 		return false
-	if skip_cinematics:
+	if skip_cinematics or beat == Beat.COVER_ROSE:
 		apply_interact(prop)
 		return true
 	_lock_input()
@@ -96,18 +99,16 @@ func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
 	if not _is_current_objective(prop):
 		return empty
 	match beat:
+		Beat.COVER_ROSE:
+			_finish_opening_cover()
+			return empty
 		Beat.PULL_SHOOTS:
 			prop.is_consumed = true
 			prop.visible = false
 			pulled_shoot_count += 1
 			if pulled_shoot_count >= SHOOT_COUNT:
-				beat = Beat.TEND_ROSE
+				beat = Beat.FAREWELL
 			return empty
-		Beat.TEND_ROSE:
-			beat = Beat.FAREWELL
-			if not _glass_globe().visible:
-				_glass_globe().visible = true
-			return B612Lines.tend_rose()
 		Beat.FAREWELL:
 			prop.is_consumed = true
 			beat = Beat.DEPART
@@ -124,6 +125,8 @@ func try_first_sunset_narration(phase: float) -> void:
 		_is_first_sunset_narration_pending = true
 	_last_sky_phase = phase
 	if not _is_first_sunset_narration_pending:
+		return
+	if beat == Beat.OPENING or beat == Beat.COVER_ROSE:
 		return
 	if is_blocking_input or dialogue.is_open():
 		return
@@ -156,17 +159,19 @@ func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float
 
 
 func _play_interact(prop: SurfaceProp) -> void:
-	if beat == Beat.TEND_ROSE:
-		await _play_dialogue(B612Lines.tend_rose_until_cover())
-		_glass_globe().visible = true
-		await _play_dialogue(B612Lines.tend_rose_after_cover())
-		apply_interact(prop)
-		is_blocking_input = false
-		return
 	if beat == Beat.FAREWELL:
-		await _play_dialogue(B612Lines.farewell_until_uncover())
 		_glass_globe().visible = false
-		await _play_dialogue(B612Lines.farewell_after_uncover())
+		var previous_cue_was_dialogue := false
+		for cue in B612Lines.farewell_cues():
+			if not cue.overhead_text.is_empty():
+				if previous_cue_was_dialogue:
+					await _play_overhead_after_dialogue(cue.overhead_text)
+				else:
+					await _play_overhead(cue.overhead_text)
+				previous_cue_was_dialogue = false
+			if not cue.dialogue_lines.is_empty():
+				await _play_dialogue(cue.dialogue_lines)
+				previous_cue_was_dialogue = true
 		apply_interact(prop)
 		await _play_departure()
 		return
@@ -199,7 +204,7 @@ func _play_dialogue(lines: Array[DialogueLine]) -> void:
 	if skip_cinematics or lines.is_empty():
 		return
 	dialogue.play(lines)
-	if dialogue.is_open():
+	if dialogue.is_open() and Input.is_action_pressed(&"interact"):
 		dialogue.mark_holding(true)
 	await dialogue.closed
 
@@ -210,16 +215,43 @@ func _play_overhead(display_text: String) -> void:
 	await overhead.play_queued(display_text)
 
 
+func _play_overhead_after_dialogue(display_text: String) -> void:
+	if skip_cinematics or display_text.is_empty():
+		return
+	await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
+	await _play_overhead(display_text)
+
+
 func _is_current_objective(prop: SurfaceProp) -> bool:
 	if prop.is_consumed:
 		return false
 	match beat:
+		Beat.COVER_ROSE:
+			return prop.kind == SurfaceProp.Kind.ROSE and not _glass_globe().visible
+		Beat.FAREWELL:
+			return prop.kind == SurfaceProp.Kind.ROSE
 		Beat.PULL_SHOOTS:
 			return prop.kind == SurfaceProp.Kind.BAOBAB
-		Beat.TEND_ROSE, Beat.FAREWELL:
-			return prop.kind == SurfaceProp.Kind.ROSE
 		_:
 			return false
+
+
+func _finish_opening_cover() -> void:
+	_glass_globe().visible = true
+	player.can_move_right = true
+	is_blocking_input = false
+	if skip_cinematics:
+		beat = Beat.PULL_SHOOTS
+		return
+	_play_opening_rose_overhead()
+
+
+func _play_opening_rose_overhead() -> void:
+	await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
+	for opening_overhead_line in B612Lines.OPENING_OVERHEAD_LINES:
+		await _play_overhead(opening_overhead_line)
+	if beat == Beat.COVER_ROSE:
+		beat = Beat.PULL_SHOOTS
 
 
 func _lock_input() -> void:

@@ -7,6 +7,7 @@ extends Sprite2D
 @onready var interaction: Interaction = %Interaction
 
 var can_move_left: bool = true
+var can_move_right: bool = true
 var move_speed_scale: float = 1.0
 var _anim_time: float = 0.0
 var _was_moving: bool = false
@@ -24,7 +25,8 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	var direction := 0.0
 	if not interaction.is_busy():
-		direction = Input.get_action_strength("move_right")
+		if can_move_right:
+			direction += Input.get_action_strength("move_right")
 		if can_move_left:
 			direction -= Input.get_action_strength("move_left")
 		direction *= move_speed_scale

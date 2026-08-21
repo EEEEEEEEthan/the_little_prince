@@ -67,6 +67,9 @@ func mark_holding(held: bool) -> void:
 		return
 	_is_holding = held
 	if held:
+		if _index >= _lines.size() - 1 and _saw_confirm_released_while_idle:
+			close()
+			return
 		_advance_on_confirm_release = not is_typing() and _saw_confirm_released_while_idle
 		if is_typing():
 			_set_accelerating(true)
