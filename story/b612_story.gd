@@ -17,23 +17,6 @@ const SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS := 0.3
 const SUNSET_CAMERA_LIFT_SECONDS := 1.0
 const SUNSET_CAMERA_LIFT_PIXELS := 16.0
 const SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS := 0.5
-const OPENING_OVERHEAD_VANITY := "小王子看出了这花儿不太谦逊，可是她确实丽姿动人"
-const OPENING_OVERHEAD_LINES: PackedStringArray = [
-	"小王子很喜欢玫瑰花",
-	"可是玫瑰的傲娇，尖刺，总是让他恼火",
-]
-const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
-	"小王子的星球总会长出猴面包树",
-	"小王子每天都要拔掉猴面包树苗",
-	"如果不拔的话，星球就会被猴面包树弄得支离破碎",
-	"可是现在他决定要离开了",
-	"这是最后一株",
-]
-const SUNSET_OVERHEAD_LINES: PackedStringArray = [
-	"人在忧伤的时候，就喜欢看日落。",
-	"有一天小王子看了二十多次日落",
-]
-const OVERHEAD_PLANET_NAME := "B-612。"
 const _PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")
 const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
 
@@ -127,7 +110,7 @@ func _play_story() -> void:
 	await _prince("你很好看。")
 	await _rose("是吧，我是与太阳同时出生的。。。")
 	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
-	await _overhead(OPENING_OVERHEAD_VANITY)
+	await _overhead("小王子看出了这花儿不太谦逊，可是她确实丽姿动人")
 	await _rose("我有点冷，难道你没有屏风吗")
 	if skip_cinematics:
 		_show_glass()
@@ -138,28 +121,41 @@ func _play_story() -> void:
 	player.can_move_right = true
 	is_blocking_input = false
 	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
-	for opening_overhead_line in OPENING_OVERHEAD_LINES:
-		await _overhead(opening_overhead_line)
+	await _overhead("小王子很喜欢玫瑰花")
+	await _overhead("可是玫瑰的傲娇，尖刺，总是让他恼火")
 	has_finished_opening = true
 	await _meet_sunset()
 	player.can_move_right = false
 	_lock_input()
 	await _wait(SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS)
 	await _camera_up()
-	for sunset_overhead_line in SUNSET_OVERHEAD_LINES:
-		await _overhead(sunset_overhead_line)
+	await _overhead("人在忧伤的时候，就喜欢看日落。")
+	await _overhead("有一天小王子看了二十多次日落")
 	await _wait(SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS)
 	await _camera_down()
 	is_blocking_input = false
 	player.can_move_left = true
 	player.can_move_right = true
 	player.move_speed_scale = 1.0
-	for pull_overhead_line in PULL_SHOOT_OVERHEAD_LINES:
-		var baobab := await _interact_baobab()
-		await _overhead(pull_overhead_line)
-		baobab.is_consumed = true
-		baobab.visible = false
-		is_blocking_input = false
+	var finish_baobab := func(pulled_baobab: SurfaceProp) -> void:
+		pulled_baobab.is_consumed = true
+		pulled_baobab.visible = false
+		self.is_blocking_input = false
+	var baobab := await _interact_baobab()
+	await _overhead("小王子的星球总会长出猴面包树")
+	finish_baobab.call(baobab)
+	baobab = await _interact_baobab()
+	await _overhead("小王子每天都要拔掉猴面包树苗")
+	finish_baobab.call(baobab)
+	baobab = await _interact_baobab()
+	await _overhead("如果不拔的话，星球就会被猴面包树弄得支离破碎")
+	finish_baobab.call(baobab)
+	baobab = await _interact_baobab()
+	await _overhead("可是现在他决定要离开了")
+	finish_baobab.call(baobab)
+	baobab = await _interact_baobab()
+	await _overhead("这是最后一株")
+	finish_baobab.call(baobab)
 	var rose := await _interact_rose()
 	_hide_glass()
 	await _overhead("小王子最后一次浇花，他发觉自己要哭出来")
@@ -299,7 +295,7 @@ func _depart() -> void:
 	if skip_cinematics:
 		player.modulate.a = 0.0
 		%Dim.color = Color(0, 0, 0, 1)
-		%Epilogue.text = OVERHEAD_PLANET_NAME
+		%Epilogue.text = "B-612。"
 		await _halt_if_stale(generation)
 		return
 	await flock.arrive_from_offscreen(player.global_position)
@@ -313,7 +309,7 @@ func _depart() -> void:
 	var fade_tween := create_tween()
 	fade_tween.tween_property(%Dim, "color:a", 1.0, FADE_TO_BLACK_SECONDS)
 	await fade_tween.finished
-	%Epilogue.text = OVERHEAD_PLANET_NAME
+	%Epilogue.text = "B-612。"
 	await _halt_if_stale(generation)
 
 

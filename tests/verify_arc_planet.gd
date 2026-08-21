@@ -1707,6 +1707,11 @@ func _check_opening_cover_sequence(story: B612Story) -> int:
 	var glass_globe := rose.get_node("GlassGlobe") as Sprite2D
 	story.skip_cinematics = false
 	story.start()
+	var opening_vanity := "小王子看出了这花儿不太谦逊，可是她确实丽姿动人"
+	var opening_after_cover: PackedStringArray = [
+		"小王子很喜欢玫瑰花",
+		"可是玫瑰的傲娇，尖刺，总是让他恼火",
+	]
 	if not story.dialogue.is_open():
 		printerr("开场应先与玫瑰对白")
 		story.skip_cinematics = true
@@ -1722,7 +1727,7 @@ func _check_opening_cover_sequence(story: B612Story) -> int:
 	while Time.get_ticks_msec() < screen_deadline_msec:
 		if (
 				overhead.visible
-				and overhead_body.text == B612Story.OPENING_OVERHEAD_VANITY
+				and overhead_body.text == opening_vanity
 				and vanity_visible_msec < 0
 		):
 			vanity_visible_msec = Time.get_ticks_msec()
@@ -1821,7 +1826,7 @@ func _check_opening_cover_sequence(story: B612Story) -> int:
 	if not story.has_finished_opening:
 		printerr("开场头顶叙事播完后应进入下一段")
 		failed += 1
-	if played_overhead_lines != B612Story.OPENING_OVERHEAD_LINES:
+	if played_overhead_lines != opening_after_cover:
 		printerr(
 				"罩上玻璃罩后应按旧开场侧写逐句播放，实际 %s"
 				% ",".join(played_overhead_lines)
@@ -1842,7 +1847,7 @@ func _check_opening_cover_sequence(story: B612Story) -> int:
 			)
 			failed += 1
 	if line_started_msec.size() >= 2:
-		var first_line := B612Story.OPENING_OVERHEAD_LINES[0]
+		var first_line := opening_after_cover[0]
 		var expected_interval_msec := int(
 				(
 					maxi(first_line.length() - 1, 0)
@@ -1940,10 +1945,10 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story_script.contains("屏风"):
 		printerr("开场侧写后玫瑰应要屏风")
 		failed += 1
-	if B612Story.OPENING_OVERHEAD_VANITY.is_empty():
+	if not story_script.contains("不太谦逊"):
 		printerr("开场对白后应立即有侧写")
 		failed += 1
-	if B612Story.OPENING_OVERHEAD_LINES.is_empty():
+	if not story_script.contains("小王子很喜欢玫瑰花"):
 		printerr("罩上玻璃罩后应有旧开场头顶叙事")
 		failed += 1
 	if not is_equal_approx(B612Story.OPENING_OVERHEAD_START_DELAY_SECONDS, 3.0):
@@ -1997,10 +2002,10 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.has_crossed_sunset:
 		printerr("跨过日落应播出第一次日落叙事")
 		failed += 1
-	if B612Story.SUNSET_OVERHEAD_LINES.is_empty():
+	if not story_script.contains("人在忧伤的时候，就喜欢看日落"):
 		printerr("第一次日落应有头顶叙事")
 		failed += 1
-	if "".join(B612Story.SUNSET_OVERHEAD_LINES).contains("该走了"):
+	if story_script.contains("该走了"):
 		printerr("日落叙事不应变成离星任务提示")
 		failed += 1
 	story.skip_cinematics = true
@@ -2026,14 +2031,20 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.accepts_interact(shoots[0]):
 		printerr("拔苗段应选中嫩芽")
 		failed += 1
-	if B612Story.PULL_SHOOT_OVERHEAD_LINES.size() != B612Story.SHOOT_COUNT:
+	if story_script.count("await _interact_baobab()") != B612Story.SHOOT_COUNT:
 		printerr(
-				"拔苗头顶叙事列表长度应为 %d，实际 %d"
-				% [B612Story.SHOOT_COUNT, B612Story.PULL_SHOOT_OVERHEAD_LINES.size()]
+				"拔苗头顶叙事次数应为 %d，实际 %d"
+				% [B612Story.SHOOT_COUNT, story_script.count("await _interact_baobab()")]
 		)
 		failed += 1
-	for pull_overhead_line in B612Story.PULL_SHOOT_OVERHEAD_LINES:
-		if pull_overhead_line.is_empty():
+	for pull_overhead_line in [
+		"小王子的星球总会长出猴面包树",
+		"小王子每天都要拔掉猴面包树苗",
+		"如果不拔的话，星球就会被猴面包树弄得支离破碎",
+		"可是现在他决定要离开了",
+		"这是最后一株",
+	]:
+		if not story_script.contains(pull_overhead_line):
 			printerr("每棵嫩芽都应有头顶叙事")
 			failed += 1
 			break
@@ -2120,7 +2131,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if story.get_node("%Dim").color.a < 0.99:
 		printerr("离星后应淡出到黑场")
 		failed += 1
-	if story.get_node("%Epilogue").text != B612Story.OVERHEAD_PLANET_NAME:
+	if story.get_node("%Epilogue").text != "B-612。":
 		printerr("黑场应留下星球名")
 		failed += 1
 	story.flock.arrive_from_offscreen(
