@@ -27,6 +27,7 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/pale_gray_puff.png",
 	"res://planet/white_lavender_puff_frames.png",
 	"res://planet/baobab.png",
+	"res://planet/flora.png",
 	"res://planet/body.png",
 	"res://planet/starfield.png",
 	"res://planet/day_sky.png",
@@ -67,6 +68,9 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.BAOBAB_COUNT != 5:
 		printerr("BAOBAB_COUNT 应为 5，实际 %d" % WorldConstants.BAOBAB_COUNT)
+		failed += 1
+	if WorldConstants.FLORA_COUNT != 80:
+		printerr("FLORA_COUNT 应为 80，实际 %d" % WorldConstants.FLORA_COUNT)
 		failed += 1
 	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
@@ -190,6 +194,12 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.ROSE_SPRITE_SIZE < 14 or WorldConstants.ROSE_SPRITE_SIZE > 26:
 		printerr("ROSE_SPRITE_SIZE 应约 16~22，实际 %d" % WorldConstants.ROSE_SPRITE_SIZE)
+		failed += 1
+	if WorldConstants.FLORA_SPRITE_SIZE < 12 or WorldConstants.FLORA_SPRITE_SIZE > 20:
+		printerr("FLORA_SPRITE_SIZE 应约 12~18，实际 %d" % WorldConstants.FLORA_SPRITE_SIZE)
+		failed += 1
+	if WorldConstants.FLORA_VARIANT_COUNT < 4:
+		printerr("FLORA_VARIANT_COUNT 应覆盖草与其他植物，实际 %d" % WorldConstants.FLORA_VARIANT_COUNT)
 		failed += 1
 	if (
 		WorldConstants.PLAYER_SPRITE_WIDTH < 10 or WorldConstants.PLAYER_SPRITE_WIDTH > 16
@@ -424,6 +434,11 @@ func _check_static_assets() -> int:
 			WorldConstants.BAOBAB_SPRITE_SIZE * WorldConstants.BAOBAB_VARIANT_COUNT,
 			WorldConstants.BAOBAB_SPRITE_SIZE,
 		],
+		[
+			"res://planet/flora.png",
+			WorldConstants.FLORA_SPRITE_SIZE * WorldConstants.FLORA_VARIANT_COUNT,
+			WorldConstants.FLORA_SPRITE_SIZE,
+		],
 		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
 		[
 			"res://player/prince.png",
@@ -467,6 +482,26 @@ func _check_static_assets() -> int:
 			failed += 1
 		if found_smoke_pixel:
 			printerr("活火山贴图不应再含烟雾像素")
+			failed += 1
+	var flora_tex := load("res://planet/flora.png") as Texture2D
+	if flora_tex != null:
+		var flora_img := flora_tex.get_image()
+		var found_leaf := false
+		var found_blossom := false
+		for pixel_y in range(flora_img.get_height()):
+			for pixel_x in range(flora_img.get_width()):
+				var pixel := flora_img.get_pixel(pixel_x, pixel_y)
+				if pixel.a < 0.5:
+					continue
+				if pixel.g > pixel.r and pixel.g > pixel.b:
+					found_leaf = true
+				if pixel.r > pixel.b + 0.15 and pixel.g > pixel.b + 0.1 and pixel.s > 0.35:
+					found_blossom = true
+		if not found_leaf:
+			printerr("地表植物贴图应含绿色叶片")
+			failed += 1
+		if not found_blossom:
+			printerr("地表植物贴图应含小花等非草色变体")
 			failed += 1
 	print("  静态 assets PNG 可加载 OK")
 	return failed
@@ -588,6 +623,12 @@ func _check_scene_and_mechanics() -> int:
 				% [WorldConstants.BAOBAB_COUNT, planet.baobab_angles.size()]
 			)
 			failed += 1
+		if planet.flora_angles.size() != WorldConstants.FLORA_COUNT:
+			printerr(
+				"地表植物数量应为 %d，实际 %d"
+				% [WorldConstants.FLORA_COUNT, planet.flora_angles.size()]
+			)
+			failed += 1
 		var rose_count := 0
 		for prop in planet.surface_props:
 			if prop.kind == SurfaceProp.Kind.ROSE:
@@ -658,7 +699,113 @@ func _check_scene_and_mechanics() -> int:
 			):
 				printerr("猴面包树变体越界：%d" % prop.variant)
 				failed += 1
-		var expected_props: int = 1 + WorldConstants.VOLCANO_COUNT + WorldConstants.BAOBAB_COUNT
+		var flora_props: Array[SurfaceProp] = []
+		var shared_flora_material: ShaderMaterial = null
+		var flora_shader := load("res://planet/flora_sway.gdshader") as Shader
+		if flora_shader == null:
+			printerr("无法加载 flora_sway.gdshader")
+			failed += 1
+		elif (
+			not flora_shader.code.contains("MODEL_MATRIX")
+			or not flora_shader.code.contains("VERTEX")
+		):
+			printerr("植株 sway shader 应按世界坐标驱动顶点位移")
+			failed += 1
+		for prop in planet.surface_props:
+			if prop.kind != SurfaceProp.Kind.FLORA:
+				continue
+			flora_props.append(prop)
+			if prop.variant < 0 or prop.variant >= WorldConstants.FLORA_VARIANT_COUNT:
+				printerr("地表植物变体越界：%d" % prop.variant)
+				failed += 1
+			if prop.frame != prop.variant:
+				printerr(
+					"地表植物 %s 的 frame 应与 variant 一致，实际 frame=%d variant=%d"
+					% [prop.name, prop.frame, prop.variant]
+				)
+				failed += 1
+			if prop.hframes != WorldConstants.FLORA_VARIANT_COUNT:
+				printerr(
+					"地表植物 %s hframes 应为 %d，实际 %d"
+					% [prop.name, WorldConstants.FLORA_VARIANT_COUNT, prop.hframes]
+				)
+				failed += 1
+			if prop.texture == null or prop.texture.resource_path != "res://planet/flora.png":
+				printerr("地表植物 %s 应使用 flora.png" % prop.name)
+				failed += 1
+			if prop.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
+				printerr("地表植物 %s 应为 Nearest 过滤" % prop.name)
+				failed += 1
+			if prop.is_interactable() or prop.get_dialogue_id() != &"":
+				printerr("地表植物 %s 只作为装饰，不应可交互" % prop.name)
+				failed += 1
+			var flora_material := prop.material as ShaderMaterial
+			if (
+				flora_material == null
+				or flora_material.shader == null
+				or flora_material.shader.resource_path != "res://planet/flora_sway.gdshader"
+			):
+				printerr("地表植物 %s 应挂载 flora_sway ShaderMaterial" % prop.name)
+				failed += 1
+			elif shared_flora_material == null:
+				shared_flora_material = flora_material
+			elif flora_material != shared_flora_material:
+				printerr("地表植物应共享同一 sway 材质")
+				failed += 1
+		if flora_props.size() != WorldConstants.FLORA_COUNT:
+			printerr(
+				"地表植物节点数应为 %d，实际 %d"
+				% [WorldConstants.FLORA_COUNT, flora_props.size()]
+			)
+			failed += 1
+		const FLORA_CLOSE_NEIGHBOR_ARC_PX := 4.5
+		const FLORA_CLUSTER_JOIN_ARC_PX := 6.0
+		const FLORA_MIN_CLUSTERED_RATIO := 0.55
+		const FLORA_MIN_CLUSTER_COUNT := 6
+		const FLORA_MAX_CLUSTER_COUNT := 18
+		const FLORA_ROSE_CLEARANCE_RAD := 0.18
+		var sorted_flora_angles: Array[float] = planet.flora_angles.duplicate()
+		sorted_flora_angles.sort()
+		var flora_count := sorted_flora_angles.size()
+		var close_neighbor_count := 0
+		var flora_cluster_count := 0
+		var close_neighbor_rad := FLORA_CLOSE_NEIGHBOR_ARC_PX / planet.radius
+		var cluster_join_rad := FLORA_CLUSTER_JOIN_ARC_PX / planet.radius
+		for flora_index in flora_count:
+			var flora_angle: float = sorted_flora_angles[flora_index]
+			if absf(angle_difference(flora_angle, planet.rose_angle)) < FLORA_ROSE_CLEARANCE_RAD:
+				printerr("地表植物不应贴住玫瑰")
+				failed += 1
+			var previous_angle: float = sorted_flora_angles[flora_index - 1]
+			var next_angle: float = sorted_flora_angles[(flora_index + 1) % flora_count]
+			var nearest_gap := minf(
+					absf(angle_difference(flora_angle, previous_angle)),
+					absf(angle_difference(flora_angle, next_angle)),
+			)
+			if nearest_gap < close_neighbor_rad:
+				close_neighbor_count += 1
+			if absf(angle_difference(flora_angle, next_angle)) > cluster_join_rad:
+				flora_cluster_count += 1
+		var clustered_ratio := float(close_neighbor_count) / float(flora_count)
+		if clustered_ratio < FLORA_MIN_CLUSTERED_RATIO:
+			printerr(
+				"地表植物应成簇分布，近邻成簇比例应为至少 %s，实际 %s"
+				% [FLORA_MIN_CLUSTERED_RATIO, clustered_ratio]
+			)
+			failed += 1
+		if (
+			flora_cluster_count < FLORA_MIN_CLUSTER_COUNT
+			or flora_cluster_count > FLORA_MAX_CLUSTER_COUNT
+		):
+			printerr(
+				"地表植物应分成多簇，簇数应在 %d~%d，实际 %d"
+				% [FLORA_MIN_CLUSTER_COUNT, FLORA_MAX_CLUSTER_COUNT, flora_cluster_count]
+			)
+			failed += 1
+		var expected_props: int = (
+			1 + WorldConstants.VOLCANO_COUNT + WorldConstants.BAOBAB_COUNT
+			+ WorldConstants.FLORA_COUNT
+		)
 		if planet.surface_props.size() != expected_props:
 			printerr(
 				"地表地物总数应为 %d，实际 %d"
@@ -1315,6 +1462,22 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 	if planet.find_nearest_interactable() == active_volcano:
 		printerr("站在火山旁不应选中火山")
 		failed += 1
+	var flora: SurfaceProp = null
+	for prop in planet.surface_props:
+		if prop.kind == SurfaceProp.Kind.FLORA:
+			flora = prop
+			break
+	if flora == null:
+		printerr("场景中没有地表植物")
+		failed += 1
+	else:
+		if flora.is_interactable():
+			printerr("地表植物只作为装饰，不应可交互")
+			failed += 1
+		planet.teleport_player(flora.rotation)
+		if planet.find_nearest_interactable() == flora:
+			printerr("站在地表植物旁不应选中植物")
+			failed += 1
 
 	planet.teleport_player(baobab.rotation)
 	await process_frame
@@ -1849,6 +2012,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += 1
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []
+	var flora_props: Array[SurfaceProp] = []
 	var rose: SurfaceProp = null
 	for prop in planet.surface_props:
 		match prop.kind:
@@ -1856,6 +2020,8 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 				shoots.append(prop)
 			SurfaceProp.Kind.VOLCANO:
 				volcanoes.append(prop)
+			SurfaceProp.Kind.FLORA:
+				flora_props.append(prop)
 			SurfaceProp.Kind.ROSE:
 				rose = prop
 	if shoots.size() != WorldConstants.BAOBAB_COUNT:
@@ -1974,6 +2140,10 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 			if smoke != null and not smoke.emitting:
 				printerr("装饰火山应继续冒烟")
 				failed += 1
+	for flora_prop in flora_props:
+		if flora_prop.is_interactable() or story.accepts_interact(flora_prop):
+			printerr("地表植物只作为装饰，不应可交互")
+			failed += 1
 	var glass_globe := rose.get_node("GlassGlobe") as Sprite2D
 	if not glass_globe.visible:
 		printerr("告别前玻璃罩应还在")
