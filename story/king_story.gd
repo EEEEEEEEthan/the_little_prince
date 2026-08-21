@@ -114,17 +114,16 @@ func _await_audience_keep_away() -> void:
 
 func _play_standing_sunset_sky() -> void:
 	var generation := _story_generation
-	var sky := planet.sky
 	if skip_cinematics:
-		sky.commanded_daylight_phase = SkyPhase.SUNSET_PHASE
+		planet.sky.commanded_daylight_phase = SkyPhase.SUNSET_PHASE
 		await _halt_if_stale(generation)
 		return
-	sky.commanded_daylight_phase = sky.daylight_phase()
+	planet.sky.commanded_daylight_phase = planet.sky.daylight_phase()
 	if _story_tween != null:
 		_story_tween.kill()
 	_story_tween = create_tween()
 	_story_tween.tween_property(
-			sky, "commanded_daylight_phase", SkyPhase.SUNSET_PHASE, 2.4
+			planet.sky, "commanded_daylight_phase", SkyPhase.SUNSET_PHASE, 2.4
 	)
 	await _story_tween.finished
 	_story_tween = null
