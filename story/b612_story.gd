@@ -148,6 +148,7 @@ func _play_story() -> void:
 	is_blocking_input = false
 	if not skip_cinematics:
 		(planet.get_node("%Butterfly3") as Butterfly).begin_guide_flight()
+	await _overhead("她安静下来")
 	await _wait_move_right()
 	await _wait(3.0)
 	await _overhead("小王子很喜欢玫瑰花")
