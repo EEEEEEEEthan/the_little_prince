@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成国王/商人星球循环配乐（CC0）。故乡/日落曲改用 OpenGameArt。运行：python3 audio/generate_chiptune.py"""
+"""生成国王/商人/点灯人星球循环配乐（CC0）。故乡/日落曲改用 OpenGameArt。运行：python3 audio/generate_chiptune.py"""
 
 from __future__ import annotations
 
@@ -208,10 +208,39 @@ def render_sparse_ledger_tally() -> np.ndarray:
 	return finalize(buffer)
 
 
+def render_rapid_lamp_duty_tick() -> np.ndarray:
+	beats_per_minute = 96.0
+	tick_bars = [
+		[(G3, 0.25), (None, 0.25), (G3, 0.25), (None, 0.25), (C4, 0.25), (None, 1.75)],
+		[(G3, 0.25), (None, 2.75)],
+		[(None, 3.0)],
+		[(D3, 1.0), (None, 2.0)],
+		[(G3, 0.25), (None, 0.25), (G3, 0.25), (None, 2.25)],
+		[(None, 3.0)],
+		[(A3, 0.5), (None, 2.5)],
+		[(C3, 2.0), (None, 1.0)],
+		[(G3, 0.25), (None, 0.25), (C4, 0.25), (None, 2.25)],
+		[(None, 3.0)],
+		[(G3, 0.25), (None, 2.75)],
+		[(D3, 0.5), (None, 2.5)],
+		[(G3, 0.25), (None, 0.25), (G3, 0.25), (None, 0.25), (G3, 0.25), (None, 1.75)],
+		[(None, 3.0)],
+		[(C3, 3.0)],
+		[(None, 3.0)],
+	]
+	buffer = allocate_buffer(len(tick_bars), 3.0, beats_per_minute)
+	mix_tine(
+			buffer, expand_bars(tick_bars), SAMPLE_RATE, beats_per_minute,
+			0.16, 0.42,
+	)
+	return finalize(buffer)
+
+
 def main() -> None:
 	output_directory = Path(__file__).resolve().parent
 	write_ogg(render_king_toy_waltz(), output_directory / "narrow_cpenta_toy_waltz.ogg")
 	write_ogg(render_sparse_ledger_tally(), output_directory / "sparse_ledger_tally.ogg")
+	write_ogg(render_rapid_lamp_duty_tick(), output_directory / "rapid_lamp_duty_tick.ogg")
 
 
 if __name__ == "__main__":

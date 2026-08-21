@@ -118,7 +118,7 @@ func _collect_surface_props() -> void:
 				spawn_anchor_angle = king_angle
 				if spawn_on_opposite_side:
 					spawn_anchor_angle = fposmod(king_angle + PI, TAU)
-			SurfaceProp.Kind.DRUNKARD, SurfaceProp.Kind.MERCHANT:
+			SurfaceProp.Kind.DRUNKARD, SurfaceProp.Kind.MERCHANT, SurfaceProp.Kind.LAMPLIGHTER:
 				spawn_anchor_angle = prop.rotation
 			SurfaceProp.Kind.VOLCANO:
 				volcano_angles.append(prop.rotation)
