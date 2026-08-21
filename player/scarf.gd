@@ -19,8 +19,8 @@ const MAX_LOCAL_Y: float = -3.0
 const FRAME_WIDTH: int = 32
 const FRAME_HEIGHT: int = 24
 const FRAME_ORIGIN := Vector2i(-16, -16)
-const COLOR := Color8(255, 125, 62)
-const SHADOW_COLOR := Color8(204, 92, 64)
+const COLOR := Color8(224, 171, 74)
+const SHADOW_COLOR := Color8(224, 171, 74)
 
 @onready var planet: Planet = %Planet
 @onready var player: Player = %Player
