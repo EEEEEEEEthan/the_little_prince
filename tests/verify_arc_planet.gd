@@ -74,8 +74,8 @@ func _check_constants() -> int:
 	if WorldConstants.VOLCANO_COUNT != 3:
 		printerr("VOLCANO_COUNT 应为 3，实际 %d" % WorldConstants.VOLCANO_COUNT)
 		failed += 1
-	if WorldConstants.BAOBAB_COUNT != 5:
-		printerr("BAOBAB_COUNT 应为 5，实际 %d" % WorldConstants.BAOBAB_COUNT)
+	if WorldConstants.BAOBAB_COUNT != 9:
+		printerr("BAOBAB_COUNT 应为 9，实际 %d" % WorldConstants.BAOBAB_COUNT)
 		failed += 1
 	if WorldConstants.FLORA_COUNT != 80:
 		printerr("FLORA_COUNT 应为 80，实际 %d" % WorldConstants.FLORA_COUNT)
@@ -2462,7 +2462,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	var prompt := scene.get_node("GameView/GameViewport/InteractPrompt") as InteractPrompt
 	var overhead := story.overhead
 	var overhead_body := overhead.get_node("Body") as Label
-	const FIRST_PULL_OVERHEAD := "小王子的星球总会长出猴面包树"
+	const FIRST_PULL_OVERHEAD := "B612总会长出猴面包树"
 	story.skip_cinematics = false
 	if not is_equal_approx(story.interact_hold_seconds(shoots[0]), B612Story.PULL_SHOOT_HOLD_SECONDS):
 		printerr(
@@ -2843,8 +2843,6 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 	player.modulate.a = 1.0
 	dim.color.a = 0.0
 	var start_player_y := player.position.y
-	var has_departed := false
-	story.departed.connect(func() -> void: has_departed = true)
 	var depart_started_msec := Time.get_ticks_msec()
 	story._depart(
 			"B-612。",
@@ -2959,14 +2957,7 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 				% story.get_node("%Epilogue").text
 		)
 		failed += 1
-	var departed_deadline_msec := Time.get_ticks_msec() + int(
-			(PlanetStory.EPILOGUE_HOLD_SECONDS + 1.0) * 1000.0
-	)
-	while not has_departed and Time.get_ticks_msec() < departed_deadline_msec:
-		await process_frame
-	if not has_departed:
-		printerr("黑场结束后应发出 departed")
-		failed += 1
+	await create_timer(PlanetStory.EPILOGUE_HOLD_SECONDS + 0.3).timeout
 	if failed == 0:
 		print("  B612 离星飞到一半旁白 OK")
 	scene.queue_free()

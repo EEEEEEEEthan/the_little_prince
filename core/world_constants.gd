@@ -12,7 +12,7 @@ const APEX_Y_RATIO: float = 0.88
 const VISIBLE_HALF_ARC: float = PI * 0.55
 
 const VOLCANO_COUNT: int = 3
-const BAOBAB_COUNT: int = 5
+const BAOBAB_COUNT: int = 9
 const FLORA_COUNT: int = 80
 const BUTTERFLY_COUNT: int = 8
 
