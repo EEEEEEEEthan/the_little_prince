@@ -1939,6 +1939,26 @@ func _assert_dialogue_portrait_side(
 	if speaker.horizontal_alignment != expected_alignment:
 		printerr("%s 说话人应对齐到头像一侧" % label)
 		failed += 1
+	var panel := dialogue.get_node("%Panel") as Control
+	const expected_aligned_inset := 4.0
+	const expected_shrunk_inset := expected_aligned_inset + 32.0
+	var expected_offset_left := (
+			expected_aligned_inset if portrait_on_left
+			else expected_shrunk_inset
+	)
+	var expected_offset_right := -(
+			expected_shrunk_inset if portrait_on_left
+			else expected_aligned_inset
+	)
+	if (
+			not is_equal_approx(panel.offset_left, expected_offset_left)
+			or not is_equal_approx(panel.offset_right, expected_offset_right)
+	):
+		printerr(
+				"%s 对话框应变窄并贴齐头像一侧，实际 left=%s right=%s"
+				% [label, panel.offset_left, panel.offset_right]
+		)
+		failed += 1
 	return failed
 
 

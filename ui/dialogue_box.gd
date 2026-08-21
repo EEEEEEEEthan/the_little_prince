@@ -136,6 +136,16 @@ func _finish_current_line() -> void:
 func _show_line() -> void:
 	var line := _lines[_index]
 	var portrait_on_left := line.speaker == DialogueCatalog.PRINCE_SPEAKER
+	const panel_aligned_edge_inset := 4.0
+	const panel_shrunk_edge_inset := panel_aligned_edge_inset + 32.0
+	%Panel.offset_left = (
+			panel_aligned_edge_inset if portrait_on_left
+			else panel_shrunk_edge_inset
+	)
+	%Panel.offset_right = -(
+			panel_shrunk_edge_inset if portrait_on_left
+			else panel_aligned_edge_inset
+	)
 	%Portrait.texture = line.portrait
 	%ContentRow.move_child(%Portrait, 0 if portrait_on_left else 1)
 	%Speaker.text = line.speaker
