@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://7vp1ua5ygtk5"]
 
 [ext_resource type="Script" uid="uid://bvmu7yfjsqvgp" path="res://ui/dialogue_box.gd" id="1_dialogue"]
 [ext_resource type="FontFile" uid="uid://b8w2t37l8urid" path="res://ui/fonts/fusion-pixel-10px-zh_hans.woff2" id="2_font"]
@@ -6,6 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://c0k7tc4gwunhx" path="res://ui/portraits/prince.png" id="4_prince"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
 bg_color = Color(0.0470588, 0.0705882, 0.14902, 1)
 border_width_left = 1
 border_width_top = 1
@@ -13,10 +17,6 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(1, 0.968627, 0.819608, 1)
 anti_aliasing = false
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
 
 [sub_resource type="GDScript" id="GDScript_continue_triangle"]
 script/source = "extends Control
@@ -44,12 +44,12 @@ func _draw() -> void:
 		draw_rect(Rect2(row_index, row_index, row_width, 1), triangle_color)
 "
 
-[node name="DialogueBox" type="CanvasLayer"]
+[node name="DialogueBox" type="CanvasLayer" unique_id=2112096421]
 layer = 10
 script = ExtResource("1_dialogue")
 
-[node name="Panel" type="PanelContainer" parent="."]
-anchors_preset = 13
+[node name="Panel" type="PanelContainer" parent="." unique_id=298503607]
+anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
@@ -61,26 +61,26 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="ContentRow" type="HBoxContainer" parent="Panel"]
+[node name="ContentRow" type="HBoxContainer" parent="Panel" unique_id=327931108]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Portrait" type="TextureRect" parent="Panel/ContentRow"]
+[node name="Portrait" type="TextureRect" parent="Panel/ContentRow" unique_id=122379968]
 unique_name_in_owner = true
+texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 0
-texture_filter = 1
 texture = ExtResource("4_prince")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="TextColumn" type="Control" parent="Panel/ContentRow"]
+[node name="TextColumn" type="Control" parent="Panel/ContentRow" unique_id=818660073]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="VBox" type="VBoxContainer" parent="Panel/ContentRow/TextColumn"]
+[node name="VBox" type="VBoxContainer" parent="Panel/ContentRow/TextColumn" unique_id=1876186056]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -89,7 +89,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 2
 
-[node name="Speaker" type="Label" parent="Panel/ContentRow/TextColumn/VBox"]
+[node name="Speaker" type="Label" parent="Panel/ContentRow/TextColumn/VBox" unique_id=1136840971]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.878431, 0.670588, 0.290196, 1)
@@ -97,18 +97,18 @@ theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 10
 text = "小王子"
 
-[node name="Body" type="Label" parent="Panel/ContentRow/TextColumn/VBox"]
+[node name="Body" type="Label" parent="Panel/ContentRow/TextColumn/VBox" unique_id=1684335860]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(1, 0.968627, 0.819608, 1)
+theme_override_constants/line_spacing = 1
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 10
-theme_override_constants/line_spacing = 1
-autowrap_mode = 3
 text = "placeholder"
+autowrap_mode = 3
 
-[node name="ContinueTriangle" type="Control" parent="Panel/ContentRow/TextColumn"]
+[node name="ContinueTriangle" type="Control" parent="Panel/ContentRow/TextColumn" unique_id=1926487477]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(5, 3)
 layout_mode = 1
@@ -124,9 +124,9 @@ grow_vertical = 0
 mouse_filter = 2
 script = SubResource("GDScript_continue_triangle")
 
-[node name="Typewriter" type="AudioStreamPlayer" parent="."]
+[node name="Typewriter" type="AudioStreamPlayer" parent="." unique_id=1907550723]
 stream = ExtResource("3_blip")
 volume_db = -8.0
 
-[node name="Timer" type="Timer" parent="."]
+[node name="Timer" type="Timer" parent="." unique_id=1973346029]
 wait_time = 0.045
