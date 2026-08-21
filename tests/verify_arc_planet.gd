@@ -46,6 +46,10 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/scratched_border_lines.png",
 	"res://planet/pale_paw_prints.png",
 	"res://ui/portraits/king.png",
+	"res://planet/amber_mottled_disk.png",
+	"res://planet/brown_glass_bottle.png",
+	"res://planet/slumped_wine_drinker.png",
+	"res://ui/portraits/slumped_wine_drinker.png",
 ]
 
 const REQUIRED_OTHER_ASSETS: Array[String] = [
@@ -71,6 +75,7 @@ func _run_tests() -> void:
 	failed += _check_no_legacy()
 	failed += _check_tscn_editor_visible()
 	failed += _check_king_scene_resource_uids()
+	failed += _check_drunkard_scene_resource_uids()
 	failed += _check_input_map()
 	failed += await _check_main_story_starts_with_sky_ready()
 	failed += await _check_story_not_active_before_planet_ready()
@@ -80,6 +85,8 @@ func _run_tests() -> void:
 	failed += await _check_b612_depart_lift_halfway_overhead()
 	failed += await _check_king_chapter()
 	failed += await _check_b612_departed_travels_to_king()
+	failed += await _check_drunkard_chapter()
+	failed += await _check_king_departed_travels_to_drunkard()
 	if failed == 0:
 		print("[verify_arc_planet] 全部通过")
 		quit(0)
@@ -100,6 +107,9 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.BUTTERFLY_COUNT != 8:
 		printerr("BUTTERFLY_COUNT 应为 8，实际 %d" % WorldConstants.BUTTERFLY_COUNT)
+		failed += 1
+	if WorldConstants.DRUNKARD_BOTTLE_COUNT != 17:
+		printerr("DRUNKARD_BOTTLE_COUNT 应为 17，实际 %d" % WorldConstants.DRUNKARD_BOTTLE_COUNT)
 		failed += 1
 	if absf(WorldConstants.PLANET_RADIUS - EXPECTED_PLANET_RADIUS) > 0.01:
 		printerr(
@@ -507,6 +517,15 @@ func _check_static_assets() -> int:
 				% [king_diameter, king_diameter, king_body.get_width(), king_body.get_height()]
 			)
 			failed += 1
+	var amber_body: Texture2D = load("res://planet/amber_mottled_disk.png") as Texture2D
+	if amber_body != null:
+		var amber_diameter: int = int(ceil(WorldConstants.PLANET_RADIUS)) * 2
+		if amber_body.get_width() != amber_diameter or amber_body.get_height() != amber_diameter:
+			printerr(
+				"amber_mottled_disk.png 应为 %dx%d，实际 %dx%d"
+				% [amber_diameter, amber_diameter, amber_body.get_width(), amber_body.get_height()]
+			)
+			failed += 1
 	# 精灵尺寸应对齐常量（火山 / 猴面包树为 spritesheet，宽度 = 帧数 × 帧尺寸）
 	var sprite_checks: Array = [
 		[
@@ -547,6 +566,9 @@ func _check_static_assets() -> int:
 		["res://ui/portraits/prince.png", 32, 32],
 		["res://ui/portraits/rose.png", 32, 32],
 		["res://ui/portraits/king.png", 32, 32],
+		["res://planet/brown_glass_bottle.png", WorldConstants.BROWN_GLASS_BOTTLE_WIDTH, WorldConstants.BROWN_GLASS_BOTTLE_HEIGHT],
+		["res://planet/slumped_wine_drinker.png", WorldConstants.SLUMPED_WINE_DRINKER_WIDTH, WorldConstants.SLUMPED_WINE_DRINKER_HEIGHT],
+		["res://ui/portraits/slumped_wine_drinker.png", 32, 32],
 		["res://planet/glass_globe.png", 24, 24],
 		["res://planet/migratory_bird.png", 16, 8],
 		["res://planet/butterfly.png", 8, 3],
@@ -630,6 +652,7 @@ func _check_tscn_editor_visible() -> int:
 		"res://planet/b612.tscn",
 		"res://planet/king.tscn",
 		"res://planet/vain.tscn",
+		"res://planet/drunkard.tscn",
 		"res://planet/butterfly.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
@@ -673,6 +696,40 @@ func _check_king_scene_resource_uids() -> int:
 		failed += 1
 	if failed == 0:
 		print("  国王场景资源 UID 与文件一致 OK")
+	return failed
+
+
+func _check_drunkard_scene_resource_uids() -> int:
+	var failed := 0
+	var uid_and_path := RegEx.new()
+	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
+	var drunkard_scene := FileAccess.get_file_as_string("res://planet/drunkard.tscn")
+	for match_ in uid_and_path.search_all(drunkard_scene):
+		var declared_uid := match_.get_string(1)
+		var resource_path := match_.get_string(2)
+		var canonical_uid := ResourceUID.id_to_text(
+				ResourceLoader.get_resource_uid(resource_path)
+		)
+		if declared_uid != canonical_uid:
+			printerr(
+					"drunkard.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					% [resource_path, declared_uid, canonical_uid]
+			)
+			failed += 1
+	var zenith_header := FileAccess.get_file_as_string(
+			"res://planet/amber_evening_zenith_gradient.tres"
+	).get_slice("\n", 0)
+	var zenith_canonical := ResourceUID.id_to_text(
+			ResourceLoader.get_resource_uid("res://planet/amber_evening_zenith_gradient.tres")
+	)
+	if not zenith_header.contains(zenith_canonical):
+		printerr(
+				"amber_evening_zenith_gradient.tres 头 UID 应为 %s"
+				% zenith_canonical
+		)
+		failed += 1
+	if failed == 0:
+		print("  酒鬼场景资源 UID 与文件一致 OK")
 	return failed
 
 
@@ -3325,6 +3382,12 @@ func _check_standalone_planet_scenes() -> int:
 			"res://audio/the_one_who_stands_distant.ogg",
 			"虚荣者星球单独运行"
 	)
+	failed += await _assert_standalone_planet_run(
+			"res://planet/drunkard.tscn",
+			DrunkardStory,
+			"res://audio/i_want_to_go_home.ogg",
+			"酒鬼星球单独运行"
+	)
 	var base_planet := (load("res://planet/planet.tscn") as PackedScene).instantiate() as Planet
 	root.add_child(base_planet)
 	await process_frame
@@ -3399,6 +3462,29 @@ func _assert_standalone_planet_run(
 			failed += 1
 		if (story as B612Story) != null or (story as KingStory) != null:
 			printerr("虚荣者星球不应挂 B612/国王演出")
+			failed += 1
+	if planet_path == "res://planet/drunkard.tscn":
+		var bottle_count := 0
+		var has_drunkard := false
+		var has_king := false
+		for prop in planet.surface_props:
+			if prop.kind == SurfaceProp.Kind.BOTTLE:
+				bottle_count += 1
+			if prop.kind == SurfaceProp.Kind.DRUNKARD:
+				has_drunkard = true
+			if prop.kind == SurfaceProp.Kind.KING:
+				has_king = true
+		if not has_drunkard:
+			printerr("酒鬼单独运行应有酒鬼")
+			failed += 1
+		if has_king:
+			printerr("酒鬼单独运行不应有国王")
+			failed += 1
+		if bottle_count != WorldConstants.DRUNKARD_BOTTLE_COUNT:
+			printerr(
+					"酒鬼单独运行瓶子应为 %d，实际 %d"
+					% [WorldConstants.DRUNKARD_BOTTLE_COUNT, bottle_count]
+			)
 			failed += 1
 	failed += _assert_playing_stream(
 			shell,
@@ -3883,3 +3969,247 @@ func _assert_dirt_grass_footstep_switch(
 	if failed == 0:
 		print("  土/草脚步切换 OK")
 	return failed
+
+
+func _check_drunkard_chapter() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	scene.travel_to_king_planet(false)
+	await process_frame
+	scene.travel_to_drunkard_planet(false)
+	await process_frame
+
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
+	var story := scene.get_node_or_null("%DrunkardStory") as DrunkardStory
+	if planet == null or player == null or story == null:
+		printerr("酒鬼章缺少 Planet / Player / DrunkardStory")
+		scene.queue_free()
+		await process_frame
+		return 1
+	if planet.scene_file_path != "res://planet/drunkard.tscn":
+		printerr("国王之后星球应为 drunkard.tscn，实际 %s" % planet.scene_file_path)
+		failed += 1
+	failed += _assert_playing_music(scene, "drunkard_day_music", "换到酒鬼星球")
+	if story.planet != planet:
+		printerr("换星后 DrunkardStory 应绑定酒鬼星球")
+		failed += 1
+	if (scene.get_node("%Interaction") as Interaction).story != story:
+		printerr("换星后 Interaction 应绑定 DrunkardStory")
+		failed += 1
+
+	var drunkard: SurfaceProp = null
+	var bottle_count := 0
+	var bottle_angles: Array[float] = []
+	for prop in planet.surface_props:
+		match prop.kind:
+			SurfaceProp.Kind.DRUNKARD:
+				drunkard = prop
+			SurfaceProp.Kind.BOTTLE:
+				bottle_count += 1
+				bottle_angles.append(prop.rotation)
+				if prop.is_interactable() or story.accepts_interact(prop):
+					printerr("瓶子不应可交互：%s" % prop.name)
+					failed += 1
+			SurfaceProp.Kind.KING, SurfaceProp.Kind.ROSE, SurfaceProp.Kind.VOLCANO, SurfaceProp.Kind.BAOBAB, SurfaceProp.Kind.FLORA:
+				printerr("酒鬼星球不应有其它章地物 %s" % prop.name)
+				failed += 1
+	if drunkard == null:
+		printerr("酒鬼星球应有酒鬼")
+		failed += 1
+	if bottle_count != WorldConstants.DRUNKARD_BOTTLE_COUNT:
+		printerr(
+				"酒鬼星球瓶子应为 %d，实际 %d"
+				% [WorldConstants.DRUNKARD_BOTTLE_COUNT, bottle_count]
+		)
+		failed += 1
+	bottle_angles.sort()
+	var ring_angles: Array[float] = bottle_angles.duplicate()
+	if drunkard != null:
+		ring_angles.append(drunkard.rotation)
+		ring_angles.sort()
+	var widest_gap := 0.0
+	for gap_index in ring_angles.size():
+		var from_angle: float = ring_angles[gap_index]
+		var to_angle: float = ring_angles[(gap_index + 1) % ring_angles.size()]
+		var gap := fposmod(to_angle - from_angle, TAU)
+		widest_gap = maxf(widest_gap, gap)
+	if widest_gap > TAU / 8.0:
+		printerr("瓶子圈空隙过大，实际 %s" % widest_gap)
+		failed += 1
+	if drunkard != null:
+		failed += _assert_focus(planet, drunkard, &"drunkard", "酒鬼")
+		planet.teleport_player(fposmod(drunkard.rotation + PI, TAU))
+		var visible_bottles := 0
+		for prop in planet.surface_props:
+			if prop.kind == SurfaceProp.Kind.BOTTLE and prop.visible:
+				visible_bottles += 1
+		if visible_bottles < 3:
+			printerr("走到对面仍应困在瓶子圈里，可见瓶子 %d" % visible_bottles)
+			failed += 1
+
+	var drunkard_lines := DialogueCatalog.lines_for_id(&"drunkard")
+	if drunkard_lines.size() != 1 or drunkard_lines[0].text != "喝是为了忘羞耻":
+		printerr("酒鬼台词应只有「喝是为了忘羞耻」")
+		failed += 1
+
+	var body_image := (planet.body.texture as Texture2D).get_image()
+	var amber_pixels := 0
+	var cool_pixels := 0
+	var opaque_pixels := 0
+	for pixel_y in range(0, body_image.get_height(), 4):
+		for pixel_x in range(0, body_image.get_width(), 4):
+			var pixel := body_image.get_pixel(pixel_x, pixel_y)
+			if pixel.a < 0.5:
+				continue
+			opaque_pixels += 1
+			if pixel.r > pixel.b + 0.12 and pixel.r > pixel.g - 0.02:
+				amber_pixels += 1
+			if pixel.b > pixel.r + 0.04 or pixel.g > pixel.r + 0.08:
+				cool_pixels += 1
+	if opaque_pixels == 0 or float(amber_pixels) / float(opaque_pixels) < 0.45:
+		printerr("酒鬼星球地面应偏琥珀")
+		failed += 1
+	if float(cool_pixels) / float(opaque_pixels) > 0.2:
+		printerr("酒鬼星球地面不应偏国王那颗的绿蓝")
+		failed += 1
+	var amber_zenith := (
+			planet.sky.material as ShaderMaterial
+	).get_shader_parameter("zenith_gradient") as GradientTexture1D
+	if amber_zenith == null:
+		printerr("酒鬼星球应有琥珀傍晚天空")
+		failed += 1
+	else:
+		var sunset := amber_zenith.gradient.sample(SkyPhase.SUNSET_PHASE)
+		var noon := amber_zenith.gradient.sample(SkyPhase.NOON_PHASE)
+		if sunset.r <= sunset.b or sunset.r <= sunset.g:
+			printerr("傍晚天空应偏琥珀，实际 %s" % sunset)
+			failed += 1
+		if noon.g > noon.r and noon.g > noon.b:
+			printerr("酒鬼天空不应像国王正午绿天，实际 %s" % noon)
+			failed += 1
+		if noon.b > noon.r:
+			printerr("酒鬼天空不应像白天蓝天，实际 %s" % noon)
+			failed += 1
+
+	if drunkard == null:
+		scene.queue_free()
+		await process_frame
+		return failed + 1
+
+	planet.teleport_player(planet.spawn_angle)
+	story.skip_cinematics = true
+	await story.start()
+	if not is_equal_approx(planet.sky.commanded_daylight_phase, SkyPhase.SUNSET_PHASE):
+		printerr("酒鬼星球天光应锁在傍晚")
+		failed += 1
+	if planet.sky.is_self_rotating:
+		printerr("酒鬼星球天空不应再自转成白天")
+		failed += 1
+	if not story.has_finished_opening:
+		printerr("酒鬼开场结束后应能走动")
+		failed += 1
+	if story.is_blocking_input:
+		printerr("酒鬼开场结束后应允许走动")
+		failed += 1
+	if not player.can_move_left or not player.can_move_right:
+		printerr("酒鬼开场后应能左右移动")
+		failed += 1
+	if not story.accepts_interact(drunkard):
+		printerr("开场后应能与酒鬼交谈")
+		failed += 1
+	var dialogue := story.dialogue
+	dialogue.play_line(
+			DialogueLine.new(
+					DialogueCatalog.DRUNKARD_SPEAKER,
+					"喝是为了忘羞耻",
+					DialogueCatalog.DRUNKARD_PORTRAIT
+			)
+	)
+	failed += _assert_dialogue_portrait_side(
+			dialogue, "res://ui/portraits/slumped_wine_drinker.png", false, "酒鬼开口"
+	)
+	dialogue.close()
+	if not story.try_handle_interact(drunkard):
+		printerr("开场后应按 A 听酒鬼那一句")
+		failed += 1
+	if not drunkard.is_consumed:
+		printerr("听完后酒鬼应消耗")
+		failed += 1
+	if player.modulate.a > 0.01:
+		printerr("离星后小王子应消失")
+		failed += 1
+	if story.get_node("%Epilogue").text != "327。":
+		printerr("黑场应留下 327。，实际 %s" % story.get_node("%Epilogue").text)
+		failed += 1
+	if failed == 0:
+		print("  酒鬼星球演出 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_king_departed_travels_to_drunkard() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("%Story") as B612Story).auto_start = false
+	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
+	(scene.get_node("%DrunkardStory") as DrunkardStory).skip_cinematics = true
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	scene.travel_to_king_planet(true)
+	await process_frame
+	await process_frame
+	var king_story := scene.get_node("%KingStory") as KingStory
+	king_story._story_generation += 1
+	king_story.is_active = false
+	king_story.set_process(false)
+	king_story.departed.emit()
+	await process_frame
+	await process_frame
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var drunkard_story := scene.get_node("%DrunkardStory") as DrunkardStory
+	if planet == null or planet.scene_file_path != "res://planet/drunkard.tscn":
+		printerr(
+				"国王离星后应换到酒鬼星球，实际 %s"
+				% (planet.scene_file_path if planet != null else "null")
+		)
+		failed += 1
+	if drunkard_story.planet != planet:
+		printerr("离星换星后 DrunkardStory 应绑定酒鬼星球")
+		failed += 1
+	failed += _assert_playing_music(scene, "drunkard_day_music", "国王离星换星")
+	var opening_deadline_msec := Time.get_ticks_msec() + 5000
+	while (
+			not drunkard_story.has_finished_opening
+			and Time.get_ticks_msec() < opening_deadline_msec
+	):
+		await process_frame
+	if not drunkard_story.has_finished_opening:
+		printerr("换星后酒鬼开场应自动开始")
+		failed += 1
+	if failed == 0:
+		print("  国王离星后进入酒鬼星球 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+

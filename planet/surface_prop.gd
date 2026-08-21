@@ -3,7 +3,21 @@ extends Sprite2D
 ## 圆弧星球上的地表地物，拖到 Planet 的 Surface 下即可。
 ## 位置、贴图、帧、层级均在 tscn 中定死；运行期仅按玩家角更新可见性。
 
-enum Kind { ROSE, VOLCANO, BAOBAB, FLORA, KING, RAT, EDICT, BORDER, RAT_TRACE, THRONE, CAPE }
+enum Kind {
+	ROSE,
+	VOLCANO,
+	BAOBAB,
+	FLORA,
+	KING,
+	RAT,
+	EDICT,
+	BORDER,
+	RAT_TRACE,
+	THRONE,
+	CAPE,
+	BOTTLE,
+	DRUNKARD,
+}
 
 @export var kind: Kind = Kind.ROSE
 @export var variant: int = 0
@@ -42,12 +56,14 @@ func get_dialogue_id() -> StringName:
 			return &"baobab"
 		Kind.KING:
 			return &"king"
+		Kind.DRUNKARD:
+			return &"drunkard"
 	return &""
 
 
 func is_interactable() -> bool:
 	match kind:
-		Kind.VOLCANO, Kind.FLORA, Kind.RAT, Kind.EDICT, Kind.BORDER, Kind.RAT_TRACE, Kind.THRONE, Kind.CAPE:
+		Kind.VOLCANO, Kind.FLORA, Kind.RAT, Kind.EDICT, Kind.BORDER, Kind.RAT_TRACE, Kind.THRONE, Kind.CAPE, Kind.BOTTLE:
 			return false
 	return not is_consumed and get_dialogue_id() != &""
 

@@ -62,10 +62,11 @@ radius = 6.0
 
 [sub_resource type="GDScript" id="GDScript_music"]
 script/source = "extends Node
-## 循环配乐：故乡、国王星球，交叉淡化切换。
+## 循环配乐：故乡、国王、酒鬼星球，交叉淡化切换。
 
 const META_HOME_DAY_MUSIC := \"home_day_music\"
 const META_KING_DAY_MUSIC := \"king_day_music\"
+const META_DRUNKARD_DAY_MUSIC := \"drunkard_day_music\"
 const META_OPENING_DAY_MUSIC := \"opening_day_music\"
 const CROSSFADE_SECONDS := 1.6
 const PLAYING_VOLUME_DB := -10.0
@@ -85,6 +86,9 @@ func _ready() -> void:
 	_idle = $Incoming
 	for meta_name in [META_HOME_DAY_MUSIC, META_KING_DAY_MUSIC]:
 		(_config_music(meta_name) as AudioStreamOggVorbis).loop = true
+	var config := owner.get_node(\"Config\")
+	if config.has_meta(META_DRUNKARD_DAY_MUSIC):
+		(_config_music(META_DRUNKARD_DAY_MUSIC) as AudioStreamOggVorbis).loop = true
 	_active.volume_db = SILENT_VOLUME_DB
 	_idle.volume_db = SILENT_VOLUME_DB
 	_active.stream = _opening_music()
@@ -95,6 +99,10 @@ func _ready() -> void:
 
 func play_king_day_loop() -> void:
 	_crossfade_to(_config_music(META_KING_DAY_MUSIC))
+
+
+func play_drunkard_day_loop() -> void:
+	_crossfade_to(_config_music(META_DRUNKARD_DAY_MUSIC))
 
 
 func fade_out() -> void:
