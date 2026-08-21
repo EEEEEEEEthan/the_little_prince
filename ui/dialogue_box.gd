@@ -1,6 +1,6 @@
 class_name DialogueBox
 extends CanvasLayer
-## 像素风打字机对话框：头像 + 说话人 + 逐字正文，出字时播放提示音。
+## 像素风打字机对话框：小王子头像居左，其他角色居右；逐字正文。
 
 signal closed
 signal line_advanced
@@ -10,8 +10,6 @@ const TYPEWRITER_FAST_INTERVAL := 0.012
 const TYPEWRITER_VOLUME_DB := -8.0
 const TYPEWRITER_FAST_VOLUME_DB := -20.0
 
-@onready var _portrait: TextureRect = %Portrait
-@onready var _speaker: Label = %Speaker
 @onready var _body: Label = %Body
 @onready var _typewriter: AudioStreamPlayer = $Typewriter
 @onready var _timer: Timer = $Timer
@@ -25,11 +23,13 @@ var _is_revealing: bool = false
 var _typewriter_accum_seconds: float = 0.0
 var _close_after_last: bool = true
 
+
 func _ready() -> void:
 	# tscn 保持可见便于编辑；开局再关。
 	visible = false
 	set_process(false)
 	_timer.wait_time = TYPEWRITER_INTERVAL
+
 
 func _process(delta: float) -> void:
 	if visible and not _is_revealing and not _is_holding:
@@ -44,39 +44,23 @@ func _process(delta: float) -> void:
 		_typewriter_accum_seconds -= typewriter_interval
 		_reveal_next_character()
 
+
 func is_open() -> bool:
 	return visible
+
 
 func is_typing() -> bool:
 	return _is_revealing
 
+
 func play(lines: Array[DialogueLine]) -> void:
-	if lines.is_empty():
-		close()
-		return
-	_close_after_last = true
-	_lines = lines.duplicate()
-	_index = 0
-	_is_holding = false
-	_advance_on_confirm_release = false
-	_saw_confirm_released_while_idle = false
-	_set_accelerating(false)
-	visible = true
-	set_process(true)
-	_show_line()
+	_play_lines(lines, true)
 
 
 func play_line(line: DialogueLine) -> void:
-	_close_after_last = false
-	_lines = [line]
-	_index = 0
-	_is_holding = false
-	_advance_on_confirm_release = false
-	_saw_confirm_released_while_idle = false
-	_set_accelerating(false)
-	visible = true
-	set_process(true)
-	_show_line()
+	var lines: Array[DialogueLine] = []
+	lines.append(line)
+	_play_lines(lines, false)
 
 
 func mark_holding(held: bool) -> void:
@@ -126,6 +110,22 @@ func close() -> void:
 		closed.emit()
 
 
+func _play_lines(lines: Array[DialogueLine], close_after_last: bool) -> void:
+	if lines.is_empty():
+		close()
+		return
+	_close_after_last = close_after_last
+	_lines = lines.duplicate()
+	_index = 0
+	_is_holding = false
+	_advance_on_confirm_release = false
+	_saw_confirm_released_while_idle = false
+	_set_accelerating(false)
+	visible = true
+	set_process(true)
+	_show_line()
+
+
 func _finish_current_line() -> void:
 	if _close_after_last:
 		close()
@@ -135,9 +135,15 @@ func _finish_current_line() -> void:
 
 func _show_line() -> void:
 	var line := _lines[_index]
-	_speaker.text = line.speaker
+	var portrait_on_left := line.speaker == DialogueCatalog.PRINCE_SPEAKER
+	%Portrait.texture = line.portrait
+	%ContentRow.move_child(%Portrait, 0 if portrait_on_left else 1)
+	%Speaker.text = line.speaker
+	%Speaker.horizontal_alignment = (
+			HORIZONTAL_ALIGNMENT_LEFT if portrait_on_left
+			else HORIZONTAL_ALIGNMENT_RIGHT
+	)
 	_body.text = line.text
-	_portrait.texture = line.portrait
 	_body.visible_characters = 0
 	%ContinueTriangle.visible = false
 	_timer.stop()
@@ -145,9 +151,11 @@ func _show_line() -> void:
 	_typewriter_accum_seconds = 0.0
 	_reveal_next_character()
 
+
 func _set_accelerating(enabled: bool) -> void:
 	_timer.wait_time = TYPEWRITER_FAST_INTERVAL if enabled else TYPEWRITER_INTERVAL
 	_typewriter.volume_db = TYPEWRITER_FAST_VOLUME_DB if enabled else TYPEWRITER_VOLUME_DB
+
 
 func _reveal_next_character() -> void:
 	var total := _body.get_total_character_count()
@@ -162,6 +170,7 @@ func _reveal_next_character() -> void:
 		if _is_holding:
 			_advance_on_confirm_release = false
 			_saw_confirm_released_while_idle = false
+
 
 func _play_blip() -> void:
 	var shown := _body.visible_characters

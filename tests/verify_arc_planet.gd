@@ -1751,8 +1751,88 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			printerr("close 后对话框应关闭")
 			failed += 1
 
+	if dialogue != null and rose != null:
+		failed += await _check_dialogue_portrait_sides(planet, dialogue, rose)
+
 	print("  地物交互 / 叙事对话 OK")
 	return failed
+
+
+func _check_dialogue_portrait_sides(
+		planet: Planet,
+		dialogue: DialogueBox,
+		rose: SurfaceProp,
+) -> int:
+	var failed := 0
+	var prince_portrait_path := "res://ui/portraits/prince.png"
+	var rose_portrait_path := "res://ui/portraits/rose.png"
+	Input.action_release("interact")
+
+	dialogue.play(DialogueCatalog.lines_for_id(&"rose"))
+	failed += _assert_dialogue_portrait_side(
+			dialogue, prince_portrait_path, true, "小王子旁白"
+	)
+	dialogue.play_line(
+			DialogueLine.new(
+					DialogueCatalog.ROSE_SPEAKER, "开口", DialogueCatalog.ROSE_PORTRAIT
+			)
+	)
+	failed += _assert_dialogue_portrait_side(
+			dialogue, rose_portrait_path, false, "玫瑰开口"
+	)
+	dialogue.close()
+
+	dialogue.play(DialogueCatalog.lines_for_id(&"baobab"))
+	failed += _assert_dialogue_portrait_side(
+			dialogue, prince_portrait_path, true, "树旁白"
+	)
+	dialogue.close()
+
+	planet.teleport_player(rose.rotation)
+	await process_frame
+	Input.action_press("interact")
+	await process_frame
+	Input.action_release("interact")
+	if not dialogue.is_open():
+		printerr("按确认应打开对话")
+		failed += 1
+	else:
+		failed += _assert_dialogue_portrait_side(
+				dialogue, prince_portrait_path, true, "交互玫瑰旁白"
+		)
+	dialogue.close()
+	return failed
+
+
+func _assert_dialogue_portrait_side(
+		dialogue: DialogueBox,
+		resource_path: String,
+		portrait_on_left: bool,
+		label: String,
+) -> int:
+	var failed := 0
+	var portrait := dialogue.get_node("%Portrait") as TextureRect
+	var row := dialogue.get_node("%ContentRow") as HBoxContainer
+	var speaker := dialogue.get_node("%Speaker") as Label
+	if portrait.texture == null or portrait.texture.resource_path != resource_path:
+		printerr("%s 头像应为 %s" % [label, resource_path])
+		failed += 1
+	var portrait_index := portrait.get_index()
+	if portrait_on_left and portrait_index != 0:
+		printerr("%s 头像应在左侧，实际 index=%s" % [label, portrait_index])
+		failed += 1
+	if not portrait_on_left and portrait_index != row.get_child_count() - 1:
+		printerr("%s 头像应在右侧，实际 index=%s" % [label, portrait_index])
+		failed += 1
+	var expected_alignment := (
+			HORIZONTAL_ALIGNMENT_LEFT if portrait_on_left
+			else HORIZONTAL_ALIGNMENT_RIGHT
+	)
+	if speaker.horizontal_alignment != expected_alignment:
+		printerr("%s 说话人应对齐到头像一侧" % label)
+		failed += 1
+	return failed
+
 
 func _assert_focus(
 	planet: Planet, target: SurfaceProp, dialogue_id: StringName, label: String
@@ -1773,10 +1853,10 @@ func _check_typewriter_hold(
 	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
 ) -> int:
 	var failed := 0
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var body := dialogue.get_node("%Body") as Label
 	var timer := dialogue.get_node("Timer") as Timer
 	var typewriter := dialogue.get_node("Typewriter") as AudioStreamPlayer
-	var continue_triangle := dialogue.get_node("ContinueTriangle") as Control
+	var continue_triangle := dialogue.get_node("%ContinueTriangle") as Control
 	var first_text := lines[0].text
 	var second_text := lines[1].text
 
@@ -1875,8 +1955,8 @@ func _check_typewriter_hold_through_line_then_release(
 	scene: Node, dialogue: DialogueBox, lines: Array[DialogueLine]
 ) -> int:
 	var failed := 0
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
-	var continue_triangle := dialogue.get_node("ContinueTriangle") as Control
+	var body := dialogue.get_node("%Body") as Label
+	var continue_triangle := dialogue.get_node("%ContinueTriangle") as Control
 	var first_text := lines[0].text
 	var second_text := lines[1].text
 
@@ -1913,7 +1993,7 @@ func _check_typewriter_hold_follows_confirm_events(
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var body := dialogue.get_node("%Body") as Label
 	var first_text := lines[0].text
 
 	dialogue.play(lines)
@@ -1966,7 +2046,7 @@ func _check_typewriter_hold_restores_after_key_release(
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var body := dialogue.get_node("%Body") as Label
 	dialogue.play(lines)
 	scene._input(_interact_key_event(true))
 	if not is_equal_approx(timer.wait_time, DialogueBox.TYPEWRITER_FAST_INTERVAL):
@@ -1993,7 +2073,7 @@ func _check_typewriter_hold_joypad_confirm(
 ) -> int:
 	var failed := 0
 	var timer := dialogue.get_node("Timer") as Timer
-	var body := dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var body := dialogue.get_node("%Body") as Label
 
 	dialogue.play(lines)
 	scene._input(_interact_joy_event(true))
@@ -2084,10 +2164,15 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("GameCamera 应固定左上，避免改变默认构图")
 		failed += 1
 	var player := scene.get_node(PLAYER_PATH) as Player
-	var dialogue_body := story.dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var rose := planet.get_node("Surface/Rose") as SurfaceProp
+	var dialogue_body := story.dialogue.get_node("%Body") as Label
 	var fade_layer := story.get_node("FadeLayer") as CanvasLayer
 	if fade_layer.layer >= story.dialogue.layer:
 		printerr("开场淡入时对话框应叠在黑场之上")
+		failed += 1
+	planet.teleport_player(planet.spawn_angle)
+	if player.global_position.x <= rose.global_position.x:
+		printerr("出生点小王子应在玫瑰右边")
 		failed += 1
 	story.skip_cinematics = false
 	var fade_started_msec := Time.get_ticks_msec()
@@ -2140,6 +2225,13 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not story.is_blocking_input:
 		printerr("玫瑰开口后仍应禁止走动")
 		failed += 1
+	if story.dialogue.is_open() and dialogue_body.text.contains("我刚刚睡醒"):
+		failed += _assert_dialogue_portrait_side(
+				story.dialogue,
+				"res://ui/portraits/rose.png",
+				false,
+				"开场玫瑰开口",
+		)
 	story.skip_cinematics = true
 	await story.start()
 	if story.get_node("%Dim").color.a > 0.01:
@@ -2212,7 +2304,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []
 	var flora_props: Array[SurfaceProp] = []
-	var rose: SurfaceProp = null
+	rose = null
 	for prop in planet.surface_props:
 		match prop.kind:
 			SurfaceProp.Kind.BAOBAB:
