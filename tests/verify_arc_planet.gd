@@ -46,9 +46,9 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://ui/typewriter.wav",
 	"res://ui/fonts/fusion-pixel-8px-zh_hans.woff2",
 	"res://ui/fonts/fusion-pixel-10px-zh_hans.woff2",
-	"res://audio/sparse_aminor_square_lullaby.ogg",
-	"res://audio/warm_dminor_square_vesper.ogg",
-	"res://audio/sparse_cmajor_square_processional.ogg",
+	"res://audio/sparse_apenta_musicbox.ogg",
+	"res://audio/sparse_dpenta_vesper.ogg",
+	"res://audio/narrow_cpenta_toy_waltz.ogg",
 ]
 
 func _init() -> void:

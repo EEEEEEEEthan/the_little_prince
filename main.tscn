@@ -18,9 +18,9 @@
 [ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]
 [ext_resource type="PackedScene" uid="uid://dkingplanet01" path="res://planet/king.tscn" id="17_king_planet"]
 [ext_resource type="Script" uid="uid://ckingstoryg01" path="res://story/king_story.gd" id="18_king_story"]
-[ext_resource type="AudioStream" uid="uid://byw7ocxry5od5" path="res://audio/sparse_aminor_square_lullaby.ogg" id="19_home_day_music"]
-[ext_resource type="AudioStream" uid="uid://b2g3iln8eahwv" path="res://audio/warm_dminor_square_vesper.ogg" id="20_sunset_music"]
-[ext_resource type="AudioStream" uid="uid://cp4m4p8j6l865" path="res://audio/sparse_cmajor_square_processional.ogg" id="21_king_day_music"]
+[ext_resource type="AudioStream" uid="uid://dyhnjg8w4wj5n" path="res://audio/sparse_apenta_musicbox.ogg" id="19_home_day_music"]
+[ext_resource type="AudioStream" uid="uid://4fiwi016pjex" path="res://audio/sparse_dpenta_vesper.ogg" id="20_sunset_music"]
+[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="21_king_day_music"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
 shader = ExtResource("5_palette_shader")
