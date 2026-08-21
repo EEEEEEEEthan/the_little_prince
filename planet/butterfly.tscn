@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://cq8yj7f7g7sj1"]
+
+[ext_resource type="Texture2D" uid="uid://bwd838ur2l7sx" path="res://planet/butterfly.png" id="1_bssmx"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kad4g"]
+atlas = ExtResource("1_bssmx")
+region = Rect2(2, 0, 2, 3)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g7sh0"]
+atlas = ExtResource("1_bssmx")
+region = Rect2(0, 0, 2, 3)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u2tym"]
+atlas = ExtResource("1_bssmx")
+region = Rect2(6, 0, 2, 3)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_in7if"]
+animations = [{
+"frames": [{
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_kad4g")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_g7sh0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u2tym")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 15.0
+}]
+
+[node name="Butterfly" type="AnimatedSprite2D" unique_id=931806215]
+sprite_frames = SubResource("SpriteFrames_in7if")
+frame_progress = 0.34522095
