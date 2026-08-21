@@ -8,8 +8,8 @@ signal departed
 signal _halt
 
 const EPILOGUE_HOLD_SECONDS := 1.8
-const LIFT_DISTANCE_PIXELS := 72.0
 const LIFT_DURATION_SECONDS := 2.4
+const LIFT_HALFWAY_OVERHEAD_EXTRA_SECONDS := 0.5
 
 @export var auto_start: bool = true
 
@@ -210,13 +210,18 @@ func _depart(
 		player.modulate.a = 0.0
 		%Dim.color = Color(0, 0, 0, 1)
 	else:
+		var lift_distance_pixels := (
+				player.global_position.y
+				- get_viewport().get_visible_rect().position.y
+				+ float(WorldConstants.PLAYER_SPRITE_HEIGHT)
+		)
 		await flock.arrive_from_offscreen(player.global_position)
-		flock.lift(LIFT_DISTANCE_PIXELS, LIFT_DURATION_SECONDS)
+		flock.lift(lift_distance_pixels, LIFT_DURATION_SECONDS)
 		var lift_tween := create_tween()
 		lift_tween.tween_property(
 				player,
 				"position:y",
-				player.position.y - LIFT_DISTANCE_PIXELS,
+				player.position.y - lift_distance_pixels,
 				LIFT_DURATION_SECONDS
 		)
 		if lift_halfway_overhead_texts.is_empty():
@@ -225,7 +230,9 @@ func _depart(
 			)
 			await lift_tween.finished
 		else:
-			await _wait(LIFT_DURATION_SECONDS * 0.5)
+			await _wait(
+					LIFT_DURATION_SECONDS * 0.5 + LIFT_HALFWAY_OVERHEAD_EXTRA_SECONDS
+			)
 			for overhead_text in lift_halfway_overhead_texts:
 				await _overhead(overhead_text)
 		_story_tween = create_tween()

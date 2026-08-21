@@ -2852,7 +2852,7 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 	var too_early_deadline_msec := depart_started_msec + int(
 			(
 				MigratoryFlock.ARRIVE_SECONDS
-				+ PlanetStory.LIFT_DURATION_SECONDS * 0.25
+				+ PlanetStory.LIFT_DURATION_SECONDS * 0.5
 			) * 1000.0
 	)
 	while Time.get_ticks_msec() < too_early_deadline_msec:
@@ -2873,7 +2873,8 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 	var first_deadline_msec := depart_started_msec + int(
 			(
 				MigratoryFlock.ARRIVE_SECONDS
-				+ PlanetStory.LIFT_DURATION_SECONDS
+				+ PlanetStory.LIFT_DURATION_SECONDS * 0.5
+				+ PlanetStory.LIFT_HALFWAY_OVERHEAD_EXTRA_SECONDS
 				+ 1.0
 			) * 1000.0
 	)
@@ -2894,6 +2895,7 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 			(
 				MigratoryFlock.ARRIVE_SECONDS
 				+ PlanetStory.LIFT_DURATION_SECONDS * 0.5
+				+ PlanetStory.LIFT_HALFWAY_OVERHEAD_EXTRA_SECONDS
 			) * 1000.0
 	)
 	if first_delay_msec < expected_delay_msec - 400:
@@ -2909,11 +2911,27 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 		printerr("旁白开始时不应黑屏，alpha=%s" % dim.color.a)
 		failed += 1
 	var lifted_pixels := start_player_y - player.position.y
-	if lifted_pixels < PlanetStory.LIFT_DISTANCE_PIXELS * 0.35:
+	if lifted_pixels < (start_player_y + float(WorldConstants.PLAYER_SPRITE_HEIGHT)) * 0.5:
 		printerr(
-				"旁白开始时小王子应已飞起一半附近，实际 %s"
+				"旁白开始时小王子应已飞过半程，实际 %s"
 				% lifted_pixels
 		)
+		failed += 1
+	var remaining_lift_seconds := (
+			MigratoryFlock.ARRIVE_SECONDS
+			+ PlanetStory.LIFT_DURATION_SECONDS
+			- float(first_delay_msec) / 1000.0
+	)
+	if remaining_lift_seconds > 0.0:
+		await create_timer(remaining_lift_seconds + 0.15).timeout
+	var viewport_rect := (
+			scene.get_node(VIEWPORT_PATH) as SubViewport
+	).get_visible_rect()
+	if (
+			player.global_position.y + float(WorldConstants.PLAYER_SPRITE_HEIGHT)
+			> viewport_rect.position.y
+	):
+		printerr("小王子应已飞出屏幕上沿，y=%s" % player.global_position.y)
 		failed += 1
 
 	var second_deadline_msec := first_started_msec + 8000
