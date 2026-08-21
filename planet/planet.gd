@@ -58,10 +58,27 @@ extends Node2D
 			await ready
 		_apply_cloud_orbits()
 
+@export var zenith_gradient: Texture2D:
+	set(value):
+		zenith_gradient = value
+		if not is_node_ready():
+			await ready
+		if zenith_gradient == null:
+			return
+		(%Sky.material as ShaderMaterial).set_shader_parameter(
+				"zenith_gradient", zenith_gradient
+		)
+
+## 出生在锚点对面（国王星球背面降落）。
+@export var spawn_on_opposite_side: bool = false
+## 觐见禁区半宽；0 表示不限制。
+@export var audience_keep_away_arc: float = 0.0
+
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0
 ## 玩家出生角（靠近玫瑰或国王）。
 var spawn_angle: float = 0.0
+var has_contacted_audience_keep_away: bool = false
 ## 地表地物数据（静态场景内收集，供测试断言）。
 var rose_angle: float = 0.0
 var king_angle: float = 0.0
@@ -99,6 +116,8 @@ func _collect_surface_props() -> void:
 			SurfaceProp.Kind.KING:
 				king_angle = prop.rotation
 				spawn_anchor_angle = king_angle
+				if spawn_on_opposite_side:
+					spawn_anchor_angle = fposmod(king_angle + PI, TAU)
 			SurfaceProp.Kind.VOLCANO:
 				volcano_angles.append(prop.rotation)
 			SurfaceProp.Kind.BAOBAB:
@@ -122,22 +141,42 @@ func move_player(direction: float, delta: float) -> void:
 	var target_velocity := direction * max_angular_speed
 	var smoothing := 1.0 - exp(-WorldConstants.PLAYER_DAMPING * delta)
 	angular_velocity = lerp(angular_velocity, target_velocity, smoothing)
-	player_angle = fposmod(player_angle + angular_velocity * delta, TAU)
+	var next_angle := fposmod(player_angle + angular_velocity * delta, TAU)
+	if audience_keep_away_arc > 0.0:
+		var current_offset := angle_difference(king_angle, player_angle)
+		var next_offset := angle_difference(king_angle, next_angle)
+		if absf(next_offset) < audience_keep_away_arc:
+			var keep_away_side := current_offset
+			if is_zero_approx(keep_away_side):
+				keep_away_side = 1.0 if angular_velocity >= 0.0 else -1.0
+			has_contacted_audience_keep_away = true
+			angular_velocity = 0.0
+			next_angle = fposmod(
+					king_angle + signf(keep_away_side) * audience_keep_away_arc,
+					TAU
+			)
+	player_angle = next_angle
 	_sync_rotation()
 
 
 ## 弧顶附近最近的可互动物体；超出 INTERACT_RANGE_PX 则返回 null。
 func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceProp:
-	var max_arc := WorldConstants.INTERACT_RANGE_PX / radius
+	var default_max_arc := WorldConstants.INTERACT_RANGE_PX / radius
 	var best: SurfaceProp = null
-	var best_diff := max_arc
+	var best_diff := INF
 	for prop in surface_props:
 		if not prop.is_interactable():
 			continue
 		if should_accept.is_valid() and not should_accept.call(prop):
 			continue
 		var diff := absf(angle_difference(player_angle, prop.rotation))
-		if diff <= best_diff:
+		var max_arc := default_max_arc
+		if (
+				prop.kind == SurfaceProp.Kind.KING
+				and audience_keep_away_arc > 0.0
+		):
+			max_arc = audience_keep_away_arc + 0.02
+		if diff <= max_arc and diff <= best_diff:
 			best_diff = diff
 			best = prop
 	return best
@@ -147,6 +186,25 @@ func teleport_player(angle: float) -> void:
 	angular_velocity = 0.0
 	player_angle = fposmod(angle, TAU)
 	_sync_rotation()
+
+
+func is_king_visible_from_player() -> bool:
+	return (
+			absf(angle_difference(player_angle, king_angle))
+			<= WorldConstants.VISIBLE_HALF_ARC
+	)
+
+
+func is_in_distant_king_voice_range() -> bool:
+	var distance_from_king := absf(angle_difference(player_angle, king_angle))
+	return (
+			distance_from_king <= WorldConstants.KING_DISTANT_VOICE_ARC
+			and not is_king_visible_from_player()
+	)
+
+
+func signed_angle_from_king() -> float:
+	return angle_difference(king_angle, player_angle)
 
 
 func _sync_rotation() -> void:

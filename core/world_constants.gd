@@ -17,6 +17,12 @@ const FLORA_COUNT: int = 75
 const BUTTERFLY_COUNT: int = 8
 
 const SPAWN_ANGLE_OFFSET: float = 0.12
+## 国王星球只比 B612 大一圈：走几十秒能到觐见，不是第二座能逛的世界。
+const KING_PLANET_RADIUS: float = PLANET_RADIUS * 1.2
+## 觐见禁区半宽（弧度）：走不到王座脚下，贴边绕行会被弧度带出视野。
+const KING_AUDIENCE_KEEP_AWAY_ARC: float = 0.70
+## 先听见国王、人还在地平线后：比可见半弧更远。
+const KING_DISTANT_VOICE_ARC: float = 2.08
 
 ## 可互动物体相对弧顶的半宽（像素，沿圆周）。
 const INTERACT_RANGE_PX: float = 16.0
@@ -52,6 +58,16 @@ const BAOBAB_SPRITE_SIZE: int = 32
 const ROSE_SPRITE_SIZE: int = 20
 const KING_SPRITE_WIDTH: int = 20
 const KING_SPRITE_HEIGHT: int = 24
+const GOLD_SPIRED_THRONE_WIDTH: int = 28
+const GOLD_SPIRED_THRONE_HEIGHT: int = 72
+const CRIMSON_CAPE_SPREAD_WIDTH: int = 56
+const CRIMSON_CAPE_SPREAD_HEIGHT: int = 24
+const UNROLLED_PARCHMENT_WIDTH: int = 14
+const UNROLLED_PARCHMENT_HEIGHT: int = 10
+const SCRATCHED_BORDER_LINES_WIDTH: int = 18
+const SCRATCHED_BORDER_LINES_HEIGHT: int = 8
+const PALE_PAW_PRINTS_WIDTH: int = 14
+const PALE_PAW_PRINTS_HEIGHT: int = 8
 const RAT_SPRITE_WIDTH: int = 10
 const RAT_SPRITE_HEIGHT: int = 8
 const FLORA_SPRITE_SIZE: int = 16

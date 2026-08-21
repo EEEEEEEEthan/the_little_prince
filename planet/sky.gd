@@ -7,12 +7,18 @@ extends Sprite2D
 var planet_rotation: float = 0.0
 var star_rotation_speed: float = WorldConstants.STAR_ROTATION_SPEED
 var is_self_rotating: bool = true
+## 国王命令日落等演出用：有值时天空相位不再跟经度走。
+var commanded_daylight_phase: float = NAN:
+	set(value):
+		commanded_daylight_phase = value
+		_update_daylight()
 var _self_rotation: float = 0.0
 
 
 func set_planet_rotation(value: float) -> void:
 	planet_rotation = value
 	rotation = planet_rotation + _self_rotation
+	_update_daylight()
 
 
 func _process(delta: float) -> void:
@@ -24,9 +30,14 @@ func _process(delta: float) -> void:
 	_update_daylight()
 
 
+func daylight_phase() -> float:
+	if is_nan(commanded_daylight_phase):
+		return SkyPhase.angle_to_phase(rotation)
+	return commanded_daylight_phase
+
+
 func _update_daylight() -> void:
 	var mat := material as ShaderMaterial
 	if mat == null:
 		return
-	var phase := SkyPhase.angle_to_phase(rotation)
-	mat.set_shader_parameter("phase", phase)
+	mat.set_shader_parameter("phase", daylight_phase())
