@@ -1,6 +1,6 @@
 class_name DialogueBox
 extends CanvasLayer
-## 像素风打字机对话框：说话人头像跟站位左右，逐字正文。
+## 像素风打字机对话框：小王子头像居左，其他角色居右；逐字正文。
 
 signal closed
 signal line_advanced
@@ -22,7 +22,6 @@ var _saw_confirm_released_while_idle: bool = false
 var _is_revealing: bool = false
 var _typewriter_accum_seconds: float = 0.0
 var _close_after_last: bool = true
-var _prince_stands_on_left: bool = true
 
 
 func _ready() -> void:
@@ -54,22 +53,14 @@ func is_typing() -> bool:
 	return _is_revealing
 
 
-func play(
-		lines: Array[DialogueLine],
-		prince: Node2D = null,
-		partner: SurfaceProp = null,
-) -> void:
-	_play_lines(lines, true, prince, partner)
+func play(lines: Array[DialogueLine]) -> void:
+	_play_lines(lines, true)
 
 
-func play_line(
-		line: DialogueLine,
-		prince: Node2D = null,
-		partner: SurfaceProp = null,
-) -> void:
+func play_line(line: DialogueLine) -> void:
 	var lines: Array[DialogueLine] = []
 	lines.append(line)
-	_play_lines(lines, false, prince, partner)
+	_play_lines(lines, false)
 
 
 func mark_holding(held: bool) -> void:
@@ -119,21 +110,11 @@ func close() -> void:
 		closed.emit()
 
 
-func _play_lines(
-		lines: Array[DialogueLine],
-		close_after_last: bool,
-		prince: Node2D,
-		partner: SurfaceProp,
-) -> void:
+func _play_lines(lines: Array[DialogueLine], close_after_last: bool) -> void:
 	if lines.is_empty():
 		close()
 		return
 	_close_after_last = close_after_last
-	_prince_stands_on_left = (
-			prince == null
-			or partner == null
-			or prince.global_position.x <= partner.global_position.x
-	)
 	_lines = lines.duplicate()
 	_index = 0
 	_is_holding = false
@@ -154,8 +135,7 @@ func _finish_current_line() -> void:
 
 func _show_line() -> void:
 	var line := _lines[_index]
-	var prince_is_speaking := line.speaker == DialogueCatalog.PRINCE_SPEAKER
-	var portrait_on_left := prince_is_speaking == _prince_stands_on_left
+	var portrait_on_left := line.speaker == DialogueCatalog.PRINCE_SPEAKER
 	%Portrait.texture = line.portrait
 	%ContentRow.move_child(%Portrait, 0 if portrait_on_left else 1)
 	%Speaker.text = line.speaker

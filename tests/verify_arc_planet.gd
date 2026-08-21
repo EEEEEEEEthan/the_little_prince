@@ -1556,92 +1556,54 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 			printerr("close 后对话框应关闭")
 			failed += 1
 
-	if dialogue != null and rose != null and baobab != null:
-		failed += await _check_dialogue_portrait_sides(scene, planet, dialogue, rose, baobab)
+	if dialogue != null and rose != null:
+		failed += await _check_dialogue_portrait_sides(planet, dialogue, rose)
 
 	print("  地物交互 / 叙事对话 OK")
 	return failed
 
 
 func _check_dialogue_portrait_sides(
-		scene: Node,
 		planet: Planet,
 		dialogue: DialogueBox,
 		rose: SurfaceProp,
-		baobab: SurfaceProp,
 ) -> int:
 	var failed := 0
-	var player := scene.get_node(PLAYER_PATH) as Player
 	var prince_portrait_path := "res://ui/portraits/prince.png"
 	var rose_portrait_path := "res://ui/portraits/rose.png"
-	var beside_radians := 0.1
 	Input.action_release("interact")
 
-	planet.teleport_player(fposmod(rose.rotation - beside_radians, TAU))
-	if player.global_position.x >= rose.global_position.x:
-		printerr("站位夹具：小王子应在玫瑰左边")
-		failed += 1
-	dialogue.play(DialogueCatalog.lines_for_id(&"rose"), player, rose)
+	dialogue.play(DialogueCatalog.lines_for_id(&"rose"))
 	failed += _assert_dialogue_portrait_side(
-			dialogue, prince_portrait_path, true, "站玫瑰左边旁白"
+			dialogue, prince_portrait_path, true, "小王子旁白"
 	)
 	dialogue.play_line(
 			DialogueLine.new(
 					DialogueCatalog.ROSE_SPEAKER, "开口", DialogueCatalog.ROSE_PORTRAIT
-			),
-			player,
-			rose,
+			)
 	)
 	failed += _assert_dialogue_portrait_side(
-			dialogue, rose_portrait_path, false, "站玫瑰左边听花"
+			dialogue, rose_portrait_path, false, "玫瑰开口"
 	)
 	dialogue.close()
 
-	planet.teleport_player(fposmod(rose.rotation + beside_radians, TAU))
-	if player.global_position.x <= rose.global_position.x:
-		printerr("站位夹具：小王子应在玫瑰右边")
-		failed += 1
-	dialogue.play(DialogueCatalog.lines_for_id(&"rose"), player, rose)
+	dialogue.play(DialogueCatalog.lines_for_id(&"baobab"))
 	failed += _assert_dialogue_portrait_side(
-			dialogue, prince_portrait_path, false, "站玫瑰右边旁白"
-	)
-	dialogue.play_line(
-			DialogueLine.new(
-					DialogueCatalog.ROSE_SPEAKER, "开口", DialogueCatalog.ROSE_PORTRAIT
-			),
-			player,
-			rose,
-	)
-	failed += _assert_dialogue_portrait_side(
-			dialogue, rose_portrait_path, true, "站玫瑰右边听花"
+			dialogue, prince_portrait_path, true, "树旁白"
 	)
 	dialogue.close()
 
-	planet.teleport_player(fposmod(baobab.rotation - beside_radians, TAU))
-	dialogue.play(DialogueCatalog.lines_for_id(&"baobab"), player, baobab)
-	failed += _assert_dialogue_portrait_side(
-			dialogue, prince_portrait_path, true, "站树左边旁白"
-	)
-	dialogue.close()
-
-	planet.teleport_player(fposmod(baobab.rotation + beside_radians, TAU))
-	dialogue.play(DialogueCatalog.lines_for_id(&"baobab"), player, baobab)
-	failed += _assert_dialogue_portrait_side(
-			dialogue, prince_portrait_path, false, "站树右边旁白"
-	)
-	dialogue.close()
-
-	planet.teleport_player(fposmod(rose.rotation - beside_radians, TAU))
+	planet.teleport_player(rose.rotation)
 	await process_frame
 	Input.action_press("interact")
 	await process_frame
 	Input.action_release("interact")
 	if not dialogue.is_open():
-		printerr("站玫瑰左边按确认应打开对话")
+		printerr("按确认应打开对话")
 		failed += 1
 	else:
 		failed += _assert_dialogue_portrait_side(
-				dialogue, prince_portrait_path, true, "交互站玫瑰左边"
+				dialogue, prince_portrait_path, true, "交互玫瑰旁白"
 		)
 	dialogue.close()
 	return failed
@@ -2072,7 +2034,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		failed += _assert_dialogue_portrait_side(
 				story.dialogue,
 				"res://ui/portraits/rose.png",
-				true,
+				false,
 				"开场玫瑰开口",
 		)
 	story.skip_cinematics = true

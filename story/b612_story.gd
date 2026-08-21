@@ -277,11 +277,7 @@ func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 		return
 	_lock_input()
 	var already_open := dialogue.is_open()
-	dialogue.play_line(
-			DialogueLine.new(speaker, text, portrait),
-			player,
-			_rose_prop(),
-	)
+	dialogue.play_line(DialogueLine.new(speaker, text, portrait))
 	if dialogue.is_open() and not already_open and Input.is_action_pressed(&"interact"):
 		dialogue.mark_holding(true)
 	await dialogue.line_advanced

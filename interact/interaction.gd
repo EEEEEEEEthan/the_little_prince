@@ -3,7 +3,6 @@ extends Node
 ## 靠近可互动物体时显示 A 提示；点按或长按 interact（键盘 Submit / 手柄 A）交互。
 
 @onready var planet: Planet = %Planet
-@onready var player: Player = %Player
 @onready var dialogue: DialogueBox = %DialogueBox
 @onready var prompt: InteractPrompt = %InteractPrompt
 @onready var story: B612Story = %B612Story
@@ -54,7 +53,7 @@ func _on_interact() -> void:
 	var lines := DialogueCatalog.lines_for_id(_focus.get_dialogue_id())
 	if lines.is_empty():
 		return
-	dialogue.play(lines, player, _focus)
+	dialogue.play(lines)
 	if dialogue.is_open() and Input.is_action_pressed(&"interact"):
 		dialogue.mark_holding(true)
 	_set_focus(null)
