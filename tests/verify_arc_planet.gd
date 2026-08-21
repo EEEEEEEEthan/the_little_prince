@@ -1294,18 +1294,15 @@ func _check_butterflies(planet: Planet) -> int:
 				opening_guide.guide_target_local_position.x,
 				-opening_guide.guide_target_local_position.y,
 		)
-		var guide_target_orbit_radius := opening_guide.guide_target_local_position.length()
-		var guide_path_length := Vector2(
-				absf(angle_difference(
-						opening_guide._home_orbital_angle,
-						guide_target_orbital_angle,
-				))
-				* (opening_guide._home_orbit_radius + guide_target_orbit_radius)
-				* 0.5,
-				absf(guide_target_orbit_radius - opening_guide._home_orbit_radius),
-		).length()
+		var orbital_span := absf(angle_difference(
+				opening_guide._home_orbital_angle,
+				guide_target_orbital_angle,
+		))
 		opening_guide._process(1.0)
-		var expected_guide_progress := WorldConstants.PLAYER_SPEED / guide_path_length
+		var expected_guide_progress := (
+				WorldConstants.PLAYER_SPEED
+				/ (orbital_span * WorldConstants.PLANET_RADIUS)
+		)
 		if absf(opening_guide._guide_flight_progress - expected_guide_progress) > 0.02:
 			printerr(
 					"引导飞速应等于行走速度 %s px/s，进度期望 %s 实际 %s"
