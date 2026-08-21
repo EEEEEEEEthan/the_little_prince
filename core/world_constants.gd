@@ -13,6 +13,7 @@ const VISIBLE_HALF_ARC: float = PI * 0.55
 
 const VOLCANO_COUNT: int = 3
 const BAOBAB_COUNT: int = 5
+const FLORA_COUNT: int = 14
 
 const SPAWN_ANGLE_OFFSET: float = 0.12
 
@@ -43,11 +44,12 @@ const CLOUD_INSTANCE_ALPHA_MAX: float = 0.16
 ## 白天半宽（弧度）：正午蓝天与黎明各自覆盖的角度，越大白天越长、黄昏夜晚越短。
 const DAY_HALF_ARC: float = PI * 0.65
 
-## 地物 / 玩家贴图的生成尺寸（像素）。火山与猴面包树以 spritesheet 横向拼接，
+## 地物 / 玩家贴图的生成尺寸（像素）。火山、猴面包树与地表植物以 spritesheet 横向拼接，
 ## 每个变体一帧，帧尺寸仍为 *_SPRITE_SIZE。小王子为 idle+walk 横拼 spritesheet。
 const VOLCANO_SPRITE_SIZE: int = 36
 const BAOBAB_SPRITE_SIZE: int = 32
 const ROSE_SPRITE_SIZE: int = 20
+const FLORA_SPRITE_SIZE: int = 16
 const CLOUD_FRAME_WIDTH: int = 16
 const CLOUD_FRAME_HEIGHT: int = 8
 const CLOUD_FRAME_COLUMNS: int = 4
@@ -69,3 +71,6 @@ const VOLCANO_ACTIVE_VARIANT: int = 2
 
 ## 猴面包树 spritesheet 变体数量（放置时随机外观）。
 const BAOBAB_VARIANT_COUNT: int = 4
+
+## 地表植物 spritesheet 变体数量（草丛 / 干草 / 小花 / 灌木）。
+const FLORA_VARIANT_COUNT: int = 6

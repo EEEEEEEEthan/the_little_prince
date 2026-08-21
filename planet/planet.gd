@@ -1,7 +1,7 @@
 class_name Planet
 extends Node2D
 ## 可复用 2D 圆弧星球：Body / Surface / Sky / Clouds 统一绕球心旋转。
-## 用法：改半径、贴图、自转等参数；树 / 玫瑰等地表物件拖到 Surface 下即可。
+## 用法：改半径、贴图、自转等参数；树 / 玫瑰 / 地表植物拖到 Surface 下即可。
 ## Body 贴图按显示直径原尺寸绘制，不使用 scale。
 ## 小王子视觉上始终停在弧顶，实际由地表与星空反向旋转模拟行走。
 
@@ -66,6 +66,7 @@ var spawn_angle: float = 0.0
 var rose_angle: float = 0.0
 var volcano_angles: Array[float] = []
 var baobab_angles: Array[float] = []
+var flora_angles: Array[float] = []
 var surface_props: Array[SurfaceProp] = []
 
 ## 当前角速度（弧度/秒），经阻尼向目标速度平滑逼近。正值表示向右走。
@@ -96,6 +97,8 @@ func _collect_surface_props() -> void:
 				volcano_angles.append(prop.rotation)
 			SurfaceProp.Kind.BAOBAB:
 				baobab_angles.append(prop.rotation)
+			SurfaceProp.Kind.FLORA:
+				flora_angles.append(prop.rotation)
 	spawn_angle = fposmod(rose_angle + WorldConstants.SPAWN_ANGLE_OFFSET, TAU)
 
 

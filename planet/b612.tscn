@@ -7,10 +7,18 @@
 [ext_resource type="Texture2D" uid="uid://bblja4kg8jkmg" path="res://planet/baobab.png" id="9_baobab"]
 [ext_resource type="Texture2D" uid="uid://cpalegraypuff" path="res://planet/pale_gray_puff.png" id="12_puff"]
 [ext_resource type="Texture2D" uid="uid://6xcbiii2i2t3" path="res://planet/glass_globe.png" id="13_globe"]
+[ext_resource type="Texture2D" uid="uid://cflora16sheet" path="res://planet/flora.png" id="14_flora"]
+[ext_resource type="Shader" uid="uid://dfloraswayshd" path="res://planet/flora_sway.gdshader" id="15_flora_sway"]
 
 [sub_resource type="Gradient" id="Gradient_volcano_smoke"]
 offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
 colors = PackedColorArray(1, 1, 1, 1, 0.933333, 0.933333, 0.815686, 0.75, 0.627451, 0.772549, 0.678431, 0.35, 0.466667, 0.666667, 0.643137, 0)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_flora_sway"]
+shader = ExtResource("15_flora_sway")
+shader_parameter/sway_pixels = 1.8
+shader_parameter/sway_speed = 1.4
+shader_parameter/world_frequency = 0.08
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 
@@ -148,3 +156,180 @@ hframes = 4
 script = ExtResource("3_surface_prop")
 kind = 2
 dialogue_id = &"baobab_shoot"
+
+[node name="Flora" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="9" unique_id=992033583]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(35.621953, -79.767450)
+rotation = 0.42
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+script = ExtResource("3_surface_prop")
+kind = 3
+
+[node name="Flora2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=1930666866]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(57.603845, -65.677748)
+rotation = 0.72
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 3
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 3
+
+[node name="Flora3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=429417081]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(75.778093, -43.467807)
+rotation = 1.05
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 4
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 4
+
+[node name="Flora4" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=902813943]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(85.774724, -16.567023)
+rotation = 1.38
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 1
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 1
+
+[node name="Flora5" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=583639395]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(86.631838, 11.255855)
+rotation = 1.7
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 5
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 5
+
+[node name="Flora6" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=1304198793]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(79.436223, 36.354588)
+rotation = 2.0
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 2
+
+[node name="Flora7" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=1430998000]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(69.587960, 52.813686)
+rotation = 2.22
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+script = ExtResource("3_surface_prop")
+kind = 3
+
+[node name="Flora8" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=1605826523]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(-6.842650, 87.091605)
+rotation = 3.22
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 3
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 3
+
+[node name="Flora9" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=1530173656]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(-52.059329, 70.154087)
+rotation = 3.78
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 1
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 1
+
+[node name="Flora10" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="18" unique_id=1139617681]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(-81.686193, 30.969912)
+rotation = 4.35
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 2
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 2
+
+[node name="Flora11" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="19" unique_id=603058085]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(-86.534145, -11.983793)
+rotation = 4.85
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 5
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 5
+
+[node name="Flora12" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="20" unique_id=254583715]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(-62.861781, -60.664372)
+rotation = 5.48
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+script = ExtResource("3_surface_prop")
+kind = 3
+
+[node name="Flora13" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="21" unique_id=485780458]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(-46.639955, -73.868019)
+rotation = 5.72
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 4
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 4
+
+[node name="Flora14" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="22" unique_id=1228541098]
+texture_filter = 1
+material = SubResource("ShaderMaterial_flora_sway")
+position = Vector2(-28.571509, -82.555669)
+rotation = 5.95
+texture = ExtResource("14_flora")
+offset = Vector2(0, -7)
+hframes = 6
+frame = 1
+script = ExtResource("3_surface_prop")
+kind = 3
+variant = 1
+
