@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" uid="uid://bvmu7yfjsqvgp" path="res://ui/dialogue_box.gd" id="1_dialogue"]
-[ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="2_font"]
+[ext_resource type="FontFile" uid="uid://b8w2t37l8urid" path="res://ui/fonts/fusion-pixel-10px-zh_hans.woff2" id="2_font"]
 [ext_resource type="AudioStream" uid="uid://cednuam573usk" path="res://ui/typewriter.wav" id="3_blip"]
 [ext_resource type="Texture2D" uid="uid://c0k7tc4gwunhx" path="res://ui/portraits/prince.png" id="4_prince"]
 
@@ -94,7 +94,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.878431, 0.670588, 0.290196, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 text = "小王子"
 
 [node name="Body" type="Label" parent="Panel/ContentRow/TextColumn/VBox"]
@@ -103,7 +103,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(1, 0.968627, 0.819608, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_constants/line_spacing = 1
 autowrap_mode = 3
 text = "placeholder"
