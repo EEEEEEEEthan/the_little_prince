@@ -28,6 +28,8 @@ func _prepare_start() -> void:
 	_glass_globe().visible = false
 	planet.sky.is_self_rotating = false
 	player.move_speed_scale = 0.8
+	player.flip_h = true
+	(%Scarf as Scarf).settle_hang_to_facing()
 
 
 func _play_story() -> void:

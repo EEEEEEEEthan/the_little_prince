@@ -658,6 +658,9 @@ func _check_scene_and_mechanics() -> int:
 	if player == null:
 		printerr("找不到 Player（路径 %s）" % PLAYER_PATH)
 		failed += 1
+	elif not player.flip_h:
+		printerr("B612 开场小王子默认应面向左边")
+		failed += 1
 
 	if planet != null:
 		if planet.volcano_angles.size() != 3:
@@ -2278,9 +2281,22 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if player.global_position.x <= rose.global_position.x:
 		printerr("出生点小王子应在玫瑰右边")
 		failed += 1
+	var scarf := player.get_node("Scarf") as Scarf
+	player.flip_h = false
+	var settle_delta := 1.0 / 60.0
+	for _step_index in 48:
+		scarf._physics_process(settle_delta)
 	story.skip_cinematics = false
 	var fade_started_msec := Time.get_ticks_msec()
 	story.start()
+	if not player.flip_h:
+		printerr("开场小王子应面向左边")
+		failed += 1
+	var neck := scarf.simulated_positions[0]
+	var tip := scarf.simulated_positions[Scarf.POINT_COUNT - 1]
+	if tip.x <= neck.x:
+		printerr("开场围巾应在右边，neck=%s tip=%s" % [neck, tip])
+		failed += 1
 	if story.dialogue.is_open():
 		printerr("黑屏淡入前玫瑰不应开口")
 		failed += 1

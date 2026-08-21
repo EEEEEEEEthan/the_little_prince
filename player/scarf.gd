@@ -40,6 +40,19 @@ func _ready() -> void:
 	_frame_image = Image.create(FRAME_WIDTH, FRAME_HEIGHT, false, Image.FORMAT_RGBA8)
 	_frame_texture = ImageTexture.create_from_image(_frame_image)
 	texture = _frame_texture
+	settle_hang_to_facing()
+
+
+func _physics_process(delta: float) -> void:
+	_simulate(delta)
+	_display_accumulator += delta
+	var display_interval := 1.0 / DISPLAY_FPS
+	if _display_accumulator >= display_interval:
+		_display_accumulator = fmod(_display_accumulator, display_interval)
+		_capture_display()
+
+
+func settle_hang_to_facing() -> void:
 	var neck := _neck_local_position()
 	var hang_direction := Vector2(-_facing_sign(), 1.2).normalized()
 	simulated_positions.resize(POINT_COUNT)
@@ -52,15 +65,6 @@ func _ready() -> void:
 	for _settle_step in 24:
 		_simulate(1.0 / 60.0)
 	_capture_display()
-
-
-func _physics_process(delta: float) -> void:
-	_simulate(delta)
-	_display_accumulator += delta
-	var display_interval := 1.0 / DISPLAY_FPS
-	if _display_accumulator >= display_interval:
-		_display_accumulator = fmod(_display_accumulator, display_interval)
-		_capture_display()
 
 
 func _simulate(delta: float) -> void:

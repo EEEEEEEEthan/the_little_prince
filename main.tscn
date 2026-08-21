@@ -71,10 +71,12 @@ unique_name_in_owner = true
 z_index = 200
 texture_filter = 1
 texture = ExtResource("4_prince")
+flip_h = true
 hframes = 6
 script = ExtResource("3_player")
 
 [node name="Scarf" type="Sprite2D" parent="GameView/GameViewport/Player" unique_id=1847293651]
+unique_name_in_owner = true
 z_index = 1
 texture_filter = 1
 centered = false
