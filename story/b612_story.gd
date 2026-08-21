@@ -37,16 +37,10 @@ func _play_story() -> void:
 	await _rose("是吧，我是与太阳同时出生的。。。")
 	await _wait(1.0)
 	await _overhead("咳..咳..")
-	await _rose("我有点冷，你有屏风吗")
+	await _rose("我有点冷，你没有屏风吗！")
 	await _prince("屏风?")
-	await _rose("我原来住的那个地方是有屏风的")
-	await _rose("那里可不像这里...")
-	await _overhead("她从没住过别的地方")
-	await _rose("...")
-	await _overhead("她意识到自己在编一个不太高明的谎话")
 	await _overhead("咳...咳...")
-	await _overhead("她有点羞怒,于是故意咳得很大声")
-	await _prince("...")
+	await _overhead("她故意咳得很大声")
 	await _rose("屏风呢!")
 	await _prince("我这就去拿...")
 	_overhead("咳...咳...")
@@ -63,11 +57,11 @@ func _play_story() -> void:
 	is_blocking_input = false
 	if not skip_cinematics:
 		(planet.get_node("%Butterfly3") as Butterfly).begin_guide_flight()
-	await _overhead("她安静下来")
+	await _overhead("她安静了下来...")
 	await _wait_move_right()
 	await _wait(3.0)
 	await _overhead("小王子很喜欢玫瑰花")
-	await _overhead("可是她的傲娇，她的尖刺，总是让他恼火")
+	await _overhead("可是她的无理取闹，总是让他恼火")
 	has_finished_opening = true
 	await _meet_sunset()
 	player.can_move_right = false
@@ -75,7 +69,7 @@ func _play_story() -> void:
 	await _wait(0.3)
 	await _camera_up()
 	await _overhead("人在忧伤的时候，就喜欢看日落。")
-	await _overhead("有一次小王子看了四十三遍日落")
+	await _overhead("有一次小王子看了43遍日落")
 	await _wait(0.5)
 	await _camera_down()
 	is_blocking_input = false
