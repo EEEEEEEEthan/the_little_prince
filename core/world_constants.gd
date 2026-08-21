@@ -13,7 +13,7 @@ const VISIBLE_HALF_ARC: float = PI * 0.55
 
 const VOLCANO_COUNT: int = 3
 const BAOBAB_COUNT: int = 9
-const FLORA_COUNT: int = 80
+const FLORA_COUNT: int = 75
 const BUTTERFLY_COUNT: int = 8
 
 const SPAWN_ANGLE_OFFSET: float = 0.12
@@ -77,5 +77,5 @@ const VOLCANO_ACTIVE_VARIANT: int = 2
 ## 猴面包树 spritesheet 变体数量（放置时随机外观）。
 const BAOBAB_VARIANT_COUNT: int = 4
 
-## 地表植物 spritesheet 变体数量（草丛 / 干草 / 小花 / 灌木）。
+## 地表植物 spritesheet 变体数量（草绿与冷青干草等）。
 const FLORA_VARIANT_COUNT: int = 6

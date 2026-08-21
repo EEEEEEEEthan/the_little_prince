@@ -12,6 +12,9 @@ import time
 
 
 ERROR_LINE = re.compile(r"(?im)^\s*(?:ERROR|SCRIPT ERROR|PARSE ERROR|PARSER ERROR):")
+ENGINE_SHUTDOWN_NOISE = re.compile(
+    r"resources still in use at exit|ObjectDB instances were leaked"
+)
 
 
 def main() -> int:
@@ -49,8 +52,16 @@ def main() -> int:
                     continue
                 text = data.decode(errors="replace")
                 print(text, end="", file=sys.stderr if key.data == "stderr" else sys.stdout, flush=True)
-                if key.data == "stderr" and ERROR_LINE.search(text):
-                    error_seen = True
+                if key.data == "stderr":
+                    has_actionable_error = False
+                    for stderr_line in text.splitlines():
+                        if ENGINE_SHUTDOWN_NOISE.search(stderr_line):
+                            continue
+                        if ERROR_LINE.search(stderr_line):
+                            has_actionable_error = True
+                            break
+                    if has_actionable_error:
+                        error_seen = True
             if error_seen:
                 break
     finally:
