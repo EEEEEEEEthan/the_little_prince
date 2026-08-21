@@ -7,6 +7,7 @@ func _prepare_start() -> void:
 	player.move_speed_scale = 0.65
 	player.modulate.a = 1.0
 	planet.has_contacted_audience_keep_away = false
+	set_process(false)
 
 
 func _play_story() -> void:
@@ -50,12 +51,10 @@ func _play_story() -> void:
 	await _king("我会命令太阳落山。")
 	await _king("但要等到条件成熟。")
 	await _overhead("他说，傍晚就会下令。")
-	is_blocking_input = false
-	await _meet_sunset()
 	_lock_input()
-	await _wait(0.3)
 	await _camera_up()
 	await _king("太阳！我命令你落山。")
+	await _play_standing_sunset_sky()
 	await _overhead("太阳正要落下。国王的命令被执行了。")
 	await _wait(0.5)
 	await _camera_down()
@@ -110,4 +109,23 @@ func _await_audience_keep_away() -> void:
 			and not planet.has_contacted_audience_keep_away
 	):
 		await get_tree().process_frame
+	await _halt_if_stale(generation)
+
+
+func _play_standing_sunset_sky() -> void:
+	var generation := _story_generation
+	var sky := planet.sky
+	if skip_cinematics:
+		sky.commanded_daylight_phase = SkyPhase.SUNSET_PHASE
+		await _halt_if_stale(generation)
+		return
+	sky.commanded_daylight_phase = sky.daylight_phase()
+	if _story_tween != null:
+		_story_tween.kill()
+	_story_tween = create_tween()
+	_story_tween.tween_property(
+			sky, "commanded_daylight_phase", SkyPhase.SUNSET_PHASE, 2.4
+	)
+	await _story_tween.finished
+	_story_tween = null
 	await _halt_if_stale(generation)

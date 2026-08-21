@@ -3120,28 +3120,44 @@ func _check_king_chapter() -> int:
 	if not planet.has_contacted_audience_keep_away:
 		printerr("走到禁区应触发觐见")
 		failed += 1
-	await process_frame
-	await process_frame
-	await process_frame
-	if story.accepts_interact(king):
-		printerr("觐见对白应已自动开始，不应仍等按 A")
+	var audience_player_angle := planet.player_angle
+	var meeting_done_deadline_msec := Time.get_ticks_msec() + 2000
+	while (
+			not story.accepts_interact(king)
+			and Time.get_ticks_msec() < meeting_done_deadline_msec
+	):
+		await process_frame
+	if FileAccess.get_file_as_string("res://story/king_story.gd").contains("_meet_sunset"):
+		printerr("国王章不应再走 _meet_sunset 追日落")
+		failed += 1
+	if story.is_processing():
+		printerr("国王章不应再按经度侦测日落")
+		failed += 1
+	if not is_equal_approx(planet.player_angle, audience_player_angle):
+		printerr("天空演出不应改变经度/走动，player_angle %s -> %s" % [audience_player_angle, planet.player_angle])
+		failed += 1
+	if absf(absf(planet.signed_angle_from_king()) - planet.audience_keep_away_arc) > 0.04:
+		printerr("演出后应仍在禁区外，偏移 %s" % planet.signed_angle_from_king())
+		failed += 1
+	if not is_equal_approx(planet.sky.commanded_daylight_phase, SkyPhase.SUNSET_PHASE):
+		printerr(
+				"命令后应为站着看的日落天空，phase=%s"
+				% planet.sky.commanded_daylight_phase
+		)
+		failed += 1
+	if is_equal_approx(SkyPhase.angle_to_phase(planet.sky.rotation), SkyPhase.SUNSET_PHASE):
+		printerr("日落演出不应靠走到日落经度")
 		failed += 1
 	var music_before_king_sunset := scene.get_node("%Music").playing_stream as AudioStream
-	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
-	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
-	await process_frame
-	if not story.has_crossed_sunset:
-		printerr("跨过日落应进入日落段")
-		failed += 1
 	failed += _assert_playing_stream(scene, music_before_king_sunset, "国王日落不应切换配乐")
 	if story.is_blocking_input:
 		printerr("国王下令日落后应恢复输入")
 		failed += 1
 	if not story.accepts_interact(king):
-		printerr("日落后国王应可告别")
+		printerr("天空演出后应能继续司法大臣对话")
 		failed += 1
 	if not story.try_handle_interact(king):
-		printerr("日落后应按 A 告别")
+		printerr("天空演出后应按 A 继续司法大臣对话")
 		failed += 1
 	if not king.is_consumed:
 		printerr("告别后国王应消耗")
