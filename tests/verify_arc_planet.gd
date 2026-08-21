@@ -66,7 +66,9 @@ func _run_tests() -> void:
 	failed += _check_static_assets()
 	failed += _check_no_legacy()
 	failed += _check_tscn_editor_visible()
+	failed += _check_king_scene_resource_uids()
 	failed += _check_input_map()
+	failed += await _check_main_story_starts_with_sky_ready()
 	failed += await _check_scene_and_mechanics()
 	failed += await _check_standalone_planet_scenes()
 	failed += await _check_b612_depart_lift_halfway_overhead()
@@ -633,6 +635,41 @@ func _check_tscn_editor_visible() -> int:
 	print("  tscn 编辑器可见 OK")
 	return failed
 
+
+func _check_king_scene_resource_uids() -> int:
+	var failed := 0
+	var uid_and_path := RegEx.new()
+	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
+	var king_scene := FileAccess.get_file_as_string("res://planet/king.tscn")
+	for match_ in uid_and_path.search_all(king_scene):
+		var declared_uid := match_.get_string(1)
+		var resource_path := match_.get_string(2)
+		var canonical_uid := ResourceUID.id_to_text(
+				ResourceLoader.get_resource_uid(resource_path)
+		)
+		if declared_uid != canonical_uid:
+			printerr(
+					"king.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					% [resource_path, declared_uid, canonical_uid]
+			)
+			failed += 1
+	var zenith_header := FileAccess.get_file_as_string(
+			"res://planet/king_zenith_gradient.tres"
+	).get_slice("\n", 0)
+	var zenith_canonical := ResourceUID.id_to_text(
+			ResourceLoader.get_resource_uid("res://planet/king_zenith_gradient.tres")
+	)
+	if not zenith_header.contains(zenith_canonical):
+		printerr(
+				"king_zenith_gradient.tres 头 UID 应为 %s"
+				% zenith_canonical
+		)
+		failed += 1
+	if failed == 0:
+		print("  国王场景资源 UID 与文件一致 OK")
+	return failed
+
+
 func _check_input_map() -> int:
 	var failed := 0
 	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down", &"interact"]:
@@ -678,6 +715,38 @@ func _assert_playing_stream(scene: Node, expected: AudioStream, mismatch_message
 		printerr("%s（配乐应在播放）" % mismatch_message)
 		return 1
 	return 0
+
+
+func _check_main_story_starts_with_sky_ready() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	scene.travel_to_next_planet = false
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	var story := scene.get_node("%Story") as B612Story
+	var player := scene.get_node(PLAYER_PATH) as Player
+	if story.planet.sky == null:
+		printerr("main 开场 Story.start 时 planet.sky 不应为空")
+		failed += 1
+	if not is_equal_approx(player.move_speed_scale, 0.8):
+		printerr(
+				"B612 开场应已 _prepare_start，move_speed_scale=%s"
+				% player.move_speed_scale
+		)
+		failed += 1
+	if failed == 0:
+		print("  main 开场等星球 ready 后再读天空 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
 
 
 func _check_scene_and_mechanics() -> int:

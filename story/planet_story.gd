@@ -59,6 +59,8 @@ func start() -> void:
 	is_active = true
 	has_finished_opening = false
 	has_crossed_sunset = false
+	if not planet.is_node_ready():
+		await planet.ready
 	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 	_waiting_interact_kind = -1
 	_dialogue_closed_early = false
