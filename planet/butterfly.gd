@@ -48,12 +48,12 @@ func _process(delta: float) -> void:
 			)
 			var target_orbit_radius := guide_target_local_position.length()
 			if modulate.a >= 1.0:
-				var guide_path_length := hypot(
+				var guide_path_length := Vector2(
 						absf(angle_difference(_home_orbital_angle, target_orbital_angle))
 						* (_home_orbit_radius + target_orbit_radius)
 						* 0.5,
 						absf(target_orbit_radius - _home_orbit_radius),
-				)
+				).length()
 				_guide_flight_progress = minf(
 						1.0,
 						_guide_flight_progress
