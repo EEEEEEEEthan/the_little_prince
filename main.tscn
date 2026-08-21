@@ -205,7 +205,7 @@ shape = SubResource("CircleShape2D_footprint")
 
 [node name="Footstep" type="AudioStreamPlayer" parent="GameView/GameViewport/Player"]
 unique_name_in_owner = true
-volume_db = -6.0
+volume_db = -12.0412
 script = SubResource("GDScript_footstep")
 
 [node name="Scarf" type="Sprite2D" parent="GameView/GameViewport/Player" unique_id=1847293651]

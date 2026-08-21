@@ -3166,6 +3166,10 @@ func _assert_walking_footstep_playback(
 		planet: Planet, player: Player, footstep: Node, story: PlanetStory
 ) -> int:
 	var failed := 0
+	var footstep_player := footstep as AudioStreamPlayer
+	if footstep_player.volume_db > linear_to_db(0.3):
+		printerr("脚步应为配乐下的轻 SFX，volume_db=%s" % footstep_player.volume_db)
+		failed += 1
 	planet.teleport_player(planet.rose_angle)
 	_plant_walk_step(player, planet, 1.0)
 	if footstep.played_step_count != 1:
