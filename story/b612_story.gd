@@ -121,10 +121,14 @@ func _play_story() -> void:
 	await _rose("别这么磨蹭了。真烦人！")
 	await _rose("既然决定离开这儿，那么，快走吧！")
 	await _wait(1.0)
-	await _overhead("玫瑰不想小王子看见她在哭")
-	_overhead("她总是这么傲娇")
 	rose.is_consumed = true
-	await _depart("B-612。")
+	await _depart(
+			"B-612。",
+			PackedStringArray([
+				"玫瑰不想小王子看见她在哭",
+				"她总是这么傲娇",
+			])
+	)
 
 
 func _rose(text: String) -> void:
