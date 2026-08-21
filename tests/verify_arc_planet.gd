@@ -46,6 +46,9 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://ui/typewriter.wav",
 	"res://ui/fonts/fusion-pixel-8px-zh_hans.woff2",
 	"res://ui/fonts/fusion-pixel-10px-zh_hans.woff2",
+	"res://audio/sparse_aminor_square_lullaby.ogg",
+	"res://audio/warm_dminor_square_vesper.ogg",
+	"res://audio/sparse_cmajor_square_processional.ogg",
 ]
 
 func _init() -> void:
@@ -286,8 +289,22 @@ func _check_static_assets() -> int:
 			printerr("缺少静态资源：%s" % path)
 			failed += 1
 			continue
-		if load(path) == null:
+		var loaded_resource: Resource = load(path)
+		if loaded_resource == null:
 			printerr("无法加载资源：%s" % path)
+			failed += 1
+			continue
+		if not path.ends_with(".ogg"):
+			continue
+		var ogg := loaded_resource as AudioStreamOggVorbis
+		if ogg == null:
+			printerr("配乐应为 Ogg：%s" % path)
+			failed += 1
+		elif ogg.get_length() < 30.0:
+			printerr("%s 配乐过短：%s 秒" % [path, ogg.get_length()])
+			failed += 1
+		elif not ogg.loop:
+			printerr("%s 配乐应循环" % path)
 			failed += 1
 	# 星野应为以球心为中心的正方形
 	var star: Texture2D = load("res://planet/starfield.png") as Texture2D
@@ -597,6 +614,24 @@ func _check_input_map() -> int:
 	print("  InputMap move_* / interact 动作 OK")
 	return failed
 
+
+func _assert_playing_music(scene: Node, meta_name: String, label: String) -> int:
+	var music := scene.get_node_or_null("%Music")
+	if music == null:
+		printerr("主场景应有 Music")
+		return 1
+	var expected := scene.get_node("Config").get_meta(meta_name) as AudioStream
+	if music.playing_stream != expected:
+		printerr("%s应播放配乐 %s" % [label, meta_name])
+		return 1
+	var playing := music.get_node("Playing") as AudioStreamPlayer
+	var incoming := music.get_node("Incoming") as AudioStreamPlayer
+	if not playing.playing and not incoming.playing:
+		printerr("%s时配乐应在播放" % label)
+		return 1
+	return 0
+
+
 func _check_scene_and_mechanics() -> int:
 	var failed := 0
 	var packed: PackedScene = load("res://main.tscn")
@@ -623,6 +658,7 @@ func _check_scene_and_mechanics() -> int:
 	if scene.get_node_or_null("%KingStory") as KingStory == null:
 		printerr("主场景应有 KingStory")
 		failed += 1
+	failed += _assert_playing_music(scene, "home_day_music", "开局")
 
 	if scene.get_node_or_null("WorldHost") != null:
 		printerr("旧 WorldHost 结构仍存在")
@@ -2438,6 +2474,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not is_equal_approx(player.move_speed_scale, 1.0):
 		printerr("触发日落后移速应恢复，实际 %s" % player.move_speed_scale)
 		failed += 1
+	failed += _assert_playing_music(scene, "sunset_music", "B612 日落")
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []
 	var flora_props: Array[SurfaceProp] = []
@@ -2655,6 +2692,7 @@ func _check_king_chapter() -> int:
 	if planet.scene_file_path != "res://planet/king.tscn":
 		printerr("离星后星球应为 king.tscn，实际 %s" % planet.scene_file_path)
 		failed += 1
+	failed += _assert_playing_music(scene, "king_day_music", "换到国王星球")
 	if player.planet != planet:
 		printerr("换星后 Player 应绑定国王星球")
 		failed += 1
@@ -2787,6 +2825,7 @@ func _check_king_chapter() -> int:
 	if not story.has_crossed_sunset:
 		printerr("跨过日落应进入日落段")
 		failed += 1
+	failed += _assert_playing_music(scene, "sunset_music", "国王日落")
 	if story.is_blocking_input:
 		printerr("国王下令日落后应恢复输入")
 		failed += 1
@@ -3012,6 +3051,7 @@ func _check_b612_departed_travels_to_king() -> int:
 	if king_story.planet != planet:
 		printerr("离星换星后 KingStory 应绑定国王星球")
 		failed += 1
+	failed += _assert_playing_music(scene, "king_day_music", "离星换星")
 	var opening_deadline_msec := Time.get_ticks_msec() + 5000
 	while (
 			not king_story.has_finished_opening

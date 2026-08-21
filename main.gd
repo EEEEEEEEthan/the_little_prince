@@ -58,6 +58,7 @@ func travel_to_king_planet(start_story := true) -> void:
 	%Epilogue.text = ""
 	%MigratoryFlock.visible = false
 	%MigratoryFlock.set_process(false)
+	%Music.play_king_day_loop()
 	if start_story:
 		king_story.start()
 

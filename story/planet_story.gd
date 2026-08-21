@@ -96,6 +96,7 @@ func try_first_sunset_narration(phase: float) -> void:
 	if _last_sky_phase < SkyPhase.SUNSET_PHASE and phase >= SkyPhase.SUNSET_PHASE:
 		has_crossed_sunset = true
 		sunset_crossed.emit()
+		%Music.play_sunset_loop()
 	_last_sky_phase = phase
 
 
@@ -210,6 +211,7 @@ func _depart(
 		player.modulate.a = 0.0
 		%Dim.color = Color(0, 0, 0, 1)
 	else:
+		%Music.fade_out()
 		var lift_distance_pixels := (
 				player.global_position.y
 				- get_viewport().get_visible_rect().position.y
