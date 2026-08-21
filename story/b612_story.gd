@@ -18,7 +18,7 @@ var _story_generation: int = 0
 var _last_sky_phase: float = SkyPhase.NOON_PHASE
 var _waiting_interact_kind: int = -1
 var _dialogue_closed_early: bool = false
-var _camera_tween: Tween
+var _story_tween: Tween
 
 @onready var planet: Planet = %Planet
 @onready var player: Player = %Player
@@ -31,9 +31,11 @@ func _ready() -> void:
 	overhead.play_on_ready = false
 	_glass_globe().visible = false
 	%Epilogue.text = ""
-	%Dim.color = Color(0, 0, 0, 0)
 	if auto_start:
+		%Dim.color = Color(0, 0, 0, 1)
 		start()
+	else:
+		%Dim.color = Color(0, 0, 0, 0)
 
 
 func _process(_delta: float) -> void:
@@ -48,9 +50,9 @@ func start() -> void:
 	if dialogue.is_open():
 		dialogue.close()
 	overhead.play("")
-	if _camera_tween != null:
-		_camera_tween.kill()
-		_camera_tween = null
+	if _story_tween != null:
+		_story_tween.kill()
+		_story_tween = null
 	is_active = true
 	has_finished_opening = false
 	has_crossed_sunset = false
@@ -92,6 +94,14 @@ func try_first_sunset_narration(phase: float) -> void:
 
 func _play_story() -> void:
 	_lock_input()
+	%Dim.color = Color(0, 0, 0, 1)
+	if skip_cinematics:
+		%Dim.color.a = 0.0
+	else:
+		var fade_in_from_black_seconds := 2.4
+		_story_tween = create_tween()
+		_story_tween.tween_property(%Dim, "color:a", 0.0, fade_in_from_black_seconds)
+		await _wait(fade_in_from_black_seconds * 0.5)
 	await _rose("我刚刚睡醒，真对不起，瞧我的头发还是乱蓬蓬的。。。")
 	await _prince("你真美丽啊!")
 	await _rose("是吧，我是与太阳同时出生的。。。")
@@ -288,14 +298,14 @@ func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float
 	if skip_cinematics:
 		await _halt_if_stale(generation)
 		return
-	if _camera_tween != null:
-		_camera_tween.kill()
-	_camera_tween = create_tween()
-	_camera_tween.set_trans(Tween.TRANS_CUBIC)
-	_camera_tween.set_ease(Tween.EASE_IN_OUT)
-	_camera_tween.tween_property(%GameCamera, "offset:y", target_offset_y, duration_seconds)
-	await _camera_tween.finished
-	_camera_tween = null
+	if _story_tween != null:
+		_story_tween.kill()
+	_story_tween = create_tween()
+	_story_tween.set_trans(Tween.TRANS_CUBIC)
+	_story_tween.set_ease(Tween.EASE_IN_OUT)
+	_story_tween.tween_property(%GameCamera, "offset:y", target_offset_y, duration_seconds)
+	await _story_tween.finished
+	_story_tween = null
 	await _halt_if_stale(generation)
 
 
@@ -314,9 +324,10 @@ func _depart() -> void:
 	lift_tween.tween_property(player, "position:y", player.position.y - 72.0, 2.4)
 	lift_tween.tween_property(player, "modulate:a", 0.0, 2.4)
 	await lift_tween.finished
-	var fade_tween := create_tween()
-	fade_tween.tween_property(%Dim, "color:a", 1.0, 1.2)
-	await fade_tween.finished
+	_story_tween = create_tween()
+	_story_tween.tween_property(%Dim, "color:a", 1.0, 1.2)
+	await _story_tween.finished
+	_story_tween = null
 	%Epilogue.text = "B-612。"
 	await _halt_if_stale(generation)
 

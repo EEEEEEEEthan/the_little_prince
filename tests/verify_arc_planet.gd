@@ -1708,8 +1708,67 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("GameCamera 应固定左上，避免改变默认构图")
 		failed += 1
 	var player := scene.get_node(PLAYER_PATH) as Player
+	var dialogue_body := story.dialogue.get_node("Panel/HBox/VBox/Body") as Label
+	var fade_layer := story.get_node("FadeLayer") as CanvasLayer
+	if fade_layer.layer >= story.dialogue.layer:
+		printerr("开场淡入时对话框应叠在黑场之上")
+		failed += 1
+	story.skip_cinematics = false
+	var fade_started_msec := Time.get_ticks_msec()
+	story.start()
+	if story.dialogue.is_open():
+		printerr("黑屏淡入前玫瑰不应开口")
+		failed += 1
+	if story.get_node("%Dim").color.a < 0.99:
+		printerr("开场应为黑屏")
+		failed += 1
+	if not story.is_blocking_input:
+		printerr("淡入时应禁止输入")
+		failed += 1
+	if player.can_move_left or player.can_move_right:
+		printerr("淡入时不应能走动")
+		failed += 1
+	planet.angular_velocity = 0.0
+	Input.action_press("move_right")
+	player._physics_process(0.2)
+	Input.action_release("move_right")
+	if absf(planet.angular_velocity) > 0.001:
+		printerr("淡入时按右不应自转，角速度 %s" % planet.angular_velocity)
+		failed += 1
+	var rose_deadline_msec := fade_started_msec + 4000
+	while (
+			(
+				not story.dialogue.is_open()
+				or not dialogue_body.text.contains("我刚刚睡醒")
+			)
+			and Time.get_ticks_msec() < rose_deadline_msec
+	):
+		await process_frame
+	var rose_delay_msec := Time.get_ticks_msec() - fade_started_msec
+	if (
+			not story.dialogue.is_open()
+			or not dialogue_body.text.contains("我刚刚睡醒")
+	):
+		printerr("淡入一半时玫瑰应开始说话")
+		failed += 1
+	elif rose_delay_msec < 800:
+		printerr("玫瑰开口过早，淡入仅 %d ms" % rose_delay_msec)
+		failed += 1
+	elif rose_delay_msec > 1800:
+		printerr("玫瑰开口过晚，淡入已 %d ms" % rose_delay_msec)
+		failed += 1
+	var dim_alpha := story.get_node("%Dim").color.a
+	if dim_alpha < 0.25 or dim_alpha > 0.75:
+		printerr("玫瑰开口时黑场应淡入过半，实际 alpha=%s" % dim_alpha)
+		failed += 1
+	if not story.is_blocking_input:
+		printerr("玫瑰开口后仍应禁止走动")
+		failed += 1
 	story.skip_cinematics = true
 	await story.start()
+	if story.get_node("%Dim").color.a > 0.01:
+		printerr("跳过演出后开场黑场应已淡完")
+		failed += 1
 	if not story.has_finished_opening:
 		printerr("开场结束后应罩上玻璃罩并可向右走")
 		failed += 1
