@@ -96,7 +96,6 @@ func try_first_sunset_narration(phase: float) -> void:
 	if _last_sky_phase < SkyPhase.SUNSET_PHASE and phase >= SkyPhase.SUNSET_PHASE:
 		has_crossed_sunset = true
 		sunset_crossed.emit()
-		%Music.play_sunset_loop()
 	_last_sky_phase = phase
 
 

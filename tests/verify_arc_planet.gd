@@ -46,8 +46,8 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://ui/typewriter.wav",
 	"res://ui/fonts/fusion-pixel-8px-zh_hans.woff2",
 	"res://ui/fonts/fusion-pixel-10px-zh_hans.woff2",
+	"res://audio/the_one_who_stands_distant.ogg",
 	"res://audio/i_want_to_go_home.ogg",
-	"res://audio/tiny_sad_lonely_theme.ogg",
 	"res://audio/narrow_cpenta_toy_waltz.ogg",
 ]
 
@@ -616,18 +616,22 @@ func _check_input_map() -> int:
 
 
 func _assert_playing_music(scene: Node, meta_name: String, label: String) -> int:
-	var music := scene.get_node_or_null("%Music")
-	if music == null:
-		printerr("主场景应有 Music")
-		return 1
-	var expected := scene.get_node("Config").get_meta(meta_name) as AudioStream
+	return _assert_playing_stream(
+			scene,
+			scene.get_node("Config").get_meta(meta_name) as AudioStream,
+			"%s应播放配乐 %s" % [label, meta_name]
+	)
+
+
+func _assert_playing_stream(scene: Node, expected: AudioStream, mismatch_message: String) -> int:
+	var music := scene.get_node("%Music")
 	if music.playing_stream != expected:
-		printerr("%s应播放配乐 %s" % [label, meta_name])
+		printerr(mismatch_message)
 		return 1
 	var playing := music.get_node("Playing") as AudioStreamPlayer
 	var incoming := music.get_node("Incoming") as AudioStreamPlayer
 	if not playing.playing and not incoming.playing:
-		printerr("%s时配乐应在播放" % label)
+		printerr("%s（配乐应在播放）" % mismatch_message)
 		return 1
 	return 0
 
@@ -659,6 +663,12 @@ func _check_scene_and_mechanics() -> int:
 		printerr("主场景应有 KingStory")
 		failed += 1
 	failed += _assert_playing_music(scene, "home_day_music", "开局")
+	if (
+			(scene.get_node("Config").get_meta("home_day_music") as Resource).resource_path
+			!= "res://audio/the_one_who_stands_distant.ogg"
+	):
+		printerr("开场配乐应为 The one who stands Distant")
+		failed += 1
 
 	if scene.get_node_or_null("WorldHost") != null:
 		printerr("旧 WorldHost 结构仍存在")
@@ -2459,6 +2469,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 				% [opening_right_velocity, full_right_velocity]
 		)
 		failed += 1
+	var music_before_b612_sunset := scene.get_node("%Music").playing_stream as AudioStream
 	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
 	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
 	await process_frame
@@ -2474,7 +2485,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	if not is_equal_approx(player.move_speed_scale, 1.0):
 		printerr("触发日落后移速应恢复，实际 %s" % player.move_speed_scale)
 		failed += 1
-	failed += _assert_playing_music(scene, "sunset_music", "B612 日落")
+	failed += _assert_playing_stream(scene, music_before_b612_sunset, "B612 日落不应切换配乐")
 	var shoots: Array[SurfaceProp] = []
 	var volcanoes: Array[SurfaceProp] = []
 	var flora_props: Array[SurfaceProp] = []
@@ -2819,13 +2830,14 @@ func _check_king_chapter() -> int:
 	if not story.try_handle_interact(king):
 		printerr("开场后应按 A 与国王交谈")
 		failed += 1
+	var music_before_king_sunset := scene.get_node("%Music").playing_stream as AudioStream
 	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
 	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
 	await process_frame
 	if not story.has_crossed_sunset:
 		printerr("跨过日落应进入日落段")
 		failed += 1
-	failed += _assert_playing_music(scene, "sunset_music", "国王日落")
+	failed += _assert_playing_stream(scene, music_before_king_sunset, "国王日落不应切换配乐")
 	if story.is_blocking_input:
 		printerr("国王下令日落后应恢复输入")
 		failed += 1
