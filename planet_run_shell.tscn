@@ -62,13 +62,14 @@ radius = 6.0
 
 [sub_resource type="GDScript" id="GDScript_music"]
 script/source = "extends Node
-## 循环配乐：故乡、国王、酒鬼、商人、点灯人星球，交叉淡化切换。
+## 循环配乐：故乡、国王、酒鬼、商人、点灯人、地理学家星球，交叉淡化切换。
 
 const META_HOME_DAY_MUSIC := \"home_day_music\"
 const META_KING_DAY_MUSIC := \"king_day_music\"
 const META_DRUNKARD_DAY_MUSIC := \"drunkard_day_music\"
 const META_MERCHANT_DAY_MUSIC := \"merchant_day_music\"
 const META_LAMPLIGHTER_DAY_MUSIC := \"lamplighter_day_music\"
+const META_GEOGRAPHER_DAY_MUSIC := \"geographer_day_music\"
 const META_OPENING_DAY_MUSIC := \"opening_day_music\"
 const CROSSFADE_SECONDS := 1.6
 const PLAYING_VOLUME_DB := -10.0
@@ -95,6 +96,8 @@ func _ready() -> void:
 		(_config_music(META_MERCHANT_DAY_MUSIC) as AudioStreamOggVorbis).loop = true
 	if config.has_meta(META_LAMPLIGHTER_DAY_MUSIC):
 		(_config_music(META_LAMPLIGHTER_DAY_MUSIC) as AudioStreamOggVorbis).loop = true
+	if config.has_meta(META_GEOGRAPHER_DAY_MUSIC):
+		(_config_music(META_GEOGRAPHER_DAY_MUSIC) as AudioStreamOggVorbis).loop = true
 	_active.volume_db = SILENT_VOLUME_DB
 	_idle.volume_db = SILENT_VOLUME_DB
 	_active.stream = _opening_music()
@@ -117,6 +120,10 @@ func play_merchant_day_loop() -> void:
 
 func play_lamplighter_day_loop() -> void:
 	_crossfade_to(_config_music(META_LAMPLIGHTER_DAY_MUSIC))
+
+
+func play_geographer_day_loop() -> void:
+	_crossfade_to(_config_music(META_GEOGRAPHER_DAY_MUSIC))
 
 
 func fade_out() -> void:

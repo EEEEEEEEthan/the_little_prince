@@ -1,10 +1,11 @@
 extends PlanetRunShell
-## 旅程入口：开局 B612，离星后国王，再酒鬼，再商人，再点灯人。
+## 旅程入口：开局 B612，离星后国王，再酒鬼，再商人，再点灯人，再地理学家。
 
 const META_KING_PLANET_SCENE := "king_planet_scene"
 const META_DRUNKARD_PLANET_SCENE := "drunkard_planet_scene"
 const META_MERCHANT_PLANET_SCENE := "merchant_planet_scene"
 const META_LAMPLIGHTER_PLANET_SCENE := "lamplighter_planet_scene"
+const META_GEOGRAPHER_PLANET_SCENE := "geographer_planet_scene"
 
 var travel_to_next_planet: bool = true
 
@@ -68,11 +69,27 @@ func travel_to_merchant_planet(start_story := true) -> void:
 func travel_to_lamplighter_planet(start_story := true) -> void:
 	if not travel_to_next_planet:
 		return
-	travel_to_next_planet = false
 	_swap_journey_planet(
 			META_LAMPLIGHTER_PLANET_SCENE,
 			%LamplighterStory as LamplighterStory,
 			%Music.play_lamplighter_day_loop,
+			start_story
+	)
+	if start_story:
+		(%LamplighterStory as LamplighterStory).departed.connect(
+				travel_to_geographer_planet,
+				CONNECT_ONE_SHOT | CONNECT_DEFERRED
+		)
+
+
+func travel_to_geographer_planet(start_story := true) -> void:
+	if not travel_to_next_planet:
+		return
+	travel_to_next_planet = false
+	_swap_journey_planet(
+			META_GEOGRAPHER_PLANET_SCENE,
+			%GeographerStory as GeographerStory,
+			%Music.play_geographer_day_loop,
 			start_story
 	)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成国王/商人/点灯人星球循环配乐（CC0）。故乡/日落曲改用 OpenGameArt。运行：python3 audio/generate_chiptune.py"""
+"""生成国王/商人/点灯人/地理学家星球循环配乐（CC0）。故乡/日落曲改用 OpenGameArt。运行：python3 audio/generate_chiptune.py"""
 
 from __future__ import annotations
 
@@ -236,11 +236,40 @@ def render_rapid_lamp_duty_tick() -> np.ndarray:
 	return finalize(buffer)
 
 
+def render_dry_folio_rest() -> np.ndarray:
+	beats_per_minute = 40.0
+	folio_bars = [
+		[(D3, 2.0), (None, 1.0)],
+		[(None, 3.0)],
+		[(A3, 1.0), (None, 2.0)],
+		[(None, 3.0)],
+		[(F3, 0.5), (None, 2.5)],
+		[(None, 3.0)],
+		[(C4, 2.0), (None, 1.0)],
+		[(None, 3.0)],
+		[(A3, 1.0), (None, 0.5), (G3, 1.5)],
+		[(None, 3.0)],
+		[(D3, 3.0)],
+		[(None, 3.0)],
+		[(F3, 1.0), (None, 2.0)],
+		[(None, 3.0)],
+		[(A3, 0.5), (None, 2.5)],
+		[(None, 3.0)],
+	]
+	buffer = allocate_buffer(len(folio_bars), 3.0, beats_per_minute)
+	mix_tine(
+			buffer, expand_bars(folio_bars), SAMPLE_RATE, beats_per_minute,
+			0.14, 1.6,
+	)
+	return finalize(buffer)
+
+
 def main() -> None:
 	output_directory = Path(__file__).resolve().parent
 	write_ogg(render_king_toy_waltz(), output_directory / "narrow_cpenta_toy_waltz.ogg")
 	write_ogg(render_sparse_ledger_tally(), output_directory / "sparse_ledger_tally.ogg")
 	write_ogg(render_rapid_lamp_duty_tick(), output_directory / "rapid_lamp_duty_tick.ogg")
+	write_ogg(render_dry_folio_rest(), output_directory / "dry_folio_rest.ogg")
 
 
 if __name__ == "__main__":

@@ -6,10 +6,12 @@ const PRINCE_SPEAKER := "小王子"
 const ROSE_SPEAKER := "玫瑰"
 const KING_SPEAKER := "国王"
 const DRUNKARD_SPEAKER := "酒鬼"
+const GEOGRAPHER_SPEAKER := "地理学家"
 const PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")
 const ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
 const KING_PORTRAIT := preload("res://ui/portraits/king.png")
 const DRUNKARD_PORTRAIT := preload("res://ui/portraits/slumped_wine_drinker.png")
+const GEOGRAPHER_PORTRAIT := preload("res://ui/portraits/gray_beard_parchment_scholar.png")
 
 
 static func lines_for_id(id: StringName) -> Array[DialogueLine]:
@@ -47,5 +49,9 @@ static func lines_for_id(id: StringName) -> Array[DialogueLine]:
 		&"street_lamp":
 			lines.append(DialogueLine.new(
 					PRINCE_SPEAKER, "帮他点一次。", PRINCE_PORTRAIT
+			))
+		&"geographer":
+			lines.append(DialogueLine.new(
+					GEOGRAPHER_SPEAKER, "我只记下别人的报告。", GEOGRAPHER_PORTRAIT
 			))
 	return lines
