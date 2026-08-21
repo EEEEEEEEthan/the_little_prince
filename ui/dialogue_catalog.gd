@@ -5,9 +5,11 @@ extends RefCounted
 const PRINCE_SPEAKER := "小王子"
 const ROSE_SPEAKER := "玫瑰"
 const KING_SPEAKER := "国王"
+const DRUNKARD_SPEAKER := "酒鬼"
 const PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")
 const ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
 const KING_PORTRAIT := preload("res://ui/portraits/king.png")
+const DRUNKARD_PORTRAIT := preload("res://ui/portraits/slumped_wine_drinker.png")
 
 
 static func lines_for_id(id: StringName) -> Array[DialogueLine]:
@@ -33,5 +35,9 @@ static func lines_for_id(id: StringName) -> Array[DialogueLine]:
 			))
 			lines.append(DialogueLine.new(
 					PRINCE_SPEAKER, "他的命令都是通情达理的。", PRINCE_PORTRAIT
+			))
+		&"drunkard":
+			lines.append(DialogueLine.new(
+					DRUNKARD_SPEAKER, "喝是为了忘羞耻", DRUNKARD_PORTRAIT
 			))
 	return lines

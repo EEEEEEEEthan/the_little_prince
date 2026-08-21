@@ -12,14 +12,19 @@
 [ext_resource type="AudioStream" uid="uid://cb5s0bvsmamf5" path="res://audio/muffled_dirt_thud_b.wav" id="10_dirt_b"]
 [ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="11_grass_a"]
 [ext_resource type="AudioStream" uid="uid://cuivhluijhgxn" path="res://audio/dry_grass_rustle_b.wav" id="12_grass_b"]
+[ext_resource type="PackedScene" uid="uid://bbndj0oq7fs16" path="res://planet/drunkard.tscn" id="13_drunkard"]
+[ext_resource type="Script" uid="uid://blwqt5626b8st" path="res://story/drunkard_story.gd" id="14_drunkard_story"]
+[ext_resource type="AudioStream" uid="uid://04l4uya0khhs" path="res://audio/i_want_to_go_home.ogg" id="15_drunkard_music"]
 
 [node name="Main" unique_id=134579991 instance=ExtResource("1_shell")]
 script = ExtResource("2_main")
 
 [node name="Config" parent="." index="0"]
 metadata/king_planet_scene = ExtResource("4_king")
+metadata/drunkard_planet_scene = ExtResource("13_drunkard")
 metadata/home_day_music = ExtResource("7_home_day_music")
 metadata/king_day_music = ExtResource("8_king_day_music")
+metadata/drunkard_day_music = ExtResource("15_drunkard_music")
 metadata/dirt_footstep_a = ExtResource("9_dirt_a")
 metadata/dirt_footstep_b = ExtResource("10_dirt_b")
 metadata/grass_footstep_a = ExtResource("11_grass_a")
@@ -35,4 +40,9 @@ auto_start = true
 [node name="KingStory" type="Node" parent="GameView/GameViewport" index="7"]
 unique_name_in_owner = true
 script = ExtResource("6_king_story")
+auto_start = false
+
+[node name="DrunkardStory" type="Node" parent="GameView/GameViewport" index="8"]
+unique_name_in_owner = true
+script = ExtResource("14_drunkard_story")
 auto_start = false
