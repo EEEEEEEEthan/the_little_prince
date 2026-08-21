@@ -4,8 +4,19 @@
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="Texture2D" uid="uid://b37whx4jfulm4" path="res://planet/king.png" id="2_king"]
 [ext_resource type="Texture2D" uid="uid://dynp45k1lwjfa" path="res://planet/rat.png" id="4_rat"]
+[ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="5_playable"]
+[ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet_run_shell.tscn" id="6_run_shell"]
+[ext_resource type="Script" uid="uid://ckingstoryg01" path="res://story/king_story.gd" id="7_story"]
+[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="8_day_music"]
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
+
+[node name="Config" type="Node" parent="."]
+process_mode = 4
+script = ExtResource("5_playable")
+metadata/run_shell_scene = ExtResource("6_run_shell")
+metadata/story_script = ExtResource("7_story")
+metadata/day_music = ExtResource("8_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
