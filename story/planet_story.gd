@@ -210,6 +210,7 @@ func _depart(
 		player.modulate.a = 0.0
 		%Dim.color = Color(0, 0, 0, 1)
 	else:
+		%Music.fade_out()
 		var lift_distance_pixels := (
 				player.global_position.y
 				- get_viewport().get_visible_rect().position.y
