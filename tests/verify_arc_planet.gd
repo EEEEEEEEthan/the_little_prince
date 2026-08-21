@@ -3106,9 +3106,8 @@ func _check_b612_departed_travels_to_king() -> int:
 
 
 func _await_physics_queries() -> void:
-	for _frame_index in 4:
+	for _frame_index in 6:
 		await physics_frame
-	PhysicsServer2D.flush_queries()
 
 
 func _check_footsteps() -> int:
