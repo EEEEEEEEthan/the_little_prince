@@ -146,7 +146,7 @@ func _play_story() -> void:
 	await _wait(0.3)
 	await _camera_up()
 	await _overhead("人在忧伤的时候，就喜欢看日落。")
-	await _overhead("有一次小王子看了二十多遍日落")
+	await _overhead("有一次小王子看了四十三遍日落")
 	await _wait(0.5)
 	await _camera_down()
 	is_blocking_input = false
