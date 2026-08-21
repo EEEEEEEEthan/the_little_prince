@@ -1,15 +1,10 @@
 class_name B612Story
 extends Node
-## B612 故乡剧情：开场对白 → 罩玻璃罩 → 拔苗 → 告别 → 离星。
-## 第一次跨入日落时播头顶叙事，不作为关卡。
+## B612 故乡剧情：一条协程串起对白、侧写、交互与离星。
 
-enum Beat {
-	OPENING,
-	COVER_ROSE,
-	PULL_SHOOTS,
-	FAREWELL,
-	DEPART,
-}
+signal prop_interacted(prop)
+signal sunset_crossed
+signal _halt
 
 const SHOOT_DIALOGUE_ID := &"baobab_shoot"
 const SHOOT_COUNT := WorldConstants.BAOBAB_COUNT
@@ -22,17 +17,39 @@ const SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS := 0.3
 const SUNSET_CAMERA_LIFT_SECONDS := 1.0
 const SUNSET_CAMERA_LIFT_PIXELS := 16.0
 const SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS := 0.5
+const OPENING_OVERHEAD_VANITY := "小王子看出了这花儿不太谦逊，可是她确实丽姿动人"
+const OPENING_OVERHEAD_LINES: PackedStringArray = [
+	"小王子很喜欢玫瑰花",
+	"可是玫瑰的傲娇，尖刺，总是让他恼火",
+]
+const PULL_SHOOT_OVERHEAD_LINES: PackedStringArray = [
+	"小王子的星球总会长出猴面包树",
+	"小王子每天都要拔掉猴面包树苗",
+	"如果不拔的话，星球就会被猴面包树弄得支离破碎",
+	"可是现在他决定要离开了",
+	"这是最后一株",
+]
+const SUNSET_OVERHEAD_LINES: PackedStringArray = [
+	"人在忧伤的时候，就喜欢看日落。",
+	"有一天小王子看了二十多次日落",
+]
+const OVERHEAD_PLANET_NAME := "B-612。"
+const _PRINCE_PORTRAIT := preload("res://ui/portraits/prince.png")
+const _ROSE_PORTRAIT := preload("res://ui/portraits/rose.png")
 
 @export var auto_start: bool = true
 
 var skip_cinematics: bool = false
 var is_active: bool = false
 var is_blocking_input: bool = false
-var beat: Beat = Beat.OPENING
-var pulled_shoot_count: int = 0
+var has_finished_opening: bool = false
+var has_crossed_sunset: bool = false
+
+var _story_generation: int = 0
 var _last_sky_phase: float = SkyPhase.NOON_PHASE
-var _has_played_first_sunset_narration: bool = false
-var _is_first_sunset_narration_pending: bool = false
+var _waiting_interact_kind: int = -1
+var _dialogue_closed_early: bool = false
+var _camera_tween: Tween
 
 @onready var planet: Planet = %Planet
 @onready var player: Player = %Player
@@ -51,140 +68,238 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if is_active and not _has_played_first_sunset_narration:
+	if is_active and not has_crossed_sunset:
 		try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
 
 
 func start() -> void:
+	_story_generation += 1
+	sunset_crossed.emit()
+	prop_interacted.emit(null)
+	if dialogue.is_open():
+		dialogue.close()
+	overhead.play("")
+	if _camera_tween != null:
+		_camera_tween.kill()
+		_camera_tween = null
 	is_active = true
-	pulled_shoot_count = 0
-	_has_played_first_sunset_narration = false
-	_is_first_sunset_narration_pending = false
+	has_finished_opening = false
+	has_crossed_sunset = false
 	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
-	beat = Beat.OPENING
+	_waiting_interact_kind = -1
+	_dialogue_closed_early = false
 	_glass_globe().visible = false
 	player.can_move_left = false
 	player.can_move_right = false
 	player.move_speed_scale = OPENING_MOVE_SPEED_SCALE
-	_lock_input()
-	await _play_dialogue(B612Lines.opening_rose())
-	await _play_overhead_after_dialogue(B612Lines.OPENING_OVERHEAD_VANITY)
-	await _play_dialogue(B612Lines.opening_screen())
-	if skip_cinematics:
-		_finish_opening_cover()
-		return
-	is_blocking_input = false
-	beat = Beat.COVER_ROSE
+	_play_story()
+	while not has_finished_opening and is_inside_tree():
+		await get_tree().process_frame
 
 
 func accepts_interact(prop: SurfaceProp) -> bool:
-	if not is_active or is_blocking_input:
+	if not is_active or is_blocking_input or prop.is_consumed:
 		return false
-	return _is_current_objective(prop)
+	return int(prop.kind) == _waiting_interact_kind
 
 
 func try_handle_interact(prop: SurfaceProp) -> bool:
 	if not accepts_interact(prop):
 		return false
-	if skip_cinematics or beat == Beat.COVER_ROSE:
-		apply_interact(prop)
-		return true
 	_lock_input()
-	_play_interact(prop)
+	_waiting_interact_kind = -1
+	prop_interacted.emit(prop)
 	return true
 
 
-func apply_interact(prop: SurfaceProp) -> Array[DialogueLine]:
-	var empty: Array[DialogueLine] = []
-	if not _is_current_objective(prop):
-		return empty
-	match beat:
-		Beat.COVER_ROSE:
-			_finish_opening_cover()
-			return empty
-		Beat.PULL_SHOOTS:
-			prop.is_consumed = true
-			prop.visible = false
-			pulled_shoot_count += 1
-			if pulled_shoot_count >= SHOOT_COUNT:
-				beat = Beat.FAREWELL
-			return empty
-		Beat.FAREWELL:
-			prop.is_consumed = true
-			beat = Beat.DEPART
-			_glass_globe().visible = false
-			return B612Lines.farewell()
-		_:
-			return empty
-
-
 func try_first_sunset_narration(phase: float) -> void:
-	if _has_played_first_sunset_narration:
+	if has_crossed_sunset:
 		return
 	if _last_sky_phase < SkyPhase.SUNSET_PHASE and phase >= SkyPhase.SUNSET_PHASE:
-		_is_first_sunset_narration_pending = true
+		has_crossed_sunset = true
+		sunset_crossed.emit()
 	_last_sky_phase = phase
-	if not _is_first_sunset_narration_pending:
-		return
-	if beat == Beat.OPENING or beat == Beat.COVER_ROSE:
-		return
-	if is_blocking_input or dialogue.is_open():
-		return
-	_is_first_sunset_narration_pending = false
-	_has_played_first_sunset_narration = true
-	player.can_move_left = true
-	player.move_speed_scale = 1.0
-	_play_first_sunset_cinematic()
 
 
-func _play_first_sunset_cinematic() -> void:
-	if skip_cinematics:
-		return
+func _play_story() -> void:
 	_lock_input()
-	await get_tree().create_timer(SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS).timeout
-	await _tween_game_camera_offset_y(-SUNSET_CAMERA_LIFT_PIXELS, SUNSET_CAMERA_LIFT_SECONDS)
-	for sunset_overhead_line in B612Lines.SUNSET_OVERHEAD_LINES:
-		await _play_overhead(sunset_overhead_line)
-	await get_tree().create_timer(SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS).timeout
+	await _rose("我刚刚睡醒，真对不起，瞧我的头发还是乱蓬蓬的。。。")
+	await _prince("你很好看。")
+	await _rose("是吧，我是与太阳同时出生的。。。")
+	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _overhead(OPENING_OVERHEAD_VANITY)
+	await _rose("我有点冷，难道你没有屏风吗")
+	if skip_cinematics:
+		_show_glass()
+	else:
+		is_blocking_input = false
+		await _interact_rose()
+		_show_glass()
+	player.can_move_right = true
 	is_blocking_input = false
+	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	for opening_overhead_line in OPENING_OVERHEAD_LINES:
+		await _overhead(opening_overhead_line)
+	has_finished_opening = true
+	await _meet_sunset()
+	player.can_move_right = false
+	_lock_input()
+	await _wait(SUNSET_CINEMATIC_PRE_LIFT_DELAY_SECONDS)
+	await _camera_up()
+	for sunset_overhead_line in SUNSET_OVERHEAD_LINES:
+		await _overhead(sunset_overhead_line)
+	await _wait(SUNSET_CINEMATIC_POST_NARRATION_DELAY_SECONDS)
+	await _camera_down()
+	is_blocking_input = false
+	player.can_move_left = true
+	player.can_move_right = true
+	player.move_speed_scale = 1.0
+	for pull_overhead_line in PULL_SHOOT_OVERHEAD_LINES:
+		var baobab := await _interact_baobab()
+		await _overhead(pull_overhead_line)
+		baobab.is_consumed = true
+		baobab.visible = false
+		is_blocking_input = false
+	var rose := await _interact_rose()
+	_hide_glass()
+	await _overhead("小王子最后一次浇花，他发觉自己要哭出来")
+	await _prince("再见了")
+	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _overhead("花儿没有答应他")
+	await _prince("再见了")
+	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _overhead("花儿咳嗽了一阵，但并不是由于感冒")
+	await _rose("我真蠢，请你原谅我。希望你能幸福。")
+	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _overhead("小王子不知所措，不明白她为什么突然这样温柔恬静")
+	await _rose("的确，我爱你")
+	await _rose("但由于我的过错，你一点也没有理会")
+	await _rose("这丝毫不重要")
+	await _rose("不过，你也和我一样的蠢")
+	await _rose("希望你今后能幸福")
+	await _rose("把罩子放一边吧，我用不着他了")
+	await _prince("要是风来了怎么办？")
+	await _rose("我的感冒并不那么重")
+	await _prince("要是有虫子野兽呢？")
+	await _rose("我有爪子")
+	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _overhead("玫瑰天真地露出她那四根刺")
+	await _rose("别这么磨蹭了。真烦人！")
+	await _rose("既然决定离开这儿，那么，快走吧！")
+	await _wait(OPENING_OVERHEAD_START_DELAY_SECONDS)
+	await _overhead("玫瑰怕小王子看见她在哭。她总是这么傲娇")
+	rose.is_consumed = true
+	await _depart()
+
+
+func _rose(text: String) -> void:
+	await _line("玫瑰", text, _ROSE_PORTRAIT)
+
+
+func _prince(text: String) -> void:
+	await _line("小王子", text, _PRINCE_PORTRAIT)
+
+
+func _overhead(display_text: String) -> void:
+	var generation := _story_generation
+	_end_dialogue()
+	if skip_cinematics or display_text.is_empty():
+		await _halt_if_stale(generation)
+		return
+	await overhead.play_queued(display_text)
+	await _halt_if_stale(generation)
+
+
+func _wait(duration_seconds: float) -> void:
+	var generation := _story_generation
+	_end_dialogue()
+	if skip_cinematics:
+		await _halt_if_stale(generation)
+		return
+	await get_tree().create_timer(duration_seconds).timeout
+	await _halt_if_stale(generation)
+
+
+func _interact_rose() -> SurfaceProp:
+	return await _interact(SurfaceProp.Kind.ROSE)
+
+
+func _interact_baobab() -> SurfaceProp:
+	return await _interact(SurfaceProp.Kind.BAOBAB)
+
+
+func _meet_sunset() -> void:
+	var generation := _story_generation
+	if not has_crossed_sunset:
+		await sunset_crossed
+	await _halt_if_stale(generation)
+
+
+func _camera_up() -> void:
+	await _tween_game_camera_offset_y(-SUNSET_CAMERA_LIFT_PIXELS, SUNSET_CAMERA_LIFT_SECONDS)
+
+
+func _camera_down() -> void:
 	await _tween_game_camera_offset_y(0.0, SUNSET_CAMERA_LIFT_SECONDS)
 
 
-func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float) -> void:
-	var camera_tween := create_tween()
-	camera_tween.set_trans(Tween.TRANS_CUBIC)
-	camera_tween.set_ease(Tween.EASE_IN_OUT)
-	camera_tween.tween_property(%GameCamera, "offset:y", target_offset_y, duration_seconds)
-	await camera_tween.finished
+func _show_glass() -> void:
+	_glass_globe().visible = true
 
 
-func _play_interact(prop: SurfaceProp) -> void:
-	if beat == Beat.FAREWELL:
-		_glass_globe().visible = false
-		var previous_cue_was_dialogue := false
-		for cue in B612Lines.farewell_cues():
-			if not cue.overhead_text.is_empty():
-				if previous_cue_was_dialogue:
-					await _play_overhead_after_dialogue(cue.overhead_text)
-				else:
-					await _play_overhead(cue.overhead_text)
-				previous_cue_was_dialogue = false
-			if not cue.dialogue_lines.is_empty():
-				await _play_dialogue(cue.dialogue_lines)
-				previous_cue_was_dialogue = true
-		apply_interact(prop)
-		await _play_departure()
+func _hide_glass() -> void:
+	_glass_globe().visible = false
+
+
+func _line(speaker: String, text: String, portrait: Texture2D) -> void:
+	var generation := _story_generation
+	if skip_cinematics or _dialogue_closed_early:
+		await _halt_if_stale(generation)
 		return
-	await _play_overhead(B612Lines.pull_shoot(SHOOT_COUNT - pulled_shoot_count - 1))
-	apply_interact(prop)
-	is_blocking_input = false
+	_lock_input()
+	var already_open := dialogue.is_open()
+	dialogue.play_line(DialogueLine.new(speaker, text, portrait))
+	if dialogue.is_open() and not already_open and Input.is_action_pressed(&"interact"):
+		dialogue.mark_holding(true)
+	await dialogue.line_advanced
+	if not dialogue.is_open():
+		_dialogue_closed_early = true
+	await _halt_if_stale(generation)
 
 
-func _play_departure() -> void:
+func _interact(kind: SurfaceProp.Kind) -> SurfaceProp:
+	var generation := _story_generation
+	_waiting_interact_kind = int(kind)
+	var prop: SurfaceProp = await prop_interacted
+	_waiting_interact_kind = -1
+	await _halt_if_stale(generation)
+	return prop
+
+
+func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float) -> void:
+	var generation := _story_generation
+	if skip_cinematics:
+		await _halt_if_stale(generation)
+		return
+	if _camera_tween != null:
+		_camera_tween.kill()
+	_camera_tween = create_tween()
+	_camera_tween.set_trans(Tween.TRANS_CUBIC)
+	_camera_tween.set_ease(Tween.EASE_IN_OUT)
+	_camera_tween.tween_property(%GameCamera, "offset:y", target_offset_y, duration_seconds)
+	await _camera_tween.finished
+	_camera_tween = null
+	await _halt_if_stale(generation)
+
+
+func _depart() -> void:
+	var generation := _story_generation
+	_end_dialogue()
 	if skip_cinematics:
 		player.modulate.a = 0.0
 		%Dim.color = Color(0, 0, 0, 1)
-		%Epilogue.text = B612Lines.OVERHEAD_PLANET_NAME
+		%Epilogue.text = OVERHEAD_PLANET_NAME
+		await _halt_if_stale(generation)
 		return
 	await flock.arrive_from_offscreen(player.global_position)
 	flock.lift(DEPART_LIFT_PIXELS, DEPART_LIFT_SECONDS)
@@ -197,61 +312,20 @@ func _play_departure() -> void:
 	var fade_tween := create_tween()
 	fade_tween.tween_property(%Dim, "color:a", 1.0, FADE_TO_BLACK_SECONDS)
 	await fade_tween.finished
-	%Epilogue.text = B612Lines.OVERHEAD_PLANET_NAME
+	%Epilogue.text = OVERHEAD_PLANET_NAME
+	await _halt_if_stale(generation)
 
 
-func _play_dialogue(lines: Array[DialogueLine]) -> void:
-	if skip_cinematics or lines.is_empty():
+func _end_dialogue() -> void:
+	_dialogue_closed_early = false
+	if dialogue.is_open():
+		dialogue.close()
+
+
+func _halt_if_stale(generation: int) -> void:
+	if generation == _story_generation:
 		return
-	dialogue.play(lines)
-	if dialogue.is_open() and Input.is_action_pressed(&"interact"):
-		dialogue.mark_holding(true)
-	await dialogue.closed
-
-
-func _play_overhead(display_text: String) -> void:
-	if skip_cinematics or display_text.is_empty():
-		return
-	await overhead.play_queued(display_text)
-
-
-func _play_overhead_after_dialogue(display_text: String) -> void:
-	if skip_cinematics or display_text.is_empty():
-		return
-	await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
-	await _play_overhead(display_text)
-
-
-func _is_current_objective(prop: SurfaceProp) -> bool:
-	if prop.is_consumed:
-		return false
-	match beat:
-		Beat.COVER_ROSE:
-			return prop.kind == SurfaceProp.Kind.ROSE and not _glass_globe().visible
-		Beat.FAREWELL:
-			return prop.kind == SurfaceProp.Kind.ROSE
-		Beat.PULL_SHOOTS:
-			return prop.kind == SurfaceProp.Kind.BAOBAB
-		_:
-			return false
-
-
-func _finish_opening_cover() -> void:
-	_glass_globe().visible = true
-	player.can_move_right = true
-	is_blocking_input = false
-	if skip_cinematics:
-		beat = Beat.PULL_SHOOTS
-		return
-	_play_opening_rose_overhead()
-
-
-func _play_opening_rose_overhead() -> void:
-	await get_tree().create_timer(OPENING_OVERHEAD_START_DELAY_SECONDS).timeout
-	for opening_overhead_line in B612Lines.OPENING_OVERHEAD_LINES:
-		await _play_overhead(opening_overhead_line)
-	if beat == Beat.COVER_ROSE:
-		beat = Beat.PULL_SHOOTS
+	await _halt
 
 
 func _lock_input() -> void:
