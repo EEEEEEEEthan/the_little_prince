@@ -39,6 +39,12 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/migratory_bird.png",
 	"res://planet/king.png",
 	"res://planet/rat.png",
+	"res://planet/blue_mottled_disk.png",
+	"res://planet/gold_spired_throne.png",
+	"res://planet/crimson_cape_spread.png",
+	"res://planet/unrolled_parchment.png",
+	"res://planet/scratched_border_lines.png",
+	"res://planet/pale_paw_prints.png",
 	"res://ui/portraits/king.png",
 ]
 
@@ -217,6 +223,27 @@ func _check_constants() -> int:
 			"KING_SPRITE 应约 20×24，实际 %dx%d"
 			% [WorldConstants.KING_SPRITE_WIDTH, WorldConstants.KING_SPRITE_HEIGHT]
 		)
+		failed += 1
+	if WorldConstants.KING_PLANET_RADIUS <= WorldConstants.PLANET_RADIUS:
+		printerr("KING_PLANET_RADIUS 应比 B612 大一圈")
+		failed += 1
+	if WorldConstants.KING_PLANET_RADIUS > WorldConstants.PLANET_RADIUS * 1.35:
+		printerr("KING_PLANET_RADIUS 不应大到第二座能逛的星球，实际 %s" % WorldConstants.KING_PLANET_RADIUS)
+		failed += 1
+	if WorldConstants.KING_AUDIENCE_KEEP_AWAY_ARC <= WorldConstants.INTERACT_RANGE_PX / WorldConstants.KING_PLANET_RADIUS:
+		printerr("觐见禁区应大于贴身交互距离")
+		failed += 1
+	if WorldConstants.KING_AUDIENCE_KEEP_AWAY_ARC >= WorldConstants.VISIBLE_HALF_ARC:
+		printerr("禁区过大则会看不见王座")
+		failed += 1
+	if WorldConstants.KING_DISTANT_VOICE_ARC <= WorldConstants.VISIBLE_HALF_ARC:
+		printerr("国王声音应在看见人之前")
+		failed += 1
+	if (
+		WorldConstants.GOLD_SPIRED_THRONE_HEIGHT < 48
+		or WorldConstants.GOLD_SPIRED_THRONE_HEIGHT > 96
+	):
+		printerr("王座应明显高于国王，实际高 %d" % WorldConstants.GOLD_SPIRED_THRONE_HEIGHT)
 		failed += 1
 	if (
 		WorldConstants.RAT_SPRITE_WIDTH < 8 or WorldConstants.RAT_SPRITE_WIDTH > 14
@@ -462,6 +489,15 @@ func _check_static_assets() -> int:
 			if opaque_pairs > 0 and float(checker) / float(opaque_pairs) > 0.18:
 				printerr("星球贴图不应使用 1bit/Bayer 渐变")
 				failed += 1
+	var king_body: Texture2D = load("res://planet/blue_mottled_disk.png") as Texture2D
+	if king_body != null:
+		var king_diameter: int = int(ceil(WorldConstants.KING_PLANET_RADIUS)) * 2
+		if king_body.get_width() != king_diameter or king_body.get_height() != king_diameter:
+			printerr(
+				"blue_mottled_disk.png 应为 %dx%d，实际 %dx%d"
+				% [king_diameter, king_diameter, king_body.get_width(), king_body.get_height()]
+			)
+			failed += 1
 	# 精灵尺寸应对齐常量（火山 / 猴面包树为 spritesheet，宽度 = 帧数 × 帧尺寸）
 	var sprite_checks: Array = [
 		[
@@ -487,6 +523,11 @@ func _check_static_assets() -> int:
 		],
 		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
 		["res://planet/king.png", WorldConstants.KING_SPRITE_WIDTH, WorldConstants.KING_SPRITE_HEIGHT],
+		["res://planet/gold_spired_throne.png", WorldConstants.GOLD_SPIRED_THRONE_WIDTH, WorldConstants.GOLD_SPIRED_THRONE_HEIGHT],
+		["res://planet/crimson_cape_spread.png", WorldConstants.CRIMSON_CAPE_SPREAD_WIDTH, WorldConstants.CRIMSON_CAPE_SPREAD_HEIGHT],
+		["res://planet/unrolled_parchment.png", WorldConstants.UNROLLED_PARCHMENT_WIDTH, WorldConstants.UNROLLED_PARCHMENT_HEIGHT],
+		["res://planet/scratched_border_lines.png", WorldConstants.SCRATCHED_BORDER_LINES_WIDTH, WorldConstants.SCRATCHED_BORDER_LINES_HEIGHT],
+		["res://planet/pale_paw_prints.png", WorldConstants.PALE_PAW_PRINTS_WIDTH, WorldConstants.PALE_PAW_PRINTS_HEIGHT],
 		["res://planet/rat.png", WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT],
 		[
 			"res://player/prince.png",
@@ -2685,6 +2726,156 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	return failed
 
 
+func _drive_into_king_audience(planet: Planet) -> void:
+	var side := planet.signed_angle_from_king()
+	if is_zero_approx(side):
+		side = 1.0
+	var keep_away_edge := fposmod(
+			planet.king_angle + signf(side) * (planet.audience_keep_away_arc + 0.04),
+			TAU
+	)
+	planet.teleport_player(keep_away_edge)
+	for step_index in 24:
+		planet.move_player(-signf(side), 0.05)
+
+
+func _assert_king_keep_away_and_facing(planet: Planet, king: SurfaceProp) -> int:
+	var failed := 0
+	var hidden_angle := fposmod(planet.king_angle + PI, TAU)
+	planet.teleport_player(hidden_angle)
+	if planet.is_king_visible_from_player() or king.visible:
+		printerr("背面国王应出画")
+		failed += 1
+	var left_hidden := fposmod(
+			planet.king_angle - WorldConstants.VISIBLE_HALF_ARC - 0.08,
+			TAU
+	)
+	planet.teleport_player(left_hidden)
+	if king.visible:
+		printerr("从左靠近前国王应仍在屏外")
+		failed += 1
+	if not king.flip_h:
+		printerr("屏外从左靠近应已面朝左")
+		failed += 1
+	planet.teleport_player(fposmod(planet.king_angle - 0.9, TAU))
+	if not king.visible:
+		printerr("从左靠近时应看见国王")
+		failed += 1
+	if not king.flip_h:
+		printerr("从左看见时应面朝左")
+		failed += 1
+	planet.teleport_player(fposmod(planet.king_angle + 0.9, TAU))
+	if not king.visible:
+		printerr("测试穿帮：可见时直接换侧")
+		failed += 1
+	if not king.flip_h:
+		printerr("转向必须在屏外完成，可见时不应转头")
+		failed += 1
+	planet.teleport_player(hidden_angle)
+	var right_hidden := fposmod(
+			planet.king_angle + WorldConstants.VISIBLE_HALF_ARC + 0.08,
+			TAU
+	)
+	planet.teleport_player(right_hidden)
+	if king.visible:
+		printerr("从右靠近前国王应仍在屏外")
+		failed += 1
+	if king.flip_h:
+		printerr("屏外从右靠近应已面朝右")
+		failed += 1
+	planet.teleport_player(fposmod(planet.king_angle + 0.9, TAU))
+	if not king.visible or king.flip_h:
+		printerr("从右看见时应面朝右")
+		failed += 1
+	var approach := fposmod(
+			planet.king_angle + planet.audience_keep_away_arc + 0.12,
+			TAU
+	)
+	planet.teleport_player(approach)
+	planet.has_contacted_audience_keep_away = false
+	for step_index in 24:
+		planet.move_player(-1.0, 0.05)
+	if absf(planet.signed_angle_from_king()) < planet.audience_keep_away_arc - 0.01:
+		printerr("禁区应挡住走向王座脚下，实际偏移 %s" % planet.signed_angle_from_king())
+		failed += 1
+	if not planet.has_contacted_audience_keep_away:
+		printerr("撞禁区应记下觐见接触")
+		failed += 1
+	planet.has_contacted_audience_keep_away = false
+	planet.teleport_player(planet.spawn_angle)
+	return failed
+
+
+func _assert_king_romantic_palette(
+		planet: Planet, throne: SurfaceProp, cape: SurfaceProp
+) -> int:
+	var failed := 0
+	var body_image := (planet.body.texture as Texture2D).get_image()
+	var blue_pixels := 0
+	var warm_ground_pixels := 0
+	var opaque_ground_pixels := 0
+	for pixel_y in range(0, body_image.get_height(), 4):
+		for pixel_x in range(0, body_image.get_width(), 4):
+			var pixel := body_image.get_pixel(pixel_x, pixel_y)
+			if pixel.a < 0.5:
+				continue
+			opaque_ground_pixels += 1
+			if pixel.b > pixel.r + 0.04 and pixel.b > pixel.g - 0.08:
+				blue_pixels += 1
+			if pixel.r > pixel.b + 0.12 and pixel.s > 0.25:
+				warm_ground_pixels += 1
+	if opaque_ground_pixels == 0 or float(blue_pixels) / float(opaque_ground_pixels) < 0.45:
+		printerr("国王星球地面应偏蓝")
+		failed += 1
+	if warm_ground_pixels > opaque_ground_pixels / 12:
+		printerr("国王星球地面不应抢国王的暖色")
+		failed += 1
+	var king_zenith := (
+			planet.sky.material as ShaderMaterial
+	).get_shader_parameter("zenith_gradient") as GradientTexture1D
+	if king_zenith == null:
+		printerr("国王星球应有独立绿天渐变")
+		failed += 1
+	else:
+		var noon := king_zenith.gradient.sample(SkyPhase.NOON_PHASE)
+		if noon.g <= noon.r or noon.g <= noon.b:
+			printerr("国王星球正午天空应偏绿，实际 %s" % noon)
+			failed += 1
+	if throne != null:
+		var throne_image := (throne.texture as Texture2D).get_image()
+		var found_warm := false
+		for pixel_y in throne_image.get_height():
+			for pixel_x in throne_image.get_width():
+				var pixel := throne_image.get_pixel(pixel_x, pixel_y)
+				if pixel.a < 0.5:
+					continue
+				if pixel.r > 0.7 and pixel.g > 0.45 and pixel.b < 0.55:
+					found_warm = true
+					break
+			if found_warm:
+				break
+		if not found_warm:
+			printerr("王座应为远景暖色锚点")
+			failed += 1
+	if cape != null:
+		var cape_image := (cape.texture as Texture2D).get_image()
+		var found_cape_warm := false
+		for pixel_y in cape_image.get_height():
+			for pixel_x in cape_image.get_width():
+				var pixel := cape_image.get_pixel(pixel_x, pixel_y)
+				if pixel.a < 0.5:
+					continue
+				if pixel.r > pixel.g + 0.08 and pixel.r > pixel.b:
+					found_cape_warm = true
+					break
+			if found_cape_warm:
+				break
+		if not found_cape_warm:
+			printerr("披风应为暖色地形")
+			failed += 1
+	return failed
+
+
 func _check_king_chapter() -> int:
 	var failed := 0
 	var packed: PackedScene = load("res://main.tscn")
@@ -2739,23 +2930,71 @@ func _check_king_chapter() -> int:
 
 	var king: SurfaceProp = null
 	var rat: SurfaceProp = null
+	var throne: SurfaceProp = null
+	var cape: SurfaceProp = null
+	var edict_count := 0
+	var border_count := 0
+	var rat_trace_count := 0
 	for prop in planet.surface_props:
 		match prop.kind:
 			SurfaceProp.Kind.KING:
 				king = prop
 			SurfaceProp.Kind.RAT:
 				rat = prop
+			SurfaceProp.Kind.THRONE:
+				throne = prop
+			SurfaceProp.Kind.CAPE:
+				cape = prop
+			SurfaceProp.Kind.EDICT:
+				edict_count += 1
+			SurfaceProp.Kind.BORDER:
+				border_count += 1
+			SurfaceProp.Kind.RAT_TRACE:
+				rat_trace_count += 1
 			SurfaceProp.Kind.ROSE, SurfaceProp.Kind.VOLCANO, SurfaceProp.Kind.BAOBAB, SurfaceProp.Kind.FLORA:
 				printerr("国王星球不应有 B612 地物 %s" % prop.name)
 				failed += 1
+		if (
+				prop.kind != SurfaceProp.Kind.KING
+				and (prop.is_interactable() or story.accepts_interact(prop))
+		):
+			printerr("路上地物不应可交互：%s" % prop.name)
+			failed += 1
 	if king == null:
 		printerr("国王星球应有国王")
 		failed += 1
 	if rat == null:
 		printerr("国王星球应有耗子")
 		failed += 1
-	if planet.surface_props.size() != 2:
-		printerr("国王星球地物应为国王与耗子，实际 %d" % planet.surface_props.size())
+	if throne == null:
+		printerr("国王星球应有高王座")
+		failed += 1
+	if cape == null:
+		printerr("国王星球应有大披风")
+		failed += 1
+	if edict_count < 2:
+		printerr("路上应有没人看的诏书，实际 %d" % edict_count)
+		failed += 1
+	if border_count < 4:
+		printerr("路上应有划了又划的国境，实际 %d" % border_count)
+		failed += 1
+	if rat_trace_count < 2:
+		printerr("背面应有老鼠痕迹，实际 %d" % rat_trace_count)
+		failed += 1
+	if not is_equal_approx(planet.radius, WorldConstants.KING_PLANET_RADIUS):
+		printerr(
+				"国王星球半径应为 %s，实际 %s"
+				% [WorldConstants.KING_PLANET_RADIUS, planet.radius]
+		)
+		failed += 1
+	if planet.star_rotation_speed != 0.0:
+		printerr("国王星球天光应跟经度走，不应再靠星空自转追日落")
+		failed += 1
+	if not planet.spawn_on_opposite_side:
+		printerr("国王星球应背面降落")
+		failed += 1
+	if not is_equal_approx(planet.audience_keep_away_arc, WorldConstants.KING_AUDIENCE_KEEP_AWAY_ARC):
+		printerr("觐见禁区半宽应为常量")
 		failed += 1
 	if king != null:
 		if not king.is_interactable() or king.get_dialogue_id() != &"king":
@@ -2763,9 +3002,24 @@ func _check_king_chapter() -> int:
 			failed += 1
 		failed += _assert_focus(planet, king, &"king", "国王")
 		planet.teleport_player(planet.spawn_angle)
-		if player.global_position.x <= king.global_position.x:
-			printerr("出生点小王子应在国王右边")
+		if planet.is_king_visible_from_player():
+			printerr("开场王座不应在眼前")
 			failed += 1
+		if absf(angle_difference(planet.spawn_angle, planet.king_angle)) < 2.4:
+			printerr("出生点应在国王对面")
+			failed += 1
+		var spawn_phase := SkyPhase.angle_to_phase(planet.sky.rotation)
+		if spawn_phase > 0.12 and spawn_phase < 0.88:
+			printerr("背面降落应为夜里，phase=%s" % spawn_phase)
+			failed += 1
+		planet.teleport_player(planet.king_angle)
+		var throne_phase := SkyPhase.angle_to_phase(planet.sky.rotation)
+		if absf(throne_phase - SkyPhase.NOON_PHASE) > 0.08:
+			printerr("王座一侧应为白天，phase=%s" % throne_phase)
+			failed += 1
+		planet.teleport_player(planet.spawn_angle)
+		failed += _assert_king_keep_away_and_facing(planet, king)
+		failed += _assert_king_romantic_palette(planet, throne, cape)
 	if rat != null:
 		if rat.is_interactable() or story.accepts_interact(rat):
 			printerr("耗子只作为装饰，不应可交互")
@@ -2841,14 +3095,36 @@ func _check_king_chapter() -> int:
 	if not player.can_move_left or not player.can_move_right:
 		printerr("国王开场后应能左右移动")
 		failed += 1
-	if not player.flip_h:
-		printerr("开场小王子应面朝国王")
+	if story.accepts_interact(king):
+		printerr("路上不应弹出见面对话")
 		failed += 1
-	if not story.accepts_interact(king):
-		printerr("开场后应能与国王交谈")
+	planet.teleport_player(
+			fposmod(
+					planet.king_angle + WorldConstants.KING_DISTANT_VOICE_ARC - 0.02,
+					TAU
+			)
+	)
+	if not planet.is_in_distant_king_voice_range():
+		printerr("靠近但未见国王时应进入先闻其声的范围")
 		failed += 1
-	if not story.try_handle_interact(king):
-		printerr("开场后应按 A 与国王交谈")
+	if planet.is_king_visible_from_player():
+		printerr("先闻其声时应还看不见人")
+		failed += 1
+	_drive_into_king_audience(planet)
+	var meeting_deadline_msec := Time.get_ticks_msec() + 2000
+	while (
+			not planet.has_contacted_audience_keep_away
+			and Time.get_ticks_msec() < meeting_deadline_msec
+	):
+		await process_frame
+	if not planet.has_contacted_audience_keep_away:
+		printerr("走到禁区应触发觐见")
+		failed += 1
+	await process_frame
+	await process_frame
+	await process_frame
+	if story.accepts_interact(king):
+		printerr("觐见对白应已自动开始，不应仍等按 A")
 		failed += 1
 	var music_before_king_sunset := scene.get_node("%Music").playing_stream as AudioStream
 	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)

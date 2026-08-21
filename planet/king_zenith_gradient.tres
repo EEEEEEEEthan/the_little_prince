@@ -1,0 +1,8 @@
+[gd_resource type="GradientTexture1D" format=3 uid="uid://ckingzenithgrd"]
+
+[sub_resource type="Gradient" id="Gradient_king_zenith"]
+offsets = PackedFloat32Array(0.0, 0.18, 0.25, 0.5, 0.75, 0.82, 1.0)
+colors = PackedColorArray(0.0196078, 0.0313726, 0.0784314, 1, 0.156863, 0.447059, 0.266667, 1, 0.364706, 0.603922, 0.305882, 1, 0.364706, 0.603922, 0.305882, 1, 0.156863, 0.447059, 0.266667, 1, 0.0470588, 0.109804, 0.141176, 1, 0.0196078, 0.0313726, 0.0784314, 1)
+
+[resource]
+gradient = SubResource("Gradient_king_zenith")
