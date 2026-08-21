@@ -37,6 +37,9 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://ui/portraits/rose.png",
 	"res://planet/glass_globe.png",
 	"res://planet/migratory_bird.png",
+	"res://planet/king.png",
+	"res://planet/rat.png",
+	"res://ui/portraits/king.png",
 ]
 
 const REQUIRED_OTHER_ASSETS: Array[String] = [
@@ -56,6 +59,7 @@ func _run_tests() -> void:
 	failed += _check_tscn_editor_visible()
 	failed += _check_input_map()
 	failed += await _check_scene_and_mechanics()
+	failed += await _check_king_chapter()
 	if failed == 0:
 		print("[verify_arc_planet] 全部通过")
 		quit(0)
@@ -199,6 +203,24 @@ func _check_constants() -> int:
 		failed += 1
 	if WorldConstants.ROSE_SPRITE_SIZE < 14 or WorldConstants.ROSE_SPRITE_SIZE > 26:
 		printerr("ROSE_SPRITE_SIZE 应约 16~22，实际 %d" % WorldConstants.ROSE_SPRITE_SIZE)
+		failed += 1
+	if (
+		WorldConstants.KING_SPRITE_WIDTH < 16 or WorldConstants.KING_SPRITE_WIDTH > 28
+		or WorldConstants.KING_SPRITE_HEIGHT < 18 or WorldConstants.KING_SPRITE_HEIGHT > 32
+	):
+		printerr(
+			"KING_SPRITE 应约 20×24，实际 %dx%d"
+			% [WorldConstants.KING_SPRITE_WIDTH, WorldConstants.KING_SPRITE_HEIGHT]
+		)
+		failed += 1
+	if (
+		WorldConstants.RAT_SPRITE_WIDTH < 8 or WorldConstants.RAT_SPRITE_WIDTH > 14
+		or WorldConstants.RAT_SPRITE_HEIGHT < 6 or WorldConstants.RAT_SPRITE_HEIGHT > 12
+	):
+		printerr(
+			"RAT_SPRITE 应约 10×8，实际 %dx%d"
+			% [WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT]
+		)
 		failed += 1
 	if WorldConstants.FLORA_SPRITE_SIZE < 12 or WorldConstants.FLORA_SPRITE_SIZE > 20:
 		printerr("FLORA_SPRITE_SIZE 应约 12~18，实际 %d" % WorldConstants.FLORA_SPRITE_SIZE)
@@ -445,6 +467,8 @@ func _check_static_assets() -> int:
 			WorldConstants.FLORA_SPRITE_SIZE,
 		],
 		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
+		["res://planet/king.png", WorldConstants.KING_SPRITE_WIDTH, WorldConstants.KING_SPRITE_HEIGHT],
+		["res://planet/rat.png", WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT],
 		[
 			"res://player/prince.png",
 			WorldConstants.PLAYER_SPRITE_WIDTH * WorldConstants.PLAYER_SPRITE_FRAME_COUNT,
@@ -453,6 +477,7 @@ func _check_static_assets() -> int:
 		["res://ui/prompt_a.png", 13, 13],
 		["res://ui/portraits/prince.png", 32, 32],
 		["res://ui/portraits/rose.png", 32, 32],
+		["res://ui/portraits/king.png", 32, 32],
 		["res://planet/glass_globe.png", 24, 24],
 		["res://planet/migratory_bird.png", 16, 8],
 		["res://planet/butterfly.png", 8, 3],
@@ -531,8 +556,10 @@ func _check_tscn_editor_visible() -> int:
 	var failed := 0
 	for path in [
 		"res://main.tscn",
+		"res://story/b612_play.tscn",
 		"res://planet/planet.tscn",
 		"res://planet/b612.tscn",
+		"res://planet/king.tscn",
 		"res://planet/butterfly.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
@@ -571,15 +598,15 @@ func _check_input_map() -> int:
 
 func _check_scene_and_mechanics() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://story/b612_play.tscn")
 	if packed == null:
-		printerr("无法加载 main.tscn")
+		printerr("无法加载 story/b612_play.tscn")
 		return 1
 	var scene := packed.instantiate()
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/B612Story") as B612Story).auto_start = false
+	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -2214,11 +2241,11 @@ func _await_dialogue_idle(dialogue: DialogueBox) -> bool:
 
 func _check_b612_story(scene: Node, planet: Planet) -> int:
 	var failed := 0
-	var story := scene.get_node("GameView/GameViewport/B612Story") as B612Story
+	var story := scene.get_node("GameView/GameViewport/Story") as B612Story
 	if story == null:
-		printerr("找不到 B612Story")
+		printerr("找不到 B612 Story")
 		return 1
-	if scene.get_node_or_null("GameView/GameViewport/B612Story/MigratoryFlock") == null:
+	if scene.get_node_or_null("GameView/GameViewport/Story/MigratoryFlock") == null:
 		printerr("找不到 MigratoryFlock")
 		failed += 1
 	var camera := scene.get_node_or_null("GameView/GameViewport/GameCamera") as Camera2D
@@ -2558,4 +2585,179 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 			break
 	if failed == 0:
 		print("  B612 故乡剧情 OK")
+	return failed
+
+
+func _check_king_chapter() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("GameView/GameViewport/Story") as KingStory).auto_start = false
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
+	var story := scene.get_node("GameView/GameViewport/Story") as KingStory
+	if planet == null or player == null or story == null:
+		printerr("国王章缺少 Planet / Player / KingStory")
+		scene.queue_free()
+		await process_frame
+		return 1
+	if planet.scene_file_path != "res://planet/king.tscn":
+		printerr("主场景星球应为 king.tscn，实际 %s" % planet.scene_file_path)
+		failed += 1
+
+	var king: SurfaceProp = null
+	var rat: SurfaceProp = null
+	for prop in planet.surface_props:
+		match prop.kind:
+			SurfaceProp.Kind.KING:
+				king = prop
+			SurfaceProp.Kind.RAT:
+				rat = prop
+			SurfaceProp.Kind.ROSE, SurfaceProp.Kind.VOLCANO, SurfaceProp.Kind.BAOBAB, SurfaceProp.Kind.FLORA:
+				printerr("国王星球不应有 B612 地物 %s" % prop.name)
+				failed += 1
+	if king == null:
+		printerr("国王星球应有国王")
+		failed += 1
+	if rat == null:
+		printerr("国王星球应有耗子")
+		failed += 1
+	if planet.surface_props.size() != 2:
+		printerr("国王星球地物应为国王与耗子，实际 %d" % planet.surface_props.size())
+		failed += 1
+	if king != null:
+		if not king.is_interactable() or king.get_dialogue_id() != &"king":
+			printerr("国王应为可交互")
+			failed += 1
+		failed += _assert_focus(planet, king, &"king", "国王")
+		planet.teleport_player(planet.spawn_angle)
+		if player.global_position.x <= king.global_position.x:
+			printerr("出生点小王子应在国王右边")
+			failed += 1
+	if rat != null:
+		if rat.is_interactable() or story.accepts_interact(rat):
+			printerr("耗子只作为装饰，不应可交互")
+			failed += 1
+		planet.teleport_player(rat.rotation)
+		if planet.find_nearest_interactable() == rat:
+			printerr("站在耗子旁不应选中耗子")
+			failed += 1
+
+	if DialogueCatalog.lines_for_id(&"king").size() < 2:
+		printerr("king 对话至少两句")
+		failed += 1
+
+	var king_tex := load("res://planet/king.png") as Texture2D
+	if king_tex != null:
+		var king_image := king_tex.get_image()
+		var found_gold := false
+		var found_robe := false
+		for pixel_y in king_image.get_height():
+			for pixel_x in king_image.get_width():
+				var pixel := king_image.get_pixel(pixel_x, pixel_y)
+				if pixel.a < 0.5:
+					continue
+				if pixel.r > 0.8 and pixel.g > 0.6 and pixel.b < 0.4:
+					found_gold = true
+				if pixel.r > pixel.g + 0.1 and pixel.r > pixel.b and pixel.s > 0.25:
+					found_robe = true
+		if not found_gold:
+			printerr("国王贴图应含金色王冠")
+			failed += 1
+		if not found_robe:
+			printerr("国王贴图应含红色袍服")
+			failed += 1
+
+	var king_portrait := load("res://ui/portraits/king.png") as Texture2D
+	if king_portrait != null:
+		var portrait_image := king_portrait.get_image()
+		var border := portrait_image.get_pixel(0, 0)
+		var expected_border := Color(255.0 / 255.0, 247.0 / 255.0, 209.0 / 255.0)
+		if (
+				absf(border.r - expected_border.r) > 0.02
+				or absf(border.g - expected_border.g) > 0.02
+				or absf(border.b - expected_border.b) > 0.02
+		):
+			printerr("国王头像边框应为奶油色，实际 %s" % border)
+			failed += 1
+
+	var dialogue := story.dialogue
+	dialogue.play_line(
+			DialogueLine.new(
+					DialogueCatalog.KING_SPEAKER, "开口", DialogueCatalog.KING_PORTRAIT
+			)
+	)
+	failed += _assert_dialogue_portrait_side(
+			dialogue, "res://ui/portraits/king.png", false, "国王开口"
+	)
+	dialogue.close()
+
+	if king == null:
+		scene.queue_free()
+		await process_frame
+		return failed + 1
+
+	planet.teleport_player(planet.spawn_angle)
+	story.skip_cinematics = true
+	await story.start()
+	if not story.has_finished_opening:
+		printerr("国王开场结束后应能走动")
+		failed += 1
+	if story.is_blocking_input:
+		printerr("国王开场结束后应允许走动")
+		failed += 1
+	if not player.can_move_left or not player.can_move_right:
+		printerr("国王开场后应能左右移动")
+		failed += 1
+	if not player.flip_h:
+		printerr("开场小王子应面朝国王")
+		failed += 1
+	if not story.accepts_interact(king):
+		printerr("开场后应能与国王交谈")
+		failed += 1
+	if not story.try_handle_interact(king):
+		printerr("开场后应按 A 与国王交谈")
+		failed += 1
+	story.try_first_sunset_narration(SkyPhase.NOON_PHASE)
+	story.try_first_sunset_narration(SkyPhase.SUNSET_PHASE)
+	await process_frame
+	if not story.has_crossed_sunset:
+		printerr("跨过日落应进入日落段")
+		failed += 1
+	if story.is_blocking_input:
+		printerr("国王下令日落后应恢复输入")
+		failed += 1
+	if not story.accepts_interact(king):
+		printerr("日落后国王应可告别")
+		failed += 1
+	if not story.try_handle_interact(king):
+		printerr("日落后应按 A 告别")
+		failed += 1
+	if not king.is_consumed:
+		printerr("告别后国王应消耗")
+		failed += 1
+	if player.modulate.a > 0.01:
+		printerr("离星后小王子应消失")
+		failed += 1
+	if story.get_node("%Dim").color.a < 0.99:
+		printerr("离星后应淡出到黑场")
+		failed += 1
+	if story.get_node("%Epilogue").text != "325。":
+		printerr("黑场应留下 325。，实际 %s" % story.get_node("%Epilogue").text)
+		failed += 1
+
+	if failed == 0:
+		print("  国王星球演出 OK")
+	scene.queue_free()
+	await process_frame
 	return failed

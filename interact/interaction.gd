@@ -5,7 +5,7 @@ extends Node
 @onready var planet: Planet = %Planet
 @onready var dialogue: DialogueBox = %DialogueBox
 @onready var prompt: InteractPrompt = %InteractPrompt
-@onready var story: B612Story = %B612Story
+@onready var story: PlanetStory = %Story
 
 var _focus: SurfaceProp
 var _hold_elapsed_seconds: float = 0.0

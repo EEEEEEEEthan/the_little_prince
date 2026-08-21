@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://dkingplanet01"]
+
+[ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
+[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
+[ext_resource type="Texture2D" uid="uid://b37whx4jfulm4" path="res://planet/king.png" id="2_king"]
+[ext_resource type="Texture2D" uid="uid://dynp45k1lwjfa" path="res://planet/rat.png" id="4_rat"]
+
+[node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
+
+[node name="Sky" parent="." index="0" unique_id=852054590]
+z_index = -4096
+
+[node name="King" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=410000001]
+unique_name_in_owner = true
+texture_filter = 1
+position = Vector2(0, -87.36)
+texture = ExtResource("2_king")
+offset = Vector2(0, -13)
+script = ExtResource("3_surface_prop")
+kind = 4
+dialogue_id = &"king"
+
+[node name="Rat" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=410000002]
+texture_filter = 1
+position = Vector2(0, 87.36)
+rotation = 3.1415927
+texture = ExtResource("4_rat")
+offset = Vector2(0, -5)
+script = ExtResource("3_surface_prop")
+kind = 5
