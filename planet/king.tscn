@@ -2,8 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
-[ext_resource type="Texture2D" path="res://planet/king.png" id="2_king"]
-[ext_resource type="Texture2D" path="res://planet/rat.png" id="4_rat"]
+[ext_resource type="Texture2D" uid="uid://b37whx4jfulm4" path="res://planet/king.png" id="2_king"]
+[ext_resource type="Texture2D" uid="uid://dynp45k1lwjfa" path="res://planet/rat.png" id="4_rat"]
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 
@@ -25,6 +25,6 @@ texture_filter = 1
 position = Vector2(0, 87.36)
 rotation = 3.1415927
 texture = ExtResource("4_rat")
-offset = Vector2(0, -4)
+offset = Vector2(0, -5)
 script = ExtResource("3_surface_prop")
 kind = 5

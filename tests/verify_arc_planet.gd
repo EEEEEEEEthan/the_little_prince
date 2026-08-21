@@ -215,10 +215,10 @@ func _check_constants() -> int:
 		failed += 1
 	if (
 		WorldConstants.RAT_SPRITE_WIDTH < 8 or WorldConstants.RAT_SPRITE_WIDTH > 14
-		or WorldConstants.RAT_SPRITE_HEIGHT < 4 or WorldConstants.RAT_SPRITE_HEIGHT > 10
+		or WorldConstants.RAT_SPRITE_HEIGHT < 6 or WorldConstants.RAT_SPRITE_HEIGHT > 12
 	):
 		printerr(
-			"RAT_SPRITE 应约 10×6，实际 %dx%d"
+			"RAT_SPRITE 应约 10×8，实际 %dx%d"
 			% [WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT]
 		)
 		failed += 1
