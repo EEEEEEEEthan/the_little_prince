@@ -12,7 +12,7 @@ dest_files=["res://.godot/imported/rapid_lamp_duty_tick.ogg-b9167255b4a6a8f7d73c
 
 [params]
 
-loop=false
+loop=true
 loop_offset=0
 bpm=0
 beat_count=0
