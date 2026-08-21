@@ -55,11 +55,11 @@ func _play_story() -> void:
 		await _interact_rose()
 		_is_glass_interact = false
 		_show_glass()
+	await _overhead("她安静了下来...")
 	player.can_move_right = true
 	is_blocking_input = false
 	if not skip_cinematics:
 		(planet.get_node("%Butterfly3") as Butterfly).begin_guide_flight()
-	await _overhead("她安静了下来...")
 	planet.sky.is_self_rotating = true
 	await _wait_move_right()
 	await _wait(3.0)
