@@ -59,6 +59,7 @@ func _run_tests() -> void:
 	failed += _check_tscn_editor_visible()
 	failed += _check_input_map()
 	failed += await _check_scene_and_mechanics()
+	failed += await _check_b612_depart_lift_halfway_overhead()
 	failed += await _check_king_chapter()
 	failed += await _check_b612_departed_travels_to_king()
 	if failed == 0:
@@ -2810,6 +2811,164 @@ func _check_king_chapter() -> int:
 
 	if failed == 0:
 		print("  国王星球演出 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_b612_depart_lift_halfway_overhead() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	scene.travel_to_next_planet = false
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("%Story") as B612Story).auto_start = false
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+
+	var story := scene.get_node("%Story") as B612Story
+	var player := scene.get_node(PLAYER_PATH) as Player
+	var overhead := story.overhead
+	var overhead_body := overhead.get_node("Body") as Label
+	var dim := story.get_node("%Dim") as ColorRect
+	const first_overhead := "玫瑰不想小王子看见她在哭"
+	const second_overhead := "她总是这么傲娇"
+	story.skip_cinematics = false
+	player.modulate.a = 1.0
+	dim.color.a = 0.0
+	var start_player_y := player.position.y
+	var has_departed := false
+	story.departed.connect(func() -> void: has_departed = true)
+	var depart_started_msec := Time.get_ticks_msec()
+	story._depart(
+			"B-612。",
+			PackedStringArray([first_overhead, second_overhead])
+	)
+
+	var too_early_deadline_msec := depart_started_msec + int(
+			(
+				MigratoryFlock.ARRIVE_SECONDS
+				+ PlanetStory.LIFT_DURATION_SECONDS * 0.25
+			) * 1000.0
+	)
+	while Time.get_ticks_msec() < too_early_deadline_msec:
+		if overhead.visible and overhead_body.text == first_overhead:
+			printerr("离星旁白过早，小王子还未飞到一半")
+			failed += 1
+			break
+		if player.modulate.a < 0.99:
+			printerr("飞到一半前小王子不应开始消失")
+			failed += 1
+			break
+		if dim.color.a > 0.05:
+			printerr("旁白播完前不应黑屏")
+			failed += 1
+			break
+		await process_frame
+
+	var first_deadline_msec := depart_started_msec + int(
+			(
+				MigratoryFlock.ARRIVE_SECONDS
+				+ PlanetStory.LIFT_DURATION_SECONDS
+				+ 1.0
+			) * 1000.0
+	)
+	var first_started_msec := -1
+	while Time.get_ticks_msec() < first_deadline_msec:
+		if overhead.visible and overhead_body.text == first_overhead:
+			first_started_msec = Time.get_ticks_msec()
+			break
+		await process_frame
+	if first_started_msec < 0:
+		printerr("飞到一半后应播放玫瑰旁白")
+		scene.queue_free()
+		await process_frame
+		return failed + 1
+
+	var first_delay_msec := first_started_msec - depart_started_msec
+	var expected_delay_msec := int(
+			(
+				MigratoryFlock.ARRIVE_SECONDS
+				+ PlanetStory.LIFT_DURATION_SECONDS * 0.5
+			) * 1000.0
+	)
+	if first_delay_msec < expected_delay_msec - 400:
+		printerr("玫瑰旁白过早，飞起仅 %d ms" % first_delay_msec)
+		failed += 1
+	if first_delay_msec > expected_delay_msec + 600:
+		printerr("玫瑰旁白过晚，飞起已 %d ms" % first_delay_msec)
+		failed += 1
+	if player.modulate.a < 0.99:
+		printerr("旁白开始时小王子还不应消失，alpha=%s" % player.modulate.a)
+		failed += 1
+	if dim.color.a > 0.05:
+		printerr("旁白开始时不应黑屏，alpha=%s" % dim.color.a)
+		failed += 1
+	var lifted_pixels := start_player_y - player.position.y
+	if lifted_pixels < PlanetStory.LIFT_DISTANCE_PIXELS * 0.35:
+		printerr(
+				"旁白开始时小王子应已飞起一半附近，实际 %s"
+				% lifted_pixels
+		)
+		failed += 1
+
+	var second_deadline_msec := first_started_msec + 8000
+	var second_started_msec := -1
+	while Time.get_ticks_msec() < second_deadline_msec:
+		if dim.color.a > 0.05:
+			printerr("两句旁白播完前不应黑屏")
+			failed += 1
+			break
+		if overhead.visible and overhead_body.text == second_overhead:
+			second_started_msec = Time.get_ticks_msec()
+			break
+		await process_frame
+	if second_started_msec < 0:
+		printerr("第一句之后应播放「她总是这么傲娇」")
+		failed += 1
+	elif dim.color.a > 0.05:
+		printerr("第二句开始时不应黑屏，alpha=%s" % dim.color.a)
+		failed += 1
+
+	var black_deadline_msec := Time.get_ticks_msec() + 12000
+	while dim.color.a < 0.99 and Time.get_ticks_msec() < black_deadline_msec:
+		if overhead.visible:
+			if dim.color.a > 0.05:
+				printerr("旁白尚未播完就黑屏")
+				failed += 1
+				break
+		await process_frame
+	if dim.color.a < 0.99:
+		printerr("旁白播完后应黑屏")
+		failed += 1
+	var epilogue_deadline_msec := Time.get_ticks_msec() + 1000
+	while (
+			story.get_node("%Epilogue").text != "B-612。"
+			and Time.get_ticks_msec() < epilogue_deadline_msec
+	):
+		await process_frame
+	if story.get_node("%Epilogue").text != "B-612。":
+		printerr(
+				"黑场应留下 B-612。，实际 %s"
+				% story.get_node("%Epilogue").text
+		)
+		failed += 1
+	var departed_deadline_msec := Time.get_ticks_msec() + int(
+			(PlanetStory.EPILOGUE_HOLD_SECONDS + 1.0) * 1000.0
+	)
+	while not has_departed and Time.get_ticks_msec() < departed_deadline_msec:
+		await process_frame
+	if not has_departed:
+		printerr("黑场结束后应发出 departed")
+		failed += 1
+	if failed == 0:
+		print("  B612 离星飞到一半旁白 OK")
 	scene.queue_free()
 	await process_frame
 	return failed

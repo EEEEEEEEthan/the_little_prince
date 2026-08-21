@@ -8,6 +8,8 @@ signal departed
 signal _halt
 
 const EPILOGUE_HOLD_SECONDS := 1.8
+const LIFT_DISTANCE_PIXELS := 72.0
+const LIFT_DURATION_SECONDS := 2.4
 
 @export var auto_start: bool = true
 
@@ -198,7 +200,10 @@ func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float
 	await _halt_if_stale(generation)
 
 
-func _depart(epilogue_text: String) -> void:
+func _depart(
+		epilogue_text: String,
+		lift_halfway_overhead_texts: PackedStringArray = PackedStringArray(),
+) -> void:
 	var generation := _story_generation
 	_end_dialogue()
 	if skip_cinematics:
@@ -206,15 +211,28 @@ func _depart(epilogue_text: String) -> void:
 		%Dim.color = Color(0, 0, 0, 1)
 	else:
 		await flock.arrive_from_offscreen(player.global_position)
-		flock.lift(72.0, 2.4)
-		var lift_tween := create_tween().set_parallel(true)
-		lift_tween.tween_property(player, "position:y", player.position.y - 72.0, 2.4)
-		lift_tween.tween_property(player, "modulate:a", 0.0, 2.4)
-		await lift_tween.finished
+		flock.lift(LIFT_DISTANCE_PIXELS, LIFT_DURATION_SECONDS)
+		var lift_tween := create_tween()
+		lift_tween.tween_property(
+				player,
+				"position:y",
+				player.position.y - LIFT_DISTANCE_PIXELS,
+				LIFT_DURATION_SECONDS
+		)
+		if lift_halfway_overhead_texts.is_empty():
+			lift_tween.parallel().tween_property(
+					player, "modulate:a", 0.0, LIFT_DURATION_SECONDS
+			)
+			await lift_tween.finished
+		else:
+			await _wait(LIFT_DURATION_SECONDS * 0.5)
+			for overhead_text in lift_halfway_overhead_texts:
+				await _overhead(overhead_text)
 		_story_tween = create_tween()
 		_story_tween.tween_property(%Dim, "color:a", 1.0, 1.2)
 		await _story_tween.finished
 		_story_tween = null
+		player.modulate.a = 0.0
 	%Epilogue.text = epilogue_text
 	await _wait(EPILOGUE_HOLD_SECONDS)
 	departed.emit()
