@@ -1,0 +1,76 @@
+[gd_scene format=3 uid="uid://bvjewowvb2ter"]
+
+[ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
+[ext_resource type="Texture2D" uid="uid://c0dbr67px2usk" path="res://planet/hunched_ledger_merchant.png" id="2_merchant"]
+[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
+[ext_resource type="Texture2D" uid="uid://dibika4vlpdda" path="res://planet/gold_star_glass_jar.png" id="4_jar"]
+[ext_resource type="Texture2D" uid="uid://dnskqc8qj0oef" path="res://planet/ink_gold_ledger_disk.png" id="5_body"]
+[ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="11_starfield"]
+[ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="12_sky_shader"]
+[ext_resource type="Texture2D" uid="uid://btrtneif41460" path="res://planet/ink_night_zenith_gradient.tres" id="13_ink_zenith"]
+[ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
+[ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
+[ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet_run_shell.tscn" id="16_run_shell"]
+[ext_resource type="Script" uid="uid://bw54dtm61dbg5" path="res://story/merchant_story.gd" id="17_story"]
+[ext_resource type="AudioStream" uid="uid://cqwx6juhnepo3" path="res://audio/sparse_ledger_tally.ogg" id="18_day_music"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_merchant_sky"]
+noise_type = 2
+frequency = 0.001
+fractal_octaves = 10
+fractal_lacunarity = 2.32
+fractal_gain = 1.065
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_merchant_sky"]
+width = 640
+height = 640
+noise = SubResource("FastNoiseLite_merchant_sky")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_merchant_sky"]
+shader = ExtResource("12_sky_shader")
+shader_parameter/zenith_gradient = ExtResource("13_ink_zenith")
+shader_parameter/star_alpha_gradient = ExtResource("14_star_alpha")
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_merchant_sky")
+shader_parameter/phase = 0.0
+shader_parameter/noise_strength = 0.02
+
+[node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
+body_texture = ExtResource("5_body")
+zenith_gradient = ExtResource("13_ink_zenith")
+
+[node name="Config" type="Node" parent="."]
+process_mode = 4
+script = ExtResource("15_playable")
+metadata/run_shell_scene = ExtResource("16_run_shell")
+metadata/story_script = ExtResource("17_story")
+metadata/day_music = ExtResource("18_day_music")
+
+[node name="Sky" parent="." index="0" unique_id=852054590]
+z_index = -4096
+material = SubResource("ShaderMaterial_merchant_sky")
+texture = ExtResource("11_starfield")
+
+[node name="Clouds" parent="." index="1"]
+modulate = Color(0.22, 0.17, 0.1, 0.55)
+
+[node name="Merchant" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=770000001]
+unique_name_in_owner = true
+z_index = 1
+texture_filter = 1
+position = Vector2(0, -87.36)
+texture = ExtResource("2_merchant")
+offset = Vector2(0, -11)
+script = ExtResource("3_surface_prop")
+kind = 13
+
+[node name="StarJar" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=770000002]
+unique_name_in_owner = true
+z_index = 1
+texture_filter = 1
+position = Vector2(35.62195, -79.76745)
+rotation = 0.42
+texture = ExtResource("4_jar")
+offset = Vector2(0, -8)
+script = ExtResource("3_surface_prop")
+kind = 14
+dialogue_id = &"star_jar"

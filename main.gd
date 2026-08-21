@@ -1,8 +1,9 @@
 extends PlanetRunShell
-## 旅程入口：开局 B612，离星后国王，再酒鬼。
+## 旅程入口：开局 B612，离星后国王，再酒鬼，再商人。
 
 const META_KING_PLANET_SCENE := "king_planet_scene"
 const META_DRUNKARD_PLANET_SCENE := "drunkard_planet_scene"
+const META_MERCHANT_PLANET_SCENE := "merchant_planet_scene"
 
 var travel_to_next_planet: bool = true
 
@@ -34,11 +35,27 @@ func travel_to_king_planet(start_story := true) -> void:
 func travel_to_drunkard_planet(start_story := true) -> void:
 	if not travel_to_next_planet:
 		return
-	travel_to_next_planet = false
 	_swap_journey_planet(
 			META_DRUNKARD_PLANET_SCENE,
 			%DrunkardStory as DrunkardStory,
 			%Music.play_drunkard_day_loop,
+			start_story
+	)
+	if start_story:
+		(%DrunkardStory as DrunkardStory).departed.connect(
+				travel_to_merchant_planet,
+				CONNECT_ONE_SHOT | CONNECT_DEFERRED
+		)
+
+
+func travel_to_merchant_planet(start_story := true) -> void:
+	if not travel_to_next_planet:
+		return
+	travel_to_next_planet = false
+	_swap_journey_planet(
+			META_MERCHANT_PLANET_SCENE,
+			%MerchantStory as MerchantStory,
+			%Music.play_merchant_day_loop,
 			start_story
 	)
 

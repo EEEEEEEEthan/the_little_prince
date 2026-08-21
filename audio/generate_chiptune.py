@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成国王星球循环配乐（CC0）。故乡/日落曲改用 OpenGameArt。运行：python3 audio/generate_chiptune.py"""
+"""生成国王/商人星球循环配乐（CC0）。故乡/日落曲改用 OpenGameArt。运行：python3 audio/generate_chiptune.py"""
 
 from __future__ import annotations
 
@@ -14,8 +14,9 @@ SAMPLE_RATE = 22050
 A4_MIDI = 69
 A4_HERTZ = 440.0
 
-C3, G3 = 48, 55
+C3, G3, A3 = 48, 55, 57
 C4, D4, E4, G4, A4 = 60, 62, 64, 67, 69
+D3, F3 = 50, 53
 
 
 def midi_to_hertz(midi_note: int) -> float:
@@ -179,9 +180,38 @@ def render_king_toy_waltz() -> np.ndarray:
 	return finalize(buffer)
 
 
+def render_sparse_ledger_tally() -> np.ndarray:
+	beats_per_minute = 48.0
+	tally_bars = [
+		[(A3, 0.5), (None, 0.5), (A3, 0.5), (None, 1.5)],
+		[(C4, 0.5), (None, 2.5)],
+		[(None, 3.0)],
+		[(G3, 1.0), (None, 2.0)],
+		[(A3, 0.5), (None, 0.5), (C4, 0.5), (None, 1.5)],
+		[(None, 3.0)],
+		[(D3, 2.0), (None, 1.0)],
+		[(None, 3.0)],
+		[(A3, 0.5), (None, 2.5)],
+		[(F3, 1.0), (None, 2.0)],
+		[(None, 3.0)],
+		[(G3, 0.5), (None, 0.5), (A3, 0.5), (None, 1.5)],
+		[(C4, 1.0), (None, 2.0)],
+		[(None, 3.0)],
+		[(D3, 3.0)],
+		[(None, 3.0)],
+	]
+	buffer = allocate_buffer(len(tally_bars), 3.0, beats_per_minute)
+	mix_tine(
+			buffer, expand_bars(tally_bars), SAMPLE_RATE, beats_per_minute,
+			0.18, 1.1,
+	)
+	return finalize(buffer)
+
+
 def main() -> None:
 	output_directory = Path(__file__).resolve().parent
 	write_ogg(render_king_toy_waltz(), output_directory / "narrow_cpenta_toy_waltz.ogg")
+	write_ogg(render_sparse_ledger_tally(), output_directory / "sparse_ledger_tally.ogg")
 
 
 if __name__ == "__main__":

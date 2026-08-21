@@ -50,6 +50,10 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/brown_glass_bottle.png",
 	"res://planet/slumped_wine_drinker.png",
 	"res://ui/portraits/slumped_wine_drinker.png",
+	"res://planet/ink_gold_ledger_disk.png",
+	"res://planet/hunched_ledger_merchant.png",
+	"res://planet/gold_star_glass_jar.png",
+	"res://ui/portraits/hunched_ledger_merchant.png",
 ]
 
 const REQUIRED_OTHER_ASSETS: Array[String] = [
@@ -59,6 +63,7 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://audio/the_one_who_stands_distant.ogg",
 	"res://audio/i_want_to_go_home.ogg",
 	"res://audio/narrow_cpenta_toy_waltz.ogg",
+	"res://audio/sparse_ledger_tally.ogg",
 	"res://audio/muffled_dirt_thud_a.wav",
 	"res://audio/muffled_dirt_thud_b.wav",
 	"res://audio/dry_grass_rustle_a.wav",
@@ -76,6 +81,7 @@ func _run_tests() -> void:
 	failed += _check_tscn_editor_visible()
 	failed += _check_king_scene_resource_uids()
 	failed += _check_drunkard_scene_resource_uids()
+	failed += _check_merchant_scene_resource_uids()
 	failed += _check_input_map()
 	failed += await _check_main_story_starts_with_sky_ready()
 	failed += await _check_story_not_active_before_planet_ready()
@@ -87,6 +93,8 @@ func _run_tests() -> void:
 	failed += await _check_b612_departed_travels_to_king()
 	failed += await _check_drunkard_chapter()
 	failed += await _check_king_departed_travels_to_drunkard()
+	failed += await _check_merchant_chapter()
+	failed += await _check_drunkard_departed_travels_to_merchant()
 	if failed == 0:
 		print("[verify_arc_planet] 全部通过")
 		quit(0)
@@ -526,6 +534,15 @@ func _check_static_assets() -> int:
 				% [amber_diameter, amber_diameter, amber_body.get_width(), amber_body.get_height()]
 			)
 			failed += 1
+	var ledger_body: Texture2D = load("res://planet/ink_gold_ledger_disk.png") as Texture2D
+	if ledger_body != null:
+		var ledger_diameter: int = int(ceil(WorldConstants.PLANET_RADIUS)) * 2
+		if ledger_body.get_width() != ledger_diameter or ledger_body.get_height() != ledger_diameter:
+			printerr(
+				"ink_gold_ledger_disk.png 应为 %dx%d，实际 %dx%d"
+				% [ledger_diameter, ledger_diameter, ledger_body.get_width(), ledger_body.get_height()]
+			)
+			failed += 1
 	# 精灵尺寸应对齐常量（火山 / 猴面包树为 spritesheet，宽度 = 帧数 × 帧尺寸）
 	var sprite_checks: Array = [
 		[
@@ -569,6 +586,9 @@ func _check_static_assets() -> int:
 		["res://planet/brown_glass_bottle.png", WorldConstants.BROWN_GLASS_BOTTLE_WIDTH, WorldConstants.BROWN_GLASS_BOTTLE_HEIGHT],
 		["res://planet/slumped_wine_drinker.png", WorldConstants.SLUMPED_WINE_DRINKER_WIDTH, WorldConstants.SLUMPED_WINE_DRINKER_HEIGHT],
 		["res://ui/portraits/slumped_wine_drinker.png", 32, 32],
+		["res://planet/hunched_ledger_merchant.png", WorldConstants.HUNCHED_LEDGER_MERCHANT_WIDTH, WorldConstants.HUNCHED_LEDGER_MERCHANT_HEIGHT],
+		["res://planet/gold_star_glass_jar.png", WorldConstants.GOLD_STAR_GLASS_JAR_WIDTH, WorldConstants.GOLD_STAR_GLASS_JAR_HEIGHT],
+		["res://ui/portraits/hunched_ledger_merchant.png", 32, 32],
 		["res://planet/glass_globe.png", 24, 24],
 		["res://planet/migratory_bird.png", 16, 8],
 		["res://planet/butterfly.png", 8, 3],
@@ -653,6 +673,7 @@ func _check_tscn_editor_visible() -> int:
 		"res://planet/king.tscn",
 		"res://planet/vain.tscn",
 		"res://planet/drunkard.tscn",
+		"res://planet/merchant.tscn",
 		"res://planet/butterfly.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
@@ -730,6 +751,40 @@ func _check_drunkard_scene_resource_uids() -> int:
 		failed += 1
 	if failed == 0:
 		print("  酒鬼场景资源 UID 与文件一致 OK")
+	return failed
+
+
+func _check_merchant_scene_resource_uids() -> int:
+	var failed := 0
+	var uid_and_path := RegEx.new()
+	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
+	var merchant_scene := FileAccess.get_file_as_string("res://planet/merchant.tscn")
+	for match_ in uid_and_path.search_all(merchant_scene):
+		var declared_uid := match_.get_string(1)
+		var resource_path := match_.get_string(2)
+		var canonical_uid := ResourceUID.id_to_text(
+				ResourceLoader.get_resource_uid(resource_path)
+		)
+		if declared_uid != canonical_uid:
+			printerr(
+					"merchant.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					% [resource_path, declared_uid, canonical_uid]
+			)
+			failed += 1
+	var zenith_header := FileAccess.get_file_as_string(
+			"res://planet/ink_night_zenith_gradient.tres"
+	).get_slice("\n", 0)
+	var zenith_canonical := ResourceUID.id_to_text(
+			ResourceLoader.get_resource_uid("res://planet/ink_night_zenith_gradient.tres")
+	)
+	if not zenith_header.contains(zenith_canonical):
+		printerr(
+				"ink_night_zenith_gradient.tres 头 UID 应为 %s"
+				% zenith_canonical
+		)
+		failed += 1
+	if failed == 0:
+		print("  商人场景资源 UID 与文件一致 OK")
 	return failed
 
 
@@ -3388,6 +3443,12 @@ func _check_standalone_planet_scenes() -> int:
 			"res://audio/i_want_to_go_home.ogg",
 			"酒鬼星球单独运行"
 	)
+	failed += await _assert_standalone_planet_run(
+			"res://planet/merchant.tscn",
+			MerchantStory,
+			"res://audio/sparse_ledger_tally.ogg",
+			"商人星球单独运行"
+	)
 	var base_planet := (load("res://planet/planet.tscn") as PackedScene).instantiate() as Planet
 	root.add_child(base_planet)
 	await process_frame
@@ -3485,6 +3546,31 @@ func _assert_standalone_planet_run(
 					"酒鬼单独运行瓶子应为 %d，实际 %d"
 					% [WorldConstants.DRUNKARD_BOTTLE_COUNT, bottle_count]
 			)
+			failed += 1
+	if planet_path == "res://planet/merchant.tscn":
+		var merchant_count := 0
+		var jar_count := 0
+		var has_foreign_chapter := false
+		for prop in planet.surface_props:
+			if prop.kind == SurfaceProp.Kind.MERCHANT:
+				merchant_count += 1
+			if prop.kind == SurfaceProp.Kind.STAR_JAR:
+				jar_count += 1
+			if prop.kind in [
+					SurfaceProp.Kind.KING,
+					SurfaceProp.Kind.ROSE,
+					SurfaceProp.Kind.DRUNKARD,
+					SurfaceProp.Kind.BOTTLE,
+			]:
+				has_foreign_chapter = true
+		if merchant_count != 1:
+			printerr("商人单独运行应有一名商人")
+			failed += 1
+		if jar_count != 1:
+			printerr("商人单独运行应只有一只玻璃罐")
+			failed += 1
+		if has_foreign_chapter:
+			printerr("商人单独运行不应有其它章地物")
 			failed += 1
 	failed += _assert_playing_stream(
 			shell,
@@ -4209,6 +4295,269 @@ func _check_king_departed_travels_to_drunkard() -> int:
 		failed += 1
 	if failed == 0:
 		print("  国王离星后进入酒鬼星球 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_merchant_chapter() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	scene.travel_to_king_planet(false)
+	await process_frame
+	scene.travel_to_drunkard_planet(false)
+	await process_frame
+	scene.travel_to_merchant_planet(false)
+	await process_frame
+
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
+	var story := scene.get_node_or_null("%MerchantStory") as MerchantStory
+	if planet == null or player == null or story == null:
+		printerr("商人章缺少 Planet / Player / MerchantStory")
+		scene.queue_free()
+		await process_frame
+		return 1
+	if planet.scene_file_path != "res://planet/merchant.tscn":
+		printerr("酒鬼之后星球应为 merchant.tscn，实际 %s" % planet.scene_file_path)
+		failed += 1
+	failed += _assert_playing_music(scene, "merchant_day_music", "换到商人星球")
+	if story.planet != planet:
+		printerr("换星后 MerchantStory 应绑定商人星球")
+		failed += 1
+	if (scene.get_node("%Interaction") as Interaction).story != story:
+		printerr("换星后 Interaction 应绑定 MerchantStory")
+		failed += 1
+
+	var merchant: SurfaceProp = null
+	var star_jar: SurfaceProp = null
+	var jar_count := 0
+	for prop in planet.surface_props:
+		match prop.kind:
+			SurfaceProp.Kind.MERCHANT:
+				merchant = prop
+				if prop.is_interactable() or story.accepts_interact(prop):
+					printerr("商人不应可交互")
+					failed += 1
+			SurfaceProp.Kind.STAR_JAR:
+				star_jar = prop
+				jar_count += 1
+			SurfaceProp.Kind.KING, SurfaceProp.Kind.ROSE, SurfaceProp.Kind.DRUNKARD, SurfaceProp.Kind.BOTTLE, SurfaceProp.Kind.VOLCANO, SurfaceProp.Kind.BAOBAB, SurfaceProp.Kind.FLORA:
+				printerr("商人星球不应有其它章地物 %s" % prop.name)
+				failed += 1
+	if merchant == null:
+		printerr("商人星球应有商人")
+		failed += 1
+	if jar_count != 1 or star_jar == null:
+		printerr("商人星球应只有一只玻璃罐")
+		failed += 1
+
+	var body_image := (planet.body.texture as Texture2D).get_image()
+	var ink_pixels := 0
+	var gold_pixels := 0
+	var amber_like_pixels := 0
+	var cool_pixels := 0
+	var magenta_pixels := 0
+	var opaque_pixels := 0
+	for pixel_y in range(0, body_image.get_height(), 4):
+		for pixel_x in range(0, body_image.get_width(), 4):
+			var pixel := body_image.get_pixel(pixel_x, pixel_y)
+			if pixel.a < 0.5:
+				continue
+			opaque_pixels += 1
+			var luma := pixel.r * 0.3 + pixel.g * 0.59 + pixel.b * 0.11
+			if luma < 0.22:
+				ink_pixels += 1
+			if pixel.r > pixel.g and pixel.g > pixel.b + 0.04 and pixel.g > 0.28:
+				gold_pixels += 1
+			if pixel.r > pixel.b + 0.12 and pixel.r > pixel.g - 0.02 and pixel.r > 0.55:
+				amber_like_pixels += 1
+			if pixel.b > pixel.r + 0.04 or pixel.g > pixel.r + 0.08:
+				cool_pixels += 1
+			if pixel.r > 0.4 and pixel.b > 0.4 and pixel.g < pixel.r - 0.12:
+				magenta_pixels += 1
+	if opaque_pixels == 0 or float(ink_pixels) / float(opaque_pixels) < 0.55:
+		printerr("商人星球地面应偏墨色")
+		failed += 1
+	if gold_pixels == 0:
+		printerr("商人星球地面应有金色账本线")
+		failed += 1
+	if float(amber_like_pixels) / float(opaque_pixels) > 0.35:
+		printerr("商人星球地面不应像酒鬼琥珀")
+		failed += 1
+	if float(cool_pixels) / float(opaque_pixels) > 0.2:
+		printerr("商人星球地面不应偏国王那颗的绿蓝")
+		failed += 1
+	if magenta_pixels > 0:
+		printerr("商人星球地面不应偏虚荣者洋红")
+		failed += 1
+	var ink_zenith := (
+			planet.sky.material as ShaderMaterial
+	).get_shader_parameter("zenith_gradient") as GradientTexture1D
+	if ink_zenith == null:
+		printerr("商人星球应有墨金夜空")
+		failed += 1
+	else:
+		var midnight := ink_zenith.gradient.sample(0.0)
+		var noon := ink_zenith.gradient.sample(SkyPhase.NOON_PHASE)
+		if midnight.r > 0.2 or midnight.g > 0.2 or midnight.b > 0.22:
+			printerr("商人午夜天空应偏墨色，实际 %s" % midnight)
+			failed += 1
+		if noon.g > noon.r and noon.g > noon.b:
+			printerr("商人天空不应像国王正午绿天，实际 %s" % noon)
+			failed += 1
+		if noon.r > noon.b + 0.2 and noon.r > 0.45:
+			printerr("商人天空不应像酒鬼琥珀傍晚，实际 %s" % noon)
+			failed += 1
+	var star_alpha := (
+			load("res://planet/night_sky_gradient.tres") as GradientTexture1D
+	).gradient.sample(0.0).r
+	if star_alpha < 0.9:
+		printerr("午夜相位应能看见星星")
+		failed += 1
+
+	if merchant == null or star_jar == null:
+		scene.queue_free()
+		await process_frame
+		return failed + 1
+
+	failed += _assert_focus(planet, star_jar, &"star_jar", "装星星的玻璃罐")
+	planet.teleport_player(planet.spawn_angle)
+	story.skip_cinematics = true
+	await story.start()
+	if not is_equal_approx(planet.sky.daylight_phase(), 0.0):
+		printerr("商人星球天光应锁在午夜以便看见星星")
+		failed += 1
+	if not story.has_crossed_sunset:
+		printerr("商人章不应再追日落")
+		failed += 1
+	if not story.has_finished_opening:
+		printerr("商人开场结束后应能走动")
+		failed += 1
+	if story.is_blocking_input:
+		printerr("商人开场结束后应允许走动")
+		failed += 1
+	if not player.can_move_left or not player.can_move_right:
+		printerr("商人开场后应能左右移动")
+		failed += 1
+	var merchant_offset := merchant.offset
+	var merchant_flip := merchant.flip_h
+	var merchant_texture := merchant.texture
+	story.skip_cinematics = false
+	await story._camera_up()
+	var camera := scene.get_node("%GameCamera") as Camera2D
+	if camera.offset.y > -8.0:
+		printerr("玩家抬头后镜头应抬向星空")
+		failed += 1
+	if (
+			merchant.offset != merchant_offset
+			or merchant.flip_h != merchant_flip
+			or merchant.texture != merchant_texture
+	):
+		printerr("玩家抬头时商人不应抬头")
+		failed += 1
+	await story._camera_down()
+	Input.action_press(&"move_up")
+	for _frame_index in 24:
+		story._process(0.016)
+	if camera.offset.y > -8.0:
+		printerr("按上应能抬头看天上的星星")
+		failed += 1
+	if merchant.offset != merchant_offset or merchant.flip_h != merchant_flip:
+		printerr("玩家按上抬头时商人仍不应抬头")
+		failed += 1
+	Input.action_release(&"move_up")
+	story.skip_cinematics = true
+	if not story.accepts_interact(star_jar):
+		printerr("开场后应能点玻璃罐")
+		failed += 1
+	if story.accepts_interact(merchant):
+		printerr("不应把商人做成清点/交易对象")
+		failed += 1
+	if not story.try_handle_interact(star_jar):
+		printerr("开场后应一点玻璃罐即过")
+		failed += 1
+	if not star_jar.is_consumed:
+		printerr("点过玻璃罐后应消耗，不要反复清点")
+		failed += 1
+	if player.modulate.a > 0.01:
+		printerr("离星后小王子应消失")
+		failed += 1
+	if story.get_node("%Epilogue").text != "328。":
+		printerr("黑场应留下 328。，实际 %s" % story.get_node("%Epilogue").text)
+		failed += 1
+	if FileAccess.get_file_as_string("res://story/merchant_story.gd").contains("_interact(") \
+			and FileAccess.get_file_as_string("res://story/merchant_story.gd").count("_interact(") != 1:
+		printerr("商人章只能点一次玻璃罐")
+		failed += 1
+	if failed == 0:
+		print("  商人星球演出 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_drunkard_departed_travels_to_merchant() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("%Story") as B612Story).auto_start = false
+	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
+	(scene.get_node("%DrunkardStory") as DrunkardStory).skip_cinematics = true
+	(scene.get_node("%MerchantStory") as MerchantStory).skip_cinematics = true
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	scene.travel_to_drunkard_planet(true)
+	await process_frame
+	await process_frame
+	var drunkard_story := scene.get_node("%DrunkardStory") as DrunkardStory
+	drunkard_story._story_generation += 1
+	drunkard_story.is_active = false
+	drunkard_story.set_process(false)
+	drunkard_story.departed.emit()
+	await process_frame
+	await process_frame
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var merchant_story := scene.get_node("%MerchantStory") as MerchantStory
+	if planet == null or planet.scene_file_path != "res://planet/merchant.tscn":
+		printerr(
+				"酒鬼离星后应换到商人星球，实际 %s"
+				% (planet.scene_file_path if planet != null else "null")
+		)
+		failed += 1
+	if merchant_story.planet != planet:
+		printerr("离星换星后 MerchantStory 应绑定商人星球")
+		failed += 1
+	failed += _assert_playing_music(scene, "merchant_day_music", "酒鬼离星换星")
+	var opening_deadline_msec := Time.get_ticks_msec() + 5000
+	while (
+			not merchant_story.has_finished_opening
+			and Time.get_ticks_msec() < opening_deadline_msec
+	):
+		await process_frame
+	if not merchant_story.has_finished_opening:
+		printerr("换星后商人开场应自动开始")
+		failed += 1
+	if failed == 0:
+		print("  酒鬼离星后进入商人星球 OK")
 	scene.queue_free()
 	await process_frame
 	return failed
