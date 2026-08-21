@@ -60,6 +60,7 @@ func _run_tests() -> void:
 	failed += _check_input_map()
 	failed += await _check_scene_and_mechanics()
 	failed += await _check_king_chapter()
+	failed += await _check_b612_departed_travels_to_king()
 	if failed == 0:
 		print("[verify_arc_planet] 全部通过")
 		quit(0)
@@ -556,7 +557,6 @@ func _check_tscn_editor_visible() -> int:
 	var failed := 0
 	for path in [
 		"res://main.tscn",
-		"res://story/b612_play.tscn",
 		"res://planet/planet.tscn",
 		"res://planet/b612.tscn",
 		"res://planet/king.tscn",
@@ -598,11 +598,12 @@ func _check_input_map() -> int:
 
 func _check_scene_and_mechanics() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://story/b612_play.tscn")
+	var packed: PackedScene = load("res://main.tscn")
 	if packed == null:
-		printerr("无法加载 story/b612_play.tscn")
+		printerr("无法加载 main.tscn")
 		return 1
 	var scene := packed.instantiate()
+	scene.travel_to_next_planet = false
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
@@ -610,6 +611,17 @@ func _check_scene_and_mechanics() -> int:
 	root.add_child(scene)
 	await process_frame
 	await process_frame
+
+	var opening_planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	if opening_planet == null or opening_planet.scene_file_path != "res://planet/b612.tscn":
+		printerr(
+				"主场景开局应为 b612.tscn，实际 %s"
+				% (opening_planet.scene_file_path if opening_planet != null else "null")
+		)
+		failed += 1
+	if scene.get_node_or_null("%KingStory") as KingStory == null:
+		printerr("主场景应有 KingStory")
+		failed += 1
 
 	if scene.get_node_or_null("WorldHost") != null:
 		printerr("旧 WorldHost 结构仍存在")
@@ -2598,21 +2610,45 @@ func _check_king_chapter() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as KingStory).auto_start = false
+	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
 
+	var opening_planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	if opening_planet == null or opening_planet.scene_file_path != "res://planet/b612.tscn":
+		printerr(
+				"主场景开局应为 b612.tscn，实际 %s"
+				% (opening_planet.scene_file_path if opening_planet != null else "null")
+		)
+		scene.queue_free()
+		await process_frame
+		return 1
+	scene.travel_to_king_planet(false)
+	await process_frame
+
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
-	var story := scene.get_node("GameView/GameViewport/Story") as KingStory
+	var story := scene.get_node_or_null("%KingStory") as KingStory
 	if planet == null or player == null or story == null:
 		printerr("国王章缺少 Planet / Player / KingStory")
 		scene.queue_free()
 		await process_frame
 		return 1
 	if planet.scene_file_path != "res://planet/king.tscn":
-		printerr("主场景星球应为 king.tscn，实际 %s" % planet.scene_file_path)
+		printerr("离星后星球应为 king.tscn，实际 %s" % planet.scene_file_path)
+		failed += 1
+	if player.planet != planet:
+		printerr("换星后 Player 应绑定国王星球")
+		failed += 1
+	if (player.get_node("Scarf") as Scarf).planet != planet:
+		printerr("换星后围巾应绑定国王星球")
+		failed += 1
+	if (scene.get_node("%Interaction") as Interaction).planet != planet:
+		printerr("换星后 Interaction 应绑定国王星球")
+		failed += 1
+	if story.planet != planet:
+		printerr("换星后 KingStory 应绑定国王星球")
 		failed += 1
 
 	var king: SurfaceProp = null
@@ -2758,6 +2794,51 @@ func _check_king_chapter() -> int:
 
 	if failed == 0:
 		print("  国王星球演出 OK")
+	scene.queue_free()
+	await process_frame
+	return failed
+
+
+func _check_b612_departed_travels_to_king() -> int:
+	var failed := 0
+	var packed: PackedScene = load("res://main.tscn")
+	if packed == null:
+		printerr("无法加载 main.tscn")
+		return 1
+	var scene := packed.instantiate()
+	(
+		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	).play_on_ready = false
+	(scene.get_node("%Story") as B612Story).auto_start = false
+	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
+	root.add_child(scene)
+	await process_frame
+	await process_frame
+	(scene.get_node("%Story") as B612Story).departed.emit()
+	await process_frame
+	await process_frame
+	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
+	var king_story := scene.get_node("%KingStory") as KingStory
+	if planet == null or planet.scene_file_path != "res://planet/king.tscn":
+		printerr(
+				"B612 离星后应换到国王星球，实际 %s"
+				% (planet.scene_file_path if planet != null else "null")
+		)
+		failed += 1
+	if king_story.planet != planet:
+		printerr("离星换星后 KingStory 应绑定国王星球")
+		failed += 1
+	var opening_deadline_msec := Time.get_ticks_msec() + 5000
+	while (
+			not king_story.has_finished_opening
+			and Time.get_ticks_msec() < opening_deadline_msec
+	):
+		await process_frame
+	if not king_story.has_finished_opening:
+		printerr("换星后国王开场应自动开始")
+		failed += 1
+	if failed == 0:
+		print("  B612 离星后进入国王星球 OK")
 	scene.queue_free()
 	await process_frame
 	return failed

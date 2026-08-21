@@ -4,7 +4,10 @@ extends Node
 
 signal prop_interacted(prop)
 signal sunset_crossed
+signal departed
 signal _halt
+
+const EPILOGUE_HOLD_SECONDS := 1.8
 
 @export var auto_start: bool = true
 
@@ -29,12 +32,11 @@ var _story_tween: Tween
 
 func _ready() -> void:
 	overhead.play_on_ready = false
+	if not auto_start:
+		return
 	%Epilogue.text = ""
-	if auto_start:
-		%Dim.color = Color(0, 0, 0, 1)
-		start()
-	else:
-		%Dim.color = Color(0, 0, 0, 0)
+	%Dim.color = Color(0, 0, 0, 1)
+	start()
 
 
 func _process(_delta: float) -> void:
@@ -202,20 +204,20 @@ func _depart(epilogue_text: String) -> void:
 	if skip_cinematics:
 		player.modulate.a = 0.0
 		%Dim.color = Color(0, 0, 0, 1)
-		%Epilogue.text = epilogue_text
-		await _halt_if_stale(generation)
-		return
-	await flock.arrive_from_offscreen(player.global_position)
-	flock.lift(72.0, 2.4)
-	var lift_tween := create_tween().set_parallel(true)
-	lift_tween.tween_property(player, "position:y", player.position.y - 72.0, 2.4)
-	lift_tween.tween_property(player, "modulate:a", 0.0, 2.4)
-	await lift_tween.finished
-	_story_tween = create_tween()
-	_story_tween.tween_property(%Dim, "color:a", 1.0, 1.2)
-	await _story_tween.finished
-	_story_tween = null
+	else:
+		await flock.arrive_from_offscreen(player.global_position)
+		flock.lift(72.0, 2.4)
+		var lift_tween := create_tween().set_parallel(true)
+		lift_tween.tween_property(player, "position:y", player.position.y - 72.0, 2.4)
+		lift_tween.tween_property(player, "modulate:a", 0.0, 2.4)
+		await lift_tween.finished
+		_story_tween = create_tween()
+		_story_tween.tween_property(%Dim, "color:a", 1.0, 1.2)
+		await _story_tween.finished
+		_story_tween = null
 	%Epilogue.text = epilogue_text
+	await _wait(EPILOGUE_HOLD_SECONDS)
+	departed.emit()
 	await _halt_if_stale(generation)
 
 
