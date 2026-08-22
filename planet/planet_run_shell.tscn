@@ -1,12 +1,11 @@
 [gd_scene format=3 uid="uid://cprshellscn01"]
 
-[ext_resource type="Script" uid="uid://cprshellgd001" path="res://planet_run_shell.gd" id="1_shell"]
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
+[ext_resource type="Script" uid="uid://cprshellgd001" path="res://planet/planet_run_shell.gd" id="1_shell"]
 [ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://player/player.gd" id="3_player"]
-[ext_resource type="Texture2D" uid="uid://mybv7igebkcb" path="res://player/prince.png" id="4_prince"]
-[ext_resource type="Shader" uid="uid://bahfecy4eixc3" path="res://palette.gdshader" id="5_palette_shader"]
-[ext_resource type="Texture2D" uid="uid://cop81vwashvr5" path="res://palette.png" id="6_palette"]
+[ext_resource type="Shader" uid="uid://bahfecy4eixc3" path="res://visual/palette.gdshader" id="5_palette_shader"]
+[ext_resource type="Texture2D" uid="uid://cop81vwashvr5" path="res://visual/palette.png" id="6_palette"]
 [ext_resource type="Script" uid="uid://cr35jjjk4jfxm" path="res://ui/interact_prompt.gd" id="7_prompt"]
-[ext_resource type="Texture2D" uid="uid://bcculx3lqeq03" path="res://ui/prompt_a.png" id="8_prompt_tex"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="9_dialogue"]
 [ext_resource type="Script" uid="uid://ciwt72d3i6fwy" path="res://interact/interaction.gd" id="10_interact"]
 [ext_resource type="Script" uid="uid://pqblm1m4kgms" path="res://player/scarf.gd" id="11_scarf"]
@@ -22,13 +21,18 @@
 [ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="24_grass_a"]
 [ext_resource type="AudioStream" uid="uid://cuivhluijhgxn" path="res://audio/dry_grass_rustle_b.wav" id="25_grass_b"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
-shader = ExtResource("5_palette_shader")
-shader_parameter/palette = ExtResource("6_palette")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
-shader = ExtResource("16_prompt_shader")
-shader_parameter/fill_ratio = 0.0
+[sub_resource type="Texture2D" id="EditableTexture_prince"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEgAAAASCAYAAAD4+JjWAAAAAXNSR0IArs4c6QAAAXxJREFUWIXtVrtOwzAUtVFHFqR+QKqKCXVj6Dd4yJYhQ1YkBj4hE5/AlrUDgzeGfANDxYKYEMIfgJSlI5KZXOLXtW+C6kjkTEl87rnnHjtNCZkBgpoPBGeyf58VrcUZw8citT6FyCFTWH6Moanp0xDZ1wjLjzU0Nf0z1+JyVZLlqoTq0XzIUMhsSv1jQCqxPlFdu3YAy481NDV9q9Fhv9PSPr+uQDMYvuBMmsa/Ph/BgVPrL8yC2xfu03ICw8+Klh72JeqrlFpfC6hqcnl/8a0zmlzubp6cTaoml4QQotUAfJchwZn0DYH1IziTmEBj9K0TVHfWoyDMGt/QpqG6WwT7udZ9+oobs2GCM1l34XnxaUQAOtZDNgCjH9sjK1qq3gAIzs/8jF/MAQVwsoCg4xxz1FPpHwPCNsDwhxj864Exnvpr1q/Z+8Obdn95dwU2DvG3m7Xsc0J6Y/1A9dvNWj6/flDfukvfCghrIMRXhoYec6wfX73vv9NY/X+PH5fFIYeiMZCgAAAAAElFTkSuQmCC"
+
+[sub_resource type="Texture2D" id="EditableTexture_prompt_a"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAMAAABFNRROAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURQwSJqDFrV2aTv///wAAALPe/UYAAAAFdFJOU/////8A+7YOUwAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAOElEQVQYV3WOAQoAIAgD5/T/b461IiE8EDwGOlQHGmNDGK2FIJkkA8dSek1JTiam7Jlf7JN/l8YCiNsBhMUXzYkAAAAASUVORK5CYII="
+
+[sub_resource type="Texture2D" id="EditableTexture_migratory_bird"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAICAYAAADwdn+XAAAAZUlEQVR4nGNgQALa6i7/tdVd/jOQABhhGhkYGBiu3tyDlY8sBgMwOUaYxNuvn1BMFubmQ+Ejyz+/PZtBx6AY4QIGBgYGCRmz/8gKGDn1MeRePDnFiI3PgKwQ2SB0gE2eCZfioQMAUJwraTZSGawAAAAASUVORK5CYII="
 
 [sub_resource type="GDScript" id="GDScript_footstep"]
 script/source = "extends AudioStreamPlayer
@@ -56,9 +60,6 @@ func play_step() -> void:
 	last_step_was_grass = use_grass
 	play()
 "
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_footprint"]
-radius = 6.0
 
 [sub_resource type="GDScript" id="GDScript_music"]
 script/source = "extends Node
@@ -167,6 +168,17 @@ func _config_music(meta_name: String) -> AudioStream:
 	return owner.get_node(\"Config\").get_meta(meta_name) as AudioStream
 "
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
+shader = ExtResource("5_palette_shader")
+shader_parameter/palette = ExtResource("6_palette")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
+shader = ExtResource("16_prompt_shader")
+shader_parameter/fill_ratio = 0.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_footprint"]
+radius = 6.0
+
 [node name="PlanetRunShell" type="Control" unique_id=134579991]
 layout_mode = 3
 anchors_preset = 15
@@ -222,7 +234,7 @@ anchor_mode = 0
 unique_name_in_owner = true
 z_index = 200
 texture_filter = 1
-texture = ExtResource("4_prince")
+texture = SubResource("EditableTexture_prince")
 flip_h = true
 hframes = 6
 script = ExtResource("3_player")
@@ -255,7 +267,7 @@ z_index = 250
 z_as_relative = false
 texture_filter = 1
 material = SubResource("ShaderMaterial_prompt_fill")
-texture = ExtResource("8_prompt_tex")
+texture = SubResource("EditableTexture_prompt_a")
 script = ExtResource("7_prompt")
 
 [node name="DialogueBox" parent="GameView/GameViewport" unique_id=1685094322 instance=ExtResource("9_dialogue")]
@@ -277,6 +289,7 @@ auto_start = false
 unique_name_in_owner = true
 z_index = 180
 script = ExtResource("14_flock")
+bird_texture = SubResource("EditableTexture_migratory_bird")
 
 [node name="FadeLayer" type="CanvasLayer" parent="GameView/GameViewport/Story" unique_id=1234713668]
 layer = 5
@@ -303,3 +316,4 @@ theme_override_fonts/font = ExtResource("15_font")
 theme_override_font_sizes/font_size = 8
 horizontal_alignment = 1
 vertical_alignment = 1
+

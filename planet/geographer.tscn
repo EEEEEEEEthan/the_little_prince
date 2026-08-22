@@ -1,18 +1,26 @@
 [gd_scene format=3 uid="uid://ccnxy2b27mj36"]
 
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
-[ext_resource type="Texture2D" uid="uid://cpyhj8n2qnbo6" path="res://planet/gray_beard_parchment_scholar.png" id="2_geographer"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
-[ext_resource type="Texture2D" uid="uid://ccgvhgc04sank" path="res://planet/stacked_cream_ink_pages.png" id="4_reports"]
 [ext_resource type="Texture2D" uid="uid://ducegt4bjka0h" path="res://planet/cream_ink_parchment_disk.png" id="5_body"]
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="11_starfield"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="12_sky_shader"]
 [ext_resource type="Texture2D" uid="uid://dik0r4nojyjvd" path="res://planet/parchment_study_zenith_gradient.tres" id="13_parchment_zenith"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
 [ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
-[ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet_run_shell.tscn" id="16_run_shell"]
+[ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="Script" uid="uid://c5aqtsrp8kkfu" path="res://story/geographer_story.gd" id="17_story"]
 [ext_resource type="AudioStream" uid="uid://dbh8gq5hbhl0i" path="res://audio/dry_folio_rest.ogg" id="18_day_music"]
+
+
+[sub_resource type="Texture2D" id="EditableTexture_gray_beard_parchment_scholar"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAWCAYAAADJqhx8AAAAgElEQVR42mNgGLRAQ0nmPzZMkWaiDYEpvLFvHgomyRUgDTJiQigYJEZ0GKDbDsNEaV4xp+c/PkyRZoKG7JqV858YjFVzV47Hf2INAKnFa8CTc0uwYpIM8DCQQcEkG0BVF4DkCRqAHAuEXECbaEQ3hFhxDBDjZvAfhIkVH4QGkAIAv4aL8+Tc5EUAAAAASUVORK5CYII="
+
+[sub_resource type="Texture2D" id="EditableTexture_stacked_cream_ink_pages"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAOCAYAAAAmL5yKAAAAP0lEQVR42mNgoBZ4cm7Jf2IxTs0eBjJYMboBIDGybQfhrhyP/xS5AKcBVHcBLsOp7wKQANmakQ0hBjOMAgwAAJeYPhyDD9DiAAAAAElFTkSuQmCC"
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_geographer_sky"]
 noise_type = 2
@@ -58,7 +66,7 @@ unique_name_in_owner = true
 z_index = 1
 texture_filter = 1
 position = Vector2(0, -87.36)
-texture = ExtResource("2_geographer")
+texture = SubResource("EditableTexture_gray_beard_parchment_scholar")
 offset = Vector2(0, -11)
 script = ExtResource("3_surface_prop")
 kind = 17
@@ -69,7 +77,7 @@ z_index = 1
 texture_filter = 1
 position = Vector2(24.18, -83.95)
 rotation = 0.28
-texture = ExtResource("4_reports")
+texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
 script = ExtResource("3_surface_prop")
 kind = 18
@@ -80,7 +88,7 @@ z_index = 1
 texture_filter = 1
 position = Vector2(-27.52, -82.94)
 rotation = -0.32
-texture = ExtResource("4_reports")
+texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
 script = ExtResource("3_surface_prop")
 kind = 18
@@ -91,7 +99,8 @@ z_index = 1
 texture_filter = 1
 position = Vector2(41.83, -76.69)
 rotation = 0.5
-texture = ExtResource("4_reports")
+texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
 script = ExtResource("3_surface_prop")
 kind = 18
+

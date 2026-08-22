@@ -6,13 +6,14 @@ const BIRD_COUNT := 7
 const ARRIVE_SECONDS := 1.4
 const WING_FRAME_MILLISECONDS := 140
 
+@export var bird_texture: Texture2D
+
 var _birds: Array[Sprite2D] = []
 
 
 func _ready() -> void:
 	visible = false
 	set_process(false)
-	var bird_texture := preload("res://planet/migratory_bird.png")
 	for bird_index in BIRD_COUNT:
 		var bird := Sprite2D.new()
 		bird.texture = bird_texture
