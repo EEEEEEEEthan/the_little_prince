@@ -16,8 +16,8 @@
 [ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="19_home_day_music"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="21_king_day_music"]
-[ext_resource type="AudioStream" uid="uid://o7js72pawqgm" path="res://audio/soft_soil_grit_a.wav" id="22_dirt_a"]
-[ext_resource type="AudioStream" uid="uid://cb5s0bvsmamf5" path="res://audio/soft_soil_grit_b.wav" id="23_dirt_b"]
+[ext_resource type="AudioStream" uid="uid://o7js72pawqgm" path="res://audio/muffled_dirt_thud_a.wav" id="22_dirt_a"]
+[ext_resource type="AudioStream" uid="uid://cb5s0bvsmamf5" path="res://audio/muffled_dirt_thud_b.wav" id="23_dirt_b"]
 [ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="24_grass_a"]
 [ext_resource type="AudioStream" uid="uid://cuivhluijhgxn" path="res://audio/dry_grass_rustle_b.wav" id="25_grass_b"]
 
@@ -251,7 +251,7 @@ shape = SubResource("CircleShape2D_footprint")
 
 [node name="Footstep" type="AudioStreamPlayer" parent="GameView/GameViewport/Player"]
 unique_name_in_owner = true
-volume_db = -17.0774
+volume_db = -20.9151
 script = SubResource("GDScript_footstep")
 
 [node name="Scarf" type="Sprite2D" parent="GameView/GameViewport/Player" unique_id=1847293651]
