@@ -103,9 +103,9 @@ func _texture_image(tex: Texture2D) -> Image:
 	var image := tex.get_image()
 	if image != null and not image.is_empty():
 		return image
-	var inner := tex.get("_texture")
-	if inner is ImageTexture:
-		return (inner as ImageTexture).get_image()
+	var inner := tex.get("_texture") as ImageTexture
+	if inner != null:
+		return inner.get_image()
 	return image
 
 

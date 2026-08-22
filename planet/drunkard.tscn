@@ -14,11 +14,11 @@
 [ext_resource type="AudioStream" uid="uid://04l4uya0khhs" path="res://audio/i_want_to_go_home.ogg" id="18_day_music"]
 
 
-[sub_resource type="Resource" id="EditableTexture_slumped_wine_drinker"]
+[sub_resource type="Texture2D" id="EditableTexture_slumped_wine_drinker"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAWCAYAAADJqhx8AAAAwklEQVR4nGNgoBAw4pO0U1P4D2MfuvUAq1qcBtipKfyf1ZQA56fVLcBqCBMhJwYUTGFgYGBgQDaMKBcwMDAw3FjRAPeCRkQD8V6wkhD5rybCg9XQBVcg3thQZfU/oO0YI0Ev4AJ3DjxjYGAgIgzQAbK3yDIAZsi5J9/IMwAWmHVdWQwMDAwMLOS4ADlGyA7EwWMAzjC49eYL+S449uIN4y8eEYZfPCIYbKIMIAUMAwNwxsKHL++wsokGKhJi//HxYQAAKVg/0N7ERFYAAAAASUVORK5CYII="
 
-[sub_resource type="Resource" id="EditableTexture_brown_glass_bottle"]
+[sub_resource type="Texture2D" id="EditableTexture_brown_glass_bottle"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAASCAYAAABit09LAAAAmklEQVR4nGNgQAMbqqz+b6iy+o8uzoSuCBsbK4gxkPkfYyCD30QPGSG4gkvTosgzkRHZND0JLlRNSXYMelnLGDGsRgdL5h3C7kYMZyTZwdksyBIPHv3CqQmriTUNLsRZ3dKwB7/Vk9ZloWh4dekWfhNhANlqlHDk+4ViAUNNgwtx4YgMiLYaxa5PbH9QFF568QdT4YNvqIrQAQAZtDkDZxcXKgAAAABJRU5ErkJggg=="
 

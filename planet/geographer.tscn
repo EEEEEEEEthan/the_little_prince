@@ -14,11 +14,11 @@
 [ext_resource type="AudioStream" uid="uid://dbh8gq5hbhl0i" path="res://audio/dry_folio_rest.ogg" id="18_day_music"]
 
 
-[sub_resource type="Resource" id="EditableTexture_gray_beard_parchment_scholar"]
+[sub_resource type="Texture2D" id="EditableTexture_gray_beard_parchment_scholar"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAWCAYAAADJqhx8AAAAgElEQVR42mNgGLRAQ0nmPzZMkWaiDYEpvLFvHgomyRUgDTJiQigYJEZ0GKDbDsNEaV4xp+c/PkyRZoKG7JqV858YjFVzV47Hf2INAKnFa8CTc0uwYpIM8DCQQcEkG0BVF4DkCRqAHAuEXECbaEQ3hFhxDBDjZvAfhIkVH4QGkAIAv4aL8+Tc5EUAAAAASUVORK5CYII="
 
-[sub_resource type="Resource" id="EditableTexture_stacked_cream_ink_pages"]
+[sub_resource type="Texture2D" id="EditableTexture_stacked_cream_ink_pages"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAOCAYAAAAmL5yKAAAAP0lEQVR42mNgoBZ4cm7Jf2IxTs0eBjJYMboBIDGybQfhrhyP/xS5AKcBVHcBLsOp7wKQANmakQ0hBjOMAgwAAJeYPhyDD9DiAAAAAElFTkSuQmCC"
 

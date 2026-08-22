@@ -14,11 +14,11 @@
 [ext_resource type="AudioStream" uid="uid://cqwx6juhnepo3" path="res://audio/sparse_ledger_tally.ogg" id="18_day_music"]
 
 
-[sub_resource type="Resource" id="EditableTexture_hunched_ledger_merchant"]
+[sub_resource type="Texture2D" id="EditableTexture_hunched_ledger_merchant"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAWCAYAAADJqhx8AAAAv0lEQVR4nGNgGPKAEV1AREjsPz4Nb969QtHDRIpmbGqYcCkkFmB4gYGBgeHSpj6sLtHzK8KqHie4tKnvPy7DcLpARkoBr4Ynzx7gDkRCmrGpQTEA3XSSXQADK1pUCJmD34CImjsMRWEc5BvAwMDA0LfqB8OKFhWCBuGMhV+/fmDV8OrNCxQ9LLhMrogRYDDTk2E4dekJnGZgYGAomvACr4vwRiUx0QwHfLwC/7Gx0QHFmQmnAb9+/cLKproLKAYArR0/fZGsDq8AAAAASUVORK5CYII="
 
-[sub_resource type="Resource" id="EditableTexture_gold_star_glass_jar"]
+[sub_resource type="Texture2D" id="EditableTexture_gold_star_glass_jar"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAAtElEQVR4nGNgIBEwInP6CjT+m+nJMJy69IQBmbZJ2gNXx4Ks4dwfP4Zz5xgYGBiM0Og9mFbtOnbuPy5nIMsxIUvcefICpyasGlRkJBifHMnDq4kJXUDGZhLjkXkuODVhaGBgYICHCjbbMDT0FWjAFcnYTGJEl8fQUDThBiMDAwMDLmdhdRKys4jWgAugmBKTU4bVGUumdMHVYVi769i5/4uWrWBgYGBgiIuKYHCzMsLqNNoBAOXgO77F8IjXAAAAAElFTkSuQmCC"
 

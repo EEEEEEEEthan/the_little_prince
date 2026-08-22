@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://b8flyw3n9k2qp" path="res://planet/butterfly.gd" id="2_butterfly"]
 
 
-[sub_resource type="Resource" id="EditableTexture_butterfly"]
+[sub_resource type="Texture2D" id="EditableTexture_butterfly"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAgAAAADCAMAAACZFr56AAAAAXNSR0IArs4c6QAAAKhQTFRFAAAAAAAAeXl5oqKiMFGCQZLDYdPjov/zMGFBSaJpceOSov/LOG0ASaoQcfNBovOiOGkAUaIAmusAy/OCSVkAiooA69Mg//OSeUEAw3EA/6IA/9uiojAA41EA/3kw/8u6shAw20Fh/2Gy/7rrmiB520HD82H/47L/YRCikkHzonH/w7L/KAC6QUH/UYL/orr/IACyQWH7YaL/ktP/eXl5srKy6+vr////p6FNwgAAADh0Uk5TAP////////////////////////////////////////////////////////////////////////+1/GPFAAAAGElEQVQImWMwN2dgYGAwZ2AwhwAGMADRACXrApWkuk7QAAAAAElFTkSuQmCC"
 

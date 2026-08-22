@@ -47,6 +47,9 @@ func _get_width() -> int:
 func _get_height() -> int:
 	return _texture.get_height()
 
+func _get_image() -> Image:
+	return _texture.get_image()
+
 func _get_rid() -> RID:
 	return _texture.get_rid()
 
