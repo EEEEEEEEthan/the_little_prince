@@ -51,6 +51,7 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://audio/muffled_dirt_thud_b.wav",
 	"res://audio/dry_grass_rustle_a.wav",
 	"res://audio/dry_grass_rustle_b.wav",
+	"res://audio/thin_rat_squeak.wav",
 ]
 
 func _init() -> void:
@@ -334,6 +335,15 @@ func _check_constants() -> int:
 		printerr(
 			"RAT_SPRITE 应约 10×8，实际 %dx%d"
 			% [WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT]
+		)
+		failed += 1
+	if (
+		WorldConstants.DARK_SOIL_BURROW_WIDTH != 12
+		or WorldConstants.DARK_SOIL_BURROW_HEIGHT != 8
+	):
+		printerr(
+			"DARK_SOIL_BURROW 应为 12×8，实际 %dx%d"
+			% [WorldConstants.DARK_SOIL_BURROW_WIDTH, WorldConstants.DARK_SOIL_BURROW_HEIGHT]
 		)
 		failed += 1
 	if WorldConstants.FLORA_SPRITE_SIZE < 12 or WorldConstants.FLORA_SPRITE_SIZE > 20:
@@ -683,6 +693,7 @@ func _check_static_assets() -> int:
 		["划痕边框", _scene_sprite_texture("res://planet/king.tscn", "Surface/Border1"), WorldConstants.SCRATCHED_BORDER_LINES_WIDTH, WorldConstants.SCRATCHED_BORDER_LINES_HEIGHT],
 		["浅色爪印", _scene_sprite_texture("res://planet/king.tscn", "Surface/RatTrace1"), WorldConstants.PALE_PAW_PRINTS_WIDTH, WorldConstants.PALE_PAW_PRINTS_HEIGHT],
 		["老鼠", _scene_sprite_texture("res://planet/king.tscn", "Surface/Rat"), WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT],
+		["土洞", _scene_sprite_texture("res://planet/king.tscn", "Surface/RatHole"), WorldConstants.DARK_SOIL_BURROW_WIDTH, WorldConstants.DARK_SOIL_BURROW_HEIGHT],
 		[
 			"小王子",
 			_scene_sprite_texture("res://planet/planet_run_shell.tscn", "GameView/GameViewport/Player"),
@@ -3371,8 +3382,11 @@ func _check_king_chapter() -> int:
 
 	var king: SurfaceProp = null
 	var rat: SurfaceProp = null
+	var rat_hole: SurfaceProp = null
 	var throne: SurfaceProp = null
 	var cape: SurfaceProp = null
+	var edict: SurfaceProp = null
+	var border_line: SurfaceProp = null
 	var edict_count := 0
 	var border_count := 0
 	var rat_trace_count := 0
@@ -3382,30 +3396,37 @@ func _check_king_chapter() -> int:
 				king = prop
 			SurfaceProp.Kind.RAT:
 				rat = prop
+			SurfaceProp.Kind.RAT_HOLE:
+				rat_hole = prop
 			SurfaceProp.Kind.THRONE:
 				throne = prop
 			SurfaceProp.Kind.CAPE:
 				cape = prop
 			SurfaceProp.Kind.EDICT:
+				if edict == null:
+					edict = prop
 				edict_count += 1
 			SurfaceProp.Kind.BORDER:
+				if border_line == null:
+					border_line = prop
 				border_count += 1
 			SurfaceProp.Kind.RAT_TRACE:
 				rat_trace_count += 1
 			SurfaceProp.Kind.ROSE, SurfaceProp.Kind.VOLCANO, SurfaceProp.Kind.BAOBAB, SurfaceProp.Kind.FLORA:
 				printerr("国王星球不应有 B612 地物 %s" % prop.name)
 				failed += 1
-		if (
-				prop.kind != SurfaceProp.Kind.KING
-				and (prop.is_interactable() or story.accepts_interact(prop))
-		):
-			printerr("路上地物不应可交互：%s" % prop.name)
-			failed += 1
+		if prop.kind == SurfaceProp.Kind.RAT or prop.kind == SurfaceProp.Kind.RAT_TRACE:
+			if prop.is_interactable() or story.accepts_interact(prop):
+				printerr("耗子本身不应可交互：%s" % prop.name)
+				failed += 1
 	if king == null:
 		printerr("国王星球应有国王")
 		failed += 1
 	if rat == null:
 		printerr("国王星球应有耗子")
+		failed += 1
+	if rat_hole == null:
+		printerr("国王星球应有耗子洞")
 		failed += 1
 	if throne == null:
 		printerr("国王星球应有高王座")
@@ -3468,6 +3489,14 @@ func _check_king_chapter() -> int:
 		planet.teleport_player(rat.rotation)
 		if planet.find_nearest_interactable() == rat:
 			printerr("站在耗子旁不应选中耗子")
+			failed += 1
+	if rat_hole != null:
+		if not rat_hole.is_interactable():
+			printerr("耗子洞应可探")
+			failed += 1
+		planet.teleport_player(rat_hole.rotation)
+		if planet.find_nearest_interactable() != rat_hole:
+			printerr("站在洞口应选中洞，不应选中耗子")
 			failed += 1
 
 	if DialogueCatalog.lines_for_id(&"king").size() < 2:
@@ -3539,6 +3568,69 @@ func _check_king_chapter() -> int:
 	if story.accepts_interact(king):
 		printerr("路上不应弹出见面对话")
 		failed += 1
+	var overhear_deadline_msec := Time.get_ticks_msec() + 1000
+	while (
+			not story.has_overheard_distant_sentencing
+			and Time.get_ticks_msec() < overhear_deadline_msec
+	):
+		await process_frame
+	if not story.has_overheard_distant_sentencing:
+		printerr("靠近耗子洞应听见远处判刑又赦免")
+		failed += 1
+	if edict != null:
+		planet.teleport_player(edict.rotation)
+		if not story.accepts_interact(edict):
+			printerr("路上诏书应可点一下")
+			failed += 1
+		if not story.try_handle_interact(edict):
+			printerr("点诏书应读一句空令")
+			failed += 1
+	if border_line != null:
+		planet.teleport_player(border_line.rotation)
+		var border_offset_before := border_line.offset
+		if not story.try_handle_interact(border_line):
+			printerr("国境线应可踩一下")
+			failed += 1
+		await process_frame
+		if border_line.offset.is_equal_approx(border_offset_before):
+			printerr("踩国境线后线应抖一下")
+			failed += 1
+	if rat_hole != null:
+		planet.teleport_player(rat_hole.rotation)
+		if planet.find_nearest_interactable(story.accepts_interact) != rat_hole:
+			printerr("路上应能对准耗子洞")
+			failed += 1
+		if not story.try_handle_interact(rat_hole):
+			printerr("探洞应吱一声")
+			failed += 1
+		if not (rat_hole.get_node("Squeak") as AudioStreamPlayer).playing:
+			printerr("探洞后应正在播放吱声")
+			failed += 1
+	if throne != null:
+		planet.teleport_player(
+				fposmod(planet.king_angle - planet.audience_keep_away_arc - 0.04, TAU)
+		)
+		if planet.find_nearest_interactable(story.accepts_interact) != throne:
+			printerr("走近禁区前应从左侧仰望空王座")
+			failed += 1
+		if not story.try_handle_interact(throne):
+			printerr("禁区外点王座应只能仰一下")
+			failed += 1
+	if cape != null:
+		planet.teleport_player(
+				fposmod(planet.king_angle + planet.audience_keep_away_arc + 0.04, TAU)
+		)
+		if planet.find_nearest_interactable(story.accepts_interact) != cape:
+			printerr("走近禁区前应从右侧掀到披风边")
+			failed += 1
+		var cape_offset_before := cape.offset
+		if not story.try_handle_interact(cape):
+			printerr("披风边应可掀一点")
+			failed += 1
+		await process_frame
+		if cape.offset.is_equal_approx(cape_offset_before):
+			printerr("掀披风后应抬起一点")
+			failed += 1
 	planet.teleport_player(
 			fposmod(
 					planet.king_angle + WorldConstants.KING_DISTANT_VOICE_ARC - 0.02,
@@ -3571,34 +3663,39 @@ func _check_king_chapter() -> int:
 	if FileAccess.get_file_as_string("res://story/king_story.gd").contains("_meet_sunset"):
 		printerr("国王章不应再走 _meet_sunset 追日落")
 		failed += 1
+	var king_source := FileAccess.get_file_as_string("res://story/king_story.gd")
+	if (
+			king_source.contains("太阳落山")
+			or king_source.contains("我想看日落")
+			or king_source.contains("_play_standing_sunset")
+	):
+		printerr("国王章不应再声称能控制或召唤日落")
+		failed += 1
 	if story.is_processing():
 		printerr("国王章不应再按经度侦测日落")
 		failed += 1
 	if not is_equal_approx(planet.player_angle, audience_player_angle):
-		printerr("天空演出不应改变经度/走动，player_angle %s -> %s" % [audience_player_angle, planet.player_angle])
+		printerr("觐见不应改变经度/走动，player_angle %s -> %s" % [audience_player_angle, planet.player_angle])
 		failed += 1
 	if absf(absf(planet.signed_angle_from_king()) - planet.audience_keep_away_arc) > 0.04:
-		printerr("演出后应仍在禁区外，偏移 %s" % planet.signed_angle_from_king())
+		printerr("觐见后应仍在禁区外，偏移 %s" % planet.signed_angle_from_king())
 		failed += 1
-	if not is_equal_approx(planet.sky.commanded_daylight_phase, SkyPhase.SUNSET_PHASE):
+	if not is_nan(planet.sky.commanded_daylight_phase):
 		printerr(
-				"命令后应为站着看的日落天空，phase=%s"
+				"国王章天空相位应跟经度走，不应命令日落，phase=%s"
 				% planet.sky.commanded_daylight_phase
 		)
 		failed += 1
-	if is_equal_approx(SkyPhase.angle_to_phase(planet.sky.rotation), SkyPhase.SUNSET_PHASE):
-		printerr("日落演出不应靠走到日落经度")
-		failed += 1
-	var music_before_king_sunset := scene.get_node("%Music").playing_stream as AudioStream
-	failed += _assert_playing_stream(scene, music_before_king_sunset, "国王日落不应切换配乐")
+	var music_before_king_meeting := scene.get_node("%Music").playing_stream as AudioStream
+	failed += _assert_playing_stream(scene, music_before_king_meeting, "国王觐见不应切换配乐")
 	if story.is_blocking_input:
-		printerr("国王下令日落后应恢复输入")
+		printerr("国王见面对话后应恢复输入")
 		failed += 1
 	if not story.accepts_interact(king):
-		printerr("天空演出后应能继续司法大臣对话")
+		printerr("见面高潮后应能继续司法大臣对话")
 		failed += 1
 	if not story.try_handle_interact(king):
-		printerr("天空演出后应按 A 继续司法大臣对话")
+		printerr("见面高潮后应按 A 继续司法大臣对话")
 		failed += 1
 	if not king.is_consumed:
 		printerr("告别后国王应消耗")

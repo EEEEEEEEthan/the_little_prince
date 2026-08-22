@@ -20,7 +20,7 @@ script/source = "extends Sprite2D
 var planet_rotation: float = 0.0
 var star_rotation_speed: float = WorldConstants.STAR_ROTATION_SPEED
 var is_self_rotating: bool = true
-## 国王命令日落等演出用：有值时天空相位不再跟经度走。
+## 酒鬼等锁死天光用：有值时天空相位不再跟经度走。
 var commanded_daylight_phase: float = NAN:
 	set(value):
 		commanded_daylight_phase = value

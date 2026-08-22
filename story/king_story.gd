@@ -1,12 +1,15 @@
 class_name KingStory
 extends PlanetStory
-## 325 号小行星：背面降落，路上只走场景；觐见时再对上现有国王对话。
+## 325 号小行星：背面降落，路上可点环境；觐见时对上现有国王对话（无日落）。
+
+var has_overheard_distant_sentencing: bool = false
 
 
 func _prepare_start() -> void:
 	player.move_speed_scale = 0.65
 	player.modulate.a = 1.0
 	planet.has_contacted_audience_keep_away = false
+	has_overheard_distant_sentencing = false
 	set_process(false)
 
 
@@ -17,6 +20,7 @@ func _play_story() -> void:
 	player.can_move_right = true
 	is_blocking_input = false
 	has_finished_opening = true
+	_watch_rat_overhear()
 	await _await_distant_king_voice()
 	await _await_audience_keep_away()
 	await _king("过来。这是命令。")
@@ -43,21 +47,9 @@ func _play_story() -> void:
 	await _overhead("他轻轻比了个手势，把所有星球都划进他的王国。")
 	await _prince("那些星星都服从您吗？")
 	await _king("当然。我不容许无纪律。")
-	await _prince("请您命令太阳落山吧。")
-	await _prince("我想看日落。")
 	await _king("如果我命令一位将军变成海鸟，")
 	await _king("而他不服从，那是我的错。")
 	await _king("我的命令必须通情达理。")
-	await _king("我会命令太阳落山。")
-	await _king("但要等到条件成熟。")
-	await _overhead("他说，傍晚就会下令。")
-	_lock_input()
-	await _camera_up()
-	await _king("太阳！我命令你落山。")
-	await _play_standing_sunset_sky()
-	await _overhead("太阳正要落下。国王的命令被执行了。")
-	await _wait(0.5)
-	await _camera_down()
 	player.move_speed_scale = 1.0
 	is_blocking_input = false
 	var king := await _interact(SurfaceProp.Kind.KING)
@@ -80,6 +72,31 @@ func _play_story() -> void:
 	await _overhead("因为他的命令都是通情达理的。")
 	king.is_consumed = true
 	await _depart("325。")
+
+
+func accepts_interact(prop: SurfaceProp) -> bool:
+	if not is_active or is_blocking_input or prop.is_consumed:
+		return false
+	if _waiting_interact_kind >= 0:
+		return int(prop.kind) == _waiting_interact_kind
+	return prop.is_interactable() and prop.kind != SurfaceProp.Kind.KING
+
+
+func try_handle_interact(prop: SurfaceProp) -> bool:
+	if int(prop.kind) == _waiting_interact_kind:
+		return super.try_handle_interact(prop)
+	if not accepts_interact(prop):
+		return false
+	match prop.kind:
+		SurfaceProp.Kind.EDICT:
+			overhead.play_queued("诏上什么也没写。")
+		SurfaceProp.Kind.THRONE:
+			_glance_up_at_empty_throne()
+		SurfaceProp.Kind.BORDER, SurfaceProp.Kind.CAPE, SurfaceProp.Kind.RAT_HOLE:
+			prop.play_ambient_one_shot()
+		_:
+			return false
+	return true
 
 
 func _king(text: String) -> void:
@@ -112,19 +129,38 @@ func _await_audience_keep_away() -> void:
 	await _halt_if_stale(generation)
 
 
-func _play_standing_sunset_sky() -> void:
+func _watch_rat_overhear() -> void:
 	var generation := _story_generation
+	var rat: SurfaceProp = null
+	for prop in planet.surface_props:
+		if prop.kind == SurfaceProp.Kind.RAT:
+			rat = prop
+			break
+	var overhear_arc := WorldConstants.INTERACT_RANGE_PX * 2.0 / planet.radius
+	while (
+			is_inside_tree()
+			and generation == _story_generation
+			and not has_overheard_distant_sentencing
+	):
+		if (
+				has_finished_opening
+				and not is_blocking_input
+				and absf(angle_difference(planet.player_angle, rat.rotation)) <= overhear_arc
+		):
+			has_overheard_distant_sentencing = true
+			if not skip_cinematics:
+				overhead.play_queued("「判你死刑。」")
+				overhead.play_queued("「我赦免你。」")
+			return
+		await get_tree().process_frame
+
+
+func _glance_up_at_empty_throne() -> void:
 	if skip_cinematics:
-		planet.sky.commanded_daylight_phase = SkyPhase.SUNSET_PHASE
-		await _halt_if_stale(generation)
 		return
-	planet.sky.commanded_daylight_phase = planet.sky.daylight_phase()
-	if _story_tween != null:
-		_story_tween.kill()
-	_story_tween = create_tween()
-	_story_tween.tween_property(
-			planet.sky, "commanded_daylight_phase", SkyPhase.SUNSET_PHASE, 2.4
-	)
-	await _story_tween.finished
-	_story_tween = null
-	await _halt_if_stale(generation)
+	var game_camera := %GameCamera
+	var glance := game_camera.create_tween()
+	glance.set_trans(Tween.TRANS_CUBIC)
+	glance.set_ease(Tween.EASE_IN_OUT)
+	glance.tween_property(game_camera, "offset:y", -16.0, 0.45)
+	glance.tween_property(game_camera, "offset:y", 0.0, 0.55)
