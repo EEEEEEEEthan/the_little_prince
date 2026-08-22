@@ -174,8 +174,12 @@ func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceP
 		var diff := absf(angle_difference(player_angle, prop.rotation))
 		var max_arc := default_max_arc
 		if (
-				prop.kind == SurfaceProp.Kind.KING
-				and audience_keep_away_arc > 0.0
+				audience_keep_away_arc > 0.0
+				and (
+						prop.kind == SurfaceProp.Kind.KING
+						or prop.kind == SurfaceProp.Kind.THRONE
+						or prop.kind == SurfaceProp.Kind.CAPE
+				)
 		):
 			max_arc = audience_keep_away_arc + 0.02
 		if diff <= max_arc and diff <= best_diff:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成短促土地闷响与草地沙沙 one-shot（CC0）。运行：python3 audio/generate_footsteps.py"""
+"""生成短促土地闷响、草地沙沙与老鼠吱声 one-shot（CC0）。运行：python3 audio/generate_footsteps.py"""
 
 from __future__ import annotations
 
@@ -58,6 +58,19 @@ def render_dirt_thud(seed: int, thud_hertz: float) -> np.ndarray:
 	return mixed
 
 
+def render_thin_rat_squeak() -> np.ndarray:
+	rng = np.random.default_rng(9)
+	duration_seconds = 0.14
+	sample_count = int(SAMPLE_RATE * duration_seconds)
+	time_seconds = np.arange(sample_count, dtype=np.float64) / SAMPLE_RATE
+	envelope = np.exp(-time_seconds / 0.028) * (1.0 - np.exp(-time_seconds / 0.004))
+	chirp_hertz = 2100.0 + 900.0 * np.exp(-time_seconds / 0.05)
+	tone = 0.72 * np.sin(2.0 * math.pi * chirp_hertz * time_seconds)
+	overtone = 0.22 * np.sin(2.0 * math.pi * chirp_hertz * 2.03 * time_seconds)
+	noise = rng.normal(0.0, 0.08, sample_count)
+	return fade_edges(envelope * (tone + overtone + noise), 12)
+
+
 def render_grass_rustle(seed: int) -> np.ndarray:
 	rng = np.random.default_rng(seed)
 	duration_seconds = 0.13
@@ -76,6 +89,7 @@ def main() -> None:
 	write_wav(render_dirt_thud(23, 108.0), output_directory / "muffled_dirt_thud_b.wav")
 	write_wav(render_grass_rustle(41), output_directory / "dry_grass_rustle_a.wav")
 	write_wav(render_grass_rustle(67), output_directory / "dry_grass_rustle_b.wav")
+	write_wav(render_thin_rat_squeak(), output_directory / "thin_rat_squeak.wav")
 
 
 if __name__ == "__main__":

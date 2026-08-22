@@ -23,6 +23,7 @@ enum Kind {
 	STREET_LAMP,
 	GEOGRAPHER,
 	INK_REPORT,
+	RAT_HOLE,
 }
 
 @export var kind: Kind = Kind.ROSE
@@ -75,9 +76,15 @@ func get_dialogue_id() -> StringName:
 
 func is_interactable() -> bool:
 	match kind:
-		Kind.VOLCANO, Kind.FLORA, Kind.RAT, Kind.EDICT, Kind.BORDER, Kind.RAT_TRACE, Kind.THRONE, Kind.CAPE, Kind.BOTTLE, Kind.MERCHANT, Kind.LAMPLIGHTER, Kind.INK_REPORT:
+		Kind.EDICT, Kind.BORDER, Kind.THRONE, Kind.CAPE, Kind.RAT_HOLE:
+			return true
+		Kind.VOLCANO, Kind.FLORA, Kind.RAT, Kind.RAT_TRACE, Kind.BOTTLE, Kind.MERCHANT, Kind.LAMPLIGHTER, Kind.INK_REPORT:
 			return false
 	return not is_consumed and get_dialogue_id() != &""
+
+
+func play_ambient_one_shot() -> void:
+	pass
 
 
 ## 依据相对玩家角的可见性更新显示状态。
