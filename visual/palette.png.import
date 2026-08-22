@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dmsjmdhqcu8c7"
-path="res://.godot/imported/unrolled_parchment.png-dbb644a3a874d1a084b80f00bc447e56.ctex"
+uid="uid://cop81vwashvr5"
+path="res://.godot/imported/palette.png-d856c922a66047950b8cb0cc7a9eeeb7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://planet/unrolled_parchment.png"
-dest_files=["res://.godot/imported/unrolled_parchment.png-dbb644a3a874d1a084b80f00bc447e56.ctex"]
+source_file="res://visual/palette.png"
+dest_files=["res://.godot/imported/palette.png-d856c922a66047950b8cb0cc7a9eeeb7.ctex"]
 
 [params]
 

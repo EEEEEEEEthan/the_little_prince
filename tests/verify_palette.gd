@@ -5,19 +5,19 @@ func _init() -> void:
 
 func _run_tests() -> void:
 	var failed := 0
-	var palette := load("res://palette.png") as Texture2D
+	var palette := load("res://visual/palette.png") as Texture2D
 	if palette == null or palette.get_width() != 32 or palette.get_height() != 1:
 		printerr("palette.png 应为 32×1 色板")
 		failed += 1
 
-	var shader := load("res://palette.gdshader") as Shader
+	var shader := load("res://visual/palette.gdshader") as Shader
 	if shader == null:
 		printerr("无法加载色板后处理 shader")
 		failed += 1
 		quit(failed)
 		return
 
-	var packed_scene := load("res://main.tscn") as PackedScene
+	var packed_scene := load("res://journey/main.tscn") as PackedScene
 	if packed_scene == null:
 		printerr("无法加载主场景")
 		failed += 1

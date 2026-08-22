@@ -21,46 +21,19 @@ const WorldConstants = preload("res://core/world_constants.gd")
 const SKY_PHASE := preload("res://planet/sky_phase.gd")
 
 const REQUIRED_ASSETS: Array[String] = [
-	"res://player/prince.png",
-	"res://planet/rose.png",
-	"res://planet/volcano.png",
-	"res://planet/pale_gray_puff.png",
 	"res://planet/white_lavender_puff_frames.png",
-	"res://planet/baobab.png",
-	"res://planet/flora.png",
-	"res://planet/butterfly.png",
 	"res://planet/body.png",
 	"res://planet/starfield.png",
 	"res://planet/day_sky.png",
-	"res://ui/prompt_a.png",
 	"res://ui/portraits/prince.png",
 	"res://ui/portraits/rose.png",
-	"res://planet/glass_globe.png",
-	"res://planet/migratory_bird.png",
-	"res://planet/king.png",
-	"res://planet/rat.png",
-	"res://planet/blue_mottled_disk.png",
-	"res://planet/gold_spired_throne.png",
-	"res://planet/crimson_cape_spread.png",
-	"res://planet/unrolled_parchment.png",
-	"res://planet/scratched_border_lines.png",
-	"res://planet/pale_paw_prints.png",
 	"res://ui/portraits/king.png",
 	"res://planet/amber_mottled_disk.png",
-	"res://planet/brown_glass_bottle.png",
-	"res://planet/slumped_wine_drinker.png",
 	"res://ui/portraits/slumped_wine_drinker.png",
 	"res://planet/ink_gold_ledger_disk.png",
-	"res://planet/hunched_ledger_merchant.png",
-	"res://planet/gold_star_glass_jar.png",
 	"res://ui/portraits/hunched_ledger_merchant.png",
-	"res://planet/ash_gray_mottled_disk.png",
-	"res://planet/black_coat_lamplighter.png",
-	"res://planet/black_post_street_lamp.png",
 	"res://ui/portraits/black_coat_lamplighter.png",
 	"res://planet/cream_ink_parchment_disk.png",
-	"res://planet/gray_beard_parchment_scholar.png",
-	"res://planet/stacked_cream_ink_pages.png",
 	"res://ui/portraits/gray_beard_parchment_scholar.png",
 ]
 
@@ -117,6 +90,63 @@ func _run_tests() -> void:
 	else:
 		printerr("[verify_arc_planet] 失败项数：%d" % failed)
 		quit(1)
+
+
+func _is_editable_texture(tex: Texture2D) -> bool:
+	return (
+			tex is EditableTexture
+			or tex.get_script() == preload("res://addons/godot_editable_texture/editable_texture.gd")
+	)
+
+
+func _texture_image(tex: Texture2D) -> Image:
+	var image := tex.get_image()
+	if image != null and not image.is_empty():
+		return image
+	var inner := tex.get("_texture")
+	if inner is ImageTexture:
+		return (inner as ImageTexture).get_image()
+	return image
+
+
+func _instantiate_scene(scene_path: String) -> Node:
+	return (load(scene_path) as PackedScene).instantiate()
+
+
+func _scene_sprite_texture(scene_path: String, node_path: NodePath) -> Texture2D:
+	var scene := _instantiate_scene(scene_path)
+	var node := scene.get_node_or_null(node_path)
+	var tex: Texture2D = null
+	if node is Sprite2D:
+		tex = (node as Sprite2D).texture
+	elif node is CPUParticles2D:
+		tex = (node as CPUParticles2D).texture
+	scene.free()
+	return tex
+
+
+func _planet_body_texture(scene_path: String) -> Texture2D:
+	var planet := _instantiate_scene(scene_path) as Planet
+	var tex := planet.body_texture
+	planet.free()
+	return tex
+
+
+func _migratory_bird_texture() -> Texture2D:
+	var shell := _instantiate_scene("res://planet/planet_run_shell.tscn")
+	var flock := shell.get_node("GameView/GameViewport/Story/MigratoryFlock") as MigratoryFlock
+	var tex := flock.bird_texture
+	shell.free()
+	return tex
+
+
+func _butterfly_sheet_texture() -> Texture2D:
+	var butterfly := _instantiate_scene("res://planet/butterfly.tscn") as AnimatedSprite2D
+	var atlas := butterfly.sprite_frames.get_frame_texture(&"default", 0) as AtlasTexture
+	var tex: Texture2D = atlas.atlas if atlas != null else null
+	butterfly.free()
+	return tex
+
 
 func _check_constants() -> int:
 	var failed := 0
@@ -360,7 +390,7 @@ func _check_static_assets() -> int:
 			printerr("无法加载贴图：%s" % path)
 			failed += 1
 			continue
-		if path != "res://planet/butterfly.png" and (tex.get_width() < 8 or tex.get_height() < 8):
+		if tex.get_width() < 8 or tex.get_height() < 8:
 			printerr("贴图尺寸过小：%s（%dx%d）" % [path, tex.get_width(), tex.get_height()])
 			failed += 1
 	for path in REQUIRED_OTHER_ASSETS:
@@ -541,14 +571,17 @@ func _check_static_assets() -> int:
 			if opaque_pairs > 0 and float(checker) / float(opaque_pairs) > 0.18:
 				printerr("星球贴图不应使用 1bit/Bayer 渐变")
 				failed += 1
-	var king_body: Texture2D = load("res://planet/blue_mottled_disk.png") as Texture2D
+	var king_body: Texture2D = _planet_body_texture("res://planet/king.tscn")
 	if king_body != null:
 		var king_diameter: int = int(ceil(WorldConstants.KING_PLANET_RADIUS)) * 2
 		if king_body.get_width() != king_diameter or king_body.get_height() != king_diameter:
 			printerr(
-				"blue_mottled_disk.png 应为 %dx%d，实际 %dx%d"
+				"国王星球圆盘应为 %dx%d，实际 %dx%d"
 				% [king_diameter, king_diameter, king_body.get_width(), king_body.get_height()]
 			)
+			failed += 1
+		elif not _is_editable_texture(king_body):
+			printerr("国王星球圆盘应为场景内 EditableTexture")
 			failed += 1
 	var amber_body: Texture2D = load("res://planet/amber_mottled_disk.png") as Texture2D
 	if amber_body != null:
@@ -585,84 +618,33 @@ func _check_static_assets() -> int:
 				]
 			)
 			failed += 1
-	var ash_body: Texture2D = load("res://planet/ash_gray_mottled_disk.png") as Texture2D
+	var ash_body: Texture2D = _planet_body_texture("res://planet/lamplighter.tscn")
 	if ash_body != null:
 		var ash_diameter: int = int(ceil(WorldConstants.LAMPLIGHTER_PLANET_RADIUS)) * 2
 		if ash_body.get_width() != ash_diameter or ash_body.get_height() != ash_diameter:
 			printerr(
-				"ash_gray_mottled_disk.png 应为 %dx%d，实际 %dx%d"
+				"点灯人星球圆盘应为 %dx%d，实际 %dx%d"
 				% [ash_diameter, ash_diameter, ash_body.get_width(), ash_body.get_height()]
 			)
 			failed += 1
-	# 精灵尺寸应对齐常量（火山 / 猴面包树为 spritesheet，宽度 = 帧数 × 帧尺寸）
-	var sprite_checks: Array = [
-		[
-			"res://planet/volcano.png",
-			WorldConstants.VOLCANO_SPRITE_SIZE * WorldConstants.VOLCANO_VARIANT_COUNT,
-			WorldConstants.VOLCANO_SPRITE_SIZE,
-		],
-		["res://planet/pale_gray_puff.png", 8, 8],
+		elif not _is_editable_texture(ash_body):
+			printerr("点灯人星球圆盘应为场景内 EditableTexture")
+			failed += 1
+	var file_sprite_checks: Array = [
 		[
 			"res://planet/white_lavender_puff_frames.png",
 			WorldConstants.CLOUD_FRAME_WIDTH * WorldConstants.CLOUD_FRAME_COLUMNS,
 			WorldConstants.CLOUD_FRAME_HEIGHT * WorldConstants.CLOUD_FRAME_ROWS,
 		],
-		[
-			"res://planet/baobab.png",
-			WorldConstants.BAOBAB_SPRITE_SIZE * WorldConstants.BAOBAB_VARIANT_COUNT,
-			WorldConstants.BAOBAB_SPRITE_SIZE,
-		],
-		[
-			"res://planet/flora.png",
-			WorldConstants.FLORA_SPRITE_SIZE * WorldConstants.FLORA_VARIANT_COUNT,
-			WorldConstants.FLORA_SPRITE_SIZE,
-		],
-		["res://planet/rose.png", WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
-		["res://planet/king.png", WorldConstants.KING_SPRITE_WIDTH, WorldConstants.KING_SPRITE_HEIGHT],
-		["res://planet/gold_spired_throne.png", WorldConstants.GOLD_SPIRED_THRONE_WIDTH, WorldConstants.GOLD_SPIRED_THRONE_HEIGHT],
-		["res://planet/crimson_cape_spread.png", WorldConstants.CRIMSON_CAPE_SPREAD_WIDTH, WorldConstants.CRIMSON_CAPE_SPREAD_HEIGHT],
-		["res://planet/unrolled_parchment.png", WorldConstants.UNROLLED_PARCHMENT_WIDTH, WorldConstants.UNROLLED_PARCHMENT_HEIGHT],
-		["res://planet/scratched_border_lines.png", WorldConstants.SCRATCHED_BORDER_LINES_WIDTH, WorldConstants.SCRATCHED_BORDER_LINES_HEIGHT],
-		["res://planet/pale_paw_prints.png", WorldConstants.PALE_PAW_PRINTS_WIDTH, WorldConstants.PALE_PAW_PRINTS_HEIGHT],
-		["res://planet/rat.png", WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT],
-		[
-			"res://player/prince.png",
-			WorldConstants.PLAYER_SPRITE_WIDTH * WorldConstants.PLAYER_SPRITE_FRAME_COUNT,
-			WorldConstants.PLAYER_SPRITE_HEIGHT,
-		],
-		["res://ui/prompt_a.png", 13, 13],
 		["res://ui/portraits/prince.png", 32, 32],
 		["res://ui/portraits/rose.png", 32, 32],
 		["res://ui/portraits/king.png", 32, 32],
-		["res://planet/brown_glass_bottle.png", WorldConstants.BROWN_GLASS_BOTTLE_WIDTH, WorldConstants.BROWN_GLASS_BOTTLE_HEIGHT],
-		["res://planet/slumped_wine_drinker.png", WorldConstants.SLUMPED_WINE_DRINKER_WIDTH, WorldConstants.SLUMPED_WINE_DRINKER_HEIGHT],
 		["res://ui/portraits/slumped_wine_drinker.png", 32, 32],
-		["res://planet/hunched_ledger_merchant.png", WorldConstants.HUNCHED_LEDGER_MERCHANT_WIDTH, WorldConstants.HUNCHED_LEDGER_MERCHANT_HEIGHT],
-		["res://planet/gold_star_glass_jar.png", WorldConstants.GOLD_STAR_GLASS_JAR_WIDTH, WorldConstants.GOLD_STAR_GLASS_JAR_HEIGHT],
 		["res://ui/portraits/hunched_ledger_merchant.png", 32, 32],
-		["res://planet/black_coat_lamplighter.png", WorldConstants.BLACK_COAT_LAMPLIGHTER_WIDTH, WorldConstants.BLACK_COAT_LAMPLIGHTER_HEIGHT],
-		[
-			"res://planet/black_post_street_lamp.png",
-			WorldConstants.BLACK_POST_STREET_LAMP_WIDTH * WorldConstants.BLACK_POST_STREET_LAMP_FRAME_COUNT,
-			WorldConstants.BLACK_POST_STREET_LAMP_HEIGHT,
-		],
 		["res://ui/portraits/black_coat_lamplighter.png", 32, 32],
-		[
-			"res://planet/gray_beard_parchment_scholar.png",
-			WorldConstants.GRAY_BEARD_PARCHMENT_SCHOLAR_WIDTH,
-			WorldConstants.GRAY_BEARD_PARCHMENT_SCHOLAR_HEIGHT,
-		],
-		[
-			"res://planet/stacked_cream_ink_pages.png",
-			WorldConstants.STACKED_CREAM_INK_PAGES_WIDTH,
-			WorldConstants.STACKED_CREAM_INK_PAGES_HEIGHT,
-		],
 		["res://ui/portraits/gray_beard_parchment_scholar.png", 32, 32],
-		["res://planet/glass_globe.png", 24, 24],
-		["res://planet/migratory_bird.png", 16, 8],
-		["res://planet/butterfly.png", 8, 3],
 	]
-	for item in sprite_checks:
+	for item in file_sprite_checks:
 		var tex: Texture2D = load(item[0]) as Texture2D
 		if tex == null:
 			continue
@@ -672,9 +654,89 @@ func _check_static_assets() -> int:
 				% [item[0], item[1], item[2], tex.get_width(), tex.get_height()]
 			)
 			failed += 1
-	var volcano_tex := load("res://planet/volcano.png") as Texture2D
+	var embedded_sprite_checks: Array = [
+		[
+			"火山",
+			_scene_sprite_texture("res://planet/b612.tscn", "Surface/Volcano"),
+			WorldConstants.VOLCANO_SPRITE_SIZE * WorldConstants.VOLCANO_VARIANT_COUNT,
+			WorldConstants.VOLCANO_SPRITE_SIZE,
+		],
+		["火山烟", _scene_sprite_texture("res://planet/b612.tscn", "Surface/Volcano/VolcanoSmoke"), 8, 8],
+		[
+			"猴面包树",
+			_scene_sprite_texture("res://planet/b612.tscn", "Surface/Baobab"),
+			WorldConstants.BAOBAB_SPRITE_SIZE * WorldConstants.BAOBAB_VARIANT_COUNT,
+			WorldConstants.BAOBAB_SPRITE_SIZE,
+		],
+		[
+			"地表植物",
+			_scene_sprite_texture("res://planet/b612.tscn", "Surface/Flora6"),
+			WorldConstants.FLORA_SPRITE_SIZE * WorldConstants.FLORA_VARIANT_COUNT,
+			WorldConstants.FLORA_SPRITE_SIZE,
+		],
+		["玫瑰", _scene_sprite_texture("res://planet/b612.tscn", "Surface/Rose"), WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
+		["玻璃罩", _scene_sprite_texture("res://planet/b612.tscn", "Surface/Rose/GlassGlobe"), 24, 24],
+		["国王", _scene_sprite_texture("res://planet/king.tscn", "Surface/King"), WorldConstants.KING_SPRITE_WIDTH, WorldConstants.KING_SPRITE_HEIGHT],
+		["金尖顶王座", _scene_sprite_texture("res://planet/king.tscn", "Surface/Throne"), WorldConstants.GOLD_SPIRED_THRONE_WIDTH, WorldConstants.GOLD_SPIRED_THRONE_HEIGHT],
+		["红披风", _scene_sprite_texture("res://planet/king.tscn", "Surface/Cape"), WorldConstants.CRIMSON_CAPE_SPREAD_WIDTH, WorldConstants.CRIMSON_CAPE_SPREAD_HEIGHT],
+		["展开诏书", _scene_sprite_texture("res://planet/king.tscn", "Surface/EdictL"), WorldConstants.UNROLLED_PARCHMENT_WIDTH, WorldConstants.UNROLLED_PARCHMENT_HEIGHT],
+		["划痕边框", _scene_sprite_texture("res://planet/king.tscn", "Surface/Border1"), WorldConstants.SCRATCHED_BORDER_LINES_WIDTH, WorldConstants.SCRATCHED_BORDER_LINES_HEIGHT],
+		["浅色爪印", _scene_sprite_texture("res://planet/king.tscn", "Surface/RatTrace1"), WorldConstants.PALE_PAW_PRINTS_WIDTH, WorldConstants.PALE_PAW_PRINTS_HEIGHT],
+		["老鼠", _scene_sprite_texture("res://planet/king.tscn", "Surface/Rat"), WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT],
+		[
+			"小王子",
+			_scene_sprite_texture("res://planet/planet_run_shell.tscn", "GameView/GameViewport/Player"),
+			WorldConstants.PLAYER_SPRITE_WIDTH * WorldConstants.PLAYER_SPRITE_FRAME_COUNT,
+			WorldConstants.PLAYER_SPRITE_HEIGHT,
+		],
+		["交互提示", _scene_sprite_texture("res://planet/planet_run_shell.tscn", "GameView/GameViewport/InteractPrompt"), 13, 13],
+		["棕玻璃瓶", _scene_sprite_texture("res://planet/drunkard.tscn", "Surface/Bottle1"), WorldConstants.BROWN_GLASS_BOTTLE_WIDTH, WorldConstants.BROWN_GLASS_BOTTLE_HEIGHT],
+		["酒鬼", _scene_sprite_texture("res://planet/drunkard.tscn", "Surface/Drunkard"), WorldConstants.SLUMPED_WINE_DRINKER_WIDTH, WorldConstants.SLUMPED_WINE_DRINKER_HEIGHT],
+		["商人", _scene_sprite_texture("res://planet/merchant.tscn", "Surface/Merchant"), WorldConstants.HUNCHED_LEDGER_MERCHANT_WIDTH, WorldConstants.HUNCHED_LEDGER_MERCHANT_HEIGHT],
+		["金星玻璃罐", _scene_sprite_texture("res://planet/merchant.tscn", "Surface/StarJar"), WorldConstants.GOLD_STAR_GLASS_JAR_WIDTH, WorldConstants.GOLD_STAR_GLASS_JAR_HEIGHT],
+		["点灯人", _scene_sprite_texture("res://planet/lamplighter.tscn", "Surface/Lamplighter"), WorldConstants.BLACK_COAT_LAMPLIGHTER_WIDTH, WorldConstants.BLACK_COAT_LAMPLIGHTER_HEIGHT],
+		[
+			"路灯",
+			_scene_sprite_texture("res://planet/lamplighter.tscn", "Surface/StreetLamp"),
+			WorldConstants.BLACK_POST_STREET_LAMP_WIDTH * WorldConstants.BLACK_POST_STREET_LAMP_FRAME_COUNT,
+			WorldConstants.BLACK_POST_STREET_LAMP_HEIGHT,
+		],
+		[
+			"地理学家",
+			_scene_sprite_texture("res://planet/geographer.tscn", "Surface/Geographer"),
+			WorldConstants.GRAY_BEARD_PARCHMENT_SCHOLAR_WIDTH,
+			WorldConstants.GRAY_BEARD_PARCHMENT_SCHOLAR_HEIGHT,
+		],
+		[
+			"报告堆",
+			_scene_sprite_texture("res://planet/geographer.tscn", "Surface/ReportStackA"),
+			WorldConstants.STACKED_CREAM_INK_PAGES_WIDTH,
+			WorldConstants.STACKED_CREAM_INK_PAGES_HEIGHT,
+		],
+		["候鸟", _migratory_bird_texture(), 16, 8],
+		["蝴蝶图集", _butterfly_sheet_texture(), 8, 3],
+	]
+	for item in embedded_sprite_checks:
+		var tex: Texture2D = item[1]
+		if tex == null:
+			printerr("缺少内嵌贴图：%s" % item[0])
+			failed += 1
+			continue
+		if not _is_editable_texture(tex):
+			printerr("%s 应为 EditableTexture" % item[0])
+			failed += 1
+		if tex.get_width() != int(item[2]) or tex.get_height() != int(item[3]):
+			printerr(
+				"%s 尺寸应为 %dx%d，实际 %dx%d"
+				% [item[0], item[2], item[3], tex.get_width(), tex.get_height()]
+			)
+			failed += 1
+	if FileAccess.file_exists("res://planet/sky.gd") or FileAccess.file_exists("res://planet/clouds.gd"):
+		printerr("sky.gd / clouds.gd 应已收进 planet.tscn 子节点 builtin")
+		failed += 1
+	var volcano_tex := _scene_sprite_texture("res://planet/b612.tscn", "Surface/Volcano")
 	if volcano_tex != null:
-		var volcano_img := volcano_tex.get_image()
+		var volcano_img := _texture_image(volcano_tex)
 		var frame_size := WorldConstants.VOLCANO_SPRITE_SIZE
 		var active_origin := WorldConstants.VOLCANO_ACTIVE_VARIANT * frame_size
 		var found_lava := false
@@ -694,9 +756,9 @@ func _check_static_assets() -> int:
 		if found_smoke_pixel:
 			printerr("活火山贴图不应再含烟雾像素")
 			failed += 1
-	var flora_tex := load("res://planet/flora.png") as Texture2D
+	var flora_tex := _scene_sprite_texture("res://planet/b612.tscn", "Surface/Flora6")
 	if flora_tex != null:
-		var flora_img := flora_tex.get_image()
+		var flora_img := _texture_image(flora_tex)
 		var found_leaf := false
 		var found_cool_dry_grass := false
 		for pixel_y in range(flora_img.get_height()):
@@ -735,8 +797,8 @@ func _check_no_legacy() -> int:
 func _check_tscn_editor_visible() -> int:
 	var failed := 0
 	for path in [
-		"res://main.tscn",
-		"res://planet_run_shell.tscn",
+		"res://journey/main.tscn",
+		"res://planet/planet_run_shell.tscn",
 		"res://planet/planet.tscn",
 		"res://planet/b612.tscn",
 		"res://planet/king.tscn",
@@ -976,7 +1038,7 @@ func _assert_playing_stream(scene: Node, expected: AudioStream, mismatch_message
 
 func _check_main_story_starts_with_sky_ready() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -1007,7 +1069,7 @@ func _check_main_story_starts_with_sky_ready() -> int:
 
 
 func _check_story_not_active_before_planet_ready() -> int:
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -1056,7 +1118,7 @@ func _check_story_not_active_before_planet_ready() -> int:
 
 func _check_scene_and_mechanics() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -1244,8 +1306,8 @@ func _check_scene_and_mechanics() -> int:
 					% [prop.name, WorldConstants.FLORA_VARIANT_COUNT, prop.hframes]
 				)
 				failed += 1
-			if prop.texture == null or prop.texture.resource_path != "res://planet/flora.png":
-				printerr("地表植物 %s 应使用 flora.png" % prop.name)
+			if prop.texture == null or not _is_editable_texture(prop.texture):
+				printerr("地表植物 %s 应使用场景内嵌 flora 贴图" % prop.name)
 				failed += 1
 			if prop.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
 				printerr("地表植物 %s 应为 Nearest 过滤" % prop.name)
@@ -3255,7 +3317,7 @@ func _assert_king_romantic_palette(
 
 func _check_king_chapter() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -3410,9 +3472,9 @@ func _check_king_chapter() -> int:
 		printerr("king 对话至少两句")
 		failed += 1
 
-	var king_tex := load("res://planet/king.png") as Texture2D
+	var king_tex := _scene_sprite_texture("res://planet/king.tscn", "Surface/King")
 	if king_tex != null:
-		var king_image := king_tex.get_image()
+		var king_image := _texture_image(king_tex)
 		var found_gold := false
 		var found_robe := false
 		for pixel_y in king_image.get_height():
@@ -3811,7 +3873,7 @@ func _assert_standalone_planet_run(
 
 func _check_b612_depart_lift_halfway_overhead() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -3978,7 +4040,7 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 
 func _check_b612_departed_travels_to_king() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -4029,7 +4091,7 @@ func _await_physics_queries() -> void:
 
 func _check_footsteps() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -4286,7 +4348,7 @@ func _assert_dirt_grass_footstep_switch(
 
 func _check_drunkard_chapter() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -4475,7 +4537,7 @@ func _check_drunkard_chapter() -> int:
 
 func _check_king_departed_travels_to_drunkard() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -4529,7 +4591,7 @@ func _check_king_departed_travels_to_drunkard() -> int:
 
 func _check_merchant_chapter() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -4737,7 +4799,7 @@ func _check_merchant_chapter() -> int:
 
 func _check_drunkard_departed_travels_to_merchant() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -4792,7 +4854,7 @@ func _check_drunkard_departed_travels_to_merchant() -> int:
 
 func _check_lamplighter_chapter() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -4997,7 +5059,7 @@ func _check_lamplighter_chapter() -> int:
 
 func _check_merchant_departed_travels_to_lamplighter() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -5053,7 +5115,7 @@ func _check_merchant_departed_travels_to_lamplighter() -> int:
 
 func _check_geographer_chapter() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1
@@ -5252,7 +5314,7 @@ func _check_geographer_chapter() -> int:
 
 func _check_lamplighter_departed_travels_to_geographer() -> int:
 	var failed := 0
-	var packed: PackedScene = load("res://main.tscn")
+	var packed: PackedScene = load("res://journey/main.tscn")
 	if packed == null:
 		printerr("无法加载 main.tscn")
 		return 1

@@ -94,20 +94,16 @@ python3 tests/run_godot_verify.py --timeout 120 -- \
 
 ```
 .
-├── .engine-prepare.sh    # Linux/macOS 引擎准备脚本
-├── .engine-prepare.bat   # Windows 引擎准备脚本
-├── .engine-edit.sh       # Linux/macOS：准备并打开编辑器
-├── .engine-edit.bat      # Windows：准备并打开编辑器
-├── .github/workflows/
-│   └── ci.yml            # CI：无头验证
-├── core/
-│   └── world_constants.gd
-├── planet/               # 星球相关场景、脚本、贴图、着色器
-├── player/               # 玩家场景与脚本
-├── tests/
-│   ├── verify_arc_planet.gd      # 无头验证 GDScript
-│   └── run_godot_verify.py       # Python 包装器（超时 + 错误检测）
-├── main.gd
-├── main.tscn
+├── addons/                  # 编辑器插件（含 EditableTexture）
+├── audio/                   # 配乐、脚步、总线布局
+├── core/                    # 世界常量
+├── interact/                # 交互系统
+├── journey/                 # 主旅程入口 main.tscn
+├── planet/                  # 星球场景、运行壳、共享贴图与着色器
+├── player/                  # 玩家脚本
+├── story/                   # 各星球演出脚本
+├── tests/                   # 无头验证
+├── ui/                      # 对话框、提示、字体、头像
+├── visual/                  # 色板后处理
 └── project.godot
 ```
