@@ -47,8 +47,8 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 	"res://audio/sparse_ledger_tally.ogg",
 	"res://audio/rapid_lamp_duty_tick.ogg",
 	"res://audio/dry_folio_rest.ogg",
-	"res://audio/muffled_dirt_thud_a.wav",
-	"res://audio/muffled_dirt_thud_b.wav",
+	"res://audio/soft_soil_grit_a.wav",
+	"res://audio/soft_soil_grit_b.wav",
 	"res://audio/dry_grass_rustle_a.wav",
 	"res://audio/dry_grass_rustle_b.wav",
 ]
@@ -4146,8 +4146,11 @@ func _assert_walking_footstep_playback(
 ) -> int:
 	var failed := 0
 	var footstep_player := footstep as AudioStreamPlayer
-	if footstep_player.volume_db > linear_to_db(0.3):
-		printerr("脚步应为配乐下的轻 SFX，volume_db=%s" % footstep_player.volume_db)
+	if footstep_player.volume_db > linear_to_db(0.18):
+		printerr("脚步应明显轻于 0.25 线性档，volume_db=%s" % footstep_player.volume_db)
+		failed += 1
+	if footstep_player.volume_db < linear_to_db(0.1):
+		printerr("脚步过轻，volume_db=%s" % footstep_player.volume_db)
 		failed += 1
 	planet.teleport_player(planet.rose_angle)
 	_plant_walk_step(player, planet, 1.0)

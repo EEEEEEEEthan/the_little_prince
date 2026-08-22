@@ -44,11 +44,11 @@ https://creativecommons.org/publicdomain/zero/1.0/
 许可：CC0 1.0（可商用）
 说明：已按 CC0 1.0 捐入公有领域，可免费商用、修改与再分发，无需署名
 
-文件：muffled_dirt_thud_a.wav、muffled_dirt_thud_b.wav
-标题：土地闷响脚步
+文件：soft_soil_grit_a.wav、soft_soil_grit_b.wav
+标题：软土颗粒脚步
 作者：本仓库原创（generate_footsteps.py 生成）
 许可：CC0 1.0（可商用）
-说明：短 one-shot，默认地面脚步
+说明：短 one-shot，默认地面脚步（软土/沙粒感，无空心闷响）
 
 文件：dry_grass_rustle_a.wav、dry_grass_rustle_b.wav
 标题：草地沙沙脚步

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成短促土地闷响与草地沙沙 one-shot（CC0）。运行：python3 audio/generate_footsteps.py"""
+"""生成短促软土颗粒与草地沙沙 one-shot（CC0）。运行：python3 audio/generate_footsteps.py"""
 
 from __future__ import annotations
 
@@ -46,16 +46,31 @@ def write_wav(samples: np.ndarray, output_path: Path) -> None:
 		wav_file.writeframes(pcm.tobytes())
 
 
-def render_dirt_thud(seed: int, thud_hertz: float) -> np.ndarray:
+def render_soft_soil_grit(seed: int, grit_gain: float) -> np.ndarray:
 	rng = np.random.default_rng(seed)
-	duration_seconds = 0.11
+	duration_seconds = 0.085
 	sample_count = int(SAMPLE_RATE * duration_seconds)
 	time_seconds = np.arange(sample_count, dtype=np.float64) / SAMPLE_RATE
-	noise = one_pole_lowpass(rng.normal(0.0, 1.0, sample_count), 420.0)
-	body = np.sin(2.0 * math.pi * thud_hertz * time_seconds)
-	envelope = np.exp(-time_seconds / 0.028)
-	mixed = fade_edges(envelope * (0.72 * body + 0.55 * noise), 8)
-	return mixed
+	white = rng.normal(0.0, 1.0, sample_count)
+	soft_body = one_pole_lowpass(white, 640.0)
+	grit = one_pole_highpass(one_pole_lowpass(white, 7600.0), 2100.0)
+	grain_ticks = np.zeros(sample_count)
+	grain_count = 6
+	for _grain_index in range(grain_count):
+		center = int(rng.integers(6, max(7, sample_count // 2)))
+		half_width = int(rng.integers(2, 6))
+		start = max(0, center - half_width)
+		end = min(sample_count, center + half_width)
+		grain = rng.normal(0.0, 1.0, end - start)
+		grain_ticks[start:end] += one_pole_highpass(grain, 1700.0)
+	body_envelope = np.exp(-time_seconds / 0.016)
+	grit_envelope = np.exp(-time_seconds / 0.011)
+	mixed = (
+		0.48 * soft_body * body_envelope
+		+ grit_gain * grit * grit_envelope
+		+ 0.32 * grain_ticks * grit_envelope
+	)
+	return fade_edges(mixed, 5)
 
 
 def render_grass_rustle(seed: int) -> np.ndarray:
@@ -72,8 +87,8 @@ def render_grass_rustle(seed: int) -> np.ndarray:
 
 def main() -> None:
 	output_directory = Path(__file__).resolve().parent
-	write_wav(render_dirt_thud(11, 92.0), output_directory / "muffled_dirt_thud_a.wav")
-	write_wav(render_dirt_thud(23, 108.0), output_directory / "muffled_dirt_thud_b.wav")
+	write_wav(render_soft_soil_grit(11, 0.62), output_directory / "soft_soil_grit_a.wav")
+	write_wav(render_soft_soil_grit(23, 0.74), output_directory / "soft_soil_grit_b.wav")
 	write_wav(render_grass_rustle(41), output_directory / "dry_grass_rustle_a.wav")
 	write_wav(render_grass_rustle(67), output_directory / "dry_grass_rustle_b.wav")
 

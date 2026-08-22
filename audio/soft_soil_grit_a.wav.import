@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://o7js72pawqgm"
-path="res://.godot/imported/muffled_dirt_thud_a.wav-fc2228d715f3f9022a3b8db46918a1b2.sample"
+path="res://.godot/imported/soft_soil_grit_a.wav-ca2bea5ec62bb9f2681bf9c59c3b7fb3.sample"
 
 [deps]
 
-source_file="res://audio/muffled_dirt_thud_a.wav"
-dest_files=["res://.godot/imported/muffled_dirt_thud_a.wav-fc2228d715f3f9022a3b8db46918a1b2.sample"]
+source_file="res://audio/soft_soil_grit_a.wav"
+dest_files=["res://.godot/imported/soft_soil_grit_a.wav-ca2bea5ec62bb9f2681bf9c59c3b7fb3.sample"]
 
 [params]
 
