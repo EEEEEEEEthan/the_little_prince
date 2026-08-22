@@ -3608,20 +3608,20 @@ func _check_king_chapter() -> int:
 			failed += 1
 	if throne != null:
 		planet.teleport_player(
-				fposmod(planet.king_angle - planet.audience_keep_away_arc, TAU)
+				fposmod(planet.king_angle - planet.audience_keep_away_arc - 0.04, TAU)
 		)
 		if planet.find_nearest_interactable(story.accepts_interact) != throne:
-			printerr("禁区外应从左侧仰望空王座")
+			printerr("走近禁区前应从左侧仰望空王座")
 			failed += 1
 		if not story.try_handle_interact(throne):
 			printerr("禁区外点王座应只能仰一下")
 			failed += 1
 	if cape != null:
 		planet.teleport_player(
-				fposmod(planet.king_angle + planet.audience_keep_away_arc, TAU)
+				fposmod(planet.king_angle + planet.audience_keep_away_arc + 0.04, TAU)
 		)
 		if planet.find_nearest_interactable(story.accepts_interact) != cape:
-			printerr("禁区外应从右侧掀到披风边")
+			printerr("走近禁区前应从右侧掀到披风边")
 			failed += 1
 		var cape_offset_before := cape.offset
 		if not story.try_handle_interact(cape):
