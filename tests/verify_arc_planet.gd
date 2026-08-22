@@ -1822,7 +1822,7 @@ func _check_butterflies(planet: Planet) -> int:
 			failed += 1
 		if butterfly.guide_target_local_position != Vector2.ZERO:
 			opening_guide = butterfly
-			var tscn_home_position := Vector2(
+			var tscn_home_position: Vector2 = Vector2(
 					sin(butterfly._home_orbital_angle),
 					-cos(butterfly._home_orbital_angle),
 			) * butterfly._home_orbit_radius
@@ -1832,13 +1832,13 @@ func _check_butterflies(planet: Planet) -> int:
 						% [butterfly.name, tscn_home_position, butterfly.position]
 				)
 				failed += 1
-			var held_position := butterfly.position
+			var held_position: Vector2 = butterfly.position
 			butterfly._process(0.8)
 			if butterfly.position.distance_to(held_position) > 0.02:
 				printerr("引导前 %s 不应离开 tscn 坐标" % butterfly.name)
 				failed += 1
 			continue
-		var position_before := butterfly.position
+		var position_before: Vector2 = butterfly.position
 		butterfly._process(0.8)
 		if butterfly.position.distance_to(position_before) < 0.05:
 			printerr("蝴蝶 %s 应飞离原位" % butterfly.name)
@@ -1910,7 +1910,7 @@ func _check_butterflies(planet: Planet) -> int:
 			)
 			failed += 1
 		opening_guide._elapsed_seconds = 0.6
-		var guided_position_before_bob := opening_guide.position
+		var guided_position_before_bob: Vector2 = opening_guide.position
 		opening_guide._process(0.0)
 		if opening_guide.position.is_equal_approx(guided_position_before_bob):
 			printerr("引导飞行时应保留上下浮动")
@@ -1944,7 +1944,7 @@ func _check_butterflies(planet: Planet) -> int:
 				break
 		if fell_inside_planet:
 			break
-	var sample := butterflies[0]
+	var sample = butterflies[0]
 	var sample_orbital_angle := atan2(sample.position.x, -sample.position.y)
 	planet.teleport_player(sample_orbital_angle)
 	sample._process(0.0)
