@@ -59,7 +59,8 @@ func _play_story() -> void:
 	player.can_move_right = true
 	is_blocking_input = false
 	if not skip_cinematics:
-		(planet.get_node("%Butterfly3") as Butterfly).begin_guide_flight()
+		var opening_guide = planet.get_node("%Butterfly3")
+		opening_guide.begin_guide_flight()
 	planet.sky.is_self_rotating = true
 	await _wait_move_right()
 	await _wait(3.0)

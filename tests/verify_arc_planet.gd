@@ -734,6 +734,9 @@ func _check_static_assets() -> int:
 	if FileAccess.file_exists("res://planet/sky.gd") or FileAccess.file_exists("res://planet/clouds.gd"):
 		printerr("sky.gd / clouds.gd 应已收进 planet.tscn 子节点 builtin")
 		failed += 1
+	if FileAccess.file_exists("res://planet/butterfly.gd"):
+		printerr("butterfly.gd 应已收进 butterfly.tscn 根节点 builtin")
+		failed += 1
 	var volcano_tex := _scene_sprite_texture("res://planet/b612.tscn", "Surface/Volcano")
 	if volcano_tex != null:
 		var volcano_img := _texture_image(volcano_tex)
@@ -1777,11 +1780,10 @@ func _check_clouds(planet: Planet) -> int:
 func _check_butterflies(planet: Planet) -> int:
 	var failed := 0
 	var original_player_angle := planet.player_angle
-	var butterflies: Array[Butterfly] = []
+	var butterflies: Array = []
 	for child in planet.surface.get_children():
-		var butterfly := child as Butterfly
-		if butterfly != null:
-			butterflies.append(butterfly)
+		if child.scene_file_path == "res://planet/butterfly.tscn":
+			butterflies.append(child)
 	if butterflies.size() != WorldConstants.BUTTERFLY_COUNT:
 		printerr(
 				"蝴蝶数量应为 %d，实际 %d"
@@ -1792,7 +1794,7 @@ func _check_butterflies(planet: Planet) -> int:
 		planet.teleport_player(original_player_angle)
 		return failed + 1
 	var packed_scene_path := "res://planet/butterfly.tscn"
-	var opening_guide: Butterfly = null
+	var opening_guide = null
 	for butterfly in butterflies:
 		if butterfly.scene_file_path != packed_scene_path:
 			printerr("蝴蝶 %s 应实例化 butterfly.tscn" % butterfly.name)
@@ -2929,7 +2931,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	elif absf(measure_star_self_rotation.call(10.0)) < 0.0001:
 		printerr("罩上玻璃罩后星空应开始自转")
 		failed += 1
-	var opening_guide := planet.get_node("%Butterfly3") as Butterfly
+	var opening_guide := planet.get_node("%Butterfly3")
 	if opening_guide.modulate.a > 0.01:
 		printerr("跳过演出时 Butterfly3 不应开始引导")
 		failed += 1
