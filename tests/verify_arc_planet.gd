@@ -3855,7 +3855,7 @@ func _assert_standalone_planet_run(
 		printerr("%s 玩家应绑定该星" % label)
 		failed += 1
 	var story := planet.get_node("%Story")
-	var has_custom_story := (
+	var has_custom_story: bool = (
 			is_instance_of(story, PlanetStory) and story.get_script() != PlanetStory
 	)
 	if has_custom_story != expects_custom_story:
