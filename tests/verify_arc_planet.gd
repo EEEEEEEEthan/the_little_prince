@@ -57,6 +57,11 @@ const REQUIRED_OTHER_ASSETS: Array[String] = [
 func _init() -> void:
 	call_deferred(&"_run_tests")
 
+
+func get_tree() -> SceneTree:
+	return self
+
+
 func _run_tests() -> void:
 	var failed := 0
 	failed += _check_constants()
