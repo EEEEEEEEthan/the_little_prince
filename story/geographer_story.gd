@@ -1,5 +1,5 @@
 class_name GeographerStory
-extends PlanetStory
+extends "res://story/planet_story.gd"
 ## 330 号小行星：书房只记别人的报告；玫瑰太短不记，随后指向地球。
 
 

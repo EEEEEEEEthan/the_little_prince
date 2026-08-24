@@ -1,5 +1,5 @@
 class_name B612Story
-extends PlanetStory
+extends "res://story/planet_story.gd"
 ## B612 故乡剧情：一条协程串起对白、侧写、交互与离星。
 
 const PULL_SHOOT_HOLD_SECONDS := 0.8

@@ -1,5 +1,5 @@
 class_name MerchantStory
-extends PlanetStory
+extends "res://story/planet_story.gd"
 ## 328 号小行星：地是账本，星星在天上；商人从不抬头，玻璃罐一点即过。
 
 

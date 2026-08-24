@@ -1,5 +1,5 @@
 class_name LamplighterStory
-extends PlanetStory
+extends "res://story/planet_story.gd"
 ## 329 号小行星：最小、昼夜极快；陪几轮、帮点一次，站不下只能走。
 
 const ACCOMPANY_DAY_NIGHT_ROUND_COUNT := 3

@@ -1,4 +1,4 @@
-extends PlanetRunShell
+extends "res://planet/planet_run_shell.gd"
 ## 旅程入口：开局 B612，离星后国王，再酒鬼，再商人，再点灯人，再地理学家。
 
 const META_KING_PLANET_SCENE := "king_planet_scene"
