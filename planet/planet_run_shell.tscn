@@ -288,7 +288,10 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 script = ExtResource("10_interact")
 
-[node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport" unique_id=515559498]
+[node name="Story" type="Node" parent="GameView/GameViewport" unique_id=1847000003]
+unique_name_in_owner = true
+
+[node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport/Story" unique_id=515559498]
 unique_name_in_owner = true
 z_index = 180
 script = ExtResource("14_flock")
