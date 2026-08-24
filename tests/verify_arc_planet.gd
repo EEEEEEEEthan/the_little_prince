@@ -3991,6 +3991,7 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 	var overhead := story.overhead
 	var overhead_body := overhead.get_node("Body") as Label
 	var dim := story.get_node("%Dim") as ColorRect
+	var music_player := scene.get_node("%Music/Playing") as AudioStreamPlayer
 	const first_overhead := "玫瑰不想小王子看见她在哭"
 	const second_overhead := "她总是这么傲娇"
 	story.skip_cinematics = false
@@ -4020,6 +4021,10 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 			break
 		if dim.color.a > 0.05:
 			printerr("旁白播完前不应黑屏")
+			failed += 1
+			break
+		if music_player.volume_db < -20.0:
+			printerr("黑屏开始前配乐不应淡出，volume_db=%s" % music_player.volume_db)
 			failed += 1
 			break
 		await process_frame
@@ -4098,6 +4103,10 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 		if overhead.visible and overhead_body.text == second_overhead:
 			second_started_msec = Time.get_ticks_msec()
 			break
+		if music_player.volume_db < -20.0:
+			printerr("旁白播完前配乐不应淡出，volume_db=%s" % music_player.volume_db)
+			failed += 1
+			break
 		await process_frame
 	if second_started_msec < 0:
 		printerr("第一句之后应播放「她总是这么傲娇」")
@@ -4116,6 +4125,9 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 		await process_frame
 	if dim.color.a < 0.99:
 		printerr("旁白播完后应黑屏")
+		failed += 1
+	if music_player.volume_db > -70.0:
+		printerr("黑屏结束时配乐应已淡出，volume_db=%s" % music_player.volume_db)
 		failed += 1
 	var epilogue_deadline_msec := Time.get_ticks_msec() + 1000
 	while (
@@ -5472,4 +5484,3 @@ func _check_lamplighter_departed_travels_to_geographer() -> int:
 	scene.queue_free()
 	await process_frame
 	return failed
-

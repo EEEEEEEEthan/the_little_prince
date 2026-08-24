@@ -10,6 +10,7 @@ signal _halt
 const EPILOGUE_HOLD_SECONDS := 1.8
 const LIFT_DURATION_SECONDS := 2.4
 const LIFT_HALFWAY_OVERHEAD_EXTRA_SECONDS := 0.5
+const DEPARTURE_BLACKOUT_SECONDS := 1.2
 
 @export var auto_start: bool = true
 
@@ -213,7 +214,6 @@ func _depart(
 		player.modulate.a = 0.0
 		%Dim.color = Color(0, 0, 0, 1)
 	else:
-		%Music.fade_out()
 		var lift_distance_pixels := (
 				player.global_position.y
 				- get_viewport().get_visible_rect().position.y
@@ -239,8 +239,11 @@ func _depart(
 			)
 			for overhead_text in lift_halfway_overhead_texts:
 				await _overhead(overhead_text)
+		%Music.fade_out(DEPARTURE_BLACKOUT_SECONDS)
 		_story_tween = create_tween()
-		_story_tween.tween_property(%Dim, "color:a", 1.0, 1.2)
+		_story_tween.tween_property(
+				%Dim, "color:a", 1.0, DEPARTURE_BLACKOUT_SECONDS
+		)
 		await _story_tween.finished
 		_story_tween = null
 		player.modulate.a = 0.0

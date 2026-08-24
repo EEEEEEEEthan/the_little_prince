@@ -127,8 +127,8 @@ func play_geographer_day_loop() -> void:
 	_crossfade_to(_config_music(META_GEOGRAPHER_DAY_MUSIC))
 
 
-func fade_out() -> void:
-	_crossfade_to(null)
+func fade_out(duration_seconds: float = CROSSFADE_SECONDS) -> void:
+	_crossfade_to(null, duration_seconds)
 
 
 func _opening_music() -> AudioStream:
@@ -142,7 +142,7 @@ func _opening_music() -> AudioStream:
 	return _config_music(META_HOME_DAY_MUSIC)
 
 
-func _crossfade_to(music: AudioStream) -> void:
+func _crossfade_to(music: AudioStream, duration_seconds: float = CROSSFADE_SECONDS) -> void:
 	if music != null and _active.stream == music and _active.playing:
 		return
 	if _fade_tween != null:
@@ -158,9 +158,9 @@ func _crossfade_to(music: AudioStream) -> void:
 		incoming.play()
 	_fade_tween = create_tween()
 	_fade_tween.set_parallel(true)
-	_fade_tween.tween_property(outgoing, \"volume_db\", SILENT_VOLUME_DB, CROSSFADE_SECONDS)
+	_fade_tween.tween_property(outgoing, \"volume_db\", SILENT_VOLUME_DB, duration_seconds)
 	if music != null:
-		_fade_tween.tween_property(incoming, \"volume_db\", PLAYING_VOLUME_DB, CROSSFADE_SECONDS)
+		_fade_tween.tween_property(incoming, \"volume_db\", PLAYING_VOLUME_DB, duration_seconds)
 	_fade_tween.chain().tween_callback(outgoing.stop)
 
 
@@ -316,4 +316,3 @@ theme_override_fonts/font = ExtResource("15_font")
 theme_override_font_sizes/font_size = 8
 horizontal_alignment = 1
 vertical_alignment = 1
-
