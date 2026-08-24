@@ -128,7 +128,16 @@ func play_geographer_day_loop() -> void:
 
 
 func fade_out(duration_seconds: float = CROSSFADE_SECONDS) -> void:
-	_crossfade_to(null, duration_seconds)
+	var a := _active
+	var b := _idle
+	if _fade_tween != null:
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.set_parallel(true)
+	_fade_tween.tween_property(a, \"volume_db\", SILENT_VOLUME_DB, duration_seconds)
+	_fade_tween.tween_property(b, \"volume_db\", SILENT_VOLUME_DB, duration_seconds)
+	_fade_tween.chain().tween_callback(a.stop)
+	_fade_tween.chain().tween_callback(b.stop)
 
 
 func _opening_music() -> AudioStream:
