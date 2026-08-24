@@ -4,8 +4,6 @@
 [ext_resource type="Script" uid="uid://cyh14kfr3hytu" path="res://journey/main.gd" id="2_main"]
 [ext_resource type="PackedScene" uid="uid://6a4gvsyrkrea" path="res://planet/b612.tscn" id="3_b612"]
 [ext_resource type="PackedScene" uid="uid://dkingplanet01" path="res://planet/king.tscn" id="4_king"]
-[ext_resource type="Script" uid="uid://8xqecv8g6cek" path="res://story/b612_story.gd" id="5_b612_story"]
-[ext_resource type="Script" uid="uid://ckingstoryg01" path="res://story/king_story.gd" id="6_king_story"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="7_home_day_music"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="8_king_day_music"]
 [ext_resource type="AudioStream" uid="uid://o7js72pawqgm" path="res://audio/muffled_dirt_thud_a.wav" id="9_dirt_a"]
@@ -13,16 +11,12 @@
 [ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="11_grass_a"]
 [ext_resource type="AudioStream" uid="uid://cuivhluijhgxn" path="res://audio/dry_grass_rustle_b.wav" id="12_grass_b"]
 [ext_resource type="PackedScene" uid="uid://bbndj0oq7fs16" path="res://planet/drunkard.tscn" id="13_drunkard"]
-[ext_resource type="Script" uid="uid://blwqt5626b8st" path="res://story/drunkard_story.gd" id="14_drunkard_story"]
 [ext_resource type="AudioStream" uid="uid://04l4uya0khhs" path="res://audio/i_want_to_go_home.ogg" id="15_drunkard_music"]
 [ext_resource type="PackedScene" uid="uid://bvjewowvb2ter" path="res://planet/merchant.tscn" id="16_merchant"]
-[ext_resource type="Script" uid="uid://bw54dtm61dbg5" path="res://story/merchant_story.gd" id="17_merchant_story"]
 [ext_resource type="AudioStream" uid="uid://cqwx6juhnepo3" path="res://audio/sparse_ledger_tally.ogg" id="18_merchant_music"]
 [ext_resource type="PackedScene" uid="uid://ng34d2r5t0gd" path="res://planet/lamplighter.tscn" id="19_lamplighter"]
-[ext_resource type="Script" uid="uid://dpepijvfb0qlv" path="res://story/lamplighter_story.gd" id="20_lamplighter_story"]
 [ext_resource type="AudioStream" uid="uid://cciq03byi16e0" path="res://audio/rapid_lamp_duty_tick.ogg" id="21_lamplighter_music"]
 [ext_resource type="PackedScene" uid="uid://ccnxy2b27mj36" path="res://planet/geographer.tscn" id="22_geographer"]
-[ext_resource type="Script" uid="uid://c5aqtsrp8kkfu" path="res://story/geographer_story.gd" id="23_geographer_story"]
 [ext_resource type="AudioStream" uid="uid://dbh8gq5hbhl0i" path="res://audio/dry_folio_rest.ogg" id="24_geographer_music"]
 
 [node name="Main" unique_id=134579991 instance=ExtResource("1_shell")]
@@ -48,31 +42,5 @@ metadata/grass_footstep_b = ExtResource("12_grass_b")
 [node name="Planet" parent="GameView/GameViewport" index="1" instance=ExtResource("3_b612")]
 unique_name_in_owner = true
 
-[node name="Story" parent="GameView/GameViewport" index="6"]
-script = ExtResource("5_b612_story")
+[node name="Story" parent="GameView/GameViewport/Planet" index="4"]
 auto_start = true
-
-[node name="KingStory" type="Node" parent="GameView/GameViewport" index="7"]
-unique_name_in_owner = true
-script = ExtResource("6_king_story")
-auto_start = false
-
-[node name="DrunkardStory" type="Node" parent="GameView/GameViewport" index="8"]
-unique_name_in_owner = true
-script = ExtResource("14_drunkard_story")
-auto_start = false
-
-[node name="MerchantStory" type="Node" parent="GameView/GameViewport" index="9"]
-unique_name_in_owner = true
-script = ExtResource("17_merchant_story")
-auto_start = false
-
-[node name="LamplighterStory" type="Node" parent="GameView/GameViewport" index="10"]
-unique_name_in_owner = true
-script = ExtResource("20_lamplighter_story")
-auto_start = false
-
-[node name="GeographerStory" type="Node" parent="GameView/GameViewport" index="11"]
-unique_name_in_owner = true
-script = ExtResource("23_geographer_story")
-auto_start = false

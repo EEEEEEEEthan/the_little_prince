@@ -23,12 +23,11 @@ func travel_to_king_planet(start_story := true) -> void:
 		return
 	_swap_journey_planet(
 			META_KING_PLANET_SCENE,
-			%KingStory as KingStory,
 			%Music.play_king_day_loop,
 			start_story
 	)
 	if start_story:
-		(%KingStory as KingStory).departed.connect(
+		(%Story as KingStory).departed.connect(
 				travel_to_drunkard_planet,
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED
 		)
@@ -39,12 +38,11 @@ func travel_to_drunkard_planet(start_story := true) -> void:
 		return
 	_swap_journey_planet(
 			META_DRUNKARD_PLANET_SCENE,
-			%DrunkardStory as DrunkardStory,
 			%Music.play_drunkard_day_loop,
 			start_story
 	)
 	if start_story:
-		(%DrunkardStory as DrunkardStory).departed.connect(
+		(%Story as DrunkardStory).departed.connect(
 				travel_to_merchant_planet,
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED
 		)
@@ -55,12 +53,11 @@ func travel_to_merchant_planet(start_story := true) -> void:
 		return
 	_swap_journey_planet(
 			META_MERCHANT_PLANET_SCENE,
-			%MerchantStory as MerchantStory,
 			%Music.play_merchant_day_loop,
 			start_story
 	)
 	if start_story:
-		(%MerchantStory as MerchantStory).departed.connect(
+		(%Story as MerchantStory).departed.connect(
 				travel_to_lamplighter_planet,
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED
 		)
@@ -71,12 +68,11 @@ func travel_to_lamplighter_planet(start_story := true) -> void:
 		return
 	_swap_journey_planet(
 			META_LAMPLIGHTER_PLANET_SCENE,
-			%LamplighterStory as LamplighterStory,
 			%Music.play_lamplighter_day_loop,
 			start_story
 	)
 	if start_story:
-		(%LamplighterStory as LamplighterStory).departed.connect(
+		(%Story as LamplighterStory).departed.connect(
 				travel_to_geographer_planet,
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED
 		)
@@ -88,7 +84,6 @@ func travel_to_geographer_planet(start_story := true) -> void:
 	travel_to_next_planet = false
 	_swap_journey_planet(
 			META_GEOGRAPHER_PLANET_SCENE,
-			%GeographerStory as GeographerStory,
 			%Music.play_geographer_day_loop,
 			start_story
 	)
@@ -96,7 +91,6 @@ func travel_to_geographer_planet(start_story := true) -> void:
 
 func _swap_journey_planet(
 		planet_scene_meta_name: String,
-		next_story: PlanetStory,
 		play_day_music: Callable,
 		start_story: bool
 ) -> void:
@@ -106,6 +100,7 @@ func _swap_journey_planet(
 	var next_planet := (
 			$Config.get_meta(planet_scene_meta_name) as PackedScene
 	).instantiate() as Planet
+	var next_story := next_planet.get_node("%Story") as PlanetStory
 	replace_planet(next_planet)
 	next_story.planet = next_planet
 	interaction.story = next_story

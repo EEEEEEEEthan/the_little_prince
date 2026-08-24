@@ -10,9 +10,11 @@
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
 [ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
-[ext_resource type="Script" uid="uid://bw54dtm61dbg5" path="res://story/merchant_story.gd" id="17_story"]
 [ext_resource type="AudioStream" uid="uid://cqwx6juhnepo3" path="res://audio/sparse_ledger_tally.ogg" id="18_day_music"]
 
+
+[sub_resource type="GDScript" id="GDScript_merchant_story_builtin"]
+script/source = "class_name MerchantStory\nextends \"res://story/planet_story.gd\"\n## 328 号小行星：地是账本，星星在天上；商人从不抬头，玻璃罐一点即过。\n\n\nfunc _prepare_start() -> void:\n\tplayer.flip_h = true\n\tplayer.modulate.a = 1.0\n\thas_crossed_sunset = true\n\tplanet.sky.commanded_daylight_phase = 0.0\n\n\nfunc _process(_delta: float) -> void:\n\tsuper._process(_delta)\n\tif not has_finished_opening or is_blocking_input:\n\t\treturn\n\tvar look_up_amount := Input.get_action_strength(&\"move_up\")\n\t%GameCamera.offset.y = lerpf(\n\t\t\t%GameCamera.offset.y,\n\t\t\t-16.0 * look_up_amount,\n\t\t\t0.2\n\t)\n\n\nfunc _play_story() -> void:\n\tawait _fade_in_from_black()\n\tawait _camera_up()\n\tawait _overhead(\"星星都在天上。\")\n\tawait _camera_down()\n\tplayer.can_move_left = true\n\tplayer.can_move_right = true\n\tis_blocking_input = false\n\thas_finished_opening = true\n\tvar star_jar := await _interact(SurfaceProp.Kind.STAR_JAR)\n\tawait _overhead(\"他把它们锁进玻璃罐，自己从不抬头。\")\n\tstar_jar.is_consumed = true\n\tawait _depart(\"328。\")\n"
 
 [sub_resource type="Texture2D" id="EditableTexture_hunched_ledger_merchant"]
 script = ExtResource("editable_texture_script")
@@ -50,7 +52,6 @@ zenith_gradient = ExtResource("13_ink_zenith")
 process_mode = 4
 script = ExtResource("15_playable")
 metadata/run_shell_scene = ExtResource("16_run_shell")
-metadata/story_script = ExtResource("17_story")
 metadata/day_music = ExtResource("18_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
@@ -82,4 +83,9 @@ offset = Vector2(0, -8)
 script = ExtResource("3_surface_prop")
 kind = 14
 dialogue_id = &"star_jar"
+
+
+[node name="Story" parent="." index="4"]
+script = SubResource("GDScript_merchant_story_builtin")
+auto_start = false
 

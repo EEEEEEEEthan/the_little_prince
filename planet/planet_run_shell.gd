@@ -69,7 +69,6 @@ func _layout_world() -> void:
 static func present_standalone_planet(
 		standalone_planet: Planet,
 		run_shell_scene: PackedScene,
-		story_script: Script,
 		day_music: AudioStream,
 ) -> void:
 	var tree := standalone_planet.get_tree()
@@ -79,10 +78,6 @@ static func present_standalone_planet(
 	var shell := run_shell_scene.instantiate() as PlanetRunShell
 	if day_music != null:
 		shell.get_node("Config").set_meta(META_OPENING_DAY_MUSIC, day_music)
-	if story_script != null:
-		var story := shell.get_node("GameView/GameViewport/Story")
-		story.set_script(story_script)
-		(story as PlanetStory).auto_start = true
 	var viewport := shell.get_node("GameView/GameViewport") as SubViewport
 	var camera := viewport.get_node("GameCamera")
 	scene_root.remove_child(standalone_planet)
@@ -91,5 +86,8 @@ static func present_standalone_planet(
 	viewport.add_child(standalone_planet)
 	viewport.move_child(standalone_planet, camera.get_index() + 1)
 	standalone_planet.owner = shell
+	var story := standalone_planet.get_node("%Story") as PlanetStory
+	story.auto_start = true
+	story.start()
 	scene_root.add_child(shell)
 	tree.current_scene = shell
