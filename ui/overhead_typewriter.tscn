@@ -28,4 +28,4 @@ text = "风从沙上走过。"
 [node name="Typewriter" type="AudioStreamPlayer" parent="."]
 unique_name_in_owner = true
 stream = ExtResource("3_blip")
-volume_db = -14.0
+volume_db = -20.0
