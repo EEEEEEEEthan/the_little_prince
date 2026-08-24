@@ -1,5 +1,5 @@
 class_name KingStory
-extends PlanetStory
+extends "res://story/planet_story.gd"
 ## 325 号小行星：背面降落，路上可点环境；觐见时对上现有国王对话（无日落）。
 
 var has_overheard_distant_sentencing: bool = false

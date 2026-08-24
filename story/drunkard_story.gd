@@ -1,5 +1,5 @@
 class_name DrunkardStory
-extends PlanetStory
+extends "res://story/planet_story.gd"
 ## 327 号小行星：瓶子围成走不脱的圈，只有一句台词。
 
 
