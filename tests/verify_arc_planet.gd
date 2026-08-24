@@ -22,7 +22,6 @@ const SKY_PHASE := preload("res://planet/sky_phase.gd")
 
 const REQUIRED_ASSETS: Array[String] = [
 	"res://planet/white_lavender_puff_frames.png",
-	"res://planet/body.png",
 	"res://planet/starfield.png",
 	"res://planet/day_sky.png",
 	"res://ui/portraits/prince.png",
@@ -68,6 +67,7 @@ func _run_tests() -> void:
 	failed += _check_static_assets()
 	failed += _check_no_legacy()
 	failed += _check_tscn_editor_visible()
+	failed += _check_embedded_planet_stories()
 	failed += _check_king_scene_resource_uids()
 	failed += _check_drunkard_scene_resource_uids()
 	failed += _check_merchant_scene_resource_uids()
@@ -535,7 +535,8 @@ func _check_static_assets() -> int:
 		printerr("night_sky_gradient.tres 应可加载为 GradientTexture1D")
 		failed += 1
 	# 星球圆盘直径应约等于 2 * PLANET_RADIUS
-	var body: Texture2D = load("res://planet/body.png") as Texture2D
+	var base_planet := (load("res://planet/planet.tscn") as PackedScene).instantiate() as Planet
+	var body: Texture2D = base_planet.get_node("%Body").texture
 	if body != null:
 		var expected_diameter: int = int(ceil(WorldConstants.PLANET_RADIUS)) * 2
 		if body.get_width() != expected_diameter or body.get_height() != expected_diameter:
@@ -586,6 +587,10 @@ func _check_static_assets() -> int:
 			if opaque_pairs > 0 and float(checker) / float(opaque_pairs) > 0.18:
 				printerr("星球贴图不应使用 1bit/Bayer 渐变")
 				failed += 1
+		if not _is_editable_texture(body):
+			printerr("planet.tscn 的 Body 应为内嵌 EditableTexture")
+			failed += 1
+	base_planet.free()
 	var king_body: Texture2D = _planet_body_texture("res://planet/king.tscn")
 	if king_body != null:
 		var king_diameter: int = int(ceil(WorldConstants.KING_PLANET_RADIUS)) * 2
@@ -2011,6 +2016,29 @@ func _check_planet_base_scene() -> int:
 	base.queue_free()
 	await process_frame
 	print("  可复用 planet 基底 OK")
+	return failed
+
+
+func _check_embedded_planet_stories() -> int:
+	var failed := 0
+	var story_scenes := {
+		"b612": "b612_story.gd",
+		"king": "king_story.gd",
+		"drunkard": "drunkard_story.gd",
+		"merchant": "merchant_story.gd",
+		"lamplighter": "lamplighter_story.gd",
+		"geographer": "geographer_story.gd",
+	}
+	for scene_name in story_scenes:
+		var scene_source := FileAccess.get_file_as_string(
+				"res://planet/%s.tscn" % scene_name
+		)
+		if not scene_source.contains("script/source") \
+				or scene_source.contains("path=\"res://story/%s\"" % story_scenes[scene_name]):
+			printerr("%s.tscn 应将剧情脚本作为 Story builtin" % scene_name)
+			failed += 1
+	if failed == 0:
+		print("  星球剧情脚本均为 builtin OK")
 	return failed
 
 
