@@ -27,7 +27,7 @@ func _run_tests() -> void:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as PlanetStory).auto_start = false
+	scene.get_node("GameView/GameViewport/Planet").get_node("%Story").auto_start = false
 	root.add_child(scene)
 	# Wait for the scene and its children to finish initialization.
 	await process_frame

@@ -20,26 +20,33 @@ var is_blocking_input: bool = false
 var has_finished_opening: bool = false
 var has_crossed_sunset: bool = false
 
+var planet: Planet:
+	get:
+		return owner as Planet
+var player: Player:
+	get:
+		return _shell_node(&"Player") as Player
+var dialogue: DialogueBox:
+	get:
+		return _shell_node(&"DialogueBox") as DialogueBox
+var overhead: OverheadTypewriter:
+	get:
+		return _shell_node(&"OverheadTypewriter") as OverheadTypewriter
+var flock: MigratoryFlock:
+	get:
+		return _shell_node(&"MigratoryFlock") as MigratoryFlock
+
 var _story_generation: int = 0
 var _last_sky_phase: float = SkyPhase.NOON_PHASE
 var _waiting_interact_kind: int = -1
 var _dialogue_closed_early: bool = false
 var _story_tween: Tween
 
-@onready var planet: Planet = %Planet
-@onready var player: Player = %Player
-@onready var dialogue: DialogueBox = %DialogueBox
-@onready var overhead: OverheadTypewriter = %OverheadTypewriter
-@onready var flock: MigratoryFlock = %MigratoryFlock
-
 
 func _ready() -> void:
-	overhead.play_on_ready = false
-	if not auto_start:
+	if planet.owner == null:
 		return
-	%Epilogue.text = ""
-	%Dim.color = Color(0, 0, 0, 1)
-	start()
+	overhead.play_on_ready = false
 
 
 func _process(_delta: float) -> void:
@@ -48,7 +55,12 @@ func _process(_delta: float) -> void:
 	try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
 
 
+func _shell_node(unique_name: StringName) -> Node:
+	return planet.owner.get_node("%" + String(unique_name))
+
+
 func start() -> void:
+	overhead.play_on_ready = false
 	_story_generation += 1
 	sunset_crossed.emit()
 	prop_interacted.emit(null)
@@ -60,6 +72,8 @@ func start() -> void:
 		_story_tween = null
 	if not planet.is_node_ready():
 		await planet.ready
+	_shell_node(&"Epilogue").text = ""
+	_shell_node(&"Dim").color = Color(0, 0, 0, 1)
 	is_active = true
 	has_finished_opening = false
 	has_crossed_sunset = false
@@ -113,13 +127,13 @@ func _play_story() -> void:
 
 func _fade_in_from_black() -> void:
 	_lock_input()
-	%Dim.color = Color(0, 0, 0, 1)
+	_shell_node(&"Dim").color = Color(0, 0, 0, 1)
 	if skip_cinematics:
-		%Dim.color.a = 0.0
+		_shell_node(&"Dim").color.a = 0.0
 		return
 	var fade_in_from_black_seconds := 2.4
 	_story_tween = create_tween()
-	_story_tween.tween_property(%Dim, "color:a", 0.0, fade_in_from_black_seconds)
+	_story_tween.tween_property(_shell_node(&"Dim"), "color:a", 0.0, fade_in_from_black_seconds)
 	await _wait(fade_in_from_black_seconds * 0.5)
 
 
@@ -198,7 +212,7 @@ func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float
 	_story_tween = create_tween()
 	_story_tween.set_trans(Tween.TRANS_CUBIC)
 	_story_tween.set_ease(Tween.EASE_IN_OUT)
-	_story_tween.tween_property(%GameCamera, "offset:y", target_offset_y, duration_seconds)
+	_story_tween.tween_property(_shell_node(&"GameCamera"), "offset:y", target_offset_y, duration_seconds)
 	await _story_tween.finished
 	_story_tween = null
 	await _halt_if_stale(generation)
@@ -212,7 +226,7 @@ func _depart(
 	_end_dialogue()
 	if skip_cinematics:
 		player.modulate.a = 0.0
-		%Dim.color = Color(0, 0, 0, 1)
+		_shell_node(&"Dim").color = Color(0, 0, 0, 1)
 	else:
 		var lift_distance_pixels := (
 				player.global_position.y
@@ -241,13 +255,13 @@ func _depart(
 				await _overhead(overhead_text)
 		_story_tween = create_tween()
 		_story_tween.tween_property(
-				%Dim, "color:a", 1.0, DEPARTURE_BLACKOUT_SECONDS
+				_shell_node(&"Dim"), "color:a", 1.0, DEPARTURE_BLACKOUT_SECONDS
 		)
-		%Music.fade_out(DEPARTURE_BLACKOUT_SECONDS)
+		_shell_node(&"Music").fade_out(DEPARTURE_BLACKOUT_SECONDS)
 		await _story_tween.finished
 		_story_tween = null
 		player.modulate.a = 0.0
-	%Epilogue.text = epilogue_text
+	_shell_node(&"Epilogue").text = epilogue_text
 	await _wait(EPILOGUE_HOLD_SECONDS)
 	departed.emit()
 	await _halt_if_stale(generation)
