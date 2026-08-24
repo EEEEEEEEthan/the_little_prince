@@ -14,7 +14,7 @@
 
 
 [sub_resource type="GDScript" id="GDScript_drunkard_story_builtin"]
-script/source = "class_name DrunkardStory\nextends \"res://story/planet_story.gd\"\n## 327 号小行星：瓶子围成走不脱的圈，只有一句台词。\n\n\nfunc _prepare_start() -> void:\n\tplayer.flip_h = true\n\tplayer.modulate.a = 1.0\n\tplanet.sky.is_self_rotating = false\n\tplanet.sky.commanded_daylight_phase = SkyPhase.SUNSET_PHASE\n\tset_process(false)\n\n\nfunc _play_story() -> void:\n\tawait _fade_in_from_black()\n\tplayer.can_move_left = true\n\tplayer.can_move_right = true\n\tis_blocking_input = false\n\thas_finished_opening = true\n\tvar drunkard := await _interact(SurfaceProp.Kind.DRUNKARD)\n\tawait _line(\n\t\t\tDialogueCatalog.DRUNKARD_SPEAKER,\n\t\t\t\"喝是为了忘羞耻\",\n\t\t\tDialogueCatalog.DRUNKARD_PORTRAIT\n\t)\n\tdrunkard.is_consumed = true\n\tawait _depart(\"327。\")\n"
+script/source = "extends \"res://story/planet_story.gd\"\n## 327 号小行星：瓶子围成走不脱的圈，只有一句台词。\n\n\nfunc _prepare_start() -> void:\n\tplayer.flip_h = true\n\tplayer.modulate.a = 1.0\n\tplanet.sky.is_self_rotating = false\n\tplanet.sky.commanded_daylight_phase = SkyPhase.SUNSET_PHASE\n\tset_process(false)\n\n\nfunc _play_story() -> void:\n\tawait _fade_in_from_black()\n\tplayer.can_move_left = true\n\tplayer.can_move_right = true\n\tis_blocking_input = false\n\thas_finished_opening = true\n\tvar drunkard := await _interact(SurfaceProp.Kind.DRUNKARD)\n\tawait _line(\n\t\t\tDialogueCatalog.DRUNKARD_SPEAKER,\n\t\t\t\"喝是为了忘羞耻\",\n\t\t\tDialogueCatalog.DRUNKARD_PORTRAIT\n\t)\n\tdrunkard.is_consumed = true\n\tawait _depart(\"327。\")\n"
 
 [sub_resource type="Texture2D" id="EditableTexture_slumped_wine_drinker"]
 script = ExtResource("editable_texture_script")
