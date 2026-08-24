@@ -43,8 +43,7 @@ shader_parameter/noise_strength = 0.02
 
 
 [sub_resource type="GDScript" id="GDScript_story"]
-script/source = "class_name DrunkardStory
-extends PlanetStory
+script/source = "extends PlanetStory
 ## 327 号小行星：瓶子围成走不脱的圈，只有一句台词。
 
 

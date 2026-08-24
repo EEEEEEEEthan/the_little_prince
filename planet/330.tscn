@@ -43,8 +43,7 @@ shader_parameter/noise_strength = 0.02
 
 
 [sub_resource type="GDScript" id="GDScript_story"]
-script/source = "class_name GeographerStory
-extends PlanetStory
+script/source = "extends PlanetStory
 ## 330 号小行星：书房只记别人的报告；玫瑰太短不记，随后指向地球。
 
 

@@ -55,8 +55,7 @@ shader_parameter/noise_strength = 0.02
 
 
 [sub_resource type="GDScript" id="GDScript_story"]
-script/source = "class_name LamplighterStory
-extends PlanetStory
+script/source = "extends PlanetStory
 ## 329 号小行星：最小、昼夜极快；陪几轮、帮点一次，站不下只能走。
 
 const ACCOMPANY_DAY_NIGHT_ROUND_COUNT := 3
