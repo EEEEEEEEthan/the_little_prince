@@ -4553,7 +4553,7 @@ func _check_drunkard_chapter() -> int:
 		await process_frame
 		return 1
 	if planet.scene_file_path != "res://planet/327.tscn":
-		printerr("国王之后星球应为 327.tscn，实际 %s" % planet.scene_file_path)
+		printerr("国王之后星球应为 327.tscn（酒鬼），实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "drunkard_day_music", "换到酒鬼星球")
 	if story.planet != planet:
@@ -4798,7 +4798,7 @@ func _check_merchant_chapter() -> int:
 		await process_frame
 		return 1
 	if planet.scene_file_path != "res://planet/328.tscn":
-		printerr("酒鬼之后星球应为 328.tscn，实际 %s" % planet.scene_file_path)
+		printerr("酒鬼之后星球应为 328.tscn（商人），实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "merchant_day_music", "换到商人星球")
 	if story.planet != planet:
@@ -5063,7 +5063,7 @@ func _check_lamplighter_chapter() -> int:
 		await process_frame
 		return 1
 	if planet.scene_file_path != "res://planet/329.tscn":
-		printerr("商人之后星球应为 329.tscn，实际 %s" % planet.scene_file_path)
+		printerr("商人之后星球应为 329.tscn（点灯人），实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "lamplighter_day_music", "换到点灯人星球")
 	if story.planet != planet:
@@ -5326,7 +5326,7 @@ func _check_geographer_chapter() -> int:
 		await process_frame
 		return 1
 	if planet.scene_file_path != "res://planet/330.tscn":
-		printerr("点灯人之后星球应为 330.tscn，实际 %s" % planet.scene_file_path)
+		printerr("点灯人之后星球应为 330.tscn（地理学家），实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "geographer_day_music", "换到地理学家星球")
 	if story.planet != planet:
