@@ -1,5 +1,7 @@
 # The Little Prince
 
+https://github.com/user-attachments/assets/270539cb-671b-4cde-a950-f5e2a83ea38a
+
 一个使用 [Godot 4.8-dev3](https://godotengine.org/) 制作的 2D 像素风游戏。
 
 ## 环境要求
