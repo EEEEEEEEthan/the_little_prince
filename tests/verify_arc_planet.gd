@@ -586,7 +586,7 @@ func _check_static_assets() -> int:
 			if opaque_pairs > 0 and float(checker) / float(opaque_pairs) > 0.18:
 				printerr("星球贴图不应使用 1bit/Bayer 渐变")
 				failed += 1
-	var king_body: Texture2D = _planet_body_texture("res://planet/king.tscn")
+	var king_body: Texture2D = _planet_body_texture("res://planet/325.tscn")
 	if king_body != null:
 		var king_diameter: int = int(ceil(WorldConstants.KING_PLANET_RADIUS)) * 2
 		if king_body.get_width() != king_diameter or king_body.get_height() != king_diameter:
@@ -633,7 +633,7 @@ func _check_static_assets() -> int:
 				]
 			)
 			failed += 1
-	var ash_body: Texture2D = _planet_body_texture("res://planet/lamplighter.tscn")
+	var ash_body: Texture2D = _planet_body_texture("res://planet/329.tscn")
 	if ash_body != null:
 		var ash_diameter: int = int(ceil(WorldConstants.LAMPLIGHTER_PLANET_RADIUS)) * 2
 		if ash_body.get_width() != ash_diameter or ash_body.get_height() != ash_diameter:
@@ -691,14 +691,14 @@ func _check_static_assets() -> int:
 		],
 		["玫瑰", _scene_sprite_texture("res://planet/b612.tscn", "Surface/Rose"), WorldConstants.ROSE_SPRITE_SIZE, WorldConstants.ROSE_SPRITE_SIZE],
 		["玻璃罩", _scene_sprite_texture("res://planet/b612.tscn", "Surface/Rose/GlassGlobe"), 24, 24],
-		["国王", _scene_sprite_texture("res://planet/king.tscn", "Surface/King"), WorldConstants.KING_SPRITE_WIDTH, WorldConstants.KING_SPRITE_HEIGHT],
-		["金尖顶王座", _scene_sprite_texture("res://planet/king.tscn", "Surface/Throne"), WorldConstants.GOLD_SPIRED_THRONE_WIDTH, WorldConstants.GOLD_SPIRED_THRONE_HEIGHT],
-		["红披风", _scene_sprite_texture("res://planet/king.tscn", "Surface/Cape"), WorldConstants.CRIMSON_CAPE_SPREAD_WIDTH, WorldConstants.CRIMSON_CAPE_SPREAD_HEIGHT],
-		["展开诏书", _scene_sprite_texture("res://planet/king.tscn", "Surface/EdictL"), WorldConstants.UNROLLED_PARCHMENT_WIDTH, WorldConstants.UNROLLED_PARCHMENT_HEIGHT],
-		["划痕边框", _scene_sprite_texture("res://planet/king.tscn", "Surface/Border1"), WorldConstants.SCRATCHED_BORDER_LINES_WIDTH, WorldConstants.SCRATCHED_BORDER_LINES_HEIGHT],
-		["浅色爪印", _scene_sprite_texture("res://planet/king.tscn", "Surface/RatTrace1"), WorldConstants.PALE_PAW_PRINTS_WIDTH, WorldConstants.PALE_PAW_PRINTS_HEIGHT],
-		["老鼠", _scene_sprite_texture("res://planet/king.tscn", "Surface/Rat"), WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT],
-		["土洞", _scene_sprite_texture("res://planet/king.tscn", "Surface/RatHole"), WorldConstants.DARK_SOIL_BURROW_WIDTH, WorldConstants.DARK_SOIL_BURROW_HEIGHT],
+		["国王", _scene_sprite_texture("res://planet/325.tscn", "Surface/King"), WorldConstants.KING_SPRITE_WIDTH, WorldConstants.KING_SPRITE_HEIGHT],
+		["金尖顶王座", _scene_sprite_texture("res://planet/325.tscn", "Surface/Throne"), WorldConstants.GOLD_SPIRED_THRONE_WIDTH, WorldConstants.GOLD_SPIRED_THRONE_HEIGHT],
+		["红披风", _scene_sprite_texture("res://planet/325.tscn", "Surface/Cape"), WorldConstants.CRIMSON_CAPE_SPREAD_WIDTH, WorldConstants.CRIMSON_CAPE_SPREAD_HEIGHT],
+		["展开诏书", _scene_sprite_texture("res://planet/325.tscn", "Surface/EdictL"), WorldConstants.UNROLLED_PARCHMENT_WIDTH, WorldConstants.UNROLLED_PARCHMENT_HEIGHT],
+		["划痕边框", _scene_sprite_texture("res://planet/325.tscn", "Surface/Border1"), WorldConstants.SCRATCHED_BORDER_LINES_WIDTH, WorldConstants.SCRATCHED_BORDER_LINES_HEIGHT],
+		["浅色爪印", _scene_sprite_texture("res://planet/325.tscn", "Surface/RatTrace1"), WorldConstants.PALE_PAW_PRINTS_WIDTH, WorldConstants.PALE_PAW_PRINTS_HEIGHT],
+		["老鼠", _scene_sprite_texture("res://planet/325.tscn", "Surface/Rat"), WorldConstants.RAT_SPRITE_WIDTH, WorldConstants.RAT_SPRITE_HEIGHT],
+		["土洞", _scene_sprite_texture("res://planet/325.tscn", "Surface/RatHole"), WorldConstants.DARK_SOIL_BURROW_WIDTH, WorldConstants.DARK_SOIL_BURROW_HEIGHT],
 		[
 			"小王子",
 			_scene_sprite_texture("res://planet/planet_run_shell.tscn", "GameView/GameViewport/Player"),
@@ -706,26 +706,26 @@ func _check_static_assets() -> int:
 			WorldConstants.PLAYER_SPRITE_HEIGHT,
 		],
 		["交互提示", _scene_sprite_texture("res://planet/planet_run_shell.tscn", "GameView/GameViewport/InteractPrompt"), 13, 13],
-		["棕玻璃瓶", _scene_sprite_texture("res://planet/drunkard.tscn", "Surface/Bottle1"), WorldConstants.BROWN_GLASS_BOTTLE_WIDTH, WorldConstants.BROWN_GLASS_BOTTLE_HEIGHT],
-		["酒鬼", _scene_sprite_texture("res://planet/drunkard.tscn", "Surface/Drunkard"), WorldConstants.SLUMPED_WINE_DRINKER_WIDTH, WorldConstants.SLUMPED_WINE_DRINKER_HEIGHT],
-		["商人", _scene_sprite_texture("res://planet/merchant.tscn", "Surface/Merchant"), WorldConstants.HUNCHED_LEDGER_MERCHANT_WIDTH, WorldConstants.HUNCHED_LEDGER_MERCHANT_HEIGHT],
-		["金星玻璃罐", _scene_sprite_texture("res://planet/merchant.tscn", "Surface/StarJar"), WorldConstants.GOLD_STAR_GLASS_JAR_WIDTH, WorldConstants.GOLD_STAR_GLASS_JAR_HEIGHT],
-		["点灯人", _scene_sprite_texture("res://planet/lamplighter.tscn", "Surface/Lamplighter"), WorldConstants.BLACK_COAT_LAMPLIGHTER_WIDTH, WorldConstants.BLACK_COAT_LAMPLIGHTER_HEIGHT],
+		["棕玻璃瓶", _scene_sprite_texture("res://planet/327.tscn", "Surface/Bottle1"), WorldConstants.BROWN_GLASS_BOTTLE_WIDTH, WorldConstants.BROWN_GLASS_BOTTLE_HEIGHT],
+		["酒鬼", _scene_sprite_texture("res://planet/327.tscn", "Surface/Drunkard"), WorldConstants.SLUMPED_WINE_DRINKER_WIDTH, WorldConstants.SLUMPED_WINE_DRINKER_HEIGHT],
+		["商人", _scene_sprite_texture("res://planet/328.tscn", "Surface/Merchant"), WorldConstants.HUNCHED_LEDGER_MERCHANT_WIDTH, WorldConstants.HUNCHED_LEDGER_MERCHANT_HEIGHT],
+		["金星玻璃罐", _scene_sprite_texture("res://planet/328.tscn", "Surface/StarJar"), WorldConstants.GOLD_STAR_GLASS_JAR_WIDTH, WorldConstants.GOLD_STAR_GLASS_JAR_HEIGHT],
+		["点灯人", _scene_sprite_texture("res://planet/329.tscn", "Surface/Lamplighter"), WorldConstants.BLACK_COAT_LAMPLIGHTER_WIDTH, WorldConstants.BLACK_COAT_LAMPLIGHTER_HEIGHT],
 		[
 			"路灯",
-			_scene_sprite_texture("res://planet/lamplighter.tscn", "Surface/StreetLamp"),
+			_scene_sprite_texture("res://planet/329.tscn", "Surface/StreetLamp"),
 			WorldConstants.BLACK_POST_STREET_LAMP_WIDTH * WorldConstants.BLACK_POST_STREET_LAMP_FRAME_COUNT,
 			WorldConstants.BLACK_POST_STREET_LAMP_HEIGHT,
 		],
 		[
 			"地理学家",
-			_scene_sprite_texture("res://planet/geographer.tscn", "Surface/Geographer"),
+			_scene_sprite_texture("res://planet/330.tscn", "Surface/Geographer"),
 			WorldConstants.GRAY_BEARD_PARCHMENT_SCHOLAR_WIDTH,
 			WorldConstants.GRAY_BEARD_PARCHMENT_SCHOLAR_HEIGHT,
 		],
 		[
 			"报告堆",
-			_scene_sprite_texture("res://planet/geographer.tscn", "Surface/ReportStackA"),
+			_scene_sprite_texture("res://planet/330.tscn", "Surface/ReportStackA"),
 			WorldConstants.STACKED_CREAM_INK_PAGES_WIDTH,
 			WorldConstants.STACKED_CREAM_INK_PAGES_HEIGHT,
 		],
@@ -820,12 +820,12 @@ func _check_tscn_editor_visible() -> int:
 		"res://planet/planet_run_shell.tscn",
 		"res://planet/planet.tscn",
 		"res://planet/b612.tscn",
-		"res://planet/king.tscn",
-		"res://planet/vain.tscn",
-		"res://planet/drunkard.tscn",
-		"res://planet/merchant.tscn",
-		"res://planet/lamplighter.tscn",
-		"res://planet/geographer.tscn",
+		"res://planet/325.tscn",
+		"res://planet/326.tscn",
+		"res://planet/327.tscn",
+		"res://planet/328.tscn",
+		"res://planet/329.tscn",
+		"res://planet/330.tscn",
 		"res://planet/butterfly.tscn",
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
@@ -842,7 +842,7 @@ func _check_king_scene_resource_uids() -> int:
 	var failed := 0
 	var uid_and_path := RegEx.new()
 	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
-	var king_scene := FileAccess.get_file_as_string("res://planet/king.tscn")
+	var king_scene := FileAccess.get_file_as_string("res://planet/325.tscn")
 	for match_ in uid_and_path.search_all(king_scene):
 		var declared_uid := match_.get_string(1)
 		var resource_path := match_.get_string(2)
@@ -851,7 +851,7 @@ func _check_king_scene_resource_uids() -> int:
 		)
 		if declared_uid != canonical_uid:
 			printerr(
-					"king.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					"325.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
 					% [resource_path, declared_uid, canonical_uid]
 			)
 			failed += 1
@@ -876,7 +876,7 @@ func _check_drunkard_scene_resource_uids() -> int:
 	var failed := 0
 	var uid_and_path := RegEx.new()
 	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
-	var drunkard_scene := FileAccess.get_file_as_string("res://planet/drunkard.tscn")
+	var drunkard_scene := FileAccess.get_file_as_string("res://planet/327.tscn")
 	for match_ in uid_and_path.search_all(drunkard_scene):
 		var declared_uid := match_.get_string(1)
 		var resource_path := match_.get_string(2)
@@ -885,7 +885,7 @@ func _check_drunkard_scene_resource_uids() -> int:
 		)
 		if declared_uid != canonical_uid:
 			printerr(
-					"drunkard.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					"327.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
 					% [resource_path, declared_uid, canonical_uid]
 			)
 			failed += 1
@@ -910,7 +910,7 @@ func _check_merchant_scene_resource_uids() -> int:
 	var failed := 0
 	var uid_and_path := RegEx.new()
 	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
-	var merchant_scene := FileAccess.get_file_as_string("res://planet/merchant.tscn")
+	var merchant_scene := FileAccess.get_file_as_string("res://planet/328.tscn")
 	for match_ in uid_and_path.search_all(merchant_scene):
 		var declared_uid := match_.get_string(1)
 		var resource_path := match_.get_string(2)
@@ -919,7 +919,7 @@ func _check_merchant_scene_resource_uids() -> int:
 		)
 		if declared_uid != canonical_uid:
 			printerr(
-					"merchant.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					"328.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
 					% [resource_path, declared_uid, canonical_uid]
 			)
 			failed += 1
@@ -944,7 +944,7 @@ func _check_lamplighter_scene_resource_uids() -> int:
 	var failed := 0
 	var uid_and_path := RegEx.new()
 	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
-	var lamplighter_scene := FileAccess.get_file_as_string("res://planet/lamplighter.tscn")
+	var lamplighter_scene := FileAccess.get_file_as_string("res://planet/329.tscn")
 	for match_ in uid_and_path.search_all(lamplighter_scene):
 		var declared_uid := match_.get_string(1)
 		var resource_path := match_.get_string(2)
@@ -953,7 +953,7 @@ func _check_lamplighter_scene_resource_uids() -> int:
 		)
 		if declared_uid != canonical_uid:
 			printerr(
-					"lamplighter.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					"329.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
 					% [resource_path, declared_uid, canonical_uid]
 			)
 			failed += 1
@@ -978,7 +978,7 @@ func _check_geographer_scene_resource_uids() -> int:
 	var failed := 0
 	var uid_and_path := RegEx.new()
 	uid_and_path.compile("uid=\"(uid://[^\"]+)\" path=\"([^\"]+)\"")
-	var geographer_scene := FileAccess.get_file_as_string("res://planet/geographer.tscn")
+	var geographer_scene := FileAccess.get_file_as_string("res://planet/330.tscn")
 	for match_ in uid_and_path.search_all(geographer_scene):
 		var declared_uid := match_.get_string(1)
 		var resource_path := match_.get_string(2)
@@ -987,7 +987,7 @@ func _check_geographer_scene_resource_uids() -> int:
 		)
 		if declared_uid != canonical_uid:
 			printerr(
-					"geographer.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
+					"330.tscn 资源 UID 应与文件一致：%s 声明 %s，文件 %s"
 					% [resource_path, declared_uid, canonical_uid]
 			)
 			failed += 1
@@ -3396,8 +3396,8 @@ func _check_king_chapter() -> int:
 		scene.queue_free()
 		await process_frame
 		return 1
-	if planet.scene_file_path != "res://planet/king.tscn":
-		printerr("离星后星球应为 king.tscn，实际 %s" % planet.scene_file_path)
+	if planet.scene_file_path != "res://planet/325.tscn":
+		printerr("离星后星球应为 325.tscn，实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "king_day_music", "换到国王星球")
 	if player.planet != planet:
@@ -3536,7 +3536,7 @@ func _check_king_chapter() -> int:
 		printerr("king 对话至少两句")
 		failed += 1
 
-	var king_tex := _scene_sprite_texture("res://planet/king.tscn", "Surface/King")
+	var king_tex := _scene_sprite_texture("res://planet/325.tscn", "Surface/King")
 	if king_tex != null:
 		var king_image := _texture_image(king_tex)
 		var found_gold := false
@@ -3759,37 +3759,37 @@ func _check_standalone_planet_scenes() -> int:
 			"B612 单独运行"
 	)
 	failed += await _assert_standalone_planet_run(
-			"res://planet/king.tscn",
+			"res://planet/325.tscn",
 			KingStory,
 			"res://audio/narrow_cpenta_toy_waltz.ogg",
 			"国王星球单独运行"
 	)
 	failed += await _assert_standalone_planet_run(
-			"res://planet/vain.tscn",
+			"res://planet/326.tscn",
 			PlanetStory,
 			"res://audio/the_one_who_stands_distant.ogg",
 			"虚荣者星球单独运行"
 	)
 	failed += await _assert_standalone_planet_run(
-			"res://planet/drunkard.tscn",
+			"res://planet/327.tscn",
 			DrunkardStory,
 			"res://audio/i_want_to_go_home.ogg",
 			"酒鬼星球单独运行"
 	)
 	failed += await _assert_standalone_planet_run(
-			"res://planet/merchant.tscn",
+			"res://planet/328.tscn",
 			MerchantStory,
 			"res://audio/sparse_ledger_tally.ogg",
 			"商人星球单独运行"
 	)
 	failed += await _assert_standalone_planet_run(
-			"res://planet/lamplighter.tscn",
+			"res://planet/329.tscn",
 			LamplighterStory,
 			"res://audio/rapid_lamp_duty_tick.ogg",
 			"点灯人星球单独运行"
 	)
 	failed += await _assert_standalone_planet_run(
-			"res://planet/geographer.tscn",
+			"res://planet/330.tscn",
 			GeographerStory,
 			"res://audio/dry_folio_rest.ogg",
 			"地理学家星球单独运行"
@@ -3848,7 +3848,7 @@ func _assert_standalone_planet_run(
 	if story.get_script() != expected_story_type:
 		printerr("%s 故事脚本应为 %s" % [label, expected_story_type.resource_path])
 		failed += 1
-	if planet_path == "res://planet/king.tscn":
+	if planet_path == "res://planet/325.tscn":
 		var has_king := false
 		var has_rose := false
 		for prop in planet.surface_props:
@@ -3862,14 +3862,14 @@ func _assert_standalone_planet_run(
 		if has_rose:
 			printerr("国王单独运行不应有玫瑰")
 			failed += 1
-	if planet_path == "res://planet/vain.tscn":
+	if planet_path == "res://planet/326.tscn":
 		if player != null and (not player.can_move_left or not player.can_move_right):
 			printerr("虚荣者星球应能走动")
 			failed += 1
 		if (story as B612Story) != null or (story as KingStory) != null:
 			printerr("虚荣者星球不应挂 B612/国王演出")
 			failed += 1
-	if planet_path == "res://planet/drunkard.tscn":
+	if planet_path == "res://planet/327.tscn":
 		var bottle_count := 0
 		var has_drunkard := false
 		var has_king := false
@@ -3892,7 +3892,7 @@ func _assert_standalone_planet_run(
 					% [WorldConstants.DRUNKARD_BOTTLE_COUNT, bottle_count]
 			)
 			failed += 1
-	if planet_path == "res://planet/merchant.tscn":
+	if planet_path == "res://planet/328.tscn":
 		var merchant_count := 0
 		var jar_count := 0
 		var has_foreign_chapter := false
@@ -3917,7 +3917,7 @@ func _assert_standalone_planet_run(
 		if has_foreign_chapter:
 			printerr("商人单独运行不应有其它章地物")
 			failed += 1
-	if planet_path == "res://planet/lamplighter.tscn":
+	if planet_path == "res://planet/329.tscn":
 		var lamplighter_count := 0
 		var lamp_count := 0
 		var has_foreign_chapter := false
@@ -3955,7 +3955,7 @@ func _assert_standalone_planet_run(
 		):
 			printerr("点灯人单独运行星空应极快自转")
 			failed += 1
-	if planet_path == "res://planet/geographer.tscn":
+	if planet_path == "res://planet/330.tscn":
 		var geographer_count := 0
 		var report_count := 0
 		var has_foreign_chapter := false
@@ -4206,7 +4206,7 @@ func _check_b612_departed_travels_to_king() -> int:
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var king_story := scene.get_node("%KingStory") as KingStory
-	if planet == null or planet.scene_file_path != "res://planet/king.tscn":
+	if planet == null or planet.scene_file_path != "res://planet/325.tscn":
 		printerr(
 				"B612 离星后应换到国王星球，实际 %s"
 				% (planet.scene_file_path if planet != null else "null")
@@ -4524,8 +4524,8 @@ func _check_drunkard_chapter() -> int:
 		scene.queue_free()
 		await process_frame
 		return 1
-	if planet.scene_file_path != "res://planet/drunkard.tscn":
-		printerr("国王之后星球应为 drunkard.tscn，实际 %s" % planet.scene_file_path)
+	if planet.scene_file_path != "res://planet/327.tscn":
+		printerr("国王之后星球应为 327.tscn，实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "drunkard_day_music", "换到酒鬼星球")
 	if story.planet != planet:
@@ -4714,7 +4714,7 @@ func _check_king_departed_travels_to_drunkard() -> int:
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var drunkard_story := scene.get_node("%DrunkardStory") as DrunkardStory
-	if planet == null or planet.scene_file_path != "res://planet/drunkard.tscn":
+	if planet == null or planet.scene_file_path != "res://planet/327.tscn":
 		printerr(
 				"国王离星后应换到酒鬼星球，实际 %s"
 				% (planet.scene_file_path if planet != null else "null")
@@ -4769,8 +4769,8 @@ func _check_merchant_chapter() -> int:
 		scene.queue_free()
 		await process_frame
 		return 1
-	if planet.scene_file_path != "res://planet/merchant.tscn":
-		printerr("酒鬼之后星球应为 merchant.tscn，实际 %s" % planet.scene_file_path)
+	if planet.scene_file_path != "res://planet/328.tscn":
+		printerr("酒鬼之后星球应为 328.tscn，实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "merchant_day_music", "换到商人星球")
 	if story.planet != planet:
@@ -4977,7 +4977,7 @@ func _check_drunkard_departed_travels_to_merchant() -> int:
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var merchant_story := scene.get_node("%MerchantStory") as MerchantStory
-	if planet == null or planet.scene_file_path != "res://planet/merchant.tscn":
+	if planet == null or planet.scene_file_path != "res://planet/328.tscn":
 		printerr(
 				"酒鬼离星后应换到商人星球，实际 %s"
 				% (planet.scene_file_path if planet != null else "null")
@@ -5034,8 +5034,8 @@ func _check_lamplighter_chapter() -> int:
 		scene.queue_free()
 		await process_frame
 		return 1
-	if planet.scene_file_path != "res://planet/lamplighter.tscn":
-		printerr("商人之后星球应为 lamplighter.tscn，实际 %s" % planet.scene_file_path)
+	if planet.scene_file_path != "res://planet/329.tscn":
+		printerr("商人之后星球应为 329.tscn，实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "lamplighter_day_music", "换到点灯人星球")
 	if story.planet != planet:
@@ -5238,7 +5238,7 @@ func _check_merchant_departed_travels_to_lamplighter() -> int:
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var lamplighter_story := scene.get_node("%LamplighterStory") as LamplighterStory
-	if planet == null or planet.scene_file_path != "res://planet/lamplighter.tscn":
+	if planet == null or planet.scene_file_path != "res://planet/329.tscn":
 		printerr(
 				"商人离星后应换到点灯人星球，实际 %s"
 				% (planet.scene_file_path if planet != null else "null")
@@ -5297,8 +5297,8 @@ func _check_geographer_chapter() -> int:
 		scene.queue_free()
 		await process_frame
 		return 1
-	if planet.scene_file_path != "res://planet/geographer.tscn":
-		printerr("点灯人之后星球应为 geographer.tscn，实际 %s" % planet.scene_file_path)
+	if planet.scene_file_path != "res://planet/330.tscn":
+		printerr("点灯人之后星球应为 330.tscn，实际 %s" % planet.scene_file_path)
 		failed += 1
 	failed += _assert_playing_music(scene, "geographer_day_music", "换到地理学家星球")
 	if story.planet != planet:
@@ -5494,7 +5494,7 @@ func _check_lamplighter_departed_travels_to_geographer() -> int:
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var geographer_story := scene.get_node("%GeographerStory") as GeographerStory
-	if planet == null or planet.scene_file_path != "res://planet/geographer.tscn":
+	if planet == null or planet.scene_file_path != "res://planet/330.tscn":
 		printerr(
 				"点灯人离星后应换到地理学家星球，实际 %s"
 				% (planet.scene_file_path if planet != null else "null")
