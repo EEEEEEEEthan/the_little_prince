@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
+[ext_resource type="Script" uid="uid://c5aqtsrp8kkfu" path="res://story/geographer_story.gd" id="4_story"]
 [ext_resource type="Texture2D" uid="uid://ducegt4bjka0h" path="res://planet/cream_ink_parchment_disk.png" id="5_body"]
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="11_starfield"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="12_sky_shader"]
@@ -12,9 +13,6 @@
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://dbh8gq5hbhl0i" path="res://audio/dry_folio_rest.ogg" id="18_day_music"]
 
-
-[sub_resource type="GDScript" id="GDScript_geographer_story_builtin"]
-script/source = "extends \"res://story/planet_story.gd\"\n## 330 号小行星：书房只记别人的报告；玫瑰太短不记，随后指向地球。\n\n\nfunc _prepare_start() -> void:\n\tplayer.flip_h = true\n\tplayer.modulate.a = 1.0\n\thas_crossed_sunset = true\n\tset_process(false)\n\n\nfunc _play_story() -> void:\n\tawait _fade_in_from_black()\n\tawait _overhead(\"这是一间书房。\")\n\tplayer.can_move_left = true\n\tplayer.can_move_right = true\n\tis_blocking_input = false\n\thas_finished_opening = true\n\tvar geographer := await _interact(SurfaceProp.Kind.GEOGRAPHER)\n\tawait _geographer(\"我只记下别人的报告。\")\n\tawait _prince(\"我的玫瑰呢？\")\n\tawait _geographer(\"花存在得太短。我不记。\")\n\tgeographer.is_consumed = true\n\tawait _camera_up()\n\tawait _overhead(\"他指向地球。\")\n\tawait _depart(\"330。\")\n\n\nfunc _geographer(text: String) -> void:\n\tawait _line(\n\t\t\tDialogueCatalog.GEOGRAPHER_SPEAKER,\n\t\t\ttext,\n\t\t\tDialogueCatalog.GEOGRAPHER_PORTRAIT\n\t)\n"
 
 [sub_resource type="Texture2D" id="EditableTexture_gray_beard_parchment_scholar"]
 script = ExtResource("editable_texture_script")
@@ -107,6 +105,6 @@ kind = 18
 
 
 [node name="Story" parent="." index="4"]
-script = SubResource("GDScript_geographer_story_builtin")
+script = ExtResource("4_story")
 auto_start = false
 
