@@ -239,11 +239,11 @@ func _depart(
 			)
 			for overhead_text in lift_halfway_overhead_texts:
 				await _overhead(overhead_text)
-		%Music.fade_out(DEPARTURE_BLACKOUT_SECONDS)
 		_story_tween = create_tween()
 		_story_tween.tween_property(
 				%Dim, "color:a", 1.0, DEPARTURE_BLACKOUT_SECONDS
 		)
+		%Music.fade_out(DEPARTURE_BLACKOUT_SECONDS)
 		await _story_tween.finished
 		_story_tween = null
 		player.modulate.a = 0.0
