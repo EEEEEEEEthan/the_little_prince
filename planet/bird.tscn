@@ -1,0 +1,306 @@
+[gd_scene format=3 uid="uid://dnftu8hel2py3"]
+
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
+
+[sub_resource type="Texture2D" id="EditableTexture_bird"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABIAAAAICAYAAAD0g6+qAAAAQklEQVR42mNgQALdUdr/GdAASAxZHJcaDA0wQWQ+NjkMQwKMJDE03pmm8R+XBYTECWpANhyfOE7/kwVg3oTRQxsAAGc0UIlpqJDpAAAAAElFTkSuQmCC"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fly_down"]
+atlas = SubResource("EditableTexture_bird")
+region = Rect2(6, 0, 6, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fly_up"]
+atlas = SubResource("EditableTexture_bird")
+region = Rect2(12, 0, 6, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_perched"]
+atlas = SubResource("EditableTexture_bird")
+region = Rect2(0, 0, 6, 8)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_bird"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fly_down")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fly_up")
+}],
+"loop": 1,
+"name": &"fly",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_perched")
+}],
+"loop": 1,
+"name": &"perched",
+"speed": 1.0
+}]
+
+[sub_resource type="GDScript" id="GDScript_bird"]
+script/source = "extends AnimatedSprite2D
+## 地表候鸟（Boids 群体行为）：栖息跳跃、惊飞连锁、编队离星。
+## Boids 三规则——分离：太近则排斥；对齐：惊飞时方向趋同；聚合：落地后倾向靠近同伴。
+
+enum State {
+	PERCHED,
+	FLEEING,
+	GATHERING,
+	LIFTING,
+}
+
+const FLEE_MIN_ARC := 1.2
+const FLEE_MAX_ARC := 2.4
+const FLEE_BASE_ALTITUDE := 50.0
+const FLEE_ALTITUDE_VARIANCE := 16.0
+const FLEE_COOLDOWN_SECONDS := 1.5
+const GATHER_SPEED := 200.0
+const GATHER_WAYPOINT_RADIUS := 150.0
+const HOP_PEAK_ALTITUDE := 3.0
+const HOP_PEAK_ARC := 0.03
+const HOP_CHANCE_PER_SECOND := 0.15
+const FLEE_CHAIN_RADIUS := 30.0
+const SEPARATION_RADIUS := 3.0
+const COHESION_RADIUS := 50.0
+const SEPARATION_WEIGHT := 2.0
+const COHESION_WEIGHT := 0.4
+const ALIGNMENT_BLEND := 0.6
+
+@export var flee_trigger_arc: float = 0.25
+
+var _state: int = State.PERCHED
+var _orbital_angle: float = 0.0
+var _home_orbit_radius: float = 0.0
+var _flee_start_angle: float = 0.0
+var _flee_target_angle: float = 0.0
+var _flee_total_arc: float = 0.0
+var _flee_progress: float = 0.0
+var _flee_max_altitude: float = 50.0
+var _flee_cooldown: float = 0.0
+var _hop_progress: float = 1.0
+var _hop_direction: float = 1.0
+var _hop_facing_left: bool = false
+var _last_flee_direction: float = 1.0
+var _gather_target: Vector2 = Vector2.ZERO
+var _gather_waypoint: Vector2 = Vector2.ZERO
+var _gather_phase: int = 0
+var _gather_arrived: bool = false
+
+
+func _ready() -> void:
+	add_to_group(\"birds\")
+	_orbital_angle = atan2(position.x, -position.y)
+	_home_orbit_radius = position.length()
+	play(&\"perched\")
+
+
+func _process(delta: float) -> void:
+	match _state:
+		State.PERCHED:
+			_process_perched(delta)
+		State.FLEEING:
+			_process_fleeing(delta)
+		State.GATHERING:
+			_process_gathering(delta)
+	_update_visibility()
+
+
+func _process_perched(delta: float) -> void:
+	_flee_cooldown = maxf(0.0, _flee_cooldown - delta)
+	var planet := _find_planet()
+	if planet != null and planet.sky.is_self_rotating:
+		_update_hop(delta)
+	if _flee_cooldown > 0.0:
+		return
+	if planet == null:
+		return
+	var diff := absf(angle_difference(planet.player_angle, _orbital_angle))
+	if diff < flee_trigger_arc:
+		_begin_flee(planet.player_angle)
+
+
+func _boids_hop_direction() -> float:
+	var sep_sum: float = 0.0
+	var coh_sum: float = 0.0
+	var coh_count: int = 0
+	for other in get_tree().get_nodes_in_group(\"birds\"):
+		if other == self:
+			continue
+		if not other is AnimatedSprite2D:
+			continue
+		if other._state != State.PERCHED:
+			continue
+		var dist := global_position.distance_to(other.global_position)
+		if dist < SEPARATION_RADIUS and dist > 0.01:
+			var away_arc := angle_difference(other._orbital_angle, _orbital_angle)
+			sep_sum += signf(away_arc) * (SEPARATION_RADIUS - dist) / SEPARATION_RADIUS
+		if dist < COHESION_RADIUS:
+			var toward_arc := angle_difference(_orbital_angle, other._orbital_angle)
+			coh_sum += toward_arc
+			coh_count += 1
+	var steer: float = 0.0
+	if sep_sum != 0.0:
+		steer += signf(sep_sum) * SEPARATION_WEIGHT
+	if coh_count > 0 and coh_sum != 0.0:
+		steer += signf(coh_sum) * COHESION_WEIGHT
+	if steer == 0.0:
+		steer = 1.0 if randf() > 0.5 else -1.0
+	return steer
+
+
+func _update_hop(delta: float) -> void:
+	if _hop_progress < 1.0:
+		_hop_progress = minf(1.0, _hop_progress + delta * 4.0)
+		var altitude := HOP_PEAK_ALTITUDE * 4.0 * _hop_progress * (1.0 - _hop_progress)
+		var arc_offset := HOP_PEAK_ARC * _hop_direction * sin(_hop_progress * PI)
+		var angle := _orbital_angle + arc_offset
+		position = Vector2(sin(angle), -cos(angle)) * (_home_orbit_radius + altitude)
+		rotation = angle
+		flip_h = _hop_facing_left
+	else:
+		if randf() < HOP_CHANCE_PER_SECOND * delta:
+			_hop_progress = 0.0
+			_hop_direction = _boids_hop_direction()
+			_hop_facing_left = _hop_direction < 0.0
+			_orbital_angle = fposmod(_orbital_angle + HOP_PEAK_ARC * _hop_direction, TAU)
+			position = Vector2(sin(_orbital_angle), -cos(_orbital_angle)) * _home_orbit_radius
+			rotation = _orbital_angle
+
+
+func _begin_flee(player_angle: float, suggested_direction: float = NAN) -> void:
+	_state = State.FLEEING
+	play(&\"fly\")
+	_flee_start_angle = _orbital_angle
+	var away := angle_difference(player_angle, _orbital_angle)
+	if is_zero_approx(away):
+		away = 1.0 if randf() > 0.5 else -1.0
+	var my_direction := signf(away)
+	if not is_nan(suggested_direction):
+		if randf() < ALIGNMENT_BLEND:
+			my_direction = signf(suggested_direction)
+	_last_flee_direction = my_direction
+	var flee_arc := FLEE_MIN_ARC + randf() * (FLEE_MAX_ARC - FLEE_MIN_ARC)
+	_flee_target_angle = fposmod(_orbital_angle + my_direction * flee_arc, TAU)
+	_flee_total_arc = absf(angle_difference(_flee_start_angle, _flee_target_angle))
+	if _flee_total_arc < 0.01:
+		_flee_target_angle = fposmod(_orbital_angle + PI, TAU)
+		_flee_total_arc = absf(angle_difference(_flee_start_angle, _flee_target_angle))
+	_flee_max_altitude = FLEE_BASE_ALTITUDE + randf() * FLEE_ALTITUDE_VARIANCE
+	_flee_progress = 0.0
+	_startle_neighbors(player_angle)
+
+
+func _process_fleeing(delta: float) -> void:
+	var angular_speed := 1.0
+	if _flee_total_arc > 0.01:
+		var step := angular_speed * delta / _flee_total_arc
+		_flee_progress = minf(1.0, _flee_progress + step)
+	else:
+		_flee_progress = 1.0
+	var current_angle := lerp_angle(_flee_start_angle, _flee_target_angle, _flee_progress)
+	_orbital_angle = current_angle
+	var rise := smoothstep(0.0, 0.25, _flee_progress)
+	var fall := smoothstep(1.0, 0.75, _flee_progress)
+	var altitude := _flee_max_altitude * minf(rise, fall)
+	var orbit_radius := _home_orbit_radius + altitude
+	position = Vector2(sin(current_angle), -cos(current_angle)) * orbit_radius
+	rotation = current_angle
+	flip_h = _last_flee_direction < 0.0
+	if _flee_progress >= 1.0:
+		_finish_flee()
+
+
+func _finish_flee() -> void:
+	_state = State.PERCHED
+	_orbital_angle = _flee_target_angle
+	position = Vector2(sin(_orbital_angle), -cos(_orbital_angle)) * _home_orbit_radius
+	rotation = _orbital_angle
+	play(&\"perched\")
+	_flee_cooldown = FLEE_COOLDOWN_SECONDS
+
+
+func _startle_neighbors(player_angle: float) -> void:
+	var my_global := global_position
+	for other in get_tree().get_nodes_in_group(\"birds\"):
+		if other == self:
+			continue
+		if not other is AnimatedSprite2D:
+			continue
+		if other._state != State.PERCHED:
+			continue
+		var dist := my_global.distance_to(other.global_position)
+		if dist > FLEE_CHAIN_RADIUS:
+			continue
+		var chance := 1.0 if dist <= 16.0 else exp(-(dist - 16.0) / 5.0)
+		if randf() > chance:
+			continue
+		other._begin_flee(player_angle, _last_flee_direction)
+
+
+func begin_gather(target_global_position: Vector2, planet_center: Vector2) -> void:
+	_state = State.GATHERING
+	play(&\"fly\")
+	_gather_target = target_global_position
+	var to_bird := (global_position - planet_center).normalized()
+	_gather_waypoint = planet_center + to_bird * GATHER_WAYPOINT_RADIUS
+	_gather_phase = 0
+	_gather_arrived = false
+
+
+func _process_gathering(delta: float) -> void:
+	if _gather_arrived:
+		return
+	var current_target := _gather_waypoint if _gather_phase == 0 else _gather_target
+	var diff := current_target - global_position
+	var step := GATHER_SPEED * delta
+	if diff.length() <= step:
+		global_position = current_target
+		if _gather_phase == 0:
+			_gather_phase = 1
+		else:
+			_gather_arrived = true
+		return
+	global_position += diff.normalized() * step
+	flip_h = diff.x < 0.0
+
+
+func begin_lift(distance: float, duration: float) -> void:
+	_state = State.LIFTING
+	var tween := create_tween()
+	tween.tween_property(self, \"global_position:y\", global_position.y - distance, duration)
+
+
+func has_arrived_at_gather() -> bool:
+	return _gather_arrived
+
+
+func _update_visibility() -> void:
+	if _state == State.GATHERING or _state == State.LIFTING:
+		visible = true
+		z_index = 0
+		return
+	var relative_angle := global_rotation
+	visible = absf(relative_angle) <= WorldConstants.VISIBLE_HALF_ARC
+	z_index = int(cos(relative_angle) * 100.0) + 12
+
+
+func _find_planet() -> Planet:
+	var node := get_parent()
+	while node != null:
+		if node is Planet:
+			return node
+		node = node.get_parent()
+	return null
+"
+
+[node name="Bird" type="AnimatedSprite2D" unique_id=931806216]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_bird")
+animation = &"perched"
+autoplay = "perched"
+script = SubResource("GDScript_bird")

@@ -3117,6 +3117,9 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		if not shoot.is_consumed or shoot.visible:
 			printerr("拔掉的嫩芽应消耗并隐藏")
 			failed += 1
+	if get_tree().get_nodes_in_group("tree_fragment_burst").is_empty():
+		printerr("拔掉嫩芽后应生成可控碎片效果")
+		failed += 1
 	if story.accepts_interact(shoots[0]):
 		printerr("已拔嫩芽不应再交互")
 		failed += 1

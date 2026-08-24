@@ -4,8 +4,10 @@ extends PlanetStory
 
 const PULL_SHOOT_HOLD_SECONDS := 0.8
 const GLASS_GLOBE_HOLD_SECONDS := 0.8
+const UPROOT_A: AudioStream = preload("res://audio/sfx_exp_short_hard10.wav")
 
 var _is_glass_interact: bool = false
+var _uproot_count: int = 0
 
 
 func _ready() -> void:
@@ -83,6 +85,7 @@ func _play_story() -> void:
 	var pull_baobab_then_narrate := func(overhead_text: String) -> void:
 		var pulled_baobab := await _interact_baobab()
 		pulled_baobab.is_consumed = true
+		_play_uproot()
 		pulled_baobab.visible = false
 		await _overhead(overhead_text)
 		is_blocking_input = false
@@ -132,6 +135,16 @@ func _play_story() -> void:
 	)
 
 
+func try_handle_interact(prop: SurfaceProp) -> bool:
+	if not accepts_interact(prop):
+		return false
+	if not super.try_handle_interact(prop):
+		return false
+	if prop.kind == SurfaceProp.Kind.BAOBAB:
+		prop.emit_baobab_fragment_burst()
+	return true
+
+
 func _rose(text: String) -> void:
 	await _line(DialogueCatalog.ROSE_SPEAKER, text, DialogueCatalog.ROSE_PORTRAIT)
 
@@ -156,6 +169,17 @@ func _interact_rose() -> SurfaceProp:
 
 func _interact_baobab() -> SurfaceProp:
 	return await _interact(SurfaceProp.Kind.BAOBAB)
+
+
+func _play_uproot() -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = UPROOT_A
+	player.volume_linear = 0.1
+	_uproot_count += 1
+	add_child(player)
+	player.play()
+	await player.finished
+	player.queue_free()
 
 
 func _show_glass() -> void:

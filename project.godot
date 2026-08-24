@@ -267,13 +267,13 @@ interact={
 
 joypads/ignore_joypad_on_unfocused_application=true
 
-[physics]
-
-3d/physics_engine="Jolt Physics"
-
 [layer_names]
 
 2d_physics/layer_2="flora_grass"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
 
 [rendering]
 
