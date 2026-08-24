@@ -10,7 +10,6 @@
 [ext_resource type="Script" uid="uid://ciwt72d3i6fwy" path="res://interact/interaction.gd" id="10_interact"]
 [ext_resource type="Script" uid="uid://pqblm1m4kgms" path="res://player/scarf.gd" id="11_scarf"]
 [ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
-[ext_resource type="Script" uid="uid://cplanetstor01" path="res://story/planet_story.gd" id="13_story"]
 [ext_resource type="Script" uid="uid://wt1e4t3x7gyv" path="res://story/migratory_flock.gd" id="14_flock"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
 [ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]
@@ -289,21 +288,16 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 script = ExtResource("10_interact")
 
-[node name="Story" type="Node" parent="GameView/GameViewport" unique_id=1253671560]
-unique_name_in_owner = true
-script = ExtResource("13_story")
-auto_start = false
-
-[node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport/Story" unique_id=515559498]
+[node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport" unique_id=515559498]
 unique_name_in_owner = true
 z_index = 180
 script = ExtResource("14_flock")
 bird_texture = SubResource("EditableTexture_migratory_bird")
 
-[node name="FadeLayer" type="CanvasLayer" parent="GameView/GameViewport/Story" unique_id=1234713668]
+[node name="FadeLayer" type="CanvasLayer" parent="GameView/GameViewport" unique_id=1234713668]
 layer = 5
 
-[node name="Dim" type="ColorRect" parent="GameView/GameViewport/Story/FadeLayer" unique_id=1388500103]
+[node name="Dim" type="ColorRect" parent="GameView/GameViewport/FadeLayer" unique_id=1388500103]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
@@ -313,7 +307,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
 
-[node name="Epilogue" type="Label" parent="GameView/GameViewport/Story/FadeLayer" unique_id=222522644]
+[node name="Epilogue" type="Label" parent="GameView/GameViewport/FadeLayer" unique_id=222522644]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0

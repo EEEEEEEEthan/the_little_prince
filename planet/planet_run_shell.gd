@@ -15,6 +15,9 @@ const META_OPENING_DAY_MUSIC := "opening_day_music"
 func _ready() -> void:
 	_layout_world()
 	planet.teleport_player(planet.spawn_angle)
+	var story := planet.get_node("%Story") as PlanetStory
+	if story.auto_start:
+		story.start()
 
 
 func replace_planet(next_planet: Planet) -> void:
@@ -69,7 +72,6 @@ func _layout_world() -> void:
 static func present_standalone_planet(
 		standalone_planet: Planet,
 		run_shell_scene: PackedScene,
-		story_script: Script,
 		day_music: AudioStream,
 ) -> void:
 	var tree := standalone_planet.get_tree()
@@ -79,10 +81,6 @@ static func present_standalone_planet(
 	var shell := run_shell_scene.instantiate() as PlanetRunShell
 	if day_music != null:
 		shell.get_node("Config").set_meta(META_OPENING_DAY_MUSIC, day_music)
-	if story_script != null:
-		var story := shell.get_node("GameView/GameViewport/Story")
-		story.set_script(story_script)
-		(story as PlanetStory).auto_start = true
 	var viewport := shell.get_node("GameView/GameViewport") as SubViewport
 	var camera := viewport.get_node("GameCamera")
 	scene_root.remove_child(standalone_planet)

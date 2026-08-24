@@ -10,7 +10,6 @@
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
 [ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
-[ext_resource type="Script" uid="uid://c5aqtsrp8kkfu" path="res://story/geographer_story.gd" id="17_story"]
 [ext_resource type="AudioStream" uid="uid://dbh8gq5hbhl0i" path="res://audio/dry_folio_rest.ogg" id="18_day_music"]
 
 
@@ -42,6 +41,44 @@ shader_parameter/noise_texture = SubResource("NoiseTexture2D_geographer_sky")
 shader_parameter/phase = 0.5
 shader_parameter/noise_strength = 0.02
 
+
+[sub_resource type="GDScript" id="GDScript_story"]
+script/source = "extends PlanetStory
+## 330 号小行星：书房只记别人的报告；玫瑰太短不记，随后指向地球。
+
+
+func _prepare_start() -> void:
+	player.flip_h = true
+	player.modulate.a = 1.0
+	has_crossed_sunset = true
+	set_process(false)
+
+
+func _play_story() -> void:
+	await _fade_in_from_black()
+	await _overhead(\"这是一间书房。\")
+	player.can_move_left = true
+	player.can_move_right = true
+	is_blocking_input = false
+	has_finished_opening = true
+	var geographer := await _interact(SurfaceProp.Kind.GEOGRAPHER)
+	await _geographer(\"我只记下别人的报告。\")
+	await _prince(\"我的玫瑰呢？\")
+	await _geographer(\"花存在得太短。我不记。\")
+	geographer.is_consumed = true
+	await _camera_up()
+	await _overhead(\"他指向地球。\")
+	await _depart(\"330。\")
+
+
+func _geographer(text: String) -> void:
+	await _line(
+			DialogueCatalog.GEOGRAPHER_SPEAKER,
+			text,
+			DialogueCatalog.GEOGRAPHER_PORTRAIT
+	)
+"
+
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 body_texture = ExtResource("5_body")
 zenith_gradient = ExtResource("13_parchment_zenith")
@@ -50,7 +87,6 @@ zenith_gradient = ExtResource("13_parchment_zenith")
 process_mode = 4
 script = ExtResource("15_playable")
 metadata/run_shell_scene = ExtResource("16_run_shell")
-metadata/story_script = ExtResource("17_story")
 metadata/day_music = ExtResource("18_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
@@ -104,3 +140,7 @@ offset = Vector2(0, -7)
 script = ExtResource("3_surface_prop")
 kind = 18
 
+
+[node name="Story" parent="." index="4"]
+script = SubResource("GDScript_story")
+auto_start = true
