@@ -127,7 +127,7 @@ script = SubResource("GDScript_continue_triangle")
 
 [node name="Typewriter" type="AudioStreamPlayer" parent="." unique_id=1907550723]
 stream = ExtResource("3_blip")
-volume_db = -8.0
+volume_db = -14.0
 
 [node name="Timer" type="Timer" parent="." unique_id=1973346029]
 wait_time = 0.045

@@ -1613,6 +1613,7 @@ func _check_scene_and_mechanics() -> int:
 			failed += 1
 
 		failed += _check_ui_pixel_fonts(scene)
+		failed += _check_typewriter_volumes(scene)
 		failed += await _check_overhead_typewriter(scene, planet)
 		failed += await _check_prop_interactions(scene, planet)
 		failed += await _check_b612_story(scene, planet)
@@ -2106,6 +2107,30 @@ func _check_ui_pixel_fonts(scene: Node) -> int:
 			"结尾叙事",
 	)
 	print("  对话 10px / 头顶叙事 8px OK")
+	return failed
+
+
+func _check_typewriter_volumes(scene: Node) -> int:
+	var dialogue := scene.get_node("GameView/GameViewport/DialogueBox") as DialogueBox
+	var overhead := scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
+	var dialogue_typewriter := dialogue.get_node("Typewriter") as AudioStreamPlayer
+	var overhead_typewriter := overhead.get_node("%Typewriter") as AudioStreamPlayer
+	var failed := 0
+	if not is_equal_approx(dialogue_typewriter.volume_db, DialogueBox.TYPEWRITER_VOLUME_DB):
+		printerr("对话打字机音量应为 %s，实际 %s" % [
+			DialogueBox.TYPEWRITER_VOLUME_DB,
+			dialogue_typewriter.volume_db,
+		])
+		failed += 1
+	if not is_equal_approx(overhead_typewriter.volume_db, OverheadTypewriter.TYPEWRITER_VOLUME_DB):
+		printerr("头顶打字机音量应为 %s，实际 %s" % [
+			OverheadTypewriter.TYPEWRITER_VOLUME_DB,
+			overhead_typewriter.volume_db,
+		])
+		failed += 1
+	if dialogue_typewriter.volume_db <= overhead_typewriter.volume_db:
+		printerr("对话打字机应比头顶打字机更响")
+		failed += 1
 	return failed
 
 
@@ -5472,4 +5497,3 @@ func _check_lamplighter_departed_travels_to_geographer() -> int:
 	scene.queue_free()
 	await process_frame
 	return failed
-
