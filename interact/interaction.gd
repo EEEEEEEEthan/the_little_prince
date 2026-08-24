@@ -2,13 +2,20 @@ class_name Interaction
 extends Node
 ## 靠近可互动物体时显示 A 提示；点按或长按 interact（键盘 Submit / 手柄 A）交互。
 
-@onready var planet: Planet = %Planet:
+var planet: Planet:
 	set(value):
 		planet = value
-		story = planet.get_node("%Story") as PlanetStory
+		story = value.get_node("%Story") as PlanetStory
 @onready var dialogue: DialogueBox = %DialogueBox
 @onready var prompt: InteractPrompt = %InteractPrompt
 var story: PlanetStory
+
+var _focus: SurfaceProp
+var _hold_elapsed_seconds: float = 0.0
+
+
+func _ready() -> void:
+	planet = %Planet
 
 var _focus: SurfaceProp
 var _hold_elapsed_seconds: float = 0.0
