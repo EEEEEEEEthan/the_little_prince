@@ -832,6 +832,8 @@ func _check_no_legacy() -> int:
 
 func _check_tscn_editor_visible() -> int:
 	var failed := 0
+	var hidden_in_editor := RegEx.new()
+	hidden_in_editor.compile("(?m)^visible = false")
 	for path in [
 		"res://journey/main.tscn",
 		"res://planet/planet_run_shell.tscn",
@@ -847,8 +849,7 @@ func _check_tscn_editor_visible() -> int:
 		"res://ui/dialogue_box.tscn",
 		"res://ui/overhead_typewriter.tscn",
 	]:
-		var src := FileAccess.get_file_as_string(path)
-		if src.contains("visible = false"):
+		if hidden_in_editor.search(FileAccess.get_file_as_string(path)) != null:
 			printerr("%s 不应在 tscn 写 visible = false（编辑器要能看见，运行时脚本再关）" % path)
 			failed += 1
 	print("  tscn 编辑器可见 OK")
