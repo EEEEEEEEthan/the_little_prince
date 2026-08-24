@@ -21,13 +21,13 @@ func _ready() -> void:
 func travel_to_king_planet(start_story := true) -> void:
 	if not travel_to_next_planet:
 		return
-	_swap_journey_planet(
+	var next_story := _swap_journey_planet(
 			META_KING_PLANET_SCENE,
 			%Music.play_king_day_loop,
 			start_story
 	)
 	if start_story:
-		(%Story as KingStory).departed.connect(
+		(next_story as KingStory).departed.connect(
 				travel_to_drunkard_planet,
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED
 		)
@@ -36,13 +36,13 @@ func travel_to_king_planet(start_story := true) -> void:
 func travel_to_drunkard_planet(start_story := true) -> void:
 	if not travel_to_next_planet:
 		return
-	_swap_journey_planet(
+	var next_story := _swap_journey_planet(
 			META_DRUNKARD_PLANET_SCENE,
 			%Music.play_drunkard_day_loop,
 			start_story
 	)
 	if start_story:
-		(%Story as DrunkardStory).departed.connect(
+		(next_story as DrunkardStory).departed.connect(
 				travel_to_merchant_planet,
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED
 		)
@@ -51,13 +51,13 @@ func travel_to_drunkard_planet(start_story := true) -> void:
 func travel_to_merchant_planet(start_story := true) -> void:
 	if not travel_to_next_planet:
 		return
-	_swap_journey_planet(
+	var next_story := _swap_journey_planet(
 			META_MERCHANT_PLANET_SCENE,
 			%Music.play_merchant_day_loop,
 			start_story
 	)
 	if start_story:
-		(%Story as MerchantStory).departed.connect(
+		(next_story as MerchantStory).departed.connect(
 				travel_to_lamplighter_planet,
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED
 		)
@@ -66,13 +66,13 @@ func travel_to_merchant_planet(start_story := true) -> void:
 func travel_to_lamplighter_planet(start_story := true) -> void:
 	if not travel_to_next_planet:
 		return
-	_swap_journey_planet(
+	var next_story := _swap_journey_planet(
 			META_LAMPLIGHTER_PLANET_SCENE,
 			%Music.play_lamplighter_day_loop,
 			start_story
 	)
 	if start_story:
-		(%Story as LamplighterStory).departed.connect(
+		(next_story as LamplighterStory).departed.connect(
 				travel_to_geographer_planet,
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED
 		)
@@ -93,7 +93,7 @@ func _swap_journey_planet(
 		planet_scene_meta_name: String,
 		play_day_music: Callable,
 		start_story: bool
-) -> void:
+) -> PlanetStory:
 	var previous_story := interaction.story as PlanetStory
 	previous_story.is_active = false
 	previous_story.set_process(false)
@@ -107,3 +107,4 @@ func _swap_journey_planet(
 	play_day_music.call()
 	if start_story:
 		next_story.start()
+	return next_story

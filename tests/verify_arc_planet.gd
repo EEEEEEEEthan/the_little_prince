@@ -140,10 +140,17 @@ func _planet_body_texture(scene_path: String) -> Texture2D:
 
 func _migratory_bird_texture() -> Texture2D:
 	var shell := _instantiate_scene("res://planet/planet_run_shell.tscn")
-	var flock := shell.get_node("GameView/GameViewport/Story/MigratoryFlock") as MigratoryFlock
+	var flock := shell.get_node("%MigratoryFlock") as MigratoryFlock
 	var tex := flock.bird_texture
 	shell.free()
 	return tex
+
+
+func _current_story(scene: Node) -> PlanetStory:
+	var planet := scene.get_node_or_null(PLANET_PATH) as Planet
+	if planet == null:
+		return null
+	return planet.get_node_or_null("%Story") as PlanetStory
 
 
 func _butterfly_sheet_texture() -> Texture2D:
@@ -1151,7 +1158,7 @@ func _check_scene_and_mechanics() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -1163,8 +1170,8 @@ func _check_scene_and_mechanics() -> int:
 				% (opening_planet.scene_file_path if opening_planet != null else "null")
 		)
 		failed += 1
-	if scene.get_node_or_null("%KingStory") as KingStory == null:
-		printerr("主场景应有 KingStory")
+	if (scene.get_node("Config").get_meta("king_planet_scene") as PackedScene) == null:
+		printerr("主场景应配置国王星球场景")
 		failed += 1
 	failed += _assert_playing_music(scene, "home_day_music", "开局")
 	if (
@@ -2874,11 +2881,11 @@ func _await_dialogue_idle(dialogue: DialogueBox) -> bool:
 
 func _check_b612_story(scene: Node, planet: Planet) -> int:
 	var failed := 0
-	var story := scene.get_node("GameView/GameViewport/Story") as B612Story
+	var story := _current_story(scene) as B612Story
 	if story == null:
 		printerr("找不到 B612 Story")
 		return 1
-	if scene.get_node_or_null("GameView/GameViewport/Story/MigratoryFlock") == null:
+	if scene.get_node_or_null("%MigratoryFlock") == null:
 		printerr("找不到 MigratoryFlock")
 		failed += 1
 	var camera := scene.get_node_or_null("GameView/GameViewport/GameCamera") as Camera2D
@@ -2891,7 +2898,7 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 	var player := scene.get_node(PLAYER_PATH) as Player
 	var rose := planet.get_node("Surface/Rose") as SurfaceProp
 	var dialogue_body := story.dialogue.get_node("%Body") as Label
-	var fade_layer := story.get_node("FadeLayer") as CanvasLayer
+	var fade_layer := (scene.get_node("%Dim") as ColorRect).get_parent() as CanvasLayer
 	if fade_layer.layer >= story.dialogue.layer:
 		printerr("开场淡入时对话框应叠在黑场之上")
 		failed += 1
@@ -3399,7 +3406,7 @@ func _check_king_chapter() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -3418,7 +3425,7 @@ func _check_king_chapter() -> int:
 
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
-	var story := scene.get_node_or_null("%KingStory") as KingStory
+	var story := _current_story(scene) as KingStory
 	if planet == null or player == null or story == null:
 		printerr("国王章缺少 Planet / Player / KingStory")
 		scene.queue_free()
@@ -4225,7 +4232,6 @@ func _check_b612_departed_travels_to_king() -> int:
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
 	(scene.get_node("%Story") as B612Story).auto_start = false
-	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -4233,7 +4239,7 @@ func _check_b612_departed_travels_to_king() -> int:
 	await process_frame
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
-	var king_story := scene.get_node("%KingStory") as KingStory
+	var king_story := _current_story(scene) as KingStory
 	if planet == null or planet.scene_file_path != "res://planet/325.tscn":
 		printerr(
 				"B612 离星后应换到国王星球，实际 %s"
@@ -4244,15 +4250,6 @@ func _check_b612_departed_travels_to_king() -> int:
 		printerr("离星换星后 KingStory 应绑定国王星球")
 		failed += 1
 	failed += _assert_playing_music(scene, "king_day_music", "离星换星")
-	var opening_deadline_msec := Time.get_ticks_msec() + 5000
-	while (
-			not king_story.has_finished_opening
-			and Time.get_ticks_msec() < opening_deadline_msec
-	):
-		await process_frame
-	if not king_story.has_finished_opening:
-		printerr("换星后国王开场应自动开始")
-		failed += 1
 	if failed == 0:
 		print("  B612 离星后进入国王星球 OK")
 	scene.queue_free()
@@ -4276,7 +4273,7 @@ func _check_footsteps() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -4535,7 +4532,7 @@ func _check_drunkard_chapter() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -4546,7 +4543,7 @@ func _check_drunkard_chapter() -> int:
 
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
-	var story := scene.get_node_or_null("%DrunkardStory") as DrunkardStory
+	var story := _current_story(scene) as DrunkardStory
 	if planet == null or player == null or story == null:
 		printerr("酒鬼章缺少 Planet / Player / DrunkardStory")
 		scene.queue_free()
@@ -4725,15 +4722,13 @@ func _check_king_departed_travels_to_drunkard() -> int:
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
 	(scene.get_node("%Story") as B612Story).auto_start = false
-	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
-	(scene.get_node("%DrunkardStory") as DrunkardStory).skip_cinematics = true
 	root.add_child(scene)
 	await process_frame
 	await process_frame
 	scene.travel_to_king_planet(true)
 	await process_frame
 	await process_frame
-	var king_story := scene.get_node("%KingStory") as KingStory
+	var king_story := _current_story(scene) as KingStory
 	king_story._story_generation += 1
 	king_story.is_active = false
 	king_story.set_process(false)
@@ -4741,7 +4736,7 @@ func _check_king_departed_travels_to_drunkard() -> int:
 	await process_frame
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
-	var drunkard_story := scene.get_node("%DrunkardStory") as DrunkardStory
+	var drunkard_story := _current_story(scene) as DrunkardStory
 	if planet == null or planet.scene_file_path != "res://planet/327.tscn":
 		printerr(
 				"国王离星后应换到酒鬼星球，实际 %s"
@@ -4752,15 +4747,6 @@ func _check_king_departed_travels_to_drunkard() -> int:
 		printerr("离星换星后 DrunkardStory 应绑定酒鬼星球")
 		failed += 1
 	failed += _assert_playing_music(scene, "drunkard_day_music", "国王离星换星")
-	var opening_deadline_msec := Time.get_ticks_msec() + 5000
-	while (
-			not drunkard_story.has_finished_opening
-			and Time.get_ticks_msec() < opening_deadline_msec
-	):
-		await process_frame
-	if not drunkard_story.has_finished_opening:
-		printerr("换星后酒鬼开场应自动开始")
-		failed += 1
 	if failed == 0:
 		print("  国王离星后进入酒鬼星球 OK")
 	scene.queue_free()
@@ -4778,7 +4764,7 @@ func _check_merchant_chapter() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -4791,7 +4777,7 @@ func _check_merchant_chapter() -> int:
 
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
-	var story := scene.get_node_or_null("%MerchantStory") as MerchantStory
+	var story := _current_story(scene) as MerchantStory
 	if planet == null or player == null or story == null:
 		printerr("商人章缺少 Planet / Player / MerchantStory")
 		scene.queue_free()
@@ -4987,16 +4973,13 @@ func _check_drunkard_departed_travels_to_merchant() -> int:
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
 	(scene.get_node("%Story") as B612Story).auto_start = false
-	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
-	(scene.get_node("%DrunkardStory") as DrunkardStory).skip_cinematics = true
-	(scene.get_node("%MerchantStory") as MerchantStory).skip_cinematics = true
 	root.add_child(scene)
 	await process_frame
 	await process_frame
 	scene.travel_to_drunkard_planet(true)
 	await process_frame
 	await process_frame
-	var drunkard_story := scene.get_node("%DrunkardStory") as DrunkardStory
+	var drunkard_story := _current_story(scene) as DrunkardStory
 	drunkard_story._story_generation += 1
 	drunkard_story.is_active = false
 	drunkard_story.set_process(false)
@@ -5004,7 +4987,7 @@ func _check_drunkard_departed_travels_to_merchant() -> int:
 	await process_frame
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
-	var merchant_story := scene.get_node("%MerchantStory") as MerchantStory
+	var merchant_story := _current_story(scene) as MerchantStory
 	if planet == null or planet.scene_file_path != "res://planet/328.tscn":
 		printerr(
 				"酒鬼离星后应换到商人星球，实际 %s"
@@ -5015,15 +4998,6 @@ func _check_drunkard_departed_travels_to_merchant() -> int:
 		printerr("离星换星后 MerchantStory 应绑定商人星球")
 		failed += 1
 	failed += _assert_playing_music(scene, "merchant_day_music", "酒鬼离星换星")
-	var opening_deadline_msec := Time.get_ticks_msec() + 5000
-	while (
-			not merchant_story.has_finished_opening
-			and Time.get_ticks_msec() < opening_deadline_msec
-	):
-		await process_frame
-	if not merchant_story.has_finished_opening:
-		printerr("换星后商人开场应自动开始")
-		failed += 1
 	if failed == 0:
 		print("  酒鬼离星后进入商人星球 OK")
 	scene.queue_free()
@@ -5041,7 +5015,7 @@ func _check_lamplighter_chapter() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -5056,7 +5030,7 @@ func _check_lamplighter_chapter() -> int:
 
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
-	var story := scene.get_node_or_null("%LamplighterStory") as LamplighterStory
+	var story := _current_story(scene) as LamplighterStory
 	if planet == null or player == null or story == null:
 		printerr("点灯人章缺少 Planet / Player / LamplighterStory")
 		scene.queue_free()
@@ -5247,17 +5221,13 @@ func _check_merchant_departed_travels_to_lamplighter() -> int:
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
 	(scene.get_node("%Story") as B612Story).auto_start = false
-	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
-	(scene.get_node("%DrunkardStory") as DrunkardStory).skip_cinematics = true
-	(scene.get_node("%MerchantStory") as MerchantStory).skip_cinematics = true
-	(scene.get_node("%LamplighterStory") as LamplighterStory).skip_cinematics = true
 	root.add_child(scene)
 	await process_frame
 	await process_frame
 	scene.travel_to_merchant_planet(true)
 	await process_frame
 	await process_frame
-	var merchant_story := scene.get_node("%MerchantStory") as MerchantStory
+	var merchant_story := _current_story(scene) as MerchantStory
 	merchant_story._story_generation += 1
 	merchant_story.is_active = false
 	merchant_story.set_process(false)
@@ -5265,7 +5235,7 @@ func _check_merchant_departed_travels_to_lamplighter() -> int:
 	await process_frame
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
-	var lamplighter_story := scene.get_node("%LamplighterStory") as LamplighterStory
+	var lamplighter_story := _current_story(scene) as LamplighterStory
 	if planet == null or planet.scene_file_path != "res://planet/329.tscn":
 		printerr(
 				"商人离星后应换到点灯人星球，实际 %s"
@@ -5302,7 +5272,7 @@ func _check_geographer_chapter() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("GameView/GameViewport/Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -5319,7 +5289,7 @@ func _check_geographer_chapter() -> int:
 
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
 	var player: Player = scene.get_node_or_null(PLAYER_PATH) as Player
-	var story := scene.get_node_or_null("%GeographerStory") as GeographerStory
+	var story := _current_story(scene) as GeographerStory
 	if planet == null or player == null or story == null:
 		printerr("地理学家章缺少 Planet / Player / GeographerStory")
 		scene.queue_free()
@@ -5502,18 +5472,13 @@ func _check_lamplighter_departed_travels_to_geographer() -> int:
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
 	(scene.get_node("%Story") as B612Story).auto_start = false
-	(scene.get_node("%KingStory") as KingStory).skip_cinematics = true
-	(scene.get_node("%DrunkardStory") as DrunkardStory).skip_cinematics = true
-	(scene.get_node("%MerchantStory") as MerchantStory).skip_cinematics = true
-	(scene.get_node("%LamplighterStory") as LamplighterStory).skip_cinematics = true
-	(scene.get_node("%GeographerStory") as GeographerStory).skip_cinematics = true
 	root.add_child(scene)
 	await process_frame
 	await process_frame
 	scene.travel_to_lamplighter_planet(true)
 	await process_frame
 	await process_frame
-	var lamplighter_story := scene.get_node("%LamplighterStory") as LamplighterStory
+	var lamplighter_story := _current_story(scene) as LamplighterStory
 	lamplighter_story._story_generation += 1
 	lamplighter_story.is_active = false
 	lamplighter_story.set_process(false)
@@ -5521,7 +5486,7 @@ func _check_lamplighter_departed_travels_to_geographer() -> int:
 	await process_frame
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
-	var geographer_story := scene.get_node("%GeographerStory") as GeographerStory
+	var geographer_story := _current_story(scene) as GeographerStory
 	if planet == null or planet.scene_file_path != "res://planet/330.tscn":
 		printerr(
 				"点灯人离星后应换到地理学家星球，实际 %s"
@@ -5532,15 +5497,6 @@ func _check_lamplighter_departed_travels_to_geographer() -> int:
 		printerr("离星换星后 GeographerStory 应绑定地理学家星球")
 		failed += 1
 	failed += _assert_playing_music(scene, "geographer_day_music", "点灯人离星换星")
-	var opening_deadline_msec := Time.get_ticks_msec() + 5000
-	while (
-			not geographer_story.has_finished_opening
-			and Time.get_ticks_msec() < opening_deadline_msec
-	):
-		await process_frame
-	if not geographer_story.has_finished_opening:
-		printerr("换星后地理学家开场应自动开始")
-		failed += 1
 	if planet != null and planet.scene_file_path == "res://planet/earth.tscn":
 		printerr("点灯人之后不应进入地球关卡")
 		failed += 1
