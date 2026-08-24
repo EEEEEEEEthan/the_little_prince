@@ -8,7 +8,7 @@ const FADE_DURATION_SECONDS := 0.9
 const QUEUE_GAP_SECONDS := 1.0
 const AMBIENT_START_DELAY_SECONDS := 1.2
 const AMBIENT_GAP_SECONDS := 1.0
-const TYPEWRITER_VOLUME_DB := -14.0
+const TYPEWRITER_VOLUME_DB := -20.0
 
 const AMBIENT_LINES: PackedStringArray = [
 	"风从沙上走过。",

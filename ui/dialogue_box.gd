@@ -7,8 +7,8 @@ signal line_advanced
 
 const TYPEWRITER_INTERVAL := 0.045
 const TYPEWRITER_FAST_INTERVAL := 0.012
-const TYPEWRITER_VOLUME_DB := -8.0
-const TYPEWRITER_FAST_VOLUME_DB := -20.0
+const TYPEWRITER_VOLUME_DB := -14.0
+const TYPEWRITER_FAST_VOLUME_DB := -26.0
 
 @onready var _body: Label = %Body
 @onready var _typewriter: AudioStreamPlayer = $Typewriter
