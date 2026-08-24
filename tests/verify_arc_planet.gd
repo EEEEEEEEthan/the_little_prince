@@ -2033,7 +2033,7 @@ func _check_embedded_planet_stories() -> int:
 		var scene_source := FileAccess.get_file_as_string(
 				"res://planet/%s.tscn" % scene_name
 		)
-		if not scene_source.contains("script/source") \
+		if not scene_source.contains("planet_story.gd") \
 				or scene_source.contains("path=\"res://story/%s\"" % story_scenes[scene_name]):
 			printerr("%s.tscn 应将剧情脚本作为 Story builtin" % scene_name)
 			failed += 1
