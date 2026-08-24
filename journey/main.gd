@@ -12,10 +12,14 @@ var travel_to_next_planet: bool = true
 
 func _ready() -> void:
 	super._ready()
-	(%Story as PlanetStory).departed.connect(
+	_current_story().departed.connect(
 			travel_to_king_planet,
 			CONNECT_ONE_SHOT | CONNECT_DEFERRED
 	)
+
+
+func _current_story() -> PlanetStory:
+	return (%Planet as Planet).get_node("%Story") as PlanetStory
 
 
 func travel_to_king_planet(start_story := true) -> void:

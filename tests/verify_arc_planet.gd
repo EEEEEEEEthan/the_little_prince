@@ -1081,7 +1081,7 @@ func _check_main_story_starts_with_sky_ready() -> int:
 	root.add_child(scene)
 	await process_frame
 	await process_frame
-	var story := scene.get_node("%Story") as B612Story
+	var story := _current_story(scene) as B612Story
 	var player := scene.get_node(PLAYER_PATH) as Player
 	if story.planet.sky == null:
 		printerr("main 开场 Story.start 时 planet.sky 不应为空")
@@ -2030,11 +2030,11 @@ func _check_story_scene_script_references() -> int:
 	var failed := 0
 	var story_scenes := {
 		"b612": "b612_story.gd",
-		"king": "king_story.gd",
-		"drunkard": "drunkard_story.gd",
-		"merchant": "merchant_story.gd",
-		"lamplighter": "lamplighter_story.gd",
-		"geographer": "geographer_story.gd",
+		"325": "king_story.gd",
+		"327": "drunkard_story.gd",
+		"328": "merchant_story.gd",
+		"329": "lamplighter_story.gd",
+		"330": "geographer_story.gd",
 	}
 	for scene_name in story_scenes:
 		var scene_source := FileAccess.get_file_as_string(
@@ -3879,7 +3879,7 @@ func _assert_standalone_planet_run(
 	elif player.planet != planet:
 		printerr("%s 玩家应绑定该星" % label)
 		failed += 1
-	var story := shell.get_node("%Story")
+	var story := _current_story(shell)
 	if story.get_script() != expected_story_type:
 		printerr("%s 故事脚本应为 %s" % [label, expected_story_type.resource_path])
 		failed += 1
@@ -4049,12 +4049,12 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("%Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
 
-	var story := scene.get_node("%Story") as B612Story
+	var story := _current_story(scene) as B612Story
 	var player := scene.get_node(PLAYER_PATH) as Player
 	var overhead := story.overhead
 	var overhead_body := overhead.get_node("Body") as Label
@@ -4231,11 +4231,11 @@ func _check_b612_departed_travels_to_king() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("%Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
-	(scene.get_node("%Story") as B612Story).departed.emit()
+	(_current_story(scene) as B612Story).departed.emit()
 	await process_frame
 	await process_frame
 	var planet: Planet = scene.get_node_or_null(PLANET_PATH) as Planet
@@ -4282,7 +4282,7 @@ func _check_footsteps() -> int:
 	var player: Player = scene.get_node(PLAYER_PATH) as Player
 	var footprint := scene.get_node("%Footprint") as Area2D
 	var footstep := scene.get_node("%Footstep")
-	var story := scene.get_node("%Story") as PlanetStory
+	var story := _current_story(scene) as PlanetStory
 	if footprint == null or footstep == null:
 		printerr("Player 下应有 Footprint 与 Footstep")
 		scene.queue_free()
@@ -4721,7 +4721,7 @@ func _check_king_departed_travels_to_drunkard() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("%Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -4972,7 +4972,7 @@ func _check_drunkard_departed_travels_to_merchant() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("%Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -5220,7 +5220,7 @@ func _check_merchant_departed_travels_to_lamplighter() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("%Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -5471,7 +5471,7 @@ func _check_lamplighter_departed_travels_to_geographer() -> int:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("%Story") as B612Story).auto_start = false
+	(_current_story(scene) as B612Story).auto_start = false
 	root.add_child(scene)
 	await process_frame
 	await process_frame

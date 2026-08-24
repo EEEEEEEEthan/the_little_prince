@@ -3,6 +3,13 @@ extends SceneTree
 func _init() -> void:
 	call_deferred(&"_run_tests")
 
+func _current_story(scene: Node) -> PlanetStory:
+	var planet := scene.get_node_or_null("GameView/GameViewport/Planet") as Planet
+	if planet == null:
+		return null
+	return planet.get_node_or_null("%Story") as PlanetStory
+
+
 func _run_tests() -> void:
 	var failed := 0
 	var palette := load("res://visual/palette.png") as Texture2D
@@ -27,7 +34,7 @@ func _run_tests() -> void:
 	(
 		scene.get_node("GameView/GameViewport/OverheadTypewriter") as OverheadTypewriter
 	).play_on_ready = false
-	(scene.get_node("%Story") as PlanetStory).auto_start = false
+	((_current_story(scene)) as PlanetStory).auto_start = false
 	root.add_child(scene)
 	# Wait for the scene and its children to finish initialization.
 	await process_frame
