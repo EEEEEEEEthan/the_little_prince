@@ -76,11 +76,21 @@ func get_dialogue_id() -> StringName:
 
 func is_interactable() -> bool:
 	match kind:
-		Kind.EDICT, Kind.BORDER, Kind.THRONE, Kind.CAPE, Kind.RAT_HOLE:
+		Kind.EDICT, Kind.BORDER, Kind.THRONE, Kind.CAPE, Kind.RAT_HOLE, Kind.VOLCANO:
 			return true
-		Kind.VOLCANO, Kind.FLORA, Kind.RAT, Kind.RAT_TRACE, Kind.BOTTLE, Kind.MERCHANT, Kind.LAMPLIGHTER, Kind.INK_REPORT:
+		Kind.FLORA, Kind.RAT, Kind.RAT_TRACE, Kind.BOTTLE, Kind.MERCHANT, Kind.LAMPLIGHTER, Kind.INK_REPORT:
 			return false
 	return not is_consumed and get_dialogue_id() != &""
+
+
+func activate_volcano() -> void:
+	if kind != Kind.VOLCANO or variant != WorldConstants.VOLCANO_ACTIVE_VARIANT:
+		return
+	var smoke := get_node_or_null("VolcanoSmoke") as CPUParticles2D
+	if smoke == null:
+		return
+	smoke.restart()
+	smoke.emitting = true
 
 
 func play_ambient_one_shot() -> void:

@@ -1253,8 +1253,11 @@ func _check_scene_and_mechanics() -> int:
 			printerr("活火山应有 VolcanoSmoke 粒子")
 			failed += 1
 		else:
-			if not volcano_smoke.emitting:
-				printerr("VolcanoSmoke 应为 emitting")
+			if volcano_smoke.emitting:
+				printerr("VolcanoSmoke 默认不应 emitting")
+				failed += 1
+			if not volcano_smoke.one_shot:
+				printerr("VolcanoSmoke 应为 one_shot")
 				failed += 1
 			if not volcano_smoke.local_coords:
 				printerr("VolcanoSmoke 应使用 local_coords（随火山旋转）")
@@ -2297,12 +2300,22 @@ func _check_prop_interactions(scene: Node, planet: Planet) -> int:
 
 	failed += _assert_focus(planet, baobab, &"baobab_shoot", "猴面包树")
 	failed += _assert_focus(planet, rose, &"rose", "玫瑰")
-	if active_volcano.is_interactable() or dead_volcano.is_interactable():
-		printerr("火山只作为装饰，不应可交互")
+	if not active_volcano.is_interactable() or not dead_volcano.is_interactable():
+		printerr("火山应可交互")
 		failed += 1
 	planet.teleport_player(active_volcano.rotation)
-	if planet.find_nearest_interactable() == active_volcano:
-		printerr("站在火山旁不应选中火山")
+	if planet.find_nearest_interactable() != active_volcano:
+		printerr("站在活火山旁应选中活火山")
+		failed += 1
+	var active_smoke := active_volcano.get_node("VolcanoSmoke") as CPUParticles2D
+	active_volcano.activate_volcano()
+	if not active_smoke.emitting:
+		printerr("确认活火山后应冒烟")
+		failed += 1
+	active_smoke.emitting = false
+	dead_volcano.activate_volcano()
+	if dead_volcano.get_node_or_null("VolcanoSmoke") != null:
+		printerr("死火山不应有烟雾粒子")
 		failed += 1
 	var flora: SurfaceProp = null
 	for prop in planet.surface_props:
@@ -3121,13 +3134,13 @@ func _check_b612_story(scene: Node, planet: Planet) -> int:
 		printerr("已拔嫩芽不应再交互")
 		failed += 1
 	for volcano in volcanoes:
-		if volcano.is_interactable() or story.accepts_interact(volcano):
-			printerr("火山只作为装饰，不应可交互")
+		if not volcano.is_interactable() or story.accepts_interact(volcano):
+			printerr("火山应可交互但不应被剧情拦截")
 			failed += 1
 		for child in volcano.get_children():
 			var smoke := child as CPUParticles2D
-			if smoke != null and not smoke.emitting:
-				printerr("装饰火山应继续冒烟")
+			if smoke != null and smoke.emitting:
+				printerr("火山默认不应冒烟")
 				failed += 1
 	for flora_prop in flora_props:
 		if flora_prop.is_interactable() or story.accepts_interact(flora_prop):

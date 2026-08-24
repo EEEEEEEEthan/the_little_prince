@@ -20,7 +20,7 @@ func _process(delta: float) -> void:
 		_set_focus(null)
 		return
 	if story.is_active:
-		_set_focus(planet.find_nearest_interactable(story.accepts_interact))
+		_set_focus(planet.find_nearest_interactable(_accepts_interaction))
 	else:
 		_set_focus(planet.find_nearest_interactable())
 	if _focus == null:
@@ -44,10 +44,18 @@ func _process(delta: float) -> void:
 		_on_interact()
 
 
+func _accepts_interaction(prop: SurfaceProp) -> bool:
+	return prop.kind == SurfaceProp.Kind.VOLCANO or story.accepts_interact(prop)
+
+
 func _on_interact() -> void:
 	if _focus == null:
 		return
 	if story.try_handle_interact(_focus):
+		_set_focus(null)
+		return
+	if _focus.kind == SurfaceProp.Kind.VOLCANO:
+		_focus.activate_volcano()
 		_set_focus(null)
 		return
 	var lines := DialogueCatalog.lines_for_id(_focus.get_dialogue_id())
