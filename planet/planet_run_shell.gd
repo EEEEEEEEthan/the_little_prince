@@ -88,6 +88,6 @@ static func present_standalone_planet(
 	standalone_planet.owner = shell
 	var story := standalone_planet.get_node("%Story") as PlanetStory
 	story.auto_start = true
-	story.start()
 	scene_root.add_child(shell)
 	tree.current_scene = shell
+	story.start()
