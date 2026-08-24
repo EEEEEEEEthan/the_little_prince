@@ -3998,6 +3998,10 @@ func _check_b612_depart_lift_halfway_overhead() -> int:
 	player.modulate.a = 1.0
 	dim.color.a = 0.0
 	var start_player_y := player.position.y
+	# Wait for the Music node's initial crossfade to reach playing volume so the
+	# subsequent fade-out check is not confused with the startup ramp-up.
+	while music_player.volume_db < -20.0:
+		await process_frame
 	var depart_started_msec := Time.get_ticks_msec()
 	story._depart(
 			"B-612。",
