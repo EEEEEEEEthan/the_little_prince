@@ -67,7 +67,7 @@ func _run_tests() -> void:
 	failed += _check_static_assets()
 	failed += _check_no_legacy()
 	failed += _check_tscn_editor_visible()
-	failed += _check_embedded_planet_stories()
+	failed += _check_story_scene_script_references()
 	failed += _check_king_scene_resource_uids()
 	failed += _check_drunkard_scene_resource_uids()
 	failed += _check_merchant_scene_resource_uids()
@@ -2019,7 +2019,7 @@ func _check_planet_base_scene() -> int:
 	return failed
 
 
-func _check_embedded_planet_stories() -> int:
+func _check_story_scene_script_references() -> int:
 	var failed := 0
 	var story_scenes := {
 		"b612": "b612_story.gd",
@@ -2034,11 +2034,11 @@ func _check_embedded_planet_stories() -> int:
 				"res://planet/%s.tscn" % scene_name
 		)
 		if not scene_source.contains("planet_story.gd") \
-				or scene_source.contains("path=\"res://story/%s\"" % story_scenes[scene_name]):
-			printerr("%s.tscn 应将剧情脚本作为 Story builtin" % scene_name)
+				or not scene_source.contains("path=\"res://story/%s\"" % story_scenes[scene_name]):
+			printerr("%s.tscn 应引用外部剧情脚本资源" % scene_name)
 			failed += 1
 	if failed == 0:
-		print("  星球剧情脚本均为 builtin OK")
+		print("  星球剧情脚本外部引用 OK")
 	return failed
 
 
