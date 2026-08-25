@@ -51,14 +51,12 @@ script/source = "extends Node2D
 	set(value):
 		radius = value
 
-## 出生在锚点对面（国王星球背面降落）。
-@export var spawn_on_opposite_side: bool = false
 ## 觐见禁区半宽；0 表示不限制。
 @export var audience_keep_away_arc: float = 0.0
 
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0
-## 玩家出生角（靠近玫瑰或国王）。
+## 出生角固定为 0：星球本地 y 最小处（未旋转时的弧顶）。
 var spawn_angle: float = 0.0
 var has_contacted_audience_keep_away: bool = false
 ## 地表地物数据（静态场景内收集，供测试断言）。
@@ -83,7 +81,6 @@ func _ready() -> void:
 
 
 func _collect_surface_props() -> void:
-	var spawn_anchor_angle := rose_angle
 	for child in surface.get_children():
 		var prop := child as SurfaceProp
 		if prop == null:
@@ -92,21 +89,14 @@ func _collect_surface_props() -> void:
 		match prop.kind:
 			SurfaceProp.Kind.ROSE:
 				rose_angle = prop.rotation
-				spawn_anchor_angle = rose_angle
 			SurfaceProp.Kind.KING:
 				king_angle = prop.rotation
-				spawn_anchor_angle = king_angle
-				if spawn_on_opposite_side:
-					spawn_anchor_angle = fposmod(king_angle + PI, TAU)
-			SurfaceProp.Kind.DRUNKARD, SurfaceProp.Kind.MERCHANT, SurfaceProp.Kind.LAMPLIGHTER, SurfaceProp.Kind.GEOGRAPHER:
-				spawn_anchor_angle = prop.rotation
 			SurfaceProp.Kind.VOLCANO:
 				volcano_angles.append(prop.rotation)
 			SurfaceProp.Kind.BAOBAB:
 				baobab_angles.append(prop.rotation)
 			SurfaceProp.Kind.FLORA:
 				flora_angles.append(prop.rotation)
-	spawn_angle = fposmod(spawn_anchor_angle + WorldConstants.SPAWN_ANGLE_OFFSET, TAU)
 
 
 func apex_global_position() -> Vector2:

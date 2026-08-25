@@ -243,8 +243,8 @@ z_index = -4096
 
 [node name="Volcano" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320]
 texture_filter = 1
-position = Vector2(-67.00001, 54.000008)
-rotation = 4.07983
+position = Vector2(-60.053728, 61.632393)
+rotation = 3.95983
 texture = SubResource("EditableTexture_volcano")
 offset = Vector2(0, -12.96)
 hframes = 3
@@ -279,8 +279,8 @@ color_ramp = SubResource("Gradient_volcano_smoke")
 
 [node name="Volcano2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=1280196619]
 texture_filter = 1
-position = Vector2(-28.8, 76.8)
-rotation = -2.7793012
+position = Vector2(-19.398991, 79.695415)
+rotation = -2.899301
 texture = SubResource("EditableTexture_volcano")
 offset = Vector2(0, -12.96)
 hframes = 3
@@ -289,8 +289,8 @@ kind = 1
 
 [node name="Volcano3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147]
 texture_filter = 1
-position = Vector2(-80.924164, -32.90971)
-rotation = -1.18455
+position = Vector2(-84.281903, -22.985434)
+rotation = -1.30455
 texture = SubResource("EditableTexture_volcano")
 offset = Vector2(0, -14.4)
 hframes = 3
@@ -301,7 +301,8 @@ variant = 1
 
 [node name="Rose" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=240828752]
 texture_filter = 1
-position = Vector2(0, -87.36)
+position = Vector2(-10.458058, -86.731762)
+rotation = -0.12
 texture = SubResource("EditableTexture_rose")
 offset = Vector2(0, -9.2)
 script = ExtResource("3_surface_prop")
@@ -316,530 +317,530 @@ offset = Vector2(0, -11)
 [node name="PlayerTrigger" parent="Surface/Rose" index="1" instance=ExtResource("22_trigger")]
 
 [node name="Baobab" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=1796814090 instance=ExtResource("19_baobab")]
-position = Vector2(40, 75)
-rotation = 2.6473107
+position = Vector2(48.690761, 69.672159)
+rotation = 2.527311
 
 [node name="Baobab3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=2117036339 instance=ExtResource("19_baobab")]
-position = Vector2(58.999992, 56)
-rotation = 2.4157896
+position = Vector2(65.279585, 48.534264)
+rotation = 2.29579
 frame = 2
 variant = 2
 
 [node name="Baobab4" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=13480941 instance=ExtResource("19_baobab")]
-position = Vector2(-6, 85)
-rotation = 3.1519175
+position = Vector2(4.218686, 85.107007)
+rotation = 3.031918
 frame = 2
 variant = 2
 
 [node name="Baobab5" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=942940131 instance=ExtResource("19_baobab")]
-position = Vector2(-39.99999, 73)
-rotation = 3.6651917
+position = Vector2(-30.973344, 77.263518)
+rotation = 3.545192
 
 [node name="Baobab6" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="8" unique_id=1062183502 instance=ExtResource("19_baobab")]
-position = Vector2(20.000002, 83)
-rotation = 2.9
+position = Vector2(29.792288, 80.008872)
+rotation = 2.78
 
 [node name="Baobab7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="9" unique_id=1232238802 instance=ExtResource("19_baobab")]
-position = Vector2(-86.59554, 11.531746)
-rotation = 4.58
+position = Vector2(-84.592309, 21.81536)
+rotation = 4.46
 frame = 2
 variant = 2
 
 [node name="Baobab8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=396414051 instance=ExtResource("19_baobab")]
-position = Vector2(-84, 1.000001)
-rotation = 4.712389
+position = Vector2(-83.276213, 11.048635)
+rotation = 4.592389
 frame = 2
 variant = 2
 
 [node name="Baobab9" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=598481963 instance=ExtResource("19_baobab")]
-position = Vector2(-70, -52.000004)
-rotation = 5.287723
+position = Vector2(-75.72164, -43.246199)
+rotation = 5.167723
 
 [node name="Baobab10" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=151772495 instance=ExtResource("19_baobab")]
-position = Vector2(-52, 69.99999)
-rotation = 3.6651917
+position = Vector2(-43.246196, 75.721629)
+rotation = 3.545192
 
 [node name="Flora6" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=1802157156 instance=ExtResource("21_flora")]
-position = Vector2(35, -80)
-rotation = 0.351884
+position = Vector2(25.171326, -83.614618)
+rotation = 0.231884
 frame = 2
 variant = 2
 
 [node name="Flora7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=1833898605 instance=ExtResource("21_flora")]
-position = Vector2(45, -71)
-rotation = 0.374778
+position = Vector2(36.176822, -75.876462)
+rotation = 0.254778
 offset = Vector2(0, -9)
 frame = 1
 variant = 1
 
 [node name="Flora8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=1821203273 instance=ExtResource("21_flora")]
-position = Vector2(42.999996, -76.00001)
-rotation = 0.397671
+position = Vector2(33.592638, -80.601091)
+rotation = 0.277671
 offset = Vector2(0, -7)
 
 [node name="Flora9" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=1724662820 instance=ExtResource("21_flora")]
-position = Vector2(35.667023, -79.74731)
-rotation = 0.420565
+position = Vector2(25.863802, -83.443596)
+rotation = 0.300565
 frame = 2
 variant = 2
 
 [node name="Flora10" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=1507662876 instance=ExtResource("21_flora")]
-position = Vector2(50, -68)
-rotation = 0.443459
+position = Vector2(41.500002, -73.496598)
+rotation = 0.323459
 offset = Vector2(0, -9)
 frame = 1
 variant = 1
 
 [node name="Flora11" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="18" unique_id=1615133110 instance=ExtResource("21_flora")]
-position = Vector2(76.70673, -41.807247)
-rotation = 1.071779
+position = Vector2(71.150266, -50.689328)
+rotation = 0.951779
 offset = Vector2(0, -7)
 frame = 2
 variant = 2
 
 [node name="Flora12" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="19" unique_id=1882337607 instance=ExtResource("21_flora")]
-position = Vector2(78.76794, -37.780704)
-rotation = 1.123564
+position = Vector2(73.67868, -46.938493)
+rotation = 1.003564
 offset = Vector2(0, -6)
 
 [node name="Flora13" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="20" unique_id=989443731 instance=ExtResource("21_flora")]
-position = Vector2(79.61217, -35.967663)
-rotation = 1.146458
+position = Vector2(74.733882, -45.239555)
+rotation = 1.026458
 offset = Vector2(0, -6)
 
 [node name="Flora14" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="21" unique_id=861472560 instance=ExtResource("21_flora")]
-position = Vector2(80.414665, -34.135777)
-rotation = 1.169352
+position = Vector2(75.749905, -43.516911)
+rotation = 1.049352
 frame = 2
 variant = 2
 
 [node name="Flora15" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="22" unique_id=2042476698 instance=ExtResource("21_flora")]
-position = Vector2(81.17502, -32.285995)
-rotation = 1.192246
+position = Vector2(76.726233, -41.771455)
+rotation = 1.072246
 offset = Vector2(0, -9)
 frame = 1
 variant = 1
 
 [node name="Flora16" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="23" unique_id=315838329 instance=ExtResource("21_flora")]
-position = Vector2(82.059235, -29.96752)
-rotation = 1.220651
+position = Vector2(77.881639, -39.575505)
+rotation = 1.100651
 offset = Vector2(0, -6)
 
 [node name="Flora17" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="24" unique_id=229909561 instance=ExtResource("21_flora")]
-position = Vector2(82.76593, -27.95658)
-rotation = 1.24505
+position = Vector2(78.823986, -37.663626)
+rotation = 1.12505
 frame = 1
 variant = 1
 
 [node name="Flora18" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="25" unique_id=335268583 instance=ExtResource("21_flora")]
-position = Vector2(87.303604, -3.138493)
-rotation = 1.534863
+position = Vector2(86.300056, -13.56723)
+rotation = 1.414863
 frame = 1
 variant = 1
 
 [node name="Flora19" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="26" unique_id=647566336 instance=ExtResource("21_flora")]
-position = Vector2(87.35985, 0.164421)
-rotation = 1.572678
+position = Vector2(86.751297, -10.294802)
+rotation = 1.452678
 offset = Vector2(0, -9)
 frame = 1
 variant = 1
 
 [node name="Flora20" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="27" unique_id=689785374 instance=ExtResource("21_flora")]
-position = Vector2(87.22048, 4.93527)
-rotation = 1.62732
+position = Vector2(87.184058, -5.541578)
+rotation = 1.50732
 frame = 2
 variant = 2
 
 [node name="Flora21" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="28" unique_id=654175941 instance=ExtResource("21_flora")]
-position = Vector2(87.001884, 7.901983)
-rotation = 1.661373
+position = Vector2(87.322186, -2.570031)
+rotation = 1.541373
 frame = 2
 variant = 2
 
 [node name="Flora22" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="29" unique_id=1043564877 instance=ExtResource("21_flora")]
-position = Vector2(86.5407, 11.936341)
-rotation = 1.707859
+position = Vector2(87.34728, 1.490524)
+rotation = 1.587859
 offset = Vector2(0, -9)
 frame = 1
 variant = 1
 
 [node name="Flora23" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="30" unique_id=2088623713 instance=ExtResource("21_flora")]
-position = Vector2(28.389769, 82.61834)
-rotation = 2.810608
+position = Vector2(38.076032, 78.6256)
+rotation = 2.690608
 offset = Vector2(0, -6)
 
 [node name="Flora24" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="31" unique_id=282634140 instance=ExtResource("21_flora")]
-position = Vector2(26.491049, 83.24658)
-rotation = 2.833502
+position = Vector2(36.266174, 79.476622)
+rotation = 2.713502
 offset = Vector2(0, -7)
 
 [node name="Flora25" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="32" unique_id=722334181 instance=ExtResource("21_flora")]
-position = Vector2(24.578445, 83.8312)
-rotation = 2.856395
+position = Vector2(34.43731, 80.285999)
+rotation = 2.736395
 offset = Vector2(0, -9)
 frame = 1
 variant = 1
 
 [node name="Flora26" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="33" unique_id=442799933 instance=ExtResource("21_flora")]
-position = Vector2(22.65296, 84.37187)
-rotation = 2.879289
+position = Vector2(32.590397, 81.053285)
+rotation = 2.759289
 frame = 3
 variant = 3
 
 [node name="Flora27" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="34" unique_id=1810473853 instance=ExtResource("21_flora")]
-position = Vector2(15.030375, 86.05729)
-rotation = 2.968681
+position = Vector2(25.224394, 83.639101)
+rotation = 2.848681
 offset = Vector2(0, -6)
 
 [node name="Flora28" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="35" unique_id=1141713434 instance=ExtResource("21_flora")]
-position = Vector2(13.056432, 86.378815)
-rotation = 2.991575
+position = Vector2(23.303137, 84.194619)
+rotation = 2.871575
 offset = Vector2(0, -9)
 frame = 1
 variant = 1
 
 [node name="Flora29" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="36" unique_id=485630022 instance=ExtResource("21_flora")]
-position = Vector2(11.075647, 86.65506)
-rotation = 3.014469
+position = Vector2(21.369666, 84.706002)
+rotation = 2.894469
 frame = 3
 variant = 3
 
 [node name="Flora30" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="37" unique_id=1837105977 instance=ExtResource("21_flora")]
-position = Vector2(9.089056, 86.885895)
-rotation = 3.037363
+position = Vector2(19.424996, 85.172996)
+rotation = 2.917363
 offset = Vector2(0, -7)
 frame = 3
 variant = 3
 
 [node name="Flora31" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="38" unique_id=1505521420 instance=ExtResource("21_flora")]
-position = Vector2(7.097702, 87.07119)
-rotation = 3.060256
+position = Vector2(17.470144, 85.595348)
+rotation = 2.940256
 offset = Vector2(0, -7)
 
 [node name="Flora32" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="39" unique_id=778244427 instance=ExtResource("21_flora")]
-position = Vector2(5.102628, 87.21085)
-rotation = 3.08315
+position = Vector2(15.506136, 85.972838)
+rotation = 2.96315
 offset = Vector2(0, -6)
 
 [node name="Flora33" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="40" unique_id=1124788353 instance=ExtResource("21_flora")]
-position = Vector2(-3.291293, 87.29798)
-rotation = 3.179277
+position = Vector2(7.18301, 87.064196)
+rotation = 3.059277
 frame = 4
 variant = 4
 
 [node name="Flora34" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="41" unique_id=2078258734 instance=ExtResource("21_flora")]
-position = Vector2(-7.15112, 87.06682)
-rotation = 3.223542
+position = Vector2(3.323268, 87.296767)
+rotation = 3.103542
 offset = Vector2(0, -7)
 
 [node name="Flora35" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="42" unique_id=836405867 instance=ExtResource("21_flora")]
-position = Vector2(-10.48909, 86.72801)
-rotation = 3.26195
+position = Vector2(-0.031258, 87.359989)
+rotation = 3.14195
 offset = Vector2(0, -9)
 frame = 4
 variant = 4
 
 [node name="Flora36" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="43" unique_id=1704846315 instance=ExtResource("21_flora")]
-position = Vector2(-13.121273, 86.36899)
-rotation = 3.292361
+position = Vector2(-2.687491, 87.318656)
+rotation = 3.172361
 frame = 1
 variant = 1
 
 [node name="Flora37" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="44" unique_id=1385227417 instance=ExtResource("21_flora")]
-position = Vector2(-16.877361, 85.7142)
-rotation = 3.336008
+position = Vector2(-6.494954, 87.118224)
+rotation = 3.216008
 offset = Vector2(0, -9)
 frame = 1
 variant = 1
 
 [node name="Flora38" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="45" unique_id=931287754 instance=ExtResource("21_flora")]
-position = Vector2(-18.835089, 85.30539)
-rotation = 3.358902
+position = Vector2(-8.487542, 86.946718)
+rotation = 3.238902
 offset = Vector2(0, -6)
 
 [node name="Flora39" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="46" unique_id=388786012 instance=ExtResource("21_flora")]
-position = Vector2(-20.782946, 84.85187)
-rotation = 3.381796
+position = Vector2(-10.475684, 86.729642)
+rotation = 3.261796
 offset = Vector2(0, -6)
 
 [node name="Flora40" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="47" unique_id=534819703 instance=ExtResource("21_flora")]
-position = Vector2(-22.719908, 84.35387)
-rotation = 3.40469
+position = Vector2(-12.458333, 86.467101)
+rotation = 3.28469
 offset = Vector2(0, -9)
 frame = 4
 variant = 4
 
 [node name="Flora41" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="48" unique_id=2084744278 instance=ExtResource("21_flora")]
-position = Vector2(-24.644964, 83.81167)
-rotation = 3.427583
+position = Vector2(-14.434453, 86.159253)
+rotation = 3.307583
 frame = 4
 variant = 4
 
 [node name="Flora42" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="49" unique_id=1556194772 instance=ExtResource("21_flora")]
-position = Vector2(-26.557102, 83.22553)
-rotation = 3.450477
+position = Vector2(-16.403008, 85.806234)
+rotation = 3.330477
 offset = Vector2(0, -6)
 
 [node name="Flora43" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="50" unique_id=448772937 instance=ExtResource("21_flora")]
-position = Vector2(-28.455324, 82.59579)
-rotation = 3.473371
+position = Vector2(-18.362967, 85.408263)
+rotation = 3.353371
 frame = 1
 variant = 1
 
 [node name="Flora44" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="51" unique_id=1636513168 instance=ExtResource("21_flora")]
-position = Vector2(-36.49506, 79.37178)
-rotation = 3.572565
+position = Vector2(-26.73084, 83.169893)
+rotation = 3.452565
 frame = 1
 variant = 1
 
 [node name="Flora45" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="52" unique_id=1057653890 instance=ExtResource("21_flora")]
-position = Vector2(-38.30246, 78.51555)
-rotation = 3.595459
+position = Vector2(-28.627743, 82.536188)
+rotation = 3.475459
 offset = Vector2(0, -6)
 
 [node name="Flora46" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="53" unique_id=1414343510 instance=ExtResource("21_flora")]
-position = Vector2(-40.089783, 77.618164)
-rotation = 3.618353
+position = Vector2(-30.509641, 81.85922)
+rotation = 3.498353
 offset = Vector2(0, -9)
 frame = 4
 variant = 4
 
 [node name="Flora47" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="54" unique_id=2030056016 instance=ExtResource("21_flora")]
-position = Vector2(-48.266346, 72.81572)
-rotation = 3.726953
+position = Vector2(-39.202315, 78.070146)
+rotation = 3.606953
 frame = 2
 variant = 2
 
 [node name="Flora48" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="55" unique_id=495178667 instance=ExtResource("21_flora")]
-position = Vector2(-50.464664, 71.3098)
-rotation = 3.757456
+position = Vector2(-41.565101, 76.838222)
+rotation = 3.637456
 offset = Vector2(0, -7)
 frame = 2
 variant = 2
 
 [node name="Flora49" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="56" unique_id=972478685 instance=ExtResource("21_flora")]
-position = Vector2(-52.79125, 69.60498)
-rotation = 3.790474
+position = Vector2(-44.079043, 75.424182)
+rotation = 3.670474
 frame = 2
 variant = 2
 
 [node name="Flora50" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="57" unique_id=1449462354 instance=ExtResource("21_flora")]
-position = Vector2(-54.370796, 68.37826)
-rotation = 3.813368
+position = Vector2(-45.794083, 74.395375)
+rotation = 3.693368
 frame = 2
 variant = 2
 
 [node name="Flora51" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="58" unique_id=625842898 instance=ExtResource("21_flora")]
-position = Vector2(-56.178913, 66.900665)
-rotation = 3.840098
+position = Vector2(-47.766084, 73.14486)
+rotation = 3.720098
 offset = Vector2(0, -6)
 
 [node name="Flora52" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="59" unique_id=994777400 instance=ExtResource("21_flora")]
-position = Vector2(-57.695667, 65.5971)
-rotation = 3.862992
+position = Vector2(-49.427983, 72.032243)
+rotation = 3.742992
 offset = Vector2(0, -7)
 
 [node name="Flora53" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="60" unique_id=1408950166 instance=ExtResource("21_flora")]
-position = Vector2(-59.709095, 63.769848)
-rotation = 3.894116
+position = Vector2(-51.645676, 70.459163)
+rotation = 3.774116
 offset = Vector2(0, -6)
 
 [node name="Flora54" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="61" unique_id=1339358498 instance=ExtResource("21_flora")]
-position = Vector2(-61.60674, 61.93851)
-rotation = 3.924305
+position = Vector2(-53.748908, 68.868166)
+rotation = 3.804305
 frame = 2
 variant = 2
 
 [node name="Flora55" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="62" unique_id=518546626 instance=ExtResource("21_flora")]
-position = Vector2(-63.05038, 60.468334)
-rotation = 3.947892
+position = Vector2(-55.358164, 67.581384)
+rotation = 3.827892
 offset = Vector2(0, -7)
 
 [node name="Flora56" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="63" unique_id=1420276685 instance=ExtResource("21_flora")]
-position = Vector2(-76.57787, 42.042828)
-rotation = 4.210298
+position = Vector2(-70.994131, 50.907789)
+rotation = 4.090298
 frame = 1
 variant = 1
 
 [node name="Flora57" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="64" unique_id=270044752 instance=ExtResource("21_flora")]
-position = Vector2(-78.08537, 39.171974)
-rotation = 4.247418
+position = Vector2(-72.834466, 48.238046)
+rotation = 4.127418
 frame = 1
 variant = 1
 
 [node name="Flora58" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="65" unique_id=1606376688 instance=ExtResource("21_flora")]
-position = Vector2(-79.6181, 35.954517)
-rotation = 4.288216
+position = Vector2(-74.741343, 45.227213)
+rotation = 4.168216
 offset = Vector2(0, -6)
 
 [node name="Flora59" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="66" unique_id=1913705764 instance=ExtResource("21_flora")]
-position = Vector2(-80.4203, 34.122498)
-rotation = 4.31111
+position = Vector2(-75.757089, 43.504402)
+rotation = 4.19111
 offset = Vector2(0, -7)
 
 [node name="Flora60" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="67" unique_id=606904363 instance=ExtResource("21_flora")]
-position = Vector2(-81.56602, 31.285057)
-rotation = 4.346139
+position = Vector2(-77.234246, 40.824523)
+rotation = 4.226139
 frame = 1
 variant = 1
 
 [node name="Flora61" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="68" unique_id=2082438370 instance=ExtResource("21_flora")]
-position = Vector2(-82.81286, 27.81727)
-rotation = 4.388326
+position = Vector2(-78.887256, 37.530936)
+rotation = 4.268326
 offset = Vector2(0, -7)
 
 [node name="Flora62" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="69" unique_id=1833791263 instance=ExtResource("21_flora")]
-position = Vector2(-69.86104, -52.45193)
-rotation = 5.356404
+position = Vector2(-75.63778, -43.71151)
+rotation = 5.236404
 offset = Vector2(0, -6)
 
 [node name="Flora63" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="70" unique_id=1353793688 instance=ExtResource("21_flora")]
-position = Vector2(-67.30869, -55.689404)
-rotation = 5.403599
+position = Vector2(-73.49135, -47.231249)
+rotation = 5.283599
 offset = Vector2(0, -6)
 
 [node name="Flora64" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="71" unique_id=1357537124 instance=ExtResource("21_flora")]
-position = Vector2(-65.10368, -58.25186)
-rotation = 5.442299
+position = Vector2(-71.608954, -50.039244)
+rotation = 5.322299
 offset = Vector2(0, -7)
 frame = 2
 variant = 2
 
 [node name="Flora65" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="72" unique_id=1209480988 instance=ExtResource("21_flora")]
-position = Vector2(-63.75314, -59.726936)
-rotation = 5.465193
+position = Vector2(-70.444711, -51.665389)
+rotation = 5.345193
 offset = Vector2(0, -7)
 frame = 2
 variant = 2
 
 [node name="Flora66" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="73" unique_id=2002104007 instance=ExtResource("21_flora")]
-position = Vector2(-62.147408, -61.396004)
-rotation = 5.491705
+position = Vector2(-69.050335, -53.51468)
+rotation = 5.371705
 offset = Vector2(0, -9)
 frame = 5
 variant = 5
 
 [node name="Flora67" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="74" unique_id=968969174 instance=ExtResource("21_flora")]
-position = Vector2(-59.759384, -63.722725)
-rotation = 5.529873
+position = Vector2(-66.958021, -56.110544)
+rotation = 5.409873
 offset = Vector2(0, -10)
 frame = 5
 variant = 5
 
 [node name="Flora68" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="75" unique_id=2037000280 instance=ExtResource("21_flora")]
-position = Vector2(-46.40708, -74.01454)
-rotation = 5.723149
+position = Vector2(-54.933794, -67.926781)
+rotation = 5.603149
 offset = Vector2(0, -6)
 
 [node name="Flora69" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="76" unique_id=1521571395 instance=ExtResource("21_flora")]
-position = Vector2(-44.298676, -75.295395)
-rotation = 5.75139
+position = Vector2(-52.993886, -69.450826)
+rotation = 5.63139
 frame = 1
 variant = 1
 
 [node name="Flora70" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="77" unique_id=598939892 instance=ExtResource("21_flora")]
-position = Vector2(-42.563423, -76.28974)
-rotation = 5.774283
+position = Vector2(-51.390147, -70.645751)
+rotation = 5.654283
 frame = 1
 variant = 1
 
 [node name="Flora71" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="78" unique_id=1172511183 instance=ExtResource("21_flora")]
-position = Vector2(-40.805862, -77.2441)
-rotation = 5.797177
+position = Vector2(-49.759474, -71.80365)
+rotation = 5.677177
 offset = Vector2(0, -7)
 
 [node name="Flora72" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="79" unique_id=1498475045 instance=ExtResource("21_flora")]
-position = Vector2(-39.026917, -78.157974)
-rotation = 5.820071
+position = Vector2(-48.102724, -72.923913)
+rotation = 5.700071
 offset = Vector2(0, -6)
 
 [node name="Flora73" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="80" unique_id=1303028433 instance=ExtResource("21_flora")]
-position = Vector2(-37.227512, -79.03089)
-rotation = 5.842965
+position = Vector2(-46.420758, -74.005962)
+rotation = 5.722965
 offset = Vector2(0, -6)
 
 [node name="Flora74" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="81" unique_id=1916349663 instance=ExtResource("21_flora")]
-position = Vector2(-33.851543, -80.53473)
-rotation = 5.885273
+position = Vector2(-43.249095, -75.903132)
+rotation = 5.765273
 offset = Vector2(0, -7)
 
 [node name="Flora75" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="82" unique_id=212153021 instance=ExtResource("21_flora")]
-position = Vector2(-31.99909, -81.28854)
-rotation = 5.908167
+position = Vector2(-41.500203, -76.873283)
+rotation = 5.788167
 offset = Vector2(0, -6)
 
 [node name="Flora76" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="83" unique_id=886096523 instance=ExtResource("21_flora")]
-position = Vector2(-30.129868, -81.99976)
-rotation = 5.93106
+position = Vector2(-39.729565, -77.803157)
+rotation = 5.81106
 offset = Vector2(0, -6)
 
 [node name="Flora77" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="84" unique_id=735027206 instance=ExtResource("21_flora")]
-position = Vector2(-28.24485, -82.668)
-rotation = 5.953954
+position = Vector2(-37.9381, -78.692251)
+rotation = 5.833954
 frame = 1
 variant = 1
 
 [node name="Flora78" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="85" unique_id=1672022584 instance=ExtResource("21_flora")]
-position = Vector2(-26.345032, -83.29291)
-rotation = 5.976848
+position = Vector2(-36.126753, -79.540098)
+rotation = 5.856848
 frame = 1
 variant = 1
 
 [node name="Flora79" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="86" unique_id=966860992 instance=ExtResource("21_flora")]
-position = Vector2(-24.037985, -83.98776)
-rotation = 6.004429
+position = Vector2(-33.919479, -80.506133)
+rotation = 5.884429
 offset = Vector2(0, -7)
 frame = 2
 variant = 2
 
 [node name="Flora80" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="87" unique_id=909034296 instance=ExtResource("21_flora")]
-position = Vector2(-21.107876, -84.77162)
-rotation = 6.039151
+position = Vector2(-31.104279, -81.635126)
+rotation = 5.919151
 offset = Vector2(0, -7)
 frame = 2
 variant = 2
 
 [node name="Butterfly" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="88" unique_id=2101847701 instance=ExtResource("16_butterfly")]
-position = Vector2(-79, -53.999992)
-rotation = -0.405658
+position = Vector2(-84.89634, -44.154394)
+rotation = -0.525658
 autoplay = "default"
 
 [node name="Butterfly2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="89" unique_id=2101847702 instance=ExtResource("16_butterfly")]
-position = Vector2(-19.999996, 94.99999)
-rotation = -2.938601
+position = Vector2(-8.48351, 96.711054)
+rotation = -3.058601
 autoplay = "default"
 
 [node name="Butterfly3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="90" unique_id=2101847703 instance=ExtResource("16_butterfly")]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
-position = Vector2(34.511806, -97.42805)
-rotation = 0.340437
+position = Vector2(22.600292, -100.858894)
+rotation = 0.220437
 autoplay = "default"
-guide_target_local_position = Vector2(92, -38)
+guide_target_local_position = Vector2(86.789331, -48.740251)
 
 [node name="Butterfly4" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="91" unique_id=2101847704 instance=ExtResource("16_butterfly")]
-position = Vector2(-69.01107, 82.24136)
-rotation = -2.443444
+position = Vector2(-58.669492, 89.9114)
+rotation = -2.563444
 autoplay = "default"
 
 [node name="Butterfly5" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="92" unique_id=2101847705 instance=ExtResource("16_butterfly")]
-position = Vector2(99, 6.000004)
-rotation = 1.167022
+position = Vector2(99.006329, -5.894653)
+rotation = 1.047022
 autoplay = "default"
 
 [node name="Butterfly6" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="93" unique_id=2101847706 instance=ExtResource("16_butterfly")]
-position = Vector2(-95.551765, 41.962715)
-rotation = -1.984601
+position = Vector2(-89.841168, 53.099659)
+rotation = -2.104601
 autoplay = "default"
 
 [node name="Butterfly7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="94" unique_id=2101847707 instance=ExtResource("16_butterfly")]
-position = Vector2(-95, 31)
-rotation = -2.0110188
+position = Vector2(-90.605742, 42.149727)
+rotation = -2.131019
 autoplay = "default"
 
 [node name="Butterfly8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="95" unique_id=2101847708 instance=ExtResource("16_butterfly")]
-position = Vector2(-12.999999, 97.00001)
-rotation = 3.025916
+position = Vector2(-1.294426, 97.858706)
+rotation = 2.905916
 autoplay = "default"
 
 

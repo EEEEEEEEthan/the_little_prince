@@ -16,7 +16,6 @@ const BAOBAB_COUNT: int = 9
 const FLORA_COUNT: int = 75
 const BUTTERFLY_COUNT: int = 8
 
-const SPAWN_ANGLE_OFFSET: float = 0.12
 ## 国王星球只比 B612 大一圈：走几十秒能到觐见，不是第二座能逛的世界。
 const KING_PLANET_RADIUS: float = PLANET_RADIUS * 1.2
 ## 觐见禁区半宽（弧度）：走不到王座脚下，贴边绕行会被弧度带出视野。
