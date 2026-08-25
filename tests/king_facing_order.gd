@@ -35,7 +35,7 @@ func _begin() -> void:
 		return
 	while story.is_blocking_player_input() or not story.is_processing():
 		await process_frame
-	var player := story.player
+	var player = story.player
 	var was_facing_king: bool = story._player_is_facing_king()
 	player.flip_h = not player.flip_h
 	for _wait in 8:

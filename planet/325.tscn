@@ -151,6 +151,11 @@ func _prepare_start() -> void:
 	set_process(false)
 
 
+func _ready() -> void:
+	set_process(false)
+	await super._ready()
+
+
 func _play_story() -> void:
 	await _fade_in_from_black()
 	await _overhead(\"325\")
@@ -350,7 +355,7 @@ func _await_king() -> void:
 func _process(_delta: float) -> void:
 	if is_blocking_player_input():
 		return
-	var player_is_facing_king := _player_is_facing_king()
+	var player_is_facing_king: bool = _player_is_facing_king()
 	if player_is_facing_king == _last_player_facing_king:
 		return
 	_last_player_facing_king = player_is_facing_king
@@ -363,7 +368,7 @@ func _process(_delta: float) -> void:
 
 
 func _player_is_facing_king() -> bool:
-	var king_is_to_the_left := %King.global_position.x < player.global_position.x
+	var king_is_to_the_left: bool = %King.global_position.x < player.global_position.x
 	return player.flip_h == king_is_to_the_left
 
 
