@@ -6,13 +6,19 @@
 [ext_resource type="Texture2D" uid="uid://ducegt4bjka0h" path="res://planet/cream_ink_parchment_disk.png" id="5_body"]
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="11_starfield"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="12_sky_shader"]
-[ext_resource type="Texture2D" uid="uid://dik0r4nojyjvd" path="res://planet/parchment_study_zenith_gradient.tres" id="13_parchment_zenith"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
 [ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://dbh8gq5hbhl0i" path="res://audio/dry_folio_rest.ogg" id="18_day_music"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="19_trigger"]
 
+
+[sub_resource type="Gradient" id="Gradient_parchment_study_zenith"]
+offsets = PackedFloat32Array(0, 0.25, 0.5, 0.75, 1)
+colors = PackedColorArray(0.121569, 0.090196, 0.058824, 1, 0.54902, 0.431373, 0.282353, 1, 0.721569, 0.611765, 0.431373, 1, 0.54902, 0.431373, 0.282353, 1, 0.121569, 0.090196, 0.058824, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_parchment_study_zenith"]
+gradient = SubResource("Gradient_parchment_study_zenith")
 
 [sub_resource type="Texture2D" id="EditableTexture_gray_beard_parchment_scholar"]
 script = ExtResource("editable_texture_script")
@@ -36,7 +42,7 @@ noise = SubResource("FastNoiseLite_geographer_sky")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_geographer_sky"]
 shader = ExtResource("12_sky_shader")
-shader_parameter/zenith_gradient = ExtResource("13_parchment_zenith")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_parchment_study_zenith")
 shader_parameter/star_alpha_gradient = ExtResource("14_star_alpha")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_geographer_sky")
 shader_parameter/phase = 0.5
@@ -82,7 +88,7 @@ func _geographer(text: String) -> void:
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 body_texture = ExtResource("5_body")
-zenith_gradient = ExtResource("13_parchment_zenith")
+zenith_gradient = SubResource("GradientTexture1D_parchment_study_zenith")
 
 [node name="Config" type="Node" parent="."]
 process_mode = 4

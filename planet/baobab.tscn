@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://cbaobabtscn01"]
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
-[ext_resource type="Script" uid="uid://cbaobabscript1" path="res://planet/baobab.gd" id="1_baobab"]
+[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="1_surface_prop"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="2_trigger"]
 
 [sub_resource type="Texture2D" id="EditableTexture_baobab"]
@@ -14,7 +14,7 @@ scale = Vector2(0.72, 0.72)
 texture = SubResource("EditableTexture_baobab")
 offset = Vector2(0, -13.44)
 hframes = 4
-script = ExtResource("1_baobab")
+script = ExtResource("1_surface_prop")
 kind = 2
 dialogue_id = &"baobab_shoot"
 

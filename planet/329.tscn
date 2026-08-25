@@ -5,13 +5,19 @@
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="11_starfield"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="12_sky_shader"]
-[ext_resource type="Texture2D" uid="uid://cunwgcl6bsdt0" path="res://planet/gray_day_night_zenith_gradient.tres" id="13_gray_zenith"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
 [ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://cciq03byi16e0" path="res://audio/rapid_lamp_duty_tick.ogg" id="18_day_music"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="19_trigger"]
 
+
+[sub_resource type="Gradient" id="Gradient_gray_day_night_zenith"]
+offsets = PackedFloat32Array(0, 0.25, 0.5, 0.75, 1)
+colors = PackedColorArray(0.0392157, 0.0392157, 0.0392157, 1, 0.352941, 0.352941, 0.352941, 1, 0.721569, 0.721569, 0.721569, 1, 0.352941, 0.352941, 0.352941, 1, 0.0392157, 0.0392157, 0.0392157, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_gray_day_night_zenith"]
+gradient = SubResource("Gradient_gray_day_night_zenith")
 
 [sub_resource type="Texture2D" id="EditableTexture_black_coat_lamplighter"]
 script = ExtResource("editable_texture_script")
@@ -48,7 +54,7 @@ noise = SubResource("FastNoiseLite_lamplighter_sky")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lamplighter_sky"]
 shader = ExtResource("12_sky_shader")
-shader_parameter/zenith_gradient = ExtResource("13_gray_zenith")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_gray_day_night_zenith")
 shader_parameter/star_alpha_gradient = ExtResource("14_star_alpha")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_lamplighter_sky")
 shader_parameter/phase = 0.5
@@ -99,7 +105,7 @@ func _play_story() -> void:
 radius = 48.048
 body_texture = SubResource("EditableTexture_ash_gray_mottled_disk")
 star_rotation_speed = 1.2
-zenith_gradient = ExtResource("13_gray_zenith")
+zenith_gradient = SubResource("GradientTexture1D_gray_day_night_zenith")
 
 [node name="Config" type="Node" parent="."]
 process_mode = 4

@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="11_starfield"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="12_sky_shader"]
-[ext_resource type="Texture2D" uid="uid://7h17aahjfxl2" path="res://planet/king_zenith_gradient.tres" id="13_king_zenith"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
 [ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
@@ -13,6 +12,13 @@
 [ext_resource type="AudioStream" uid="uid://b5xo4yhua70tx" path="res://audio/thin_rat_squeak.wav" id="19_rat_squeak"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="20_trigger"]
 
+
+[sub_resource type="Gradient" id="Gradient_king_zenith"]
+offsets = PackedFloat32Array(0, 0.18, 0.25, 0.5, 0.75, 0.82, 1)
+colors = PackedColorArray(0.0196078, 0.0313726, 0.0784314, 1, 0.156863, 0.447059, 0.266667, 1, 0.364706, 0.603922, 0.305882, 1, 0.364706, 0.603922, 0.305882, 1, 0.156863, 0.447059, 0.266667, 1, 0.0470588, 0.109804, 0.141176, 1, 0.0196078, 0.0313726, 0.0784314, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_king_zenith"]
+gradient = SubResource("Gradient_king_zenith")
 
 [sub_resource type="Texture2D" id="EditableTexture_king"]
 script = ExtResource("editable_texture_script")
@@ -64,7 +70,7 @@ noise = SubResource("FastNoiseLite_king_sky")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_king_sky"]
 shader = ExtResource("12_sky_shader")
-shader_parameter/zenith_gradient = ExtResource("13_king_zenith")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_king_zenith")
 shader_parameter/star_alpha_gradient = ExtResource("14_star_alpha")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_king_sky")
 shader_parameter/phase = 0.0
@@ -295,7 +301,7 @@ func _glance_up_at_empty_throne() -> void:
 radius = 104.832
 body_texture = SubResource("EditableTexture_blue_mottled_disk")
 star_rotation_speed = 0.0
-zenith_gradient = ExtResource("13_king_zenith")
+zenith_gradient = SubResource("GradientTexture1D_king_zenith")
 spawn_on_opposite_side = true
 audience_keep_away_arc = 0.70
 
