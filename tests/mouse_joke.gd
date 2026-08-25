@@ -22,15 +22,17 @@ func _begin() -> void:
 	var mouse: SurfaceProp = planet.get_node("%Mouse")
 	planet.teleport_player(mouse.rotation)
 	await process_frame
+	await process_frame
 	if not story.accepts_interact(mouse):
 		push_error("出生后应能点小老鼠")
 		quit(1)
 		return
+	if mouse.interacted.get_connections().is_empty():
+		push_error("老鼠 interacted 未接到剧情")
+		quit(1)
+		return
 	for squeak_index in 4:
-		if not story.try_handle_interact(mouse):
-			push_error("第 %s 次交互失败" % str(squeak_index + 1))
-			quit(1)
-			return
+		mouse.interacted.emit()
 		while story.is_blocking_input:
 			await process_frame
 	await create_timer(0.7).timeout

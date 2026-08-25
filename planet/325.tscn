@@ -122,6 +122,7 @@ var _rest_rotation := 0.0
 
 
 func _ready() -> void:
+	super._ready()
 	_rest_rotation = rotation
 	offset = REST_OFFSET
 	hframes = 4
@@ -138,7 +139,7 @@ func _process(delta: float) -> void:
 
 
 func play_ambient_one_shot() -> void:
-	%Squeak.play()
+	$Squeak.play()
 	if _motion_tween != null:
 		_motion_tween.kill()
 	offset = REST_OFFSET
@@ -185,7 +186,7 @@ script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAMCAYAAADS87vJAAAAx0lEQVR42mNgoBOw0lL6D8MMAwAG1H6QpV+W7ADjgXAAVewnJQRBao4saUHBlMYAXe1HN4CUEMRmOToe1PbjMgBXCGLj47JYSkjgPwi8qJjwn1T9tLKfpBDEZsCGzgysDnh15wQcw/S/2bAC7hlC+mllP0Yg4gpBYj0AcwTMIdj0I8cetiSM7Aly7cenH9luUDbCaTm5HiCkH+YJUgowutpPKAYp9cBA6Uc2h1j9FDsAvcoitfqj2AMU2k8dA6jYahvoFuSwBwDtiPyD5jV7VAAAAABJRU5ErkJggg=="
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_mouse_player_trigger"]
-radius = 20.0
+radius = 28.0
 
 [sub_resource type="GDScript" id="GDScript_story"]
 script/source = "extends PlanetStory
@@ -251,6 +252,7 @@ func _play_mouse_joke() -> void:
 	await _prince(\"喵\")
 	await _overhead(\"小老鼠跑掉了\")
 	is_blocking_input = false
+
 
 func _await_king() -> void:
 	await %TriggerHello.player_entered
@@ -346,8 +348,8 @@ disabled = true
 unique_name_in_owner = true
 z_index = 2
 texture_filter = 1
-position = Vector2(22.877448, -102.305281)
-rotation = 0.22
+position = Vector2(8.377617, -104.496716)
+rotation = 0.08
 texture = SubResource("EditableTexture_round_tan_mouse")
 offset = Vector2(0, -7)
 hframes = 4
@@ -358,7 +360,6 @@ is_armed = true
 shape = SubResource("CircleShape2D_mouse_player_trigger")
 
 [node name="Squeak" type="AudioStreamPlayer" parent="Surface/Mouse" unique_id=410000061]
-unique_name_in_owner = true
 stream = ExtResource("19_rat_squeak")
 volume_db = -6.0
 
