@@ -274,6 +274,122 @@ func _await_king() -> void:
 	await _overhead(\"国王有点生气\")
 	await _king(\"那我命令你忽而打哈欠，忽而不打哈欠！\")
 	is_blocking_input = false
+	%TriggerSleepy.interact_kind = WorldConstants.InteractKind.PRESS
+	%TriggerSleepy.is_armed = true
+	planet.refresh_interact_focus()
+	await %TriggerSleepy.interacted
+	%TriggerSleepy.is_armed = false
+	planet.refresh_interact_focus()
+	_lock_input()
+	await _overhead(\"国王坚持要他的权威受到尊重，他不能容忍不服从。\")
+	await _overhead(\"他是一位绝对的君主。\")
+	await _overhead(\"但因为他是善良的，他的命令都是通情达理的。\")
+	await _king(\"如果我命令一位将军像蝴蝶一样从一朵花飞到另一朵花...\")
+	await _king(\"或者变成一只海鸟，如果他不执行命令...\")
+	await _king(\"那是谁的错？是将军还是我？\")
+	await _prince(\"是您。\")
+	await _king(\"完全正确。只能要求每个人做他能做的事。\")
+	await _king(\"权威首先是建立在理性之上的。\")
+	await _king(\"如果我命令我的人民去投海，他们就会起来造反。\")
+	await _king(\"我有权要求服从，因为我的命令都是合理的。\")
+	is_blocking_input = false
+	%TriggerSleepy.is_armed = true
+	planet.refresh_interact_focus()
+	await %TriggerSleepy.interacted
+	%TriggerSleepy.is_armed = false
+	planet.refresh_interact_focus()
+	_lock_input()
+	await _prince(\"陛下，我可以问您一个问题吗？\")
+	await _king(\"我命令你问我。\")
+	await _prince(\"陛下，您统治什么？\")
+	await _king(\"统治一切。\")
+	await _prince(\"一切？\")
+	await _overhead(\"国王做了一个手势，把他的星球、别的星球和所有的星星都划了进去。\")
+	await _prince(\"所有的星星？\")
+	await _king(\"所有的星星。\")
+	await _overhead(\"因为他的统治不仅是绝对的，而且是宇宙的。\")
+	await _prince(\"星星服从吗？\")
+	await _king(\"当然，它们立刻服从。我不容许无纪律。\")
+	is_blocking_input = false
+	%TriggerSleepy.is_armed = true
+	planet.refresh_interact_focus()
+	await %TriggerSleepy.interacted
+	%TriggerSleepy.is_armed = false
+	planet.refresh_interact_focus()
+	_lock_input()
+	await _overhead(\"这样的权力让小王子惊叹。\")
+	await _overhead(\"如果他有这样的权力，就能看七十二次、一百次甚至两百次日落，而不用挪动椅子。\")
+	await _overhead(\"想起被他抛弃的小星球，小王子有点忧伤。\")
+	await _overhead(\"他鼓起勇气，请求国王。\")
+	await _prince(\"我很想看一次日落...请给我这个恩惠...命令太阳下山...\")
+	await _king(\"你会看到日落的，我会命令它。\")
+	await _king(\"但根据我的统治科学，我要等到时机有利。\")
+	await _prince(\"那要等到什么时候？\")
+	await _king(\"嗯！嗯！\")
+	await _overhead(\"国王查了查厚厚的历书。\")
+	await _king(\"大约...今晚七点四十分左右！\")
+	await _king(\"到时候你会看到我的命令被很好地执行。\")
+	await _overhead(\"小王子又打了个哈欠，因为错过了日落而遗憾。\")
+	await _overhead(\"而且，他已经开始觉得有点无聊了。\")
+	is_blocking_input = false
+	%TriggerSleepy.is_armed = true
+	planet.refresh_interact_focus()
+	await %TriggerSleepy.interacted
+	%TriggerSleepy.is_armed = false
+	planet.refresh_interact_focus()
+	_lock_input()
+	await _prince(\"我在这里没有事可做了，我要上路了。\")
+	await _king(\"别走。\")
+	await _overhead(\"国王为终于有了一个臣民而骄傲。\")
+	await _king(\"别走！别走！我任命你为大臣！\")
+	await _prince(\"什么大臣？\")
+	await _king(\"司法大臣！\")
+	await _prince(\"可是这儿没有人可以审判啊！\")
+	await _king(\"这可难说。\")
+	await _king(\"我还没有巡视过我的王国呢。\")
+	await _king(\"我老了，这里放不下马车，走路又累人。\")
+	await _prince(\"哦，可是我已经看过了！\")
+	await _overhead(\"小王子转过身，又看了一眼星球的另一面。\")
+	await _overhead(\"这个星球这么小！\")
+	is_blocking_input = false
+	%TriggerSleepy.is_armed = true
+	planet.refresh_interact_focus()
+	await %TriggerSleepy.interacted
+	%TriggerSleepy.is_armed = false
+	planet.refresh_interact_focus()
+	_lock_input()
+	await _king(\"那么你就审判你自己吧！\")
+	await _king(\"这是最难的事情。\")
+	await _king(\"审判自己比审判别人难得多。\")
+	await _king(\"如果你能正确地审判自己，你就是个真正有智慧的人。\")
+	await _prince(\"我可以在任何地方审判自己，我不需要住在这里。\")
+	await _king(\"嗯！嗯！\")
+	await _king(\"我有理由相信我星球的某个地方有一只老耗子。\")
+	await _king(\"我夜里听见它的声音。\")
+	await _king(\"你可以审判那只老耗子。\")
+	await _king(\"你可以不时地判处它死刑，这样它的生命就取决于你的审判。\")
+	await _king(\"但为了节约，你每次都要赦免它。\")
+	await _king(\"这里只有一只耗子。\")
+	is_blocking_input = false
+	%TriggerSleepy.is_armed = true
+	planet.refresh_interact_focus()
+	await %TriggerSleepy.interacted
+	%TriggerSleepy.is_armed = false
+	planet.refresh_interact_focus()
+	_lock_input()
+	await _prince(\"我不喜欢判人死刑，我想我该走了。\")
+	await _king(\"别走。\")
+	await _prince(\"如果陛下希望被立刻服从...\")
+	await _prince(\"应该给我一个合理的命令。\")
+	await _prince(\"比如，命令我在一分钟之内离开。\")
+	await _prince(\"看起来时机是有利的...\")
+	await _overhead(\"国王没有回答。\")
+	await _overhead(\"小王子先是犹豫了一下，接着叹了口气，动身走了。\")
+	await _king(\"我任命你为大使！\")
+	await _overhead(\"国王急忙在他身后喊道，神气很是威严。\")
+	is_blocking_input = false
+	%TriggerSleepy.interact_kind = WorldConstants.InteractKind.NONE
+	planet.refresh_interact_focus()
 
 
 func _king(text: String) -> void:

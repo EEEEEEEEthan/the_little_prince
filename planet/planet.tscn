@@ -103,7 +103,7 @@ func refresh_interact_focus() -> void:
 			if not area.is_armed or area.interact_kind == WorldConstants.InteractKind.NONE:
 				continue
 			var prop := area.hosted_surface_prop() as SurfaceProp
-			if prop == null or not story.accepts_interact(prop):
+			if prop != null and not story.accepts_interact(prop):
 				continue
 			var distance_squared := apex_global_position().distance_squared_to(area.global_position)
 			if distance_squared <= best_distance_squared:
