@@ -7,12 +7,10 @@
 [ext_resource type="Texture2D" uid="uid://cop81vwashvr5" path="res://visual/palette.png" id="6_palette"]
 [ext_resource type="Script" uid="uid://cr35jjjk4jfxm" path="res://ui/interact_prompt.gd" id="7_prompt"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="9_dialogue"]
-[ext_resource type="Script" uid="uid://ciwt72d3i6fwy" path="res://interact/interaction.gd" id="10_interact"]
 [ext_resource type="Script" uid="uid://pqblm1m4kgms" path="res://player/scarf.gd" id="11_scarf"]
 [ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
 [ext_resource type="Script" uid="uid://wt1e4t3x7gyv" path="res://story/migratory_flock.gd" id="14_flock"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
-[ext_resource type="Shader" uid="uid://cpromptfillshd" path="res://ui/interact_prompt.gdshader" id="16_prompt_shader"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="19_home_day_music"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="21_king_day_music"]
 [ext_resource type="AudioStream" uid="uid://o7js72pawqgm" path="res://audio/muffled_dirt_thud_a.wav" id="22_dirt_a"]
@@ -20,6 +18,111 @@
 [ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="24_grass_a"]
 [ext_resource type="AudioStream" uid="uid://cuivhluijhgxn" path="res://audio/dry_grass_rustle_b.wav" id="25_grass_b"]
 
+
+[sub_resource type="GDScript" id="GDScript_interaction"]
+script/source = "class_name Interaction
+extends Node
+## 靠近可互动物体时显示 A 提示；点按或长按 interact（键盘 Submit / 手柄 A）交互。
+
+var story: PlanetStory
+var planet: Planet:
+	set(value):
+		planet = value
+		story = value.get_node(\"%Story\") as PlanetStory
+@onready var dialogue: DialogueBox = %DialogueBox
+@onready var prompt: InteractPrompt = %InteractPrompt
+@onready var player: Player = %Player
+
+var _focus: SurfaceProp
+var _hold_elapsed_seconds: float = 0.0
+
+
+func _ready() -> void:
+	planet = %Planet
+
+
+func is_busy() -> bool:
+	return dialogue.is_open() or story.is_blocking_input or _hold_elapsed_seconds > 0.0
+
+
+func _process(delta: float) -> void:
+	if dialogue.is_open() or story.is_blocking_input:
+		_set_focus(null)
+		return
+	if story.is_active:
+		_set_focus(player.find_nearest_interactable(story.accepts_interact))
+	else:
+		_set_focus(player.find_nearest_interactable())
+	if _focus == null:
+		_clear_hold()
+		return
+	var required_hold_seconds := story.interact_hold_seconds(_focus)
+	if required_hold_seconds > 0.0:
+		if Input.is_action_pressed(&\"interact\"):
+			if _hold_elapsed_seconds <= 0.0:
+				planet.angular_velocity = 0.0
+			_hold_elapsed_seconds += delta
+			prompt.hold_fill_ratio = _hold_elapsed_seconds / required_hold_seconds
+			if _hold_elapsed_seconds >= required_hold_seconds:
+				_clear_hold()
+				_on_interact()
+		else:
+			_clear_hold()
+		return
+	_clear_hold()
+	if Input.is_action_just_pressed(&\"interact\"):
+		_on_interact()
+
+
+func _on_interact() -> void:
+	if _focus == null:
+		return
+	if story.try_handle_interact(_focus):
+		_set_focus(null)
+		return
+	var lines := DialogueCatalog.lines_for_id(_focus.get_dialogue_id())
+	if lines.is_empty():
+		return
+	dialogue.play(lines)
+	if dialogue.is_open() and Input.is_action_pressed(&\"interact\"):
+		dialogue.mark_holding(true)
+	_set_focus(null)
+
+
+func _set_focus(prop: SurfaceProp) -> void:
+	if prop == _focus:
+		return
+	_clear_hold()
+	_focus = prop
+	if _focus == null:
+		prompt.hide_prompt()
+	else:
+		prompt.show_on(_focus)
+
+
+func _clear_hold() -> void:
+	if _hold_elapsed_seconds == 0.0 and is_zero_approx(prompt.hold_fill_ratio):
+		return
+	_hold_elapsed_seconds = 0.0
+	prompt.hold_fill_ratio = 0.0
+"
+
+[sub_resource type="Shader" id="Shader_prompt_fill"]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+uniform float fill_ratio : hint_range(0.0, 1.0) = 0.0;
+
+void fragment() {
+	vec4 texel = texture(TEXTURE, UV);
+	vec2 from_center = UV * 2.0 - 1.0;
+	float angle_turns = atan(-from_center.x, -from_center.y) / TAU + 0.5;
+	float filled = step(angle_turns, fill_ratio);
+	float holding = 1.0 - step(fill_ratio, 0.0);
+	float brightness = mix(1.0, mix(0.35, 1.0, filled), holding);
+	COLOR = vec4(texel.rgb * brightness, texel.a);
+}
+"
 
 [sub_resource type="Texture2D" id="EditableTexture_prince"]
 script = ExtResource("editable_texture_script")
@@ -181,7 +284,7 @@ shader = ExtResource("5_palette_shader")
 shader_parameter/palette = ExtResource("6_palette")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
-shader = ExtResource("16_prompt_shader")
+shader = SubResource("Shader_prompt_fill")
 shader_parameter/fill_ratio = 0.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_footprint"]
@@ -286,7 +389,7 @@ unique_name_in_owner = true
 
 [node name="Interaction" type="Node" parent="GameView/GameViewport" unique_id=1838989427]
 unique_name_in_owner = true
-script = ExtResource("10_interact")
+script = SubResource("GDScript_interaction")
 
 [node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport" unique_id=515559498]
 unique_name_in_owner = true

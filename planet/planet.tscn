@@ -6,11 +6,34 @@
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
-[ext_resource type="Texture2D" uid="uid://cwlvnpufffrm" path="res://planet/white_lavender_puff_frames.png" id="14_cloud_tex"]
-[ext_resource type="Shader" uid="uid://bcloudframeshd" path="res://planet/cloud_frame.gdshader" id="15_cloud_shader"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="16_player_trigger"]
 
 
+
+[sub_resource type="Shader" id="Shader_cloud_frame"]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+uniform float frame_columns = 4.0;
+uniform float frame_rows = 8.0;
+
+void vertex() {
+	float row_index = floor(COLOR.r * (frame_rows - 1.0) + 0.5);
+	float start_frame = COLOR.g * frame_columns;
+	float animation_speed = mix(0.55, 1.35, COLOR.b);
+	float frame_index = floor(mod(start_frame + TIME * 2.0 * animation_speed, frame_columns));
+	UV = vec2((UV.x + frame_index) / frame_columns, (UV.y + row_index) / frame_rows);
+}
+
+void fragment() {
+	vec4 texel = texture(TEXTURE, UV);
+	COLOR = vec4(texel.rgb, texel.a * COLOR.a);
+}
+"
+
+[sub_resource type="Texture2D" id="EditableTexture_white_lavender_puff_frames"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAB4UlEQVR4nO2bTXKDMAyF5VwlR8gy5++yR+hZ6CbugJFsyYJ5o1pvlYC/x8SJox8M0eIq9cW2bdv+xNf3z2Hg+/WkUkohQVH5wsGtyfv1PEKNUWRe/AVIsnwLFg8U++id1BhYzvfGoNiHZpD2Il4PFMtq+8gMXuSBYlOr6RQF2vhZVUOJtJ6i8mwewCURnKpZZL5YkwjOxOuBYos0g1rtf04eDxRL9MkDZuLkaS05PFBsKpWiw1qQYukoBkfmhw0RLpRoStIo/HQY1DYlNB4olqgphy26otryeFzFikugN8OjfHzGA8WePoA0s9oa2+OBYlMri/0P6JWTmvUfiX+0cAu0cZRbS5H5qXJWGwUsHijWdF9gNM7jgWLV9wW0F7qzf38Hq7rNNdtA8Hig2NRqyn5AC1dFqee9vDmear+FGQ8Em2FQAjIMki3FvMMDxaZW0vJ5wF8U2K+ZNnZWw1FPLiLf7a1bkhGPB4olmmyItCZXeKDYbkNEOiYmFQ4PFHsS10Pnjt3lgWJTq+r0T8rF0FFcjcyzu6y4EGLZthaJz21y+zczBtJ7iweKJWL6AaMZ1VzQ44FiU6lFZd4fQDQuhCLx5v0B3PjI/FQe8F9KYaKJPMBSCms9UCxRPjiZD04ur1+MVa3T7cAgbAAAAABJRU5ErkJggg=="
 
 [sub_resource type="Texture2D" id="EditableTexture_body"]
 script = ExtResource("editable_texture_script")
@@ -227,13 +250,13 @@ shader_parameter/phase = 0.5
 shader_parameter/noise_strength = 0.02
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_cloud_frame"]
-shader = ExtResource("15_cloud_shader")
+shader = SubResource("Shader_cloud_frame")
 
 [node name="Planet" type="Node2D" unique_id=1020592655]
 script = ExtResource("1_planet")
 body_texture = SubResource("EditableTexture_body")
 starfield_texture = ExtResource("5_starfield")
-cloud_texture = ExtResource("14_cloud_tex")
+cloud_texture = SubResource("EditableTexture_white_lavender_puff_frames")
 
 [node name="Sky" type="Sprite2D" parent="." unique_id=852054590]
 unique_name_in_owner = true
@@ -256,7 +279,7 @@ unique_name_in_owner = true
 texture_filter = 1
 texture_repeat = 0
 material = SubResource("ShaderMaterial_cloud_frame")
-texture = ExtResource("14_cloud_tex")
+texture = SubResource("EditableTexture_white_lavender_puff_frames")
 
 [node name="Surface" type="Node2D" parent="." unique_id=1169720567]
 unique_name_in_owner = true
