@@ -113,8 +113,7 @@ func _emit_fragment_burst() -> void:
 		burst_root.queue_free())
 "
 
-[node name="Baobab" type="Sprite2D"]
-groups = ["baobab"]
+[node name="Baobab" type="Sprite2D" groups=["baobab"]]
 texture_filter = 1
 scale = Vector2(0.72, 0.72)
 texture = SubResource("EditableTexture_baobab")

@@ -331,9 +331,8 @@ interaction_enabled = true
 [node name="PlayerTrigger" parent="Surface/Throne" instance=ExtResource("20_trigger")]
 radius = 116.67
 
-[node name="King" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=410000001]
+[node name="King" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=410000001 groups=["king", "player_spawn_anchor"]]
 unique_name_in_owner = true
-groups = ["king", "player_spawn_anchor"]
 z_index = 1
 texture_filter = 1
 position = Vector2(0, -104.832)

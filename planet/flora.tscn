@@ -35,14 +35,13 @@ shader_parameter/sway_pixels = 1.8
 shader_parameter/sway_speed = 1.4
 shader_parameter/world_frequency = 0.08
 
-[node name="Flora" type="Sprite2D"]
+[node name="Flora" type="Sprite2D" groups=["flora"]]
 z_index = 5
 texture_filter = 1
 material = SubResource("ShaderMaterial_flora_sway")
 texture = SubResource("EditableTexture_flora")
 offset = Vector2(0, -8)
 hframes = 6
-groups = ["flora"]
 script = ExtResource("1_surface_prop")
 
 [node name="PlayerTrigger" parent="." instance=ExtResource("2_trigger")]

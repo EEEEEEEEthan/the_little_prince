@@ -235,8 +235,7 @@ metadata/day_music = ExtResource("20_day_music")
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
 
-[node name="Volcano" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320]
-groups = ["volcano"]
+[node name="Volcano" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320 groups=["volcano"]]
 texture_filter = 1
 position = Vector2(-67.00001, 54.000008)
 rotation = 4.07983
@@ -271,8 +270,7 @@ angular_velocity_max = 4.0
 scale_amount_min = 0.5
 color_ramp = SubResource("Gradient_volcano_smoke")
 
-[node name="Volcano2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=1280196619]
-groups = ["volcano"]
+[node name="Volcano2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=1280196619 groups=["volcano"]]
 texture_filter = 1
 position = Vector2(-28.8, 76.8)
 rotation = -2.7793012
@@ -281,8 +279,7 @@ offset = Vector2(0, -12.96)
 hframes = 3
 script = ExtResource("3_surface_prop")
 
-[node name="Volcano3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147]
-groups = ["volcano"]
+[node name="Volcano3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147 groups=["volcano"]]
 texture_filter = 1
 position = Vector2(-80.924164, -32.90971)
 rotation = -1.18455
@@ -293,9 +290,8 @@ frame = 1
 script = ExtResource("3_surface_prop")
 variant = 1
 
-[node name="Rose" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=240828752]
+[node name="Rose" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=240828752 groups=["rose", "player_spawn_anchor"]]
 unique_name_in_owner = true
-groups = ["rose", "player_spawn_anchor"]
 texture_filter = 1
 position = Vector2(0, -87.36)
 texture = SubResource("EditableTexture_rose")

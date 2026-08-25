@@ -189,16 +189,11 @@ func _interact_any(props: Array[SurfaceProp]) -> SurfaceProp:
 	var generation := _story_generation
 	_end_dialogue()
 	_waiting_props = props.duplicate()
-	var received_holder: Array = [null]
 	var callbacks: Dictionary = {}
 	for waiting_prop in props:
-		var callback := func() -> void:
-			if received_holder[0] != null:
-				return
-			received_holder[0] = waiting_prop
-			prop_interacted.emit(waiting_prop)
+		var callback := prop_interacted.emit.bind(waiting_prop)
 		callbacks[waiting_prop] = callback
-		waiting_prop.interacted.connect(callback)
+		waiting_prop.interacted.connect(callback, CONNECT_ONE_SHOT)
 	var received: SurfaceProp = await prop_interacted
 	for waiting_prop in props:
 		var callback: Callable = callbacks[waiting_prop]

@@ -82,9 +82,8 @@ modulate = Color(0.72, 0.62, 0.45, 0.45)
 [node name="Body" parent="." index="3"]
 texture = SubResource("EditableTexture_cream_ink_parchment_disk")
 
-[node name="Geographer" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=790000001]
+[node name="Geographer" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=790000001 groups=["player_spawn_anchor"]]
 unique_name_in_owner = true
-groups = ["player_spawn_anchor"]
 z_index = 1
 texture_filter = 1
 position = Vector2(0, -87.36)
