@@ -29,6 +29,7 @@ var flora_angles: Array[float] = []
 var surface_props: Array[SurfaceProp] = []
 var overlapping_player_triggers: Array[Area2D] = []
 var focused_player_trigger: Area2D
+var air_walls: Array[Node] = []
 
 ## 当前角速度（弧度/秒），经阻尼向目标速度平滑逼近。正值表示向右走。
 var angular_velocity: float = 0.0
@@ -47,6 +48,8 @@ func _ready() -> void:
 
 
 func _collect_surface_props() -> void:
+	air_walls.clear()
+	_collect_air_walls(surface)
 	for child in surface.get_children():
 		if child.name == \"Rose\":
 			rose_angle = child.rotation
@@ -129,8 +132,22 @@ func move_player(direction: float, delta: float) -> void:
 	var target_velocity := direction * max_angular_speed
 	var smoothing := 1.0 - exp(-WorldConstants.PLAYER_DAMPING * delta)
 	angular_velocity = lerp(angular_velocity, target_velocity, smoothing)
-	player_angle = fposmod(player_angle + angular_velocity * delta, TAU)
+	var next_angle := fposmod(player_angle + angular_velocity * delta, TAU)
+	for wall in air_walls:
+		if wall.blocks_player_entry(self, player_angle, next_angle):
+			angular_velocity = 0.0
+			next_angle = player_angle
+			break
+	player_angle = next_angle
 	_sync_rotation()
+
+
+func _collect_air_walls(node: Node) -> void:
+	for child in node.get_children():
+		if child.has_method(&\"blocks_player_entry\"):
+			air_walls.append(child)
+		else:
+			_collect_air_walls(child)
 
 
 func teleport_player(angle: float) -> void:
