@@ -34,7 +34,7 @@ download() {
   local url="$1"
   local out="$2"
   if command -v curl >/dev/null 2>&1; then
-    curl -fL --retry 3 --retry-delay 2 -o "$out" "$url"
+    curl -fL --http1.1 --retry 5 --retry-all-errors --retry-delay 2 -C - -o "$out" "$url"
   elif command -v wget >/dev/null 2>&1; then
     wget -O "$out" "$url"
   else
