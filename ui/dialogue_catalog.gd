@@ -5,6 +5,7 @@ extends RefCounted
 const PRINCE_SPEAKER := "小王子"
 const ROSE_SPEAKER := "玫瑰"
 const KING_SPEAKER := "国王"
+const MOUSE_SPEAKER := "小老鼠"
 const DRUNKARD_SPEAKER := "酒鬼"
 const GEOGRAPHER_SPEAKER := "地理学家"
 const CHARACTER_BUST_FRAMES := preload("res://ui/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png")

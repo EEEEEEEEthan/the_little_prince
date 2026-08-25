@@ -23,6 +23,10 @@ _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABQAAAAYCAYAAAD6S912AAAAsElEQVR42mNgwAM+
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAYAAADA+m62AAAAOUlEQVR42mNgQAJOBt7/QZgBHwApePfuAhxj1QBTxCOkBsY4FaObRpSpeBUhewTZQwQ9RlIIoCsCAPXxVtWHf6ZFAAAAAElFTkSuQmCC"
 
+[sub_resource type="Texture2D" id="EditableTexture_round_tan_mouse"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAMCAYAAADS87vJAAAAx0lEQVR42mNgoBOw0lL6D8MMAwAG1H6QpV+W7ADjgXAAVewnJQRBao4saUHBlMYAXe1HN4CUEMRmOToe1PbjMgBXCGLj47JYSkjgPwi8qJjwn1T9tLKfpBDEZsCGzgysDnh15wQcw/S/2bAC7hlC+mllP0Yg4gpBYj0AcwTMIdj0I8cetiSM7Aly7cenH9luUDbCaTm5HiCkH+YJUgowutpPKAYp9cBA6Uc2h1j9FDsAvcoitfqj2AMU2k8dA6jYahvoFuSwBwDtiPyD5jV7VAAAAABJRU5ErkJggg=="
+
 [sub_resource type="Texture2D" id="EditableTexture_blue_mottled_disk"]
 script = ExtResource("editable_texture_script")
 _base64_data = "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"
@@ -103,6 +107,83 @@ func play_ambient_one_shot() -> void:
 	punch.tween_property(self, \"offset\", Vector2(0, -4), 0.08)
 "
 
+[sub_resource type="GDScript" id="GDScript_mouse"]
+script/source = "extends SurfaceProp
+
+const REST_OFFSET := Vector2(0, -7)
+const IDLE_FRAME_COUNT := 2
+const RUN_FRAME_START := 2
+const RUN_FRAME_COUNT := 2
+const IDLE_FRAMES_PER_SECOND := 2.0
+const RUN_FRAMES_PER_SECOND := 10.0
+const FLEE_ARC := 0.9
+const FLEE_DURATION_SECONDS := 0.45
+
+var _anim_time := 0.0
+var _is_fleeing := false
+var _motion_tween: Tween
+var _rest_rotation := 0.0
+
+
+func _ready() -> void:
+	_rest_rotation = rotation
+	offset = REST_OFFSET
+	hframes = 4
+	frame = 0
+
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	if _is_fleeing:
+		frame = RUN_FRAME_START + int(_anim_time * RUN_FRAMES_PER_SECOND) % RUN_FRAME_COUNT
+		return
+	flip_h = angle_difference(rotation, owner.player_angle) < 0.0
+	frame = int(_anim_time * IDLE_FRAMES_PER_SECOND) % IDLE_FRAME_COUNT
+
+
+func play_ambient_one_shot() -> void:
+	$Squeak.play()
+	if _motion_tween != null:
+		_motion_tween.kill()
+	offset = REST_OFFSET
+	_motion_tween = create_tween()
+	_motion_tween.tween_property(self, \"offset\", REST_OFFSET + Vector2(0, -3), 0.06)
+	_motion_tween.tween_property(self, \"offset\", REST_OFFSET, 0.10)
+
+
+func run_away() -> void:
+	_is_fleeing = true
+	_anim_time = 0.0
+	is_armed = false
+	flip_h = false
+	if _motion_tween != null:
+		_motion_tween.kill()
+	_motion_tween = create_tween()
+	_motion_tween.set_trans(Tween.TRANS_QUAD)
+	_motion_tween.set_ease(Tween.EASE_IN)
+	_motion_tween.tween_property(self, \"rotation\", rotation + FLEE_ARC, FLEE_DURATION_SECONDS)
+	_motion_tween.parallel().tween_property(self, \"modulate:a\", 0.0, FLEE_DURATION_SECONDS)
+	_motion_tween.tween_callback(func() -> void:
+		visible = false
+		is_consumed = true
+	)
+
+
+func restore_at_rest() -> void:
+	if _motion_tween != null:
+		_motion_tween.kill()
+		_motion_tween = null
+	_is_fleeing = false
+	_anim_time = 0.0
+	rotation = _rest_rotation
+	offset = REST_OFFSET
+	modulate.a = 1.0
+	visible = true
+	is_consumed = false
+	is_armed = true
+	frame = 0
+"
+
 
 [sub_resource type="GDScript" id="GDScript_king_face"]
 script/source = "extends SurfaceProp
@@ -116,6 +197,7 @@ script/source = "extends PlanetStory
 ## 325 号小行星：背面降落，路上可点环境；觐见时对上现有国王对话（无日落）。
 
 var has_overheard_distant_sentencing: bool = false
+var mouse_squeak_count: int = 0
 
 
 func _prepare_start() -> void:
@@ -123,6 +205,8 @@ func _prepare_start() -> void:
 	player.modulate.a = 1.0
 	planet.has_contacted_audience_keep_away = false
 	has_overheard_distant_sentencing = false
+	mouse_squeak_count = 0
+	%Mouse.restore_at_rest()
 	set_process(false)
 
 
@@ -206,9 +290,26 @@ func try_handle_interact(prop: SurfaceProp) -> bool:
 		_glance_up_at_empty_throne()
 	elif prop.name.begins_with(\"Border\") or prop.name == \"Cape\" or prop.name == \"RatHole\":
 		prop.play_ambient_one_shot()
+	elif prop.name == \"Mouse\":
+		_play_mouse_joke()
 	else:
 		return false
 	return true
+
+
+func _play_mouse_joke() -> void:
+	_lock_input()
+	mouse_squeak_count += 1
+	%Mouse.play_ambient_one_shot()
+	await _line(DialogueCatalog.MOUSE_SPEAKER, \"吱\", null)
+	if mouse_squeak_count < 4:
+		await _prince(\"吱\")
+		is_blocking_input = false
+		return
+	%Mouse.run_away()
+	await _prince(\"喵\")
+	await _overhead(\"小老鼠跑掉了\")
+	is_blocking_input = false
 
 
 func _king(text: String) -> void:
@@ -243,7 +344,7 @@ func _await_audience_keep_away() -> void:
 
 func _watch_rat_overhear() -> void:
 	var generation := _story_generation
-	var rat: SurfaceProp = planet.get_node(\"Surface/Rat\") as SurfaceProp
+	var rat_hole: SurfaceProp = %RatHole as SurfaceProp
 	var overhear_arc: float = WorldConstants.INTERACT_RANGE_PX * 2.0 / planet.radius
 	while (
 			is_inside_tree()
@@ -253,7 +354,7 @@ func _watch_rat_overhear() -> void:
 		if (
 				has_finished_opening
 				and not is_blocking_input
-				and absf(angle_difference(planet.player_angle, rat.rotation)) <= overhear_arc
+				and absf(angle_difference(planet.player_angle, rat_hole.rotation)) <= overhear_arc
 		):
 			has_overheard_distant_sentencing = true
 			if not skip_cinematics:
@@ -268,6 +369,7 @@ func _is_ambient_prop(prop: SurfaceProp) -> bool:
 			prop.name == \"Cape\"
 			or prop.name == \"Throne\"
 			or prop.name == \"RatHole\"
+			or prop.name == \"Mouse\"
 			or prop.name.begins_with(\"Edict\")
 			or prop.name.begins_with(\"Border\")
 	)
@@ -292,6 +394,9 @@ radius = 116.67
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_king_player_trigger"]
 radius = 67.86
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mouse_player_trigger"]
+radius = 20.0
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 position = Vector2(128, 301.952)
@@ -350,35 +455,54 @@ script = SubResource("GDScript_king_face")
 
 [node name="PlayerTrigger" parent="Surface/King" index="0"]
 shape = SubResource("CircleShape2D_king_player_trigger")
-[node name="Rat" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=410000002 instance=ExtResource("4_prop_scene")]
+[node name="Mouse" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=410000060 instance=ExtResource("4_prop_scene")]
+unique_name_in_owner = true
+z_index = 2
+texture_filter = 1
+position = Vector2(73.726188, -74.526489)
+rotation = 0.78
+texture = SubResource("EditableTexture_round_tan_mouse")
+offset = Vector2(0, -7)
+hframes = 4
+script = SubResource("GDScript_mouse")
+is_armed = true
+
+[node name="PlayerTrigger" parent="Surface/Mouse" index="0"]
+shape = SubResource("CircleShape2D_mouse_player_trigger")
+
+[node name="Squeak" type="AudioStreamPlayer" parent="Surface/Mouse" unique_id=410000061]
+stream = ExtResource("19_rat_squeak")
+volume_db = -6.0
+
+[node name="Rat" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=410000002 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(0, 104.832)
 rotation = 3.1415927
 texture = SubResource("EditableTexture_rat")
 offset = Vector2(0, -5)
 
-[node name="RatTrace1" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=410000020 instance=ExtResource("4_prop_scene")]
+[node name="RatTrace1" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=410000020 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-22.877448, 102.305281)
 rotation = 3.3615927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
 
-[node name="RatTrace2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=410000021 instance=ExtResource("4_prop_scene")]
+[node name="RatTrace2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=410000021 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(28.970915, 100.749364)
 rotation = 2.8615927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
 
-[node name="RatTrace3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=410000022 instance=ExtResource("4_prop_scene")]
+[node name="RatTrace3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=410000022 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-48.409235, 92.985452)
 rotation = 3.6215927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
 
-[node name="EdictL" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=410000030 instance=ExtResource("4_prop_scene")]
+[node name="EdictL" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="8" unique_id=410000030 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-95.686869, -42.822555)
 rotation = -1.15
@@ -386,7 +510,7 @@ texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
 is_armed = true
 
-[node name="EdictR" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="8" unique_id=410000031 instance=ExtResource("4_prop_scene")]
+[node name="EdictR" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="9" unique_id=410000031 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(98.447664, -36.025071)
 rotation = 1.22
@@ -394,7 +518,7 @@ texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
 is_armed = true
 
-[node name="EdictL2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="9" unique_id=410000032 instance=ExtResource("4_prop_scene")]
+[node name="EdictL2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=410000032 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-93.023972, 48.335172)
 rotation = -2.05
@@ -402,7 +526,7 @@ texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
 is_armed = true
 
-[node name="EdictR2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=410000033 instance=ExtResource("4_prop_scene")]
+[node name="EdictR2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=410000033 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(89.415457, 54.723161)
 rotation = 2.12
@@ -410,7 +534,7 @@ texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
 is_armed = true
 
-[node name="Border1" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=410000040 instance=ExtResource("4_prop_scene")]
+[node name="Border1" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=410000040 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(85.271974, -60.979002)
 rotation = 0.95
@@ -419,7 +543,7 @@ offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="Border2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=410000041 instance=ExtResource("4_prop_scene")]
+[node name="Border2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=410000041 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(89.328188, -54.865499)
 rotation = 1.02
@@ -428,7 +552,7 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="Border3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=410000042 instance=ExtResource("4_prop_scene")]
+[node name="Border3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=410000042 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-83.404509, -63.509339)
 rotation = -0.92
@@ -437,7 +561,7 @@ offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="Border4" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=410000043 instance=ExtResource("4_prop_scene")]
+[node name="Border4" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=410000043 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-88.213086, -56.640971)
 rotation = -1.0
@@ -446,7 +570,7 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="Border5" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=410000044 instance=ExtResource("4_prop_scene")]
+[node name="Border5" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=410000044 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(100.772402, 28.890677)
 rotation = 1.85
@@ -455,7 +579,7 @@ offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="Border6" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=410000045 instance=ExtResource("4_prop_scene")]
+[node name="Border6" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=410000045 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(98.504914, 35.868232)
 rotation = 1.92
@@ -464,7 +588,7 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="Border7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=410000046 instance=ExtResource("4_prop_scene")]
+[node name="Border7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="18" unique_id=410000046 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-99.860468, 31.900396)
 rotation = -1.88
@@ -473,7 +597,7 @@ offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="Border8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="18" unique_id=410000047 instance=ExtResource("4_prop_scene")]
+[node name="Border8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="19" unique_id=410000047 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-96.991774, 39.778687)
 rotation = -1.96
@@ -482,7 +606,8 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="RatHole" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="19" unique_id=410000050 instance=ExtResource("4_prop_scene")]
+[node name="RatHole" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="20" unique_id=410000050 instance=ExtResource("4_prop_scene")]
+unique_name_in_owner = true
 z_index = -1
 texture_filter = 1
 position = Vector2(0, 104.832)
