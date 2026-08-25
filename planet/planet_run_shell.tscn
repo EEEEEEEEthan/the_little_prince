@@ -59,7 +59,6 @@ const META_OPENING_DAY_MUSIC := \"opening_day_music\"
 @onready var planet = $GameView/GameViewport/Planet
 @onready var player = $GameView/GameViewport/Player
 @onready var dialogue = %DialogueBox
-@onready var interaction = %Interaction
 
 
 func _ready() -> void:
@@ -82,7 +81,7 @@ func replace_planet(next_planet: Node2D) -> void:
 	planet = next_planet
 	player.planet = next_planet
 	player.get_node(\"Scarf\").planet = next_planet
-	interaction.planet = next_planet
+	next_planet.bind_player_footprint(player.get_node(\"%Footprint\"))
 	game_viewport.remove_child(previous_planet)
 	previous_planet.free()
 	next_planet.teleport_player(next_planet.spawn_angle)
@@ -117,7 +116,6 @@ script/source = "extends Sprite2D
 ## 贴图为 idle+walk 横拼 spritesheet，按角速度切帧；左右用 flip_h。
 
 @onready var planet = %Planet
-@onready var interaction = %Interaction
 
 var can_move_left: bool = true
 var can_move_right: bool = true
@@ -126,44 +124,38 @@ var _anim_time: float = 0.0
 var _was_moving: bool = false
 var _last_walk_frame_index: int = -1
 
+func _ready() -> void:
+	planet.bind_player_footprint(%Footprint)
+
 func _physics_process(delta: float) -> void:
 	var direction := 0.0
-	if not interaction.is_busy():
+	if not is_busy():
 		if can_move_right:
 			direction += Input.get_action_strength(\"move_right\")
 		if can_move_left:
 			direction -= Input.get_action_strength(\"move_left\")
 		direction *= move_speed_scale
 	planet.move_player(direction, delta)
+	planet.refresh_interact_focus()
 	_update_animation(direction, delta)
 
+func is_busy() -> bool:
+	var story := planet.get_node(\"%Story\") as PlanetStory
+	return %DialogueBox.is_open() or story.is_blocking_input or planet.is_interact_holding
+
 func is_in_grass() -> bool:
-	return has_overlapping_trigger_kind(WorldConstants.TriggerKind.GRASS)
-
-
-func has_overlapping_trigger_kind(kind: WorldConstants.TriggerKind) -> bool:
-	for area in %Footprint.get_overlapping_areas():
-		if area.has_method(\"hosted_surface_prop\") and area.kind == kind:
-			return true
-	return false
+	return planet.is_player_in_grass()
 
 
 func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceProp:
-	var best: SurfaceProp = null
-	var best_distance_squared := INF
-	for area in %Footprint.get_overlapping_areas():
-		if not area.has_method(\"hosted_surface_prop\") or area.kind != WorldConstants.TriggerKind.INTERACT:
-			continue
-		var prop := area.hosted_surface_prop() as SurfaceProp
-		if prop == null or not prop.is_interactable():
-			continue
-		if should_accept.is_valid() and not should_accept.call(prop):
-			continue
-		var distance_squared := global_position.distance_squared_to(area.global_position)
-		if distance_squared <= best_distance_squared:
-			best_distance_squared = distance_squared
-			best = prop
-	return best
+	if planet.focused_player_trigger == null:
+		return null
+	var prop := planet.focused_player_trigger.hosted_surface_prop() as SurfaceProp
+	if prop == null:
+		return null
+	if should_accept.is_valid() and not should_accept.call(prop):
+		return null
+	return prop
 
 
 func _update_animation(direction: float, delta: float) -> void:
@@ -183,7 +175,7 @@ func _update_animation(direction: float, delta: float) -> void:
 		frame = WorldConstants.PLAYER_IDLE_FRAME_COUNT + walk_index
 		if walk_index != _last_walk_frame_index:
 			_last_walk_frame_index = walk_index
-			if walk_index % 2 == 0 and not interaction.is_busy():
+			if walk_index % 2 == 0 and not is_busy():
 				%Footstep.play_step()
 	else:
 		var idle_count := WorldConstants.PLAYER_IDLE_FRAME_COUNT
@@ -363,63 +355,6 @@ func _plot_dot(pixel: Vector2i, color: Color, thickness: int) -> void:
 		_frame_image.set_pixel(image_x, pixel.y, color)
 "
 
-[sub_resource type="GDScript" id="GDScript_prompt"]
-script/source = "extends Sprite2D
-## 手柄 A 键提示：跟随目标头顶移动，自身保持屏幕朝向，不继承星球旋转。
-## 长按交互时按钮本身按填充比例做进度渲染。
-
-var hold_fill_ratio: float = 0.0:
-	set(value):
-		hold_fill_ratio = clampf(value, 0.0, 1.0)
-		if not is_node_ready():
-			await ready
-		(material as ShaderMaterial).set_shader_parameter(&\"fill_ratio\", hold_fill_ratio)
-
-var _target: SurfaceProp
-
-
-func _ready() -> void:
-	# tscn 保持可见便于编辑；开局再关。
-	visible = false
-	set_process(false)
-
-
-func show_on(prop: SurfaceProp) -> void:
-	_target = prop
-	rotation = 0.0
-	offset = Vector2.ZERO
-	hold_fill_ratio = 0.0
-	visible = true
-	set_process(true)
-	_sync_to_target()
-
-
-func hide_prompt() -> void:
-	_target = null
-	hold_fill_ratio = 0.0
-	visible = false
-	set_process(false)
-	offset = Vector2.ZERO
-
-
-func _process(_delta: float) -> void:
-	_sync_to_target()
-	if not visible:
-		return
-	if hold_fill_ratio > 0.0:
-		offset = Vector2.ZERO
-		return
-	offset = Vector2(0.0, sin(Time.get_ticks_msec() * 0.006) * 1.5)
-
-
-func _sync_to_target() -> void:
-	if _target == null or not is_instance_valid(_target):
-		hide_prompt()
-		return
-	global_position = _target.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
-	global_rotation = 0.0
-"
-
 [sub_resource type="GDScript" id="GDScript_flock"]
 script/source = "extends Node2D
 ## 候鸟：离星时从屏幕外飞到弧顶，再向上带走小王子。
@@ -495,117 +430,9 @@ func _process(_delta: float) -> void:
 
 
 
-[sub_resource type="GDScript" id="GDScript_interaction"]
-script/source = "extends Node
-## 靠近可互动物体时显示 A 提示；点按或长按 interact（键盘 Submit / 手柄 A）交互。
-
-var story: PlanetStory
-var planet:
-	set(value):
-		planet = value
-		story = value.get_node(\"%Story\") as PlanetStory
-@onready var dialogue = %DialogueBox
-@onready var prompt = %InteractPrompt
-@onready var player = %Player
-
-var _focus: SurfaceProp
-var _hold_elapsed_seconds: float = 0.0
-
-
-func _ready() -> void:
-	planet = %Planet
-
-
-func is_busy() -> bool:
-	return dialogue.is_open() or story.is_blocking_input or _hold_elapsed_seconds > 0.0
-
-
-func _process(delta: float) -> void:
-	if dialogue.is_open() or story.is_blocking_input:
-		_set_focus(null)
-		return
-	if story.is_active:
-		_set_focus(player.find_nearest_interactable(story.accepts_interact))
-	else:
-		_set_focus(player.find_nearest_interactable())
-	if _focus == null:
-		_clear_hold()
-		return
-	var required_hold_seconds := story.interact_hold_seconds(_focus)
-	if required_hold_seconds > 0.0:
-		if Input.is_action_pressed(&\"interact\"):
-			if _hold_elapsed_seconds <= 0.0:
-				planet.angular_velocity = 0.0
-			_hold_elapsed_seconds += delta
-			prompt.hold_fill_ratio = _hold_elapsed_seconds / required_hold_seconds
-			if _hold_elapsed_seconds >= required_hold_seconds:
-				_clear_hold()
-				_on_interact()
-		else:
-			_clear_hold()
-		return
-	_clear_hold()
-	if Input.is_action_just_pressed(&\"interact\"):
-		_on_interact()
-
-
-func _on_interact() -> void:
-	if _focus == null:
-		return
-	if story.try_handle_interact(_focus):
-		_set_focus(null)
-		return
-	var lines := DialogueCatalog.lines_for_id(_focus.get_dialogue_id())
-	if lines.is_empty():
-		return
-	dialogue.play(lines)
-	if dialogue.is_open() and Input.is_action_pressed(&\"interact\"):
-		dialogue.mark_holding(true)
-	_set_focus(null)
-
-
-func _set_focus(prop: SurfaceProp) -> void:
-	if prop == _focus:
-		return
-	_clear_hold()
-	_focus = prop
-	if _focus == null:
-		prompt.hide_prompt()
-	else:
-		prompt.show_on(_focus)
-
-
-func _clear_hold() -> void:
-	if _hold_elapsed_seconds == 0.0 and is_zero_approx(prompt.hold_fill_ratio):
-		return
-	_hold_elapsed_seconds = 0.0
-	prompt.hold_fill_ratio = 0.0
-"
-
-[sub_resource type="Shader" id="Shader_prompt_fill"]
-code = "shader_type canvas_item;
-render_mode unshaded;
-
-uniform float fill_ratio : hint_range(0.0, 1.0) = 0.0;
-
-void fragment() {
-	vec4 texel = texture(TEXTURE, UV);
-	vec2 from_center = UV * 2.0 - 1.0;
-	float angle_turns = atan(-from_center.x, -from_center.y) / TAU + 0.5;
-	float filled = step(angle_turns, fill_ratio);
-	float holding = 1.0 - step(fill_ratio, 0.0);
-	float brightness = mix(1.0, mix(0.35, 1.0, filled), holding);
-	COLOR = vec4(texel.rgb * brightness, texel.a);
-}
-"
-
 [sub_resource type="Texture2D" id="EditableTexture_prince"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEgAAAASCAYAAAD4+JjWAAAAAXNSR0IArs4c6QAAAXxJREFUWIXtVrtOwzAUtVFHFqR+QKqKCXVj6Dd4yJYhQ1YkBj4hE5/AlrUDgzeGfANDxYKYEMIfgJSlI5KZXOLXtW+C6kjkTEl87rnnHjtNCZkBgpoPBGeyf58VrcUZw8citT6FyCFTWH6Moanp0xDZ1wjLjzU0Nf0z1+JyVZLlqoTq0XzIUMhsSv1jQCqxPlFdu3YAy481NDV9q9Fhv9PSPr+uQDMYvuBMmsa/Ph/BgVPrL8yC2xfu03ICw8+Klh72JeqrlFpfC6hqcnl/8a0zmlzubp6cTaoml4QQotUAfJchwZn0DYH1IziTmEBj9K0TVHfWoyDMGt/QpqG6WwT7udZ9+oobs2GCM1l34XnxaUQAOtZDNgCjH9sjK1qq3gAIzs/8jF/MAQVwsoCg4xxz1FPpHwPCNsDwhxj864Exnvpr1q/Z+8Obdn95dwU2DvG3m7Xsc0J6Y/1A9dvNWj6/flDfukvfCghrIMRXhoYec6wfX73vv9NY/X+PH5fFIYeiMZCgAAAAAElFTkSuQmCC"
-
-[sub_resource type="Texture2D" id="EditableTexture_prompt_a"]
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAMAAABFNRROAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURQwSJqDFrV2aTv///wAAALPe/UYAAAAFdFJOU/////8A+7YOUwAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAOElEQVQYV3WOAQoAIAgD5/T/b461IiE8EDwGOlQHGmNDGK2FIJkkA8dSek1JTiam7Jlf7JN/l8YCiNsBhMUXzYkAAAAASUVORK5CYII="
 
 [sub_resource type="Texture2D" id="EditableTexture_migratory_bird"]
 script = ExtResource("editable_texture_script")
@@ -758,10 +585,6 @@ func _config_music(meta_name: String) -> AudioStream:
 shader = SubResource("Shader_palette")
 shader_parameter/palette = SubResource("EditableTexture_palette")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
-shader = SubResource("Shader_prompt_fill")
-shader_parameter/fill_ratio = 0.0
-
 [sub_resource type="CircleShape2D" id="CircleShape2D_footprint"]
 radius = 6.0
 
@@ -850,14 +673,6 @@ centered = false
 offset = Vector2(-16, -16)
 script = SubResource("GDScript_scarf")
 
-[node name="InteractPrompt" type="Sprite2D" parent="GameView/GameViewport" unique_id=1871861395]
-unique_name_in_owner = true
-z_index = 250
-z_as_relative = false
-texture_filter = 1
-material = SubResource("ShaderMaterial_prompt_fill")
-texture = SubResource("EditableTexture_prompt_a")
-script = SubResource("GDScript_prompt")
 
 [node name="DialogueBox" parent="GameView/GameViewport" unique_id=1685094322 instance=ExtResource("9_dialogue")]
 unique_name_in_owner = true
@@ -865,9 +680,6 @@ unique_name_in_owner = true
 [node name="OverheadTypewriter" parent="GameView/GameViewport" unique_id=1992303185 instance=ExtResource("12_overhead")]
 unique_name_in_owner = true
 
-[node name="Interaction" type="Node" parent="GameView/GameViewport" unique_id=1838989427]
-unique_name_in_owner = true
-script = SubResource("GDScript_interaction")
 
 [node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport" unique_id=515559498]
 unique_name_in_owner = true

@@ -36,12 +36,10 @@ script/source = "extends PlanetStory
 func _prepare_start() -> void:
 	player.flip_h = true
 	player.modulate.a = 1.0
-	has_crossed_sunset = true
 	planet.sky.commanded_daylight_phase = 0.0
 
 
 func _process(_delta: float) -> void:
-	super._process(_delta)
 	if not has_finished_opening or is_blocking_input:
 		return
 	var look_up_amount := Input.get_action_strength(&\"move_up\")
@@ -62,7 +60,7 @@ func _play_story() -> void:
 	player.can_move_right = true
 	is_blocking_input = false
 	has_finished_opening = true
-	var star_jar := await _interact(SurfaceProp.Kind.STAR_JAR)
+	var star_jar := await _interact(%StarJar as SurfaceProp)
 	await _overhead(\"他把它们锁进玻璃罐，自己从不抬头。\")
 	star_jar.is_consumed = true
 	await _depart(\"328。\")
@@ -92,8 +90,6 @@ texture_filter = 1
 position = Vector2(0, -87.36)
 texture = SubResource("EditableTexture_hunched_ledger_merchant")
 offset = Vector2(0, -11)
-script = ExtResource("3_surface_prop")
-kind = 13
 
 [node name="StarJar" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=770000002]
 unique_name_in_owner = true
@@ -104,8 +100,6 @@ rotation = 0.42
 texture = SubResource("EditableTexture_gold_star_glass_jar")
 offset = Vector2(0, -8)
 script = ExtResource("3_surface_prop")
-kind = 14
-dialogue_id = &"star_jar"
 
 [node name="PlayerTrigger" parent="Surface/StarJar" instance=ExtResource("19_trigger")]
 

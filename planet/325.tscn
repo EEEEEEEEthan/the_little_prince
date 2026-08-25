@@ -105,6 +105,13 @@ func play_ambient_one_shot() -> void:
 "
 
 
+[sub_resource type="GDScript" id="GDScript_king_face"]
+script/source = "extends SurfaceProp
+
+func _process(_delta: float) -> void:
+	flip_h = angle_difference(rotation, owner.player_angle) < 0.0
+"
+
 [sub_resource type="GDScript" id="GDScript_story"]
 script/source = "extends PlanetStory
 ## 325 号小行星：背面降落，路上可点环境；觐见时对上现有国王对话（无日落）。
@@ -159,7 +166,7 @@ func _play_story() -> void:
 	await _king(\"我的命令必须通情达理。\")
 	player.move_speed_scale = 1.0
 	is_blocking_input = false
-	var king := await _interact(SurfaceProp.Kind.KING)
+	var king := await _interact(%King as SurfaceProp)
 	await _king(\"我任命你为司法大臣。\")
 	await _prince(\"可是这儿没有人可以审判。\")
 	await _king(\"那可难说。\")
@@ -184,25 +191,24 @@ func _play_story() -> void:
 func accepts_interact(prop: SurfaceProp) -> bool:
 	if not is_active or is_blocking_input or prop.is_consumed:
 		return false
-	if _waiting_interact_kind >= 0:
-		return int(prop.kind) == _waiting_interact_kind
-	return prop.is_interactable() and prop.kind != SurfaceProp.Kind.KING
+	if not _waiting_props.is_empty():
+		return _waiting_props.has(prop)
+	return _is_ambient_prop(prop)
 
 
 func try_handle_interact(prop: SurfaceProp) -> bool:
-	if int(prop.kind) == _waiting_interact_kind:
+	if not _waiting_props.is_empty() and _waiting_props.has(prop):
 		return super.try_handle_interact(prop)
 	if not accepts_interact(prop):
 		return false
-	match prop.kind:
-		SurfaceProp.Kind.EDICT:
-			overhead.play_queued(\"诏上什么也没写。\")
-		SurfaceProp.Kind.THRONE:
-			_glance_up_at_empty_throne()
-		SurfaceProp.Kind.BORDER, SurfaceProp.Kind.CAPE, SurfaceProp.Kind.RAT_HOLE:
-			prop.play_ambient_one_shot()
-		_:
-			return false
+	if prop.name.begins_with(\"Edict\"):
+		overhead.play_queued(\"诏上什么也没写。\")
+	elif prop.name == \"Throne\":
+		_glance_up_at_empty_throne()
+	elif prop.name.begins_with(\"Border\") or prop.name == \"Cape\" or prop.name == \"RatHole\":
+		prop.play_ambient_one_shot()
+	else:
+		return false
 	return true
 
 
@@ -238,11 +244,7 @@ func _await_audience_keep_away() -> void:
 
 func _watch_rat_overhear() -> void:
 	var generation := _story_generation
-	var rat: SurfaceProp = null
-	for prop in planet.surface_props:
-		if prop.kind == SurfaceProp.Kind.RAT:
-			rat = prop
-			break
+	var rat: SurfaceProp = planet.get_node(\"Surface/Rat\") as SurfaceProp
 	var overhear_arc: float = WorldConstants.INTERACT_RANGE_PX * 2.0 / planet.radius
 	while (
 			is_inside_tree()
@@ -260,6 +262,16 @@ func _watch_rat_overhear() -> void:
 				overhead.play_queued(\"「我赦免你。」\")
 			return
 		await get_tree().process_frame
+
+
+func _is_ambient_prop(prop: SurfaceProp) -> bool:
+	return (
+			prop.name == \"Cape\"
+			or prop.name == \"Throne\"
+			or prop.name == \"RatHole\"
+			or prop.name.begins_with(\"Edict\")
+			or prop.name.begins_with(\"Border\")
+	)
 
 
 func _glance_up_at_empty_throne() -> void:
@@ -314,7 +326,7 @@ rotation = 0.22
 texture = SubResource("EditableTexture_crimson_cape_spread")
 offset = Vector2(0, -6)
 script = SubResource("GDScript_cape_hem")
-kind = 10
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Cape" instance=ExtResource("20_trigger")]
 shape = SubResource("CircleShape2D_cape_player_trigger")
@@ -326,7 +338,7 @@ position = Vector2(0, -104.832)
 texture = SubResource("EditableTexture_gold_spired_throne")
 offset = Vector2(0, -36)
 script = ExtResource("3_surface_prop")
-kind = 9
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Throne" instance=ExtResource("20_trigger")]
 shape = SubResource("CircleShape2D_throne_player_trigger")
@@ -338,9 +350,7 @@ texture_filter = 1
 position = Vector2(0, -104.832)
 texture = SubResource("EditableTexture_king")
 offset = Vector2(0, -52)
-script = ExtResource("3_surface_prop")
-kind = 4
-dialogue_id = &"king"
+script = SubResource("GDScript_king_face")
 
 [node name="PlayerTrigger" parent="Surface/King" instance=ExtResource("20_trigger")]
 shape = SubResource("CircleShape2D_king_player_trigger")
@@ -351,8 +361,6 @@ position = Vector2(0, 104.832)
 rotation = 3.1415927
 texture = SubResource("EditableTexture_rat")
 offset = Vector2(0, -5)
-script = ExtResource("3_surface_prop")
-kind = 5
 
 [node name="RatTrace1" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=410000020]
 texture_filter = 1
@@ -360,8 +368,6 @@ position = Vector2(-22.877448, 102.305281)
 rotation = 3.3615927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
-script = ExtResource("3_surface_prop")
-kind = 8
 
 [node name="RatTrace2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=410000021]
 texture_filter = 1
@@ -369,8 +375,6 @@ position = Vector2(28.970915, 100.749364)
 rotation = 2.8615927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
-script = ExtResource("3_surface_prop")
-kind = 8
 
 [node name="RatTrace3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=410000022]
 texture_filter = 1
@@ -378,8 +382,6 @@ position = Vector2(-48.409235, 92.985452)
 rotation = 3.6215927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
-script = ExtResource("3_surface_prop")
-kind = 8
 
 [node name="EdictL" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=410000030]
 texture_filter = 1
@@ -388,7 +390,7 @@ rotation = -1.15
 texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
 script = ExtResource("3_surface_prop")
-kind = 6
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/EdictL" instance=ExtResource("20_trigger")]
 
@@ -399,7 +401,7 @@ rotation = 1.22
 texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
 script = ExtResource("3_surface_prop")
-kind = 6
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/EdictR" instance=ExtResource("20_trigger")]
 
@@ -410,7 +412,7 @@ rotation = -2.05
 texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
 script = ExtResource("3_surface_prop")
-kind = 6
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/EdictL2" instance=ExtResource("20_trigger")]
 
@@ -421,7 +423,7 @@ rotation = 2.12
 texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
 script = ExtResource("3_surface_prop")
-kind = 6
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/EdictR2" instance=ExtResource("20_trigger")]
 
@@ -432,7 +434,7 @@ rotation = 0.95
 texture = SubResource("EditableTexture_scratched_border_lines")
 offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
-kind = 7
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Border1" instance=ExtResource("20_trigger")]
 
@@ -443,7 +445,7 @@ rotation = 1.02
 texture = SubResource("EditableTexture_scratched_border_lines")
 offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
-kind = 7
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Border2" instance=ExtResource("20_trigger")]
 
@@ -454,7 +456,7 @@ rotation = -0.92
 texture = SubResource("EditableTexture_scratched_border_lines")
 offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
-kind = 7
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Border3" instance=ExtResource("20_trigger")]
 
@@ -465,7 +467,7 @@ rotation = -1.0
 texture = SubResource("EditableTexture_scratched_border_lines")
 offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
-kind = 7
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Border4" instance=ExtResource("20_trigger")]
 
@@ -476,7 +478,7 @@ rotation = 1.85
 texture = SubResource("EditableTexture_scratched_border_lines")
 offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
-kind = 7
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Border5" instance=ExtResource("20_trigger")]
 
@@ -487,7 +489,7 @@ rotation = 1.92
 texture = SubResource("EditableTexture_scratched_border_lines")
 offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
-kind = 7
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Border6" instance=ExtResource("20_trigger")]
 
@@ -498,7 +500,7 @@ rotation = -1.88
 texture = SubResource("EditableTexture_scratched_border_lines")
 offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
-kind = 7
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Border7" instance=ExtResource("20_trigger")]
 
@@ -509,7 +511,7 @@ rotation = -1.96
 texture = SubResource("EditableTexture_scratched_border_lines")
 offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
-kind = 7
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/Border8" instance=ExtResource("20_trigger")]
 
@@ -521,7 +523,7 @@ rotation = 3.1415927
 texture = SubResource("EditableTexture_dark_soil_burrow")
 offset = Vector2(0, -4)
 script = SubResource("GDScript_rat_hole")
-kind = 19
+is_armed = true
 
 [node name="PlayerTrigger" parent="Surface/RatHole" instance=ExtResource("20_trigger")]
 

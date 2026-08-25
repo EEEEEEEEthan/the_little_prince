@@ -1,10 +1,17 @@
 [gd_scene format=3 uid="uid://cplyrtrgscn1"]
 
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
+
 [sub_resource type="GDScript" id="GDScript_player_trigger"]
 script/source = "extends Area2D
-## 玩家邻近检测：脚底 Area 与本触发器重叠即视为进入草地、可交互范围或日落。
+## 玩家邻近检测。InteractKind 只描述按键方式；头顶 A 键由本节点自己显示。
 
-@export var kind: WorldConstants.TriggerKind = WorldConstants.TriggerKind.INTERACT
+signal player_entered
+signal player_exited
+signal interacted
+
+@export var interact_kind: WorldConstants.InteractKind = WorldConstants.InteractKind.PRESS
+@export var long_press_seconds: float = 0.8
 @export var shape: Shape2D:
 	set(value):
 		shape = value
@@ -12,10 +19,149 @@ script/source = "extends Area2D
 			await ready
 		%CollisionShape2D.shape = shape
 
+var is_armed: bool = false
+var is_holding: bool = false
+var is_focused: bool = false:
+	set(value):
+		is_focused = value
+		if not is_node_ready():
+			await ready
+		if is_focused:
+			_show_prompt()
+			set_process(true)
+		else:
+			_hide_prompt()
+			set_process(false)
+
+var _hold_elapsed_seconds: float = 0.0
+var _player_is_inside: bool = false
+
 
 func hosted_surface_prop() -> SurfaceProp:
 	return get_parent() as SurfaceProp
+
+
+func notify_player_entered() -> void:
+	_player_is_inside = true
+	player_entered.emit()
+
+
+func notify_player_exited() -> void:
+	_player_is_inside = false
+	_clear_hold()
+	player_exited.emit()
+
+
+func _ready() -> void:
+	%Prompt.visible = false
+	set_process(false)
+
+
+func _process(delta: float) -> void:
+	if not is_focused:
+		return
+	_sync_prompt()
+	if interact_kind == WorldConstants.InteractKind.NONE:
+		return
+	var required_hold_seconds := 0.0
+	if interact_kind == WorldConstants.InteractKind.LONG_PRESS:
+		required_hold_seconds = long_press_seconds
+		var story := _planet_story()
+		if story != null and story.skip_cinematics:
+			required_hold_seconds = 0.0
+	if required_hold_seconds > 0.0:
+		if Input.is_action_pressed(&\"interact\"):
+			if _hold_elapsed_seconds <= 0.0:
+				_planet().angular_velocity = 0.0
+			is_holding = true
+			_hold_elapsed_seconds += delta
+			%Prompt.hold_fill_ratio = _hold_elapsed_seconds / required_hold_seconds
+			if _hold_elapsed_seconds >= required_hold_seconds:
+				_clear_hold()
+				interacted.emit()
+		else:
+			_clear_hold()
+		return
+	_clear_hold()
+	if Input.is_action_just_pressed(&\"interact\"):
+		interacted.emit()
+
+
+func _show_prompt() -> void:
+	%Prompt.hold_fill_ratio = 0.0
+	%Prompt.visible = true
+	_sync_prompt()
+
+
+func _hide_prompt() -> void:
+	%Prompt.visible = false
+	%Prompt.hold_fill_ratio = 0.0
+	_clear_hold()
+
+
+func _clear_hold() -> void:
+	is_holding = false
+	_hold_elapsed_seconds = 0.0
+	if is_node_ready():
+		%Prompt.hold_fill_ratio = 0.0
+
+
+func _sync_prompt() -> void:
+	%Prompt.global_position = to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+	%Prompt.global_rotation = 0.0
+	if %Prompt.hold_fill_ratio > 0.0:
+		%Prompt.offset = Vector2.ZERO
+	else:
+		%Prompt.offset = Vector2(0.0, sin(Time.get_ticks_msec() * 0.006) * 1.5)
+
+
+func _planet() -> Node:
+	var prop := hosted_surface_prop()
+	if prop != null:
+		return prop.owner
+	return owner
+
+
+func _planet_story() -> PlanetStory:
+	return _planet().get_node(\"%Story\") as PlanetStory
 "
+
+[sub_resource type="GDScript" id="GDScript_prompt"]
+script/source = "extends Sprite2D
+## 手柄 A 键提示：跟随触发器头顶，自身保持屏幕朝向。
+
+var hold_fill_ratio: float = 0.0:
+	set(value):
+		hold_fill_ratio = clampf(value, 0.0, 1.0)
+		if not is_node_ready():
+			await ready
+		(material as ShaderMaterial).set_shader_parameter(&\"fill_ratio\", hold_fill_ratio)
+"
+
+[sub_resource type="Shader" id="Shader_prompt_fill"]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+uniform float fill_ratio : hint_range(0.0, 1.0) = 0.0;
+
+void fragment() {
+	vec4 texel = texture(TEXTURE, UV);
+	vec2 from_center = UV * 2.0 - 1.0;
+	float angle_turns = atan(-from_center.x, -from_center.y) / TAU + 0.5;
+	float filled = step(angle_turns, fill_ratio);
+	float holding = 1.0 - step(fill_ratio, 0.0);
+	float brightness = mix(1.0, mix(0.35, 1.0, filled), holding);
+	COLOR = vec4(texel.rgb * brightness, texel.a);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
+shader = SubResource("Shader_prompt_fill")
+shader_parameter/fill_ratio = 0.0
+
+[sub_resource type="Texture2D" id="EditableTexture_prompt_a"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAMAAABFNRROAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURQwSJqDFrV2aTv///wAAALPe/UYAAAAFdFJOU/////8A+7YOUwAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAOElEQVQYV3WOAQoAIAgD5/T/b461IiE8EDwGOlQHGmNDGK2FIJkkA8dSek1JTiam7Jlf7JN/l8YCiNsBhMUXzYkAAAAASUVORK5CYII="
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_trigger"]
 radius = 16.0
@@ -32,3 +178,13 @@ shape = SubResource("CircleShape2D_trigger")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 unique_name_in_owner = true
 shape = SubResource("CircleShape2D_trigger")
+
+[node name="Prompt" type="Sprite2D" parent="."]
+unique_name_in_owner = true
+z_index = 250
+z_as_relative = false
+texture_filter = 1
+material = SubResource("ShaderMaterial_prompt_fill")
+texture = SubResource("EditableTexture_prompt_a")
+script = SubResource("GDScript_prompt")
+visible = false

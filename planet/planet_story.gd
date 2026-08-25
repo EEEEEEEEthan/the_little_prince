@@ -37,25 +37,19 @@ var flock:
 		return _shell_node(&"MigratoryFlock")
 
 var _story_generation: int = 0
-var _waiting_interact_kind: int = -1
+var _waiting_props: Array[SurfaceProp] = []
 var _dialogue_closed_early: bool = false
 var _story_tween: Tween
 
 
 func _ready() -> void:
+	if not planet.is_node_ready():
+		await planet.ready
+	for prop in planet.surface_props:
+		prop.interacted.connect(try_handle_interact.bind(prop))
 	if planet.owner == null:
 		return
 	overhead.play_on_ready = false
-
-
-func _process(_delta: float) -> void:
-	if not is_active or has_crossed_sunset or not planet.is_node_ready():
-		return
-	try_first_sunset_narration()
-
-
-func _shell_node(unique_name: StringName) -> Node:
-	return planet.owner.get_node("%" + String(unique_name))
 
 
 func start() -> void:
@@ -76,7 +70,7 @@ func start() -> void:
 	is_active = true
 	has_finished_opening = false
 	has_crossed_sunset = false
-	_waiting_interact_kind = -1
+	_waiting_props.clear()
 	_dialogue_closed_early = false
 	player.can_move_left = false
 	player.can_move_right = false
@@ -90,28 +84,16 @@ func start() -> void:
 func accepts_interact(prop: SurfaceProp) -> bool:
 	if not is_active or is_blocking_input or prop.is_consumed:
 		return false
-	return int(prop.kind) == _waiting_interact_kind
-
-
-func interact_hold_seconds(_prop: SurfaceProp) -> float:
-	return 0.0
+	return _waiting_props.has(prop)
 
 
 func try_handle_interact(prop: SurfaceProp) -> bool:
 	if not accepts_interact(prop):
 		return false
 	_lock_input()
-	_waiting_interact_kind = -1
+	_waiting_props.clear()
 	prop_interacted.emit(prop)
 	return true
-
-
-func try_first_sunset_narration() -> void:
-	if has_crossed_sunset:
-		return
-	if player.has_overlapping_trigger_kind(WorldConstants.TriggerKind.SUNSET):
-		has_crossed_sunset = true
-		sunset_crossed.emit()
 
 
 func _prepare_start() -> void:
@@ -120,6 +102,10 @@ func _prepare_start() -> void:
 
 func _play_story() -> void:
 	pass
+
+
+func _shell_node(unique_name: StringName) -> Node:
+	return planet.owner.get_node("%" + String(unique_name))
 
 
 func _fade_in_from_black() -> void:
@@ -189,14 +175,24 @@ func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 	await _halt_if_stale(generation)
 
 
-func _interact(kind: SurfaceProp.Kind) -> SurfaceProp:
+func _interact(prop: SurfaceProp) -> SurfaceProp:
+	var props: Array[SurfaceProp] = []
+	props.append(prop)
+	return await _interact_any(props)
+
+
+func _interact_any(props: Array[SurfaceProp]) -> SurfaceProp:
 	var generation := _story_generation
 	_end_dialogue()
-	_waiting_interact_kind = int(kind)
-	var prop: SurfaceProp = await prop_interacted
-	_waiting_interact_kind = -1
+	_waiting_props = props.duplicate()
+	for prop in props:
+		prop.is_armed = true
+	var result: SurfaceProp = await prop_interacted
+	for prop in props:
+		prop.is_armed = false
+	_waiting_props.clear()
 	await _halt_if_stale(generation)
-	return prop
+	return result
 
 
 func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float) -> void:

@@ -15,7 +15,6 @@ texture = SubResource("EditableTexture_baobab")
 offset = Vector2(0, -13.44)
 hframes = 4
 script = ExtResource("1_surface_prop")
-kind = 2
-dialogue_id = &"baobab_shoot"
+interact_kind = 2
 
 [node name="PlayerTrigger" parent="." instance=ExtResource("2_trigger")]
