@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://csurfprop001"]
+[gd_scene load_steps=3 format=3 uid="uid://csurfpropbase"]
 
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="1_surface_prop"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="2_player_trigger"]

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
-[ext_resource type="PackedScene" uid="uid://csurfprop001" path="res://planet/surface_prop.tscn" id="4_prop_scene"]
+[ext_resource type="PackedScene" uid="uid://csurfpropbase" path="res://planet/surface_prop.tscn" id="4_prop_scene"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://cciq03byi16e0" path="res://audio/rapid_lamp_duty_tick.ogg" id="18_day_music"]
 
