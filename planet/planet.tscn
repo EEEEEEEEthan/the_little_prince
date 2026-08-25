@@ -518,7 +518,7 @@ script = SubResource("GDScript_sky")
 
 [node name="SunsetTrigger" parent="Sky" unique_id=1847000005 instance=ExtResource("16_player_trigger")]
 unique_name_in_owner = true
-position = Vector2(68, 56.51999)
+position = Vector2(76, 52.51999)
 interact_kind = 0
 
 [node name="Clouds" type="Node2D" parent="." unique_id=1847000001]
