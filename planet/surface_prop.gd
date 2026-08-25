@@ -6,6 +6,26 @@ signal player_entered
 signal player_exited
 signal interacted
 
+@export var is_armed: bool = false:
+	set(value):
+		is_armed = value
+		if not is_node_ready():
+			await ready
+		var trigger := _player_trigger()
+		if trigger == null:
+			return
+		trigger.is_armed = is_armed
+
+@export var interact_kind: WorldConstants.InteractKind = WorldConstants.InteractKind.PRESS:
+	set(value):
+		interact_kind = value
+		if not is_node_ready():
+			await ready
+		var trigger := _player_trigger()
+		if trigger == null:
+			return
+		trigger.interact_kind = interact_kind
+
 var is_consumed: bool = false:
 	set(value):
 		is_consumed = value
@@ -16,7 +36,7 @@ var is_consumed: bool = false:
 			return
 		trigger.monitorable = not is_consumed
 		if is_consumed:
-			trigger.is_armed = false
+			is_armed = false
 
 
 func _ready() -> void:
@@ -28,24 +48,9 @@ func _ready() -> void:
 	trigger.interacted.connect(interacted.emit)
 
 
-func arm_interact() -> void:
-	_player_trigger().is_armed = true
-
-
-func disarm_interact() -> void:
-	_player_trigger().is_armed = false
-
-
-func set_interact_kind(kind: WorldConstants.InteractKind) -> void:
-	_player_trigger().interact_kind = kind
-
-
 func play_ambient_one_shot() -> void:
 	pass
 
 
 func _player_trigger() -> Area2D:
-	for child in get_children():
-		if child.has_method("hosted_surface_prop"):
-			return child
-	return null
+	return get_node_or_null("PlayerTrigger") as Area2D

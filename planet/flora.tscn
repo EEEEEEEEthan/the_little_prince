@@ -46,9 +46,9 @@ texture = SubResource("EditableTexture_flora")
 offset = Vector2(0, -8)
 hframes = 6
 script = ExtResource("1_surface_prop")
+interact_kind = 0
 
 [node name="PlayerTrigger" parent="." instance=ExtResource("2_trigger")]
 position = Vector2(0, -8)
 groups = PackedStringArray("grass")
-interact_kind = 0
 shape = SubResource("CircleShape2D_flora_player_trigger")

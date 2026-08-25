@@ -186,10 +186,10 @@ func _interact_any(props: Array[SurfaceProp]) -> SurfaceProp:
 	_end_dialogue()
 	_waiting_props = props.duplicate()
 	for prop in props:
-		prop.arm_interact()
+		prop.is_armed = true
 	var result: SurfaceProp = await prop_interacted
 	for prop in props:
-		prop.disarm_interact()
+		prop.is_armed = false
 	_waiting_props.clear()
 	await _halt_if_stale(generation)
 	return result

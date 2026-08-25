@@ -145,9 +145,9 @@ func _play_story() -> void:
 	else:
 		await _wait(0.2)
 		is_blocking_input = false
-		_rose_prop().set_interact_kind(WorldConstants.InteractKind.LONG_PRESS)
+		_rose_prop().interact_kind = WorldConstants.InteractKind.LONG_PRESS
 		await _interact_rose()
-		_rose_prop().set_interact_kind(WorldConstants.InteractKind.PRESS)
+		_rose_prop().interact_kind = WorldConstants.InteractKind.PRESS
 		_show_glass()
 	await _overhead(\"她安静了下来...\")
 	player.can_move_right = true
