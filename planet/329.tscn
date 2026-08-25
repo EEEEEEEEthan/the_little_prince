@@ -86,7 +86,7 @@ metadata/day_music = ExtResource("18_day_music")
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
 star_rotation_speed = 1.2
-zenith_gradient = SubResource("GradientTexture1D_gray_day_night_zenith")
+instance_shader_parameters/zenith_gradient = SubResource("GradientTexture1D_gray_day_night_zenith")
 
 [node name="SunsetTrigger" parent="Sky" index="0"]
 position = Vector2(42.81108, 21.813336)

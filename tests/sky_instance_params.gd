@@ -1,5 +1,5 @@
 extends SceneTree
-## 天空材质应共享；相位走 instance uniform。canvas_item 不能 instance sampler2D。
+## 天空材质应共享；相位与天顶渐变走 instance uniform。
 
 
 func _init() -> void:
@@ -27,7 +27,10 @@ func _run() -> void:
 		push_error("[sky_instance_params] phase 未按实例写入：%s / %s" % [default_phase, king_phase])
 		quit(1)
 		return
-	if default_sky.zenith_gradient == king_sky.zenith_gradient:
+	if (
+			default_sky.get_instance_shader_parameter(&"zenith_gradient")
+			== king_sky.get_instance_shader_parameter(&"zenith_gradient")
+	):
 		push_error("[sky_instance_params] zenith_gradient 应按星球实例区分")
 		quit(1)
 		return

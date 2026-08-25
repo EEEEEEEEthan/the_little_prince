@@ -66,7 +66,7 @@ metadata/day_music = ExtResource("18_day_music")
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
 star_rotation_speed = 0.0
-zenith_gradient = SubResource("GradientTexture1D_amber_evening_zenith")
+instance_shader_parameters/zenith_gradient = SubResource("GradientTexture1D_amber_evening_zenith")
 
 [node name="Clouds" parent="." index="1"]
 modulate = Color(0.82, 0.48, 0.22, 1)
