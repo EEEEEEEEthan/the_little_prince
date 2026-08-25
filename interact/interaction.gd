@@ -9,6 +9,7 @@ var planet: Planet:
 		story = value.get_node("%Story") as PlanetStory
 @onready var dialogue: DialogueBox = %DialogueBox
 @onready var prompt: InteractPrompt = %InteractPrompt
+@onready var player: Player = %Player
 
 var _focus: SurfaceProp
 var _hold_elapsed_seconds: float = 0.0
@@ -27,9 +28,9 @@ func _process(delta: float) -> void:
 		_set_focus(null)
 		return
 	if story.is_active:
-		_set_focus(planet.find_nearest_interactable(story.accepts_interact))
+		_set_focus(player.find_nearest_interactable(story.accepts_interact))
 	else:
-		_set_focus(planet.find_nearest_interactable())
+		_set_focus(player.find_nearest_interactable())
 	if _focus == null:
 		_clear_hold()
 		return

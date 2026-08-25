@@ -37,7 +37,6 @@ var flock: MigratoryFlock:
 		return _shell_node(&"MigratoryFlock") as MigratoryFlock
 
 var _story_generation: int = 0
-var _last_sky_phase: float = SkyPhase.NOON_PHASE
 var _waiting_interact_kind: int = -1
 var _dialogue_closed_early: bool = false
 var _story_tween: Tween
@@ -52,7 +51,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not is_active or has_crossed_sunset or not planet.is_node_ready():
 		return
-	try_first_sunset_narration(SkyPhase.angle_to_phase(planet.sky.rotation))
+	try_first_sunset_narration()
 
 
 func _shell_node(unique_name: StringName) -> Node:
@@ -77,7 +76,6 @@ func start() -> void:
 	is_active = true
 	has_finished_opening = false
 	has_crossed_sunset = false
-	_last_sky_phase = SkyPhase.angle_to_phase(planet.sky.rotation)
 	_waiting_interact_kind = -1
 	_dialogue_closed_early = false
 	player.can_move_left = false
@@ -108,13 +106,12 @@ func try_handle_interact(prop: SurfaceProp) -> bool:
 	return true
 
 
-func try_first_sunset_narration(phase: float) -> void:
+func try_first_sunset_narration() -> void:
 	if has_crossed_sunset:
 		return
-	if _last_sky_phase < SkyPhase.SUNSET_PHASE and phase >= SkyPhase.SUNSET_PHASE:
+	if player.has_overlapping_trigger_kind(PlayerTrigger.Kind.SUNSET):
 		has_crossed_sunset = true
 		sunset_crossed.emit()
-	_last_sky_phase = phase
 
 
 func _prepare_start() -> void:

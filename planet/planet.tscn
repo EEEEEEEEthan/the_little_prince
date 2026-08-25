@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
 [ext_resource type="Texture2D" uid="uid://cwlvnpufffrm" path="res://planet/white_lavender_puff_frames.png" id="14_cloud_tex"]
 [ext_resource type="Shader" uid="uid://bcloudframeshd" path="res://planet/cloud_frame.gdshader" id="15_cloud_shader"]
+[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="16_player_trigger"]
 
 
 
@@ -53,6 +54,15 @@ func daylight_phase() -> float:
 	if is_nan(commanded_daylight_phase):
 		return SkyPhase.angle_to_phase(rotation)
 	return commanded_daylight_phase
+
+
+func _ready() -> void:
+	var planet_radius := (owner as Planet).radius
+	var sunset_angle := SkyPhase.phase_to_angle(SkyPhase.SUNSET_PHASE)
+	%SunsetTrigger.position = Vector2(
+			-planet_radius * sin(sunset_angle),
+			-planet_radius * cos(sunset_angle)
+	)
 
 
 func _update_daylight() -> void:
@@ -226,6 +236,10 @@ texture_filter = 1
 material = SubResource("ShaderMaterial_sky")
 texture = ExtResource("5_starfield")
 script = SubResource("GDScript_sky")
+
+[node name="SunsetTrigger" parent="Sky" unique_id=1847000005 instance=ExtResource("16_player_trigger")]
+unique_name_in_owner = true
+kind = 2
 
 [node name="Clouds" type="Node2D" parent="." unique_id=1847000001]
 unique_name_in_owner = true

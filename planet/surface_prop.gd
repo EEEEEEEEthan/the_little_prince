@@ -30,27 +30,15 @@ enum Kind {
 @export var variant: int = 0
 ## 对话目录 id；空则按 kind 回落。装饰性地物无对话。
 @export var dialogue_id: StringName = &""
-var is_consumed: bool = false
-
-
-func _ready() -> void:
-	if kind != Kind.FLORA:
-		return
-	var trigger := Area2D.new()
-	trigger.name = "GrassClumpTrigger"
-	trigger.monitoring = false
-	trigger.monitorable = true
-	trigger.input_pickable = false
-	trigger.collision_layer = 0
-	trigger.set_collision_layer_value(WorldConstants.FLORA_GRASS_PHYSICS_LAYER_INDEX, true)
-	trigger.collision_mask = 0
-	trigger.position = offset
-	var collision_shape := CollisionShape2D.new()
-	var circle := CircleShape2D.new()
-	circle.radius = WorldConstants.FLORA_GRASS_TRIGGER_RADIUS
-	collision_shape.shape = circle
-	trigger.add_child(collision_shape)
-	add_child(trigger)
+var is_consumed: bool = false:
+	set(value):
+		is_consumed = value
+		if not is_node_ready():
+			await ready
+		for child in get_children():
+			var trigger := child as PlayerTrigger
+			if trigger != null:
+				trigger.monitorable = not is_consumed
 
 
 func get_dialogue_id() -> StringName:

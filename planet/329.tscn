@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://cciq03byi16e0" path="res://audio/rapid_lamp_duty_tick.ogg" id="18_day_music"]
+[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="19_trigger"]
 
 
 [sub_resource type="Texture2D" id="EditableTexture_black_coat_lamplighter"]
@@ -136,6 +137,8 @@ hframes = 2
 script = ExtResource("3_surface_prop")
 kind = 16
 dialogue_id = &"street_lamp"
+
+[node name="PlayerTrigger" parent="Surface/StreetLamp" instance=ExtResource("19_trigger")]
 
 [node name="Duty" type="Node" parent="Surface/StreetLamp"]
 script = SubResource("GDScript_lamp_duty")
