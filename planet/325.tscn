@@ -87,12 +87,6 @@ func _process(_delta: float) -> void:
 	scale.x = -1 if angle_difference(rotation, owner.player_angle) > 0.0 else 1
 "
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_nq3ki"]
-radius = 71.53
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_q6x0b"]
-radius = 46.96
-
 [sub_resource type="Texture2D" id="Texture2D_pfy3u"]
 resource_local_to_scene = false
 resource_name = ""
@@ -134,14 +128,29 @@ func _play_story() -> void:
 	await _await_king()
 
 func _await_king() -> void:
-	await %KingTrigger1.player_entered
+	await %TriggerHello.player_entered
 	await _king(\"啊，来了一个臣民\")
 	await _overhead(\"小王子愣了一下\")
+	await _king(\"靠近些，让我好好看看你。\")
+	is_blocking_input = false
+	await %TriggerSleepy.player_entered
+	await _prince(\"陛下~~哈~哈~~啊~下\")
+	await _overhead(\"小王子不小心打了个哈欠\")
+	await _king(\"在一个国王面前打哈欠是违反礼节的。我禁止你打哈欠。\")
+	await _prince(\"对不起，我实在忍不住。我长途跋涉来到这里，还没有睡觉呢。\")
+	await _king(\"那好吧，我命令你打哈欠。好些年来我没有看见过任何人打哈欠。\")
+	await _king(\"对于我来说，打哈欠倒是新奇的事。\")
+	await _king(\"来吧，再打个哈欠！这是命令。\")
+	await _prince(\"这让我有点紧张。。。我打不出来了。。。\")
+	await _overhead(\"国王有点生气\")
+	await _king(\"那我命令你忽而打哈欠，忽而不打哈欠！\")
 	is_blocking_input = false
 
 
 func _king(text: String) -> void:
+	%King.frame = 1
 	await _line(KING_SPEAKER, text, king_portrait)
+	%King.frame = 0
 "
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
@@ -151,7 +160,6 @@ radius = 104.832
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
 material = SubResource("ShaderMaterial_nq3ki")
-star_rotation_speed = 0.0
 zenith_gradient = SubResource("GradientTexture1D_king_zenith")
 
 [node name="SunsetTrigger" parent="Sky" index="0" unique_id=1847000005]
@@ -171,15 +179,15 @@ offset = Vector2(0, -18.305)
 hframes = 2
 script = SubResource("GDScript_king_face")
 
-[node name="KingTrigger1" parent="Surface/King" index="0" unique_id=2146735862 instance=ExtResource("3_r860q")]
+[node name="TriggerHello" parent="Surface/King" index="0" unique_id=2146735862 instance=ExtResource("3_r860q")]
 unique_name_in_owner = true
+position = Vector2(-89, 44.000008)
 interact_kind = 0
-shape = SubResource("CircleShape2D_nq3ki")
 
-[node name="KingTrigger2" parent="Surface/King" index="1" unique_id=308360173 instance=ExtResource("3_r860q")]
+[node name="TriggerSleepy" parent="Surface/King" index="1" unique_id=1932765652 instance=ExtResource("3_r860q")]
 unique_name_in_owner = true
+position = Vector2(-35, 3.9999924)
 interact_kind = 0
-shape = SubResource("CircleShape2D_q6x0b")
 
 [node name="Sprite2D" type="Sprite2D" parent="Surface/King" index="2" unique_id=1228973905]
 position = Vector2(-43, 16.000004)
@@ -189,6 +197,16 @@ texture = SubResource("Texture2D_pfy3u")
 [node name="Sprite2D2" type="Sprite2D" parent="Surface/King" index="3" unique_id=227292309]
 position = Vector2(-84.000015, 51.000015)
 rotation = 5.4609914
+texture = SubResource("Texture2D_pfy3u")
+
+[node name="Sprite2D3" type="Sprite2D" parent="Surface/King" index="4" unique_id=1756424139]
+position = Vector2(-101.99999, 105.000015)
+rotation = 4.7998023
+texture = SubResource("Texture2D_pfy3u")
+
+[node name="Sprite2D4" type="Sprite2D" parent="Surface/King" index="5" unique_id=1681110654]
+position = Vector2(-95.999985, 143.00003)
+rotation = 4.4953012
 texture = SubResource("Texture2D_pfy3u")
 
 [node name="Body" parent="." index="3" unique_id=1433111694]
