@@ -1,5 +1,5 @@
 extends SceneTree
-## 无头：325 小老鼠四次交互后跑掉。
+## 无头：325 小老鼠三次交互后跑掉。
 
 
 func _init() -> void:
@@ -31,13 +31,13 @@ func _begin() -> void:
 		push_error("老鼠 interacted 未接到剧情")
 		quit(1)
 		return
-	for squeak_index in 4:
+	for squeak_index in 3:
 		mouse.interacted.emit()
 		while story.is_blocking_input:
 			await process_frame
 	await create_timer(0.7).timeout
 	if not mouse.is_consumed or mouse.visible:
-		push_error("第四次后小老鼠应跑掉")
+		push_error("第三次后小老鼠应跑掉")
 		quit(1)
 		return
 	print("[mouse_joke] 通过")
