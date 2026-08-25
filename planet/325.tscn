@@ -276,7 +276,6 @@ func _glance_up_at_empty_throne() -> void:
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 position = Vector2(128, 301.952)
 radius = 104.832
-spawn_on_opposite_side = true
 audience_keep_away_arc = 0.70
 
 [node name="Config" parent="." index="5"]
