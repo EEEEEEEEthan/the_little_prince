@@ -241,6 +241,10 @@ metadata/day_music = ExtResource("20_day_music")
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
 
+[node name="SunsetTrigger" parent="Sky" index="0"]
+position = Vector2(82.026425, 30.057198)
+rotation = -0.12
+
 [node name="Volcano" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320]
 texture_filter = 1
 position = Vector2(-60.053728, 61.632393)
