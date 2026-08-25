@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="18_run_shell"]
 [ext_resource type="PackedScene" uid="uid://cbaobabtscn01" path="res://planet/baobab.tscn" id="19_baobab"]
 [ext_resource type="PackedScene" uid="uid://cfloratscn001" path="res://planet/flora.tscn" id="21_flora"]
-[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="22_trigger"]
+[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="22_trigger"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="20_day_music"]
 
 
