@@ -43,6 +43,8 @@ var _story_tween: Tween
 
 
 func _ready() -> void:
+	if not planet.is_node_ready():
+		await planet.ready
 	for prop in planet.surface_props:
 		prop.interacted.connect(try_handle_interact.bind(prop))
 	if planet.owner == null:
