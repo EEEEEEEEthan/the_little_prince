@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://cfloratscn001" path="res://planet/flora.tscn" id="21_flora"]
 [ext_resource type="AudioStream" uid="uid://b7a21m4k1j5fq" path="res://audio/light_glass_rim_clink.wav" id="23_glass_rim_clink"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
+[ext_resource type="Texture2D" uid="uid://crosebust0001" path="res://ui/rose.png" id="rose_portrait"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -103,6 +104,9 @@ script/source = "extends PlanetStory
 ## B612 故乡剧情：一条协程串起对白、侧写、交互与离星。
 
 const UPROOT_A: AudioStream = preload(\"res://audio/sfx_exp_short_hard10.wav\")
+const ROSE_SPEAKER := \"玫瑰\"
+
+@export var rose_portrait: Texture2D
 
 var _uproot_count: int = 0
 
@@ -237,7 +241,7 @@ func try_handle_interact(prop: SurfaceProp) -> bool:
 
 
 func _rose(text: String) -> void:
-	await _line(DialogueCatalog.ROSE_SPEAKER, text, DialogueCatalog.ROSE_PORTRAIT)
+	await _line(ROSE_SPEAKER, text, rose_portrait)
 
 
 func _wait_move_right() -> void:
@@ -924,6 +928,7 @@ autoplay = "default"
 [node name="Story" parent="." index="4" unique_id=1847000004]
 script = SubResource("GDScript_story")
 auto_start = true
+rose_portrait = ExtResource("rose_portrait")
 
 [node name="Config" parent="." index="5" unique_id=1313635981]
 metadata/run_shell_scene = ExtResource("18_run_shell")

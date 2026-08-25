@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_iei5c"]
 [ext_resource type="FontFile" uid="uid://b8w2t37l8urid" path="res://ui/fonts/fusion-pixel-10px-zh_hans.woff2" id="2_font"]
 [ext_resource type="AudioStream" uid="uid://cednuam573usk" path="res://ui/typewriter.wav" id="3_blip"]
-[ext_resource type="Texture2D" uid="uid://vw3ouaa84vea" path="res://ui/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png" id="4_character_busts"]
+[ext_resource type="Texture2D" uid="uid://cprincebust01" path="res://ui/prince.png" id="4_prince_portrait"]
 
 [sub_resource type="GDScript" id="GDScript_dialogue"]
 script/source = "extends CanvasLayer
@@ -11,6 +11,7 @@ script/source = "extends CanvasLayer
 
 signal closed
 
+const PRINCE_SPEAKER := \"小王子\"
 const TYPEWRITER_INTERVAL := 0.045
 const TYPEWRITER_FAST_INTERVAL := 0.012
 const TYPEWRITER_VOLUME_DB := -14.0
@@ -96,7 +97,7 @@ func close() -> void:
 
 
 func _show_line(line: DialogueLine) -> void:
-	var portrait_on_left := line.speaker == DialogueCatalog.PRINCE_SPEAKER
+	var portrait_on_left := line.speaker == PRINCE_SPEAKER
 	const panel_aligned_edge_inset := 4.0
 	const panel_shrunk_edge_inset := panel_aligned_edge_inset + 32.0
 	%Panel.offset_left = (
@@ -171,10 +172,6 @@ texture_margin_right = 8.0
 texture_margin_bottom = 6.0
 region_rect = Rect2(0, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_prince"]
-atlas = ExtResource("4_character_busts")
-region = Rect2(0, 0, 32, 32)
-
 [sub_resource type="GDScript" id="GDScript_continue_triangle"]
 script/source = "extends Control
 
@@ -230,7 +227,7 @@ texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 0
-texture = SubResource("AtlasTexture_prince")
+texture = ExtResource("4_prince_portrait")
 expand_mode = 1
 stretch_mode = 5
 

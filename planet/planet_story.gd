@@ -11,6 +11,7 @@ const EPILOGUE_HOLD_SECONDS := 1.8
 const LIFT_DURATION_SECONDS := 2.4
 const LIFT_HALFWAY_OVERHEAD_EXTRA_SECONDS := 0.5
 const DEPARTURE_BLACKOUT_SECONDS := 1.2
+const PRINCE_SPEAKER := "小王子"
 
 @export var auto_start: bool = true
 
@@ -119,7 +120,7 @@ func _fade_in_from_black() -> void:
 
 
 func _prince(text: String) -> void:
-	await _line(DialogueCatalog.PRINCE_SPEAKER, text, DialogueCatalog.PRINCE_PORTRAIT)
+	await _line(PRINCE_SPEAKER, text, %Config.prince_portrait)
 
 
 func _overhead(display_text: String) -> void:
