@@ -63,7 +63,6 @@ const META_OPENING_DAY_MUSIC := \"opening_day_music\"
 
 
 func _ready() -> void:
-	_layout_world()
 	planet.teleport_player(planet.spawn_angle)
 	var story := planet.get_node(\"%Story\") as PlanetStory
 	if story.auto_start:
@@ -86,7 +85,6 @@ func replace_planet(next_planet: Node2D) -> void:
 	interaction.planet = next_planet
 	game_viewport.remove_child(previous_planet)
 	previous_planet.free()
-	_layout_world()
 	next_planet.teleport_player(next_planet.spawn_angle)
 	player.modulate.a = 1.0
 	%GameCamera.offset = Vector2.ZERO
@@ -108,16 +106,6 @@ func _input(event: InputEvent) -> void:
 	if joy_button != null and Input.is_joy_button_pressed(joy_button.device, joy_button.button_index):
 		return
 	dialogue.mark_holding(false)
-
-
-func _layout_world() -> void:
-	var viewport_size := Vector2(game_viewport.size)
-	var apex_y := viewport_size.y * WorldConstants.APEX_Y_RATIO
-	planet.global_position = Vector2(
-		viewport_size.x * 0.5, apex_y + planet.radius
-	)
-	player.global_position = planet.apex_global_position()
-
 "
 
 [sub_resource type="GDScript" id="GDScript_player"]
@@ -134,16 +122,6 @@ var move_speed_scale: float = 1.0
 var _anim_time: float = 0.0
 var _was_moving: bool = false
 var _last_walk_frame_index: int = -1
-
-func _ready() -> void:
-	hframes = WorldConstants.PLAYER_SPRITE_FRAME_COUNT
-	vframes = 1
-	scale = Vector2.ONE
-	offset = Vector2(
-		0.0,
-		-float(WorldConstants.PLAYER_SPRITE_HEIGHT) * 0.5 + WorldConstants.PLAYER_VISUAL_Y_OFFSET
-	)
-	frame = 0
 
 func _physics_process(delta: float) -> void:
 	var direction := 0.0
@@ -246,9 +224,6 @@ var _frame_texture: ImageTexture
 
 
 func _ready() -> void:
-	centered = false
-	offset = Vector2(FRAME_ORIGIN)
-	texture_filter = TEXTURE_FILTER_NEAREST
 	_frame_image = Image.create(FRAME_WIDTH, FRAME_HEIGHT, false, Image.FORMAT_RGBA8)
 	_frame_texture = ImageTexture.create_from_image(_frame_image)
 	texture = _frame_texture
@@ -841,8 +816,10 @@ anchor_mode = 0
 [node name="Player" type="Sprite2D" parent="GameView/GameViewport" unique_id=232581758]
 unique_name_in_owner = true
 z_index = 200
+position = Vector2(128, 197.12)
 texture_filter = 1
 texture = SubResource("EditableTexture_prince")
+offset = Vector2(0, -7)
 flip_h = true
 hframes = 6
 script = SubResource("GDScript_player")
@@ -867,6 +844,7 @@ unique_name_in_owner = true
 z_index = 1
 texture_filter = 1
 centered = false
+offset = Vector2(-16, -16)
 script = SubResource("GDScript_scarf")
 
 [node name="InteractPrompt" type="Sprite2D" parent="GameView/GameViewport" unique_id=1871861395]

@@ -77,10 +77,8 @@ func _play_story() -> void:
 "
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
+position = Vector2(128, 245.168)
 radius = 48.048
-body_texture = SubResource("EditableTexture_ash_gray_mottled_disk")
-star_rotation_speed = 1.2
-zenith_gradient = SubResource("GradientTexture1D_gray_day_night_zenith")
 
 [node name="Config" parent="." index="5"]
 process_mode = 4
@@ -89,9 +87,17 @@ metadata/day_music = ExtResource("18_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
+star_rotation_speed = 1.2
+zenith_gradient = SubResource("GradientTexture1D_gray_day_night_zenith")
+
+[node name="SunsetTrigger" parent="Sky" index="0"]
+position = Vector2(42.81108, 21.813336)
 
 [node name="Clouds" parent="." index="1"]
 modulate = Color(0.55, 0.55, 0.55, 0.4)
+
+[node name="Body" parent="." index="3"]
+texture = SubResource("EditableTexture_ash_gray_mottled_disk")
 
 [node name="Lamplighter" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=780000001]
 unique_name_in_owner = true

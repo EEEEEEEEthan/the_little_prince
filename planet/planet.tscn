@@ -51,66 +51,6 @@ script/source = "extends Node2D
 	set(value):
 		radius = value
 
-@export var body_texture: Texture2D:
-	set(value):
-		body_texture = value
-		if not is_node_ready():
-			await ready
-		%Body.texture = body_texture
-
-@export var starfield_texture: Texture2D:
-	set(value):
-		starfield_texture = value
-		if not is_node_ready():
-			await ready
-		%Sky.texture = starfield_texture
-
-@export var star_rotation_speed: float = WorldConstants.STAR_ROTATION_SPEED:
-	set(value):
-		star_rotation_speed = value
-		if not is_node_ready():
-			await ready
-		%Sky.star_rotation_speed = star_rotation_speed
-
-@export var cloud_texture: Texture2D:
-	set(value):
-		cloud_texture = value
-		if not is_node_ready():
-			await ready
-		%CloudSprites.texture = cloud_texture
-
-@export var cloud_drift_speed: float = WorldConstants.CLOUD_DRIFT_SPEED:
-	set(value):
-		cloud_drift_speed = value
-		if not is_node_ready():
-			await ready
-		%Clouds.drift_speed = cloud_drift_speed
-
-@export var cloud_orbit_min_radius: float = WorldConstants.CLOUD_ORBIT_MIN_RADIUS:
-	set(value):
-		cloud_orbit_min_radius = value
-		if not is_node_ready():
-			await ready
-		_apply_cloud_orbits()
-
-@export var cloud_orbit_max_radius: float = WorldConstants.CLOUD_ORBIT_MAX_RADIUS:
-	set(value):
-		cloud_orbit_max_radius = value
-		if not is_node_ready():
-			await ready
-		_apply_cloud_orbits()
-
-@export var zenith_gradient: Texture2D:
-	set(value):
-		zenith_gradient = value
-		if not is_node_ready():
-			await ready
-		if zenith_gradient == null:
-			return
-		(%Sky.material as ShaderMaterial).set_shader_parameter(
-				\"zenith_gradient\", zenith_gradient
-		)
-
 ## 出生在锚点对面（国王星球背面降落）。
 @export var spawn_on_opposite_side: bool = false
 ## 觐见禁区半宽；0 表示不限制。
@@ -139,8 +79,6 @@ var angular_velocity: float = 0.0
 
 
 func _ready() -> void:
-	# 星球贴图按显示直径原尺寸绘制，禁止用 scale 放大。
-	body.scale = Vector2.ONE
 	_collect_surface_props()
 
 
@@ -236,12 +174,6 @@ func _sync_rotation() -> void:
 	clouds.set_planet_rotation(rotation_value)
 	for prop in surface_props:
 		prop.update_visibility(player_angle)
-
-
-func _apply_cloud_orbits() -> void:
-	%Clouds.orbit_min_radius = cloud_orbit_min_radius
-	%Clouds.orbit_max_radius = cloud_orbit_max_radius
-	%Clouds.rebuild_instances()
 "
 
 [sub_resource type="GDScript" id="GDScript_playable"]
@@ -323,7 +255,17 @@ script/source = "extends Sprite2D
 
 ## 星球旋转分量，由 Planet 同步写入。
 var planet_rotation: float = 0.0
-var star_rotation_speed: float = WorldConstants.STAR_ROTATION_SPEED
+@export var star_rotation_speed: float = WorldConstants.STAR_ROTATION_SPEED
+@export var zenith_gradient: Texture2D:
+	set(value):
+		zenith_gradient = value
+		if not is_node_ready():
+			await ready
+		if zenith_gradient == null:
+			return
+		(material as ShaderMaterial).set_shader_parameter(
+				\"zenith_gradient\", zenith_gradient
+		)
 var is_self_rotating: bool = true
 ## 酒鬼等锁死天光用：有值时天空相位不再跟经度走。
 var commanded_daylight_phase: float = NAN:
@@ -354,15 +296,6 @@ func daylight_phase() -> float:
 	return commanded_daylight_phase
 
 
-func _ready() -> void:
-	var planet_radius: float = owner.radius
-	var sunset_angle := SkyPhase.phase_to_angle(SkyPhase.SUNSET_PHASE)
-	%SunsetTrigger.position = Vector2(
-			-planet_radius * sin(sunset_angle),
-			-planet_radius * cos(sunset_angle)
-	)
-
-
 func _update_daylight() -> void:
 	var mat := material as ShaderMaterial
 	if mat == null:
@@ -387,11 +320,6 @@ var _instance_colors: PackedColorArray
 
 
 func _ready() -> void:
-	var planet := owner
-	drift_speed = planet.cloud_drift_speed
-	orbit_min_radius = planet.cloud_orbit_min_radius
-	orbit_max_radius = planet.cloud_orbit_max_radius
-	_cloud_sprites.texture = planet.cloud_texture
 	rebuild_instances()
 
 
@@ -518,6 +446,7 @@ height = 640
 noise = SubResource("FastNoiseLite_aiioy")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+resource_local_to_scene = true
 shader = SubResource("Shader_sky")
 shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
 shader_parameter/star_alpha_gradient = SubResource("GradientTexture1D_night_sky")
@@ -529,10 +458,8 @@ shader_parameter/noise_strength = 0.02
 shader = SubResource("Shader_cloud_frame")
 
 [node name="Planet" type="Node2D" unique_id=1020592655]
+position = Vector2(128, 284.48)
 script = SubResource("GDScript_planet")
-body_texture = SubResource("EditableTexture_body")
-starfield_texture = SubResource("EditableTexture_starfield")
-cloud_texture = SubResource("EditableTexture_white_lavender_puff_frames")
 
 [node name="Sky" type="Sprite2D" parent="." unique_id=852054590]
 unique_name_in_owner = true
@@ -544,6 +471,7 @@ script = SubResource("GDScript_sky")
 
 [node name="SunsetTrigger" parent="Sky" unique_id=1847000005 instance=ExtResource("16_player_trigger")]
 unique_name_in_owner = true
+position = Vector2(77.83833, 39.66061)
 kind = 2
 
 [node name="Clouds" type="Node2D" parent="." unique_id=1847000001]

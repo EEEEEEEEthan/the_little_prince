@@ -69,8 +69,6 @@ func _play_story() -> void:
 "
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
-body_texture = SubResource("EditableTexture_ink_gold_ledger_disk")
-zenith_gradient = SubResource("GradientTexture1D_ink_night_zenith")
 
 [node name="Config" parent="." index="5"]
 process_mode = 4
@@ -79,9 +77,13 @@ metadata/day_music = ExtResource("18_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
+zenith_gradient = SubResource("GradientTexture1D_ink_night_zenith")
 
 [node name="Clouds" parent="." index="1"]
 modulate = Color(0.22, 0.17, 0.1, 0.55)
+
+[node name="Body" parent="." index="3"]
+texture = SubResource("EditableTexture_ink_gold_ledger_disk")
 
 [node name="Merchant" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=770000001]
 unique_name_in_owner = true
