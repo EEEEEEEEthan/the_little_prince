@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://cqwx6juhnepo3" path="res://audio/sparse_ledger_tally.ogg" id="18_day_music"]
-[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="19_trigger"]
+[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="19_trigger"]
 
 
 

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="1_surface_prop"]
-[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="2_trigger"]
+[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="2_trigger"]
 
 [sub_resource type="Texture2D" id="EditableTexture_baobab"]
 script = ExtResource("editable_texture_script")

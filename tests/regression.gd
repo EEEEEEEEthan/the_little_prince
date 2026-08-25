@@ -16,7 +16,7 @@ func _begin() -> void:
 	if requested_planet_ids.is_empty():
 		return
 	AudioServer.set_bus_mute(AudioServer.get_bus_index(&"Master"), true)
-	var packed_scene := load("res://journey/main.tscn") as PackedScene
+	var packed_scene := load("res://planet/main.tscn") as PackedScene
 	var shell := packed_scene.instantiate()
 	shell.get_node("Journey").travel_to_next_planet = false
 	var story := shell.get_node(STORY_PATH) as PlanetStory

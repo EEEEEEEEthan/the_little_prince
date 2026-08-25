@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c0k7tc4gwunhx"
-path="res://.godot/imported/prince.png-e2b9021f84e2a12b8235272bfd129c40.ctex"
+uid="uid://vw3ouaa84vea"
+path="res://.godot/imported/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png-7db0f3e2c70c54e4457f4f69e72ac423.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ui/portraits/prince.png"
-dest_files=["res://.godot/imported/prince.png-e2b9021f84e2a12b8235272bfd129c40.ctex"]
+source_file="res://ui/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png"
+dest_files=["res://.godot/imported/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png-7db0f3e2c70c54e4457f4f69e72ac423.ctex"]
 
 [params]
 
