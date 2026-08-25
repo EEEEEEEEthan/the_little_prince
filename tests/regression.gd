@@ -1,13 +1,12 @@
 extends SceneTree
 ## 无头回归：用真实输入走完已定稿星球的正常流程。
 
-const REGRESSION_TIME_SCALE := 12.0
 const FINALIZED_PLANET_IDS: PackedStringArray = ["B612"]
 const STORY_PATH := "GameView/GameViewport/Planet/%Story"
 
 
 func _init() -> void:
-	Engine.time_scale = REGRESSION_TIME_SCALE
+	Engine.time_scale = WorldConstants.FAST_FORWARD_TIME_SCALE
 	call_deferred(&"_begin")
 
 

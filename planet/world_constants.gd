@@ -134,3 +134,6 @@ const BAOBAB_VARIANT_COUNT: int = 4
 
 ## 地表植物 spritesheet 变体数量（草绿与冷青干草等）。
 const FLORA_VARIANT_COUNT: int = 6
+
+## 回归脚本、以及 DEBUG 下按住左 Ctrl 时的 Engine.time_scale。
+const FAST_FORWARD_TIME_SCALE: float = 12.0
