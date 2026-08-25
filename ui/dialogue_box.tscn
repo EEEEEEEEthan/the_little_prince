@@ -2,7 +2,7 @@
 
 [ext_resource type="FontFile" uid="uid://b8w2t37l8urid" path="res://ui/fonts/fusion-pixel-10px-zh_hans.woff2" id="2_font"]
 [ext_resource type="AudioStream" uid="uid://cednuam573usk" path="res://ui/typewriter.wav" id="3_blip"]
-[ext_resource type="Texture2D" uid="uid://ccharbustfrm01" path="res://ui/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png" id="4_character_busts"]
+[ext_resource type="Texture2D" uid="uid://vw3ouaa84vea" path="res://ui/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png" id="4_character_busts"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_prince"]
 atlas = ExtResource("4_character_busts")
