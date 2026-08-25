@@ -1,5 +1,5 @@
 extends SceneTree
-## 天空材质应共享；相位与天顶渐变走 instance param，互不影响。
+## 天空材质应共享；相位走 instance uniform。canvas_item 不能 instance sampler2D。
 
 
 func _init() -> void:
