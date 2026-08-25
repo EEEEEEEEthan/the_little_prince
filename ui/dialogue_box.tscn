@@ -1,19 +1,15 @@
 [gd_scene format=3 uid="uid://7vp1ua5ygtk5"]
 
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_iei5c"]
 [ext_resource type="FontFile" uid="uid://b8w2t37l8urid" path="res://ui/fonts/fusion-pixel-10px-zh_hans.woff2" id="2_font"]
 [ext_resource type="AudioStream" uid="uid://cednuam573usk" path="res://ui/typewriter.wav" id="3_blip"]
 [ext_resource type="Texture2D" uid="uid://vw3ouaa84vea" path="res://ui/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png" id="4_character_busts"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_prince"]
-atlas = ExtResource("4_character_busts")
-region = Rect2(0, 0, 32, 32)
 
 [sub_resource type="GDScript" id="GDScript_dialogue"]
 script/source = "extends CanvasLayer
 ## 像素风打字机对话框：小王子头像居左，其他角色居右；逐字正文。
 
 signal closed
-signal line_advanced
 
 const TYPEWRITER_INTERVAL := 0.045
 const TYPEWRITER_FAST_INTERVAL := 0.012
@@ -24,14 +20,10 @@ const TYPEWRITER_FAST_VOLUME_DB := -26.0
 @onready var _typewriter: AudioStreamPlayer = $Typewriter
 @onready var _timer: Timer = $Timer
 
-var _lines: Array[DialogueLine] = []
-var _index: int = 0
 var _is_holding: bool = false
-var _advance_on_confirm_release: bool = false
-var _saw_confirm_released_while_idle: bool = false
+var _close_on_release: bool = false
 var _is_revealing: bool = false
 var _typewriter_accum_seconds: float = 0.0
-var _close_after_last: bool = true
 
 
 func _ready() -> void:
@@ -42,8 +34,6 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if visible and not _is_revealing and not _is_holding:
-		_saw_confirm_released_while_idle = true
 	if not _is_revealing:
 		return
 	var typewriter_interval := (
@@ -63,14 +53,13 @@ func is_typing() -> bool:
 	return _is_revealing
 
 
-func play(lines: Array[DialogueLine]) -> void:
-	_play_lines(lines, true)
-
-
 func play_line(line: DialogueLine) -> void:
-	var lines: Array[DialogueLine] = []
-	lines.append(line)
-	_play_lines(lines, false)
+	_is_holding = false
+	_close_on_release = false
+	_set_accelerating(false)
+	visible = true
+	set_process(true)
+	_show_line(line)
 
 
 func mark_holding(held: bool) -> void:
@@ -78,73 +67,35 @@ func mark_holding(held: bool) -> void:
 		return
 	_is_holding = held
 	if held:
-		if _index >= _lines.size() - 1 and _saw_confirm_released_while_idle:
-			_finish_current_line()
-			return
-		_advance_on_confirm_release = not is_typing() and _saw_confirm_released_while_idle
 		if is_typing():
 			_set_accelerating(true)
+		else:
+			_close_on_release = true
 		return
 	if is_typing():
 		_set_accelerating(false)
 		return
-	if not _advance_on_confirm_release:
-		return
-	_advance_on_confirm_release = false
-	_index += 1
-	if _index >= _lines.size():
-		_finish_current_line()
-	else:
-		_show_line()
+	if _close_on_release:
+		close()
 
 
 func close() -> void:
 	var was_open := visible
-	var should_advance_line := was_open and not _close_after_last
 	_timer.stop()
 	_typewriter.stop()
 	_is_holding = false
-	_advance_on_confirm_release = false
-	_saw_confirm_released_while_idle = false
+	_close_on_release = false
 	_is_revealing = false
 	_typewriter_accum_seconds = 0.0
 	_set_accelerating(false)
 	%ContinueTriangle.visible = false
-	_lines.clear()
-	_index = 0
 	set_process(false)
 	visible = false
-	if should_advance_line:
-		line_advanced.emit()
 	if was_open:
 		closed.emit()
 
 
-func _play_lines(lines: Array[DialogueLine], close_after_last: bool) -> void:
-	if lines.is_empty():
-		close()
-		return
-	_close_after_last = close_after_last
-	_lines = lines.duplicate()
-	_index = 0
-	_is_holding = false
-	_advance_on_confirm_release = false
-	_saw_confirm_released_while_idle = false
-	_set_accelerating(false)
-	visible = true
-	set_process(true)
-	_show_line()
-
-
-func _finish_current_line() -> void:
-	if _close_after_last:
-		close()
-		return
-	line_advanced.emit()
-
-
-func _show_line() -> void:
-	var line := _lines[_index]
+func _show_line(line: DialogueLine) -> void:
 	var portrait_on_left := line.speaker == DialogueCatalog.PRINCE_SPEAKER
 	const panel_aligned_edge_inset := 4.0
 	const panel_shrunk_edge_inset := panel_aligned_edge_inset + 32.0
@@ -187,9 +138,7 @@ func _reveal_next_character() -> void:
 		_typewriter_accum_seconds = 0.0
 		_set_accelerating(false)
 		%ContinueTriangle.visible = true
-		if _is_holding:
-			_advance_on_confirm_release = false
-			_saw_confirm_released_while_idle = false
+		_close_on_release = false
 
 
 func _play_blip() -> void:
@@ -207,18 +156,24 @@ func _play_blip() -> void:
 	_typewriter.play()
 "
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
-bg_color = Color(0.0470588, 0.0705882, 0.14902, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.968627, 0.819608, 1)
-anti_aliasing = false
+[sub_resource type="Texture2D" id="Texture2D_pt0uj"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_iei5c")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAFpJREFUOI1j5BFSY2BgYPjPQB5gZIFp/vx0NUk6eaVDGRgYGP4zkaMZWQ8LDpMJaoQBJlI0Y1PDhEMd0WDUgEFnADEpEl0NRkokNVkzMTAQlwLRAUwPI6XZGQBSqhku6gzx+gAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_lvka8"]
+texture = SubResource("Texture2D_pt0uj")
+texture_margin_left = 8.0
+texture_margin_top = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 6.0
+region_rect = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_prince"]
+atlas = ExtResource("4_character_busts")
+region = Rect2(0, 0, 32, 32)
 
 [sub_resource type="GDScript" id="GDScript_continue_triangle"]
 script/source = "extends Control
@@ -262,7 +217,7 @@ offset_right = -36.0
 offset_bottom = 44.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_override_styles/panel = SubResource("StyleBoxTexture_lvka8")
 
 [node name="ContentRow" type="HBoxContainer" parent="Panel" unique_id=327931108]
 unique_name_in_owner = true

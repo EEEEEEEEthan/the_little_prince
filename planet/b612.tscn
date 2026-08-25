@@ -242,7 +242,6 @@ func _rose(text: String) -> void:
 
 func _wait_move_right() -> void:
 	var generation := _story_generation
-	_end_dialogue()
 	if skip_cinematics:
 		await _halt_if_stale(generation)
 		return

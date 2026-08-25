@@ -128,7 +128,6 @@ func _await_king() -> void:
 			\"啊，来了一个臣民\",
 			DialogueCatalog.KING_PORTRAIT
 	)
-	_end_dialogue()
 	is_blocking_input = false
 "
 
