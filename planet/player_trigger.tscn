@@ -1,7 +1,5 @@
 [gd_scene format=3 uid="uid://cplyrtrgscn1"]
 
-[ext_resource type="PackedScene" uid="uid://cplyrprmtscn1" path="res://planet/interact_prompt.tscn" id="prompt_scene"]
-
 [sub_resource type="GDScript" id="GDScript_player_trigger"]
 script/source = "extends Area2D
 ## 玩家邻近检测。InteractKind 只描述按键方式；头顶 A 键由本节点自己显示。
@@ -142,5 +140,5 @@ shape = SubResource("CircleShape2D_trigger")
 unique_name_in_owner = true
 shape = SubResource("CircleShape2D_trigger")
 
-[node name="Prompt" parent="." unique_id=814833572 instance_placeholder=ExtResource("prompt_scene")]
+[node name="Prompt" parent="." unique_id=814833572 instance_placeholder="res://planet/interact_prompt.tscn"]
 unique_name_in_owner = true
