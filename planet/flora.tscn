@@ -1,8 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://cfloratscn001"]
 
+[ext_resource type="PackedScene" uid="uid://csurfpropbase" path="res://planet/surface_prop.tscn" id="1_surface_prop"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
-[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="1_surface_prop"]
-[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="2_trigger"]
 
 [sub_resource type="Shader" id="Shader_flora_sway"]
 code = "shader_type canvas_item;
@@ -38,17 +37,16 @@ shader_parameter/world_frequency = 0.08
 [sub_resource type="CircleShape2D" id="CircleShape2D_flora_player_trigger"]
 radius = 10.8
 
-[node name="Flora" type="Sprite2D"]
+[node name="Flora" instance=ExtResource("1_surface_prop")]
 z_index = 5
 texture_filter = 1
 material = SubResource("ShaderMaterial_flora_sway")
 texture = SubResource("EditableTexture_flora")
 offset = Vector2(0, -8)
 hframes = 6
-script = ExtResource("1_surface_prop")
 interact_kind = 0
 
-[node name="PlayerTrigger" parent="." instance=ExtResource("2_trigger")]
+[node name="PlayerTrigger" parent="." index="0"]
 position = Vector2(0, -8)
 groups = PackedStringArray("grass")
 shape = SubResource("CircleShape2D_flora_player_trigger")

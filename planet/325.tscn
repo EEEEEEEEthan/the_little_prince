@@ -2,11 +2,10 @@
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
-[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
+[ext_resource type="PackedScene" uid="uid://csurfpropbase" path="res://planet/surface_prop.tscn" id="4_prop_scene"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="18_day_music"]
 [ext_resource type="AudioStream" uid="uid://b5xo4yhua70tx" path="res://audio/thin_rat_squeak.wav" id="19_rat_squeak"]
-[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="20_trigger"]
 
 
 [sub_resource type="Gradient" id="Gradient_king_zenith"]
@@ -318,7 +317,7 @@ modulate = Color(0.55, 0.78, 0.92, 1)
 [node name="Body" parent="." index="3"]
 texture = SubResource("EditableTexture_blue_mottled_disk")
 
-[node name="Cape" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=410000010]
+[node name="Cape" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=410000010 instance=ExtResource("4_prop_scene")]
 z_index = -2
 texture_filter = 1
 position = Vector2(0, -104.832)
@@ -328,22 +327,19 @@ offset = Vector2(0, -6)
 script = SubResource("GDScript_cape_hem")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Cape" instance=ExtResource("20_trigger")]
+[node name="PlayerTrigger" parent="Surface/Cape" index="0"]
 shape = SubResource("CircleShape2D_cape_player_trigger")
-
-[node name="Throne" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=410000011]
+[node name="Throne" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=410000011 instance=ExtResource("4_prop_scene")]
 z_index = -1
 texture_filter = 1
 position = Vector2(0, -104.832)
 texture = SubResource("EditableTexture_gold_spired_throne")
 offset = Vector2(0, -36)
-script = ExtResource("3_surface_prop")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Throne" instance=ExtResource("20_trigger")]
+[node name="PlayerTrigger" parent="Surface/Throne" index="0"]
 shape = SubResource("CircleShape2D_throne_player_trigger")
-
-[node name="King" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=410000001]
+[node name="King" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=410000001 instance=ExtResource("4_prop_scene")]
 unique_name_in_owner = true
 z_index = 1
 texture_filter = 1
@@ -352,82 +348,69 @@ texture = SubResource("EditableTexture_king")
 offset = Vector2(0, -52)
 script = SubResource("GDScript_king_face")
 
-[node name="PlayerTrigger" parent="Surface/King" instance=ExtResource("20_trigger")]
+[node name="PlayerTrigger" parent="Surface/King" index="0"]
 shape = SubResource("CircleShape2D_king_player_trigger")
-
-[node name="Rat" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=410000002]
+[node name="Rat" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=410000002 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(0, 104.832)
 rotation = 3.1415927
 texture = SubResource("EditableTexture_rat")
 offset = Vector2(0, -5)
 
-[node name="RatTrace1" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=410000020]
+[node name="RatTrace1" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=410000020 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-22.877448, 102.305281)
 rotation = 3.3615927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
 
-[node name="RatTrace2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=410000021]
+[node name="RatTrace2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=410000021 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(28.970915, 100.749364)
 rotation = 2.8615927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
 
-[node name="RatTrace3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=410000022]
+[node name="RatTrace3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=410000022 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-48.409235, 92.985452)
 rotation = 3.6215927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
 
-[node name="EdictL" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=410000030]
+[node name="EdictL" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=410000030 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-95.686869, -42.822555)
 rotation = -1.15
 texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
-script = ExtResource("3_surface_prop")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/EdictL" instance=ExtResource("20_trigger")]
-
-[node name="EdictR" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="8" unique_id=410000031]
+[node name="EdictR" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="8" unique_id=410000031 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(98.447664, -36.025071)
 rotation = 1.22
 texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
-script = ExtResource("3_surface_prop")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/EdictR" instance=ExtResource("20_trigger")]
-
-[node name="EdictL2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="9" unique_id=410000032]
+[node name="EdictL2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="9" unique_id=410000032 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-93.023972, 48.335172)
 rotation = -2.05
 texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
-script = ExtResource("3_surface_prop")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/EdictL2" instance=ExtResource("20_trigger")]
-
-[node name="EdictR2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=410000033]
+[node name="EdictR2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=410000033 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(89.415457, 54.723161)
 rotation = 2.12
 texture = SubResource("EditableTexture_unrolled_parchment")
 offset = Vector2(0, -5)
-script = ExtResource("3_surface_prop")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/EdictR2" instance=ExtResource("20_trigger")]
-
-[node name="Border1" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=410000040]
+[node name="Border1" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=410000040 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(85.271974, -60.979002)
 rotation = 0.95
@@ -436,9 +419,7 @@ offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Border1" instance=ExtResource("20_trigger")]
-
-[node name="Border2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=410000041]
+[node name="Border2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=410000041 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(89.328188, -54.865499)
 rotation = 1.02
@@ -447,9 +428,7 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Border2" instance=ExtResource("20_trigger")]
-
-[node name="Border3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=410000042]
+[node name="Border3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=410000042 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-83.404509, -63.509339)
 rotation = -0.92
@@ -458,9 +437,7 @@ offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Border3" instance=ExtResource("20_trigger")]
-
-[node name="Border4" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=410000043]
+[node name="Border4" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=410000043 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-88.213086, -56.640971)
 rotation = -1.0
@@ -469,9 +446,7 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Border4" instance=ExtResource("20_trigger")]
-
-[node name="Border5" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=410000044]
+[node name="Border5" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=410000044 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(100.772402, 28.890677)
 rotation = 1.85
@@ -480,9 +455,7 @@ offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Border5" instance=ExtResource("20_trigger")]
-
-[node name="Border6" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=410000045]
+[node name="Border6" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=410000045 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(98.504914, 35.868232)
 rotation = 1.92
@@ -491,9 +464,7 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Border6" instance=ExtResource("20_trigger")]
-
-[node name="Border7" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=410000046]
+[node name="Border7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=410000046 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-99.860468, 31.900396)
 rotation = -1.88
@@ -502,9 +473,7 @@ offset = Vector2(0, -2)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Border7" instance=ExtResource("20_trigger")]
-
-[node name="Border8" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="18" unique_id=410000047]
+[node name="Border8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="18" unique_id=410000047 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-96.991774, 39.778687)
 rotation = -1.96
@@ -513,9 +482,7 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_border_jitter")
 is_armed = true
 
-[node name="PlayerTrigger" parent="Surface/Border8" instance=ExtResource("20_trigger")]
-
-[node name="RatHole" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="19" unique_id=410000050]
+[node name="RatHole" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="19" unique_id=410000050 instance=ExtResource("4_prop_scene")]
 z_index = -1
 texture_filter = 1
 position = Vector2(0, 104.832)
@@ -524,8 +491,6 @@ texture = SubResource("EditableTexture_dark_soil_burrow")
 offset = Vector2(0, -4)
 script = SubResource("GDScript_rat_hole")
 is_armed = true
-
-[node name="PlayerTrigger" parent="Surface/RatHole" instance=ExtResource("20_trigger")]
 
 [node name="Squeak" type="AudioStreamPlayer" parent="Surface/RatHole" unique_id=410000051]
 stream = ExtResource("19_rat_squeak")
