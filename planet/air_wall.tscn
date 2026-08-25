@@ -11,28 +11,28 @@ extends Area2D
 			await ready
 		%CollisionShape2D.shape = shape
 
-@export var enabled: bool = true:
-	set(value):
-		enabled = value
-		if not is_node_ready():
-			await ready
-		%CollisionShape2D.disabled = !enabled
+@export var enabled: bool = true
+
 
 func set_enabled(value: bool) -> void:
 	enabled = value
+
 
 func blocks_player_entry(
 		planet: Node2D,
 		current_player_angle: float,
 		next_player_angle: float
 ) -> bool:
-	if not is_visible_in_tree():
+	if not enabled or not is_visible_in_tree():
 		return false
 	if overlaps_player_at(planet, current_player_angle):
 		return false
 	return overlaps_player_at(planet, next_player_angle)
 
+
 func overlaps_player_at(planet: Node2D, at_player_angle: float) -> bool:
+	if not enabled:
+		return false
 	var surface: Node2D = planet.surface
 	var saved_rotation := surface.rotation
 	surface.rotation = -at_player_angle
@@ -43,10 +43,9 @@ func overlaps_player_at(planet: Node2D, at_player_angle: float) -> bool:
 	surface.rotation = saved_rotation
 	return overlaps
 
+
 func _overlaps_apex_circle(apex_global_position: Vector2, footprint_radius: float) -> bool:
 	var collision_shape := %CollisionShape2D
-	if collision_shape.disabled:
-		return false
 	var local_apex: Vector2 = (
 			collision_shape.global_transform.affine_inverse() * apex_global_position
 	)

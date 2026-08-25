@@ -37,6 +37,15 @@ func _run() -> void:
 		quit(1)
 		return
 	planet.teleport_player(0.0)
+	air_wall.set_enabled(false)
+	for _step in 240:
+		planet.move_player(1.0, delta)
+	if planet.player_angle <= wall_angle:
+		push_error("[air_wall] 关闭后应能穿过空气墙")
+		quit(1)
+		return
+	planet.teleport_player(0.0)
+	air_wall.set_enabled(true)
 	air_wall.visible = false
 	for _step in 240:
 		planet.move_player(1.0, delta)

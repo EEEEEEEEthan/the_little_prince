@@ -81,7 +81,6 @@ func replace_planet(next_planet: Node2D) -> void:
 	planet = next_planet
 	player.planet = next_planet
 	player.get_node(\"Scarf\").planet = next_planet
-	next_planet.bind_player_footprint(player.get_node(\"%Footprint\"))
 	game_viewport.remove_child(previous_planet)
 	previous_planet.free()
 	next_planet.teleport_player(next_planet.spawn_angle)
@@ -135,9 +134,6 @@ var move_speed_scale: float = 1.0
 var _anim_time: float = 0.0
 var _was_moving: bool = false
 var _last_walk_frame_index: int = -1
-
-func _ready() -> void:
-	planet.bind_player_footprint(%Footprint)
 
 func _physics_process(delta: float) -> void:
 	var direction := 0.0
@@ -666,9 +662,9 @@ script = SubResource("GDScript_player")
 
 [node name="Footprint" type="Area2D" parent="GameView/GameViewport/Player"]
 unique_name_in_owner = true
-collision_layer = 0
-collision_mask = 2
-monitorable = false
+collision_layer = 1
+collision_mask = 0
+monitoring = false
 input_pickable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GameView/GameViewport/Player/Footprint"]
