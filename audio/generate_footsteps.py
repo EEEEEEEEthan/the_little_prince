@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成短促土地闷响、草地沙沙与老鼠吱声 one-shot（CC0）。运行：python3 audio/generate_footsteps.py"""
+"""生成短促土地闷响、草地沙沙、老鼠吱声与玻璃罩放下 one-shot（CC0）。运行：python3 audio/generate_footsteps.py"""
 
 from __future__ import annotations
 
@@ -71,6 +71,27 @@ def render_thin_rat_squeak() -> np.ndarray:
 	return fade_edges(envelope * (tone + overtone + noise), 12)
 
 
+def render_light_glass_rim_clink() -> np.ndarray:
+	rng = np.random.default_rng(13)
+	duration_seconds = 0.2
+	sample_count = int(SAMPLE_RATE * duration_seconds)
+	time_seconds = np.arange(sample_count, dtype=np.float64) / SAMPLE_RATE
+	thud_envelope = np.exp(-time_seconds / 0.032)
+	thud = thud_envelope * np.sin(2.0 * math.pi * 124.0 * time_seconds)
+	tick_envelope = np.exp(-time_seconds / 0.02) * (1.0 - np.exp(-time_seconds / 0.0018))
+	tick_hertz = 1760.0 + 380.0 * np.exp(-time_seconds / 0.035)
+	tick = tick_envelope * (
+		0.58 * np.sin(2.0 * math.pi * tick_hertz * time_seconds)
+		+ 0.26 * np.sin(2.0 * math.pi * tick_hertz * 2.02 * time_seconds)
+	)
+	contact_noise = (
+		np.exp(-time_seconds / 0.014)
+		* one_pole_highpass(one_pole_lowpass(rng.normal(0.0, 1.0, sample_count), 4200.0), 700.0)
+		* 0.32
+	)
+	return fade_edges(0.88 * thud + 0.52 * tick + contact_noise, 10)
+
+
 def render_grass_rustle(seed: int) -> np.ndarray:
 	rng = np.random.default_rng(seed)
 	duration_seconds = 0.13
@@ -90,6 +111,7 @@ def main() -> None:
 	write_wav(render_grass_rustle(41), output_directory / "dry_grass_rustle_a.wav")
 	write_wav(render_grass_rustle(67), output_directory / "dry_grass_rustle_b.wav")
 	write_wav(render_thin_rat_squeak(), output_directory / "thin_rat_squeak.wav")
+	write_wav(render_light_glass_rim_clink(), output_directory / "light_glass_rim_clink.wav")
 
 
 if __name__ == "__main__":

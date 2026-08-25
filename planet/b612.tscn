@@ -8,6 +8,7 @@
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="20_day_music"]
 [ext_resource type="PackedScene" uid="uid://cfloratscn001" path="res://planet/flora.tscn" id="21_flora"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="22_trigger"]
+[ext_resource type="AudioStream" uid="uid://b7a21m4k1j5fq" path="res://audio/light_glass_rim_clink.wav" id="23_glass_rim_clink"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 
 [sub_resource type="Shader" id="Shader_sky"]
@@ -284,6 +285,7 @@ func _play_uproot() -> void:
 
 func _show_glass() -> void:
 	_glass_globe().visible = true
+	_glass_globe().get_node(\"RimClink\").play()
 
 
 func _hide_glass() -> void:
@@ -375,6 +377,10 @@ z_index = 2
 texture_filter = 1
 texture = SubResource("EditableTexture_glass_globe")
 offset = Vector2(0, -11)
+
+[node name="RimClink" type="AudioStreamPlayer" parent="Surface/Rose/GlassGlobe" unique_id=410000612]
+stream = ExtResource("23_glass_rim_clink")
+volume_db = -4.0
 
 [node name="PlayerTrigger" parent="Surface/Rose" index="1" unique_id=171176172 instance=ExtResource("22_trigger")]
 
