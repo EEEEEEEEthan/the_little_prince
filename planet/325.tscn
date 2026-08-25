@@ -383,18 +383,20 @@ func _await_king() -> void:
 	if skip_cinematics:
 		player.modulate.a = 0.0
 		_shell_node(&\"Dim\").color = Color(0, 0, 0, 1)
-	else:
-		var shrink_tween := create_tween()
-		shrink_tween.set_parallel(true)
-		shrink_tween.tween_property(planet, \"scale\", Vector2(0.12, 0.12), LIFT_DURATION_SECONDS)
-		shrink_tween.tween_property(player, \"modulate:a\", 0.0, LIFT_DURATION_SECONDS)
-		await shrink_tween.finished
-		var dim_tween := create_tween()
-		dim_tween.tween_property(
-				_shell_node(&\"Dim\"), \"color:a\", 1.0, DEPARTURE_BLACKOUT_SECONDS
-		)
-		_shell_node(&\"Music\").fade_out(DEPARTURE_BLACKOUT_SECONDS)
-		await dim_tween.finished
+		_shell_node(&\"Epilogue\").text = \"325。\"
+		departed.emit()
+		return
+	var shrink_tween := create_tween()
+	shrink_tween.set_parallel(true)
+	shrink_tween.tween_property(planet, \"scale\", Vector2(0.12, 0.12), LIFT_DURATION_SECONDS)
+	shrink_tween.tween_property(player, \"modulate:a\", 0.0, LIFT_DURATION_SECONDS)
+	await shrink_tween.finished
+	var dim_tween := create_tween()
+	dim_tween.tween_property(
+			_shell_node(&\"Dim\"), \"color:a\", 1.0, DEPARTURE_BLACKOUT_SECONDS
+	)
+	_shell_node(&\"Music\").fade_out(DEPARTURE_BLACKOUT_SECONDS)
+	await dim_tween.finished
 	_shell_node(&\"Epilogue\").text = \"325。\"
 	await _wait(EPILOGUE_HOLD_SECONDS)
 	departed.emit()
