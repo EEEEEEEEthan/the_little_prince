@@ -9,7 +9,7 @@ const META_OPENING_DAY_MUSIC := "opening_day_music"
 @onready var planet: Planet = $GameView/GameViewport/Planet
 @onready var player: Player = $GameView/GameViewport/Player
 @onready var dialogue: DialogueBox = %DialogueBox
-@onready var interaction: Interaction = %Interaction
+@onready var interaction = %Interaction
 
 
 func _ready() -> void:

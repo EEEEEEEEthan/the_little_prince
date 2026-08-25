@@ -24,6 +24,13 @@ const KING_AUDIENCE_KEEP_AWAY_ARC: float = 0.70
 ## 先听见国王、人还在地平线后：比可见半弧更远。
 const KING_DISTANT_VOICE_ARC: float = 2.08
 
+## 玩家脚底 Area 重叠的触发种类（builtin 脚本不能 class_name，枚举放这里）。
+enum TriggerKind {
+	GRASS,
+	INTERACT,
+	SUNSET,
+}
+
 ## 玩家触发器默认半径（像素）；可交互范围在 tscn 里按实例改。
 const INTERACT_RANGE_PX: float = 16.0
 ## 国王本人：对应觐见禁区半宽再略放一点。

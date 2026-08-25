@@ -109,7 +109,7 @@ func try_handle_interact(prop: SurfaceProp) -> bool:
 func try_first_sunset_narration() -> void:
 	if has_crossed_sunset:
 		return
-	if player.has_overlapping_trigger_kind(PlayerTrigger.Kind.SUNSET):
+	if player.has_overlapping_trigger_kind(WorldConstants.TriggerKind.SUNSET):
 		has_crossed_sunset = true
 		sunset_crossed.emit()
 

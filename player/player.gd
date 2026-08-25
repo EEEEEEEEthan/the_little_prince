@@ -4,7 +4,7 @@ extends Sprite2D
 ## 贴图为 idle+walk 横拼 spritesheet，按角速度切帧；左右用 flip_h。
 
 @onready var planet: Planet = %Planet
-@onready var interaction: Interaction = %Interaction
+@onready var interaction = %Interaction
 
 var can_move_left: bool = true
 var can_move_right: bool = true
@@ -35,13 +35,12 @@ func _physics_process(delta: float) -> void:
 	_update_animation(direction, delta)
 
 func is_in_grass() -> bool:
-	return has_overlapping_trigger_kind(PlayerTrigger.Kind.GRASS)
+	return has_overlapping_trigger_kind(WorldConstants.TriggerKind.GRASS)
 
 
-func has_overlapping_trigger_kind(kind: PlayerTrigger.Kind) -> bool:
+func has_overlapping_trigger_kind(kind: WorldConstants.TriggerKind) -> bool:
 	for area in %Footprint.get_overlapping_areas():
-		var trigger := area as PlayerTrigger
-		if trigger != null and trigger.kind == kind:
+		if area.has_method("hosted_surface_prop") and area.kind == kind:
 			return true
 	return false
 
@@ -50,15 +49,14 @@ func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceP
 	var best: SurfaceProp = null
 	var best_distance_squared := INF
 	for area in %Footprint.get_overlapping_areas():
-		var trigger := area as PlayerTrigger
-		if trigger == null or trigger.kind != PlayerTrigger.Kind.INTERACT:
+		if not area.has_method("hosted_surface_prop") or area.kind != WorldConstants.TriggerKind.INTERACT:
 			continue
-		var prop := trigger.hosted_surface_prop()
+		var prop := area.hosted_surface_prop()
 		if prop == null or not prop.is_interactable():
 			continue
 		if should_accept.is_valid() and not should_accept.call(prop):
 			continue
-		var distance_squared := global_position.distance_squared_to(trigger.global_position)
+		var distance_squared := global_position.distance_squared_to(area.global_position)
 		if distance_squared <= best_distance_squared:
 			best_distance_squared = distance_squared
 			best = prop

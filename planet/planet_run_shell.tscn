@@ -20,8 +20,7 @@
 
 
 [sub_resource type="GDScript" id="GDScript_interaction"]
-script/source = "class_name Interaction
-extends Node
+script/source = "extends Node
 ## 靠近可互动物体时显示 A 提示；点按或长按 interact（键盘 Submit / 手柄 A）交互。
 
 var story: PlanetStory

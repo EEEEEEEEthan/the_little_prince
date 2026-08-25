@@ -36,9 +36,8 @@ var is_consumed: bool = false:
 		if not is_node_ready():
 			await ready
 		for child in get_children():
-			var trigger := child as PlayerTrigger
-			if trigger != null:
-				trigger.monitorable = not is_consumed
+			if child.has_method("hosted_surface_prop"):
+				child.monitorable = not is_consumed
 
 
 func get_dialogue_id() -> StringName:

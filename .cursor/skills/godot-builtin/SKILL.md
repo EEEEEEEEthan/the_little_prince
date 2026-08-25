@@ -13,7 +13,7 @@ description: 本仓库资源放置：只用过一次的脚本/贴图/shader 必�
 | Shader | `[sub_resource type="Shader"]` + `code` |
 | 仅一处用的 PNG | `[sub_resource type="Texture2D"]` + `EditableTexture` 的 `_base64_data` |
 
-可继续用 `class_name`（如 `PlayerTrigger`），只要该脚本文件没有第二处挂载。
+Godot **禁止** builtin 脚本写 `class_name`。跨文件类型改用已有工具类上的枚举，或 `has_method` / 无类型节点引用。需要全局 `class_name` 的脚本必须外置。
 
 ## 继续留独立文件的
 
