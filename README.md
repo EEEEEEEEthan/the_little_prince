@@ -10,7 +10,7 @@ https://github.com/user-attachments/assets/270539cb-671b-4cde-a950-f5e2a83ea38a
 |------|------|
 | Godot | **4.8-dev3**，由准备脚本自动下载，无需手动安装 |
 | curl 或 wget | Linux/macOS 下载引擎二进制所需 |
-| Python 3 | 运行无头验证脚本（`tests/run_godot_verify.py`） |
+| Python 3 | 运行无头回归脚本（`tests/run_regression.py`） |
 | unzip | Linux/macOS 解压引擎压缩包所需 |
 
 引擎二进制下载后存放于 `.engine/`，同时缓存到 `~/.cache/godot-engines/` 以便复用。  
@@ -29,10 +29,9 @@ bash .engine-prepare.sh
 # 2. 打开编辑器
 .engine/.engine --editor --path .
 
-# 3. 运行无头验证（CI 同款）
-python3 tests/run_godot_verify.py --timeout 120 -- \
-  .engine/.engine --headless --path . \
-  --script res://tests/verify_arc_planet.gd
+# 3. 运行无头回归（CI 同款；当前只跑到已定稿的 B612）
+python3 tests/run_regression.py
+python3 tests/run_regression.py --planet B612
 ```
 
 ### Windows
@@ -61,22 +60,15 @@ REM 2. 打开编辑器（准备完成后自动启动）
 
 ## 验证 / 测试
 
-项目包含一个无头模式验证脚本，用于检查核心机制和资源：
+回归入口是 `tests/run_regression.py`：启动引擎、跑 `tests/regression.gd`，用真实输入走完正常玩法。GD 脚本会提高 `Engine.time_scale` 以加速。当前只有 B612 定稿，完整回归与 `--planet B612` 都只跑到离星，不进入后续星球。
 
 ```bash
-python3 tests/run_godot_verify.py --timeout 120 -- \
-  .engine/.engine --headless --path . \
-  --script res://tests/verify_arc_planet.gd
+python3 tests/run_regression.py
+python3 tests/run_regression.py --planet B612
+python3 tests/run_regression.py --timeout 180
 ```
 
-验证内容包括：
-- 世界常量（半径、弧顶比例、精灵尺寸等）
-- 必要的静态贴图资源可加载且尺寸正确
-- 无旧版伪 3D 残留文件
-- InputMap 按键映射完整
-- 主场景结构（SubViewport、Planet、Player）及圆弧力学
-
-**退出码**：`0` = 全部通过，`1` = 存在失败项。
+Python 在检测到任意 `ERROR` / `WARNING`、Godot 非零退出，或超时时以退出码 `1` 失败。
 
 ---
 
@@ -86,7 +78,7 @@ python3 tests/run_godot_verify.py --timeout 120 -- \
 
 - 缓存 Godot 引擎二进制（key: `godot-4.8-dev3-standard`）
 - 运行 `.engine-prepare.sh` 准备引擎
-- 执行上述无头验证脚本
+- 执行无头回归（B612 完整玩法）
 
 详见 [`.github/workflows/ci.yml`](.github/workflows/ci.yml)。
 
@@ -104,7 +96,7 @@ python3 tests/run_godot_verify.py --timeout 120 -- \
 ├── planet/                  # 星球场景、运行壳、共享贴图与着色器
 ├── player/                  # 玩家脚本
 ├── story/                   # 各星球演出脚本
-├── tests/                   # 无头验证
+├── tests/                   # 无头回归
 ├── ui/                      # 对话框、提示、字体、头像
 ├── visual/                  # 色板后处理
 └── project.godot
