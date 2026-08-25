@@ -3,7 +3,6 @@
 [sub_resource type="GDScript" id="GDScript_air_wall"]
 script/source = "@tool
 extends Area2D
-## 空气墙：visible 时玩家不能新走进碰撞区；已经在里面时可以走出去。
 
 @export var shape: Shape2D:
 	set(value):
@@ -12,6 +11,15 @@ extends Area2D
 			await ready
 		%CollisionShape2D.shape = shape
 
+@export var enabled: bool = true:
+	set(value):
+		enabled = value
+		if not is_node_ready():
+			await ready
+		%CollisionShape2D.disabled = !enabled
+
+func set_enabled(value: bool) -> void:
+	enabled = value
 
 func blocks_player_entry(
 		planet: Node2D,
@@ -24,7 +32,6 @@ func blocks_player_entry(
 		return false
 	return overlaps_player_at(planet, next_player_angle)
 
-
 func overlaps_player_at(planet: Node2D, at_player_angle: float) -> bool:
 	var surface: Node2D = planet.surface
 	var saved_rotation := surface.rotation
@@ -35,22 +42,6 @@ func overlaps_player_at(planet: Node2D, at_player_angle: float) -> bool:
 	)
 	surface.rotation = saved_rotation
 	return overlaps
-
-
-func _ready() -> void:
-	_sync_collision_to_visibility()
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_VISIBILITY_CHANGED:
-		_sync_collision_to_visibility()
-
-
-func _sync_collision_to_visibility() -> void:
-	if not is_node_ready():
-		return
-	%CollisionShape2D.disabled = not is_visible_in_tree()
-
 
 func _overlaps_apex_circle(apex_global_position: Vector2, footprint_radius: float) -> bool:
 	var collision_shape := %CollisionShape2D
@@ -74,16 +65,16 @@ func _overlaps_apex_circle(apex_global_position: Vector2, footprint_radius: floa
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_air_wall"]
 size = Vector2(16, 48)
 
-[node name="AirWall" type="Area2D"]
+[node name="AirWall" type="Area2D" unique_id=1586006984]
 collision_layer = 0
 collision_mask = 0
+input_pickable = false
 monitoring = false
 monitorable = false
-input_pickable = false
 script = SubResource("GDScript_air_wall")
 shape = SubResource("RectangleShape2D_air_wall")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=70283118]
 unique_name_in_owner = true
 position = Vector2(0, -24)
 shape = SubResource("RectangleShape2D_air_wall")

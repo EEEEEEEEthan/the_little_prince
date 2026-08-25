@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="3_r860q"]
+[ext_resource type="PackedScene" uid="uid://cairwallscn01" path="res://planet/air_wall.tscn" id="4_q6x0b"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="18_day_music"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
@@ -58,7 +59,7 @@ colors = PackedColorArray(0.1646875, 0.1178125, 0.136875, 1, 0.5411765, 0.560784
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_zenith"]
 gradient = SubResource("Gradient_zenith")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_nq3ki"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_q6x0b"]
 resource_local_to_scene = true
 shader = SubResource("Shader_sky")
 shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
@@ -159,7 +160,7 @@ radius = 104.832
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
-material = SubResource("ShaderMaterial_nq3ki")
+material = SubResource("ShaderMaterial_q6x0b")
 zenith_gradient = SubResource("GradientTexture1D_king_zenith")
 
 [node name="SunsetTrigger" parent="Sky" index="0" unique_id=1847000005]
@@ -209,6 +210,14 @@ position = Vector2(-95.999985, 143.00003)
 rotation = 4.4953012
 texture = SubResource("Texture2D_pfy3u")
 
+[node name="AirWall" parent="Surface/King" index="6" unique_id=471233843 instance=ExtResource("4_q6x0b")]
+position = Vector2(-90.999985, 101.00003)
+rotation = -1.5049326
+enabled = false
+
+[node name="CollisionShape2D" parent="Surface/King/AirWall" index="0" unique_id=70283118]
+disabled = true
+
 [node name="Body" parent="." index="3" unique_id=1433111694]
 texture = SubResource("EditableTexture_blue_mottled_disk")
 
@@ -220,3 +229,8 @@ auto_start = true
 [node name="Config" parent="." index="5" unique_id=1313635981]
 metadata/run_shell_scene = ExtResource("16_run_shell")
 metadata/day_music = ExtResource("18_day_music")
+
+[connection signal="player_entered" from="Surface/King/TriggerHello" to="Surface/King/AirWall" method="set_enabled" flags=7 binds= [true]]
+[connection signal="player_entered" from="Surface/King/TriggerSleepy" to="Surface/King/AirWall" method="set_enabled" flags=6 binds= [true]]
+
+[editable path="Surface/King/AirWall"]
