@@ -94,9 +94,9 @@ func replace_planet(next_planet: Node2D) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	var alt_key := event as InputEventKey
-	if OS.is_debug_build() and alt_key != null and not alt_key.is_echo() and alt_key.physical_keycode == KEY_ALT and alt_key.location == KEY_LOCATION_LEFT:
-		Engine.time_scale = WorldConstants.FAST_FORWARD_TIME_SCALE if alt_key.pressed else 1.0
+	var control_key := event as InputEventKey
+	if OS.is_debug_build() and control_key != null and not control_key.is_echo() and control_key.physical_keycode == KEY_CTRL and control_key.location == KEY_LOCATION_LEFT:
+		Engine.time_scale = WorldConstants.FAST_FORWARD_TIME_SCALE if control_key.pressed else 1.0
 	if not dialogue.is_open() or event.is_echo() or not event.is_action(&\"interact\"):
 		return
 	if event.is_pressed():
