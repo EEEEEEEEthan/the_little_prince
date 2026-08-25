@@ -24,8 +24,12 @@ const KING_AUDIENCE_KEEP_AWAY_ARC: float = 0.70
 ## 先听见国王、人还在地平线后：比可见半弧更远。
 const KING_DISTANT_VOICE_ARC: float = 2.08
 
-## 可互动物体相对弧顶的半宽（像素，沿圆周）。
+## 玩家触发器默认半径（像素）；可交互范围在 tscn 里按实例改。
 const INTERACT_RANGE_PX: float = 16.0
+## 国王本人：对应觐见禁区半宽再略放一点。
+const KING_AUDIENCE_TRIGGER_RADIUS: float = 67.86
+## 王座与披风：从禁区边缘仍能点到。
+const KING_FURNITURE_TRIGGER_RADIUS: float = 116.67
 ## A 键提示跟随点：地物本地坐标 Y（沿半径向外为负），提示本身不继承旋转。
 const INTERACT_PROMPT_LOCAL_Y: float = -38.0
 ## 头顶打字机：相对弧顶的本地 Y（向上为负），Label 底边对齐此点。
@@ -111,9 +115,7 @@ const PLAYER_IDLE_FPS: float = 2.0
 const PLAYER_WALK_FPS: float = 8.0
 ## 脚底探测圆半径（像素），用于与草丛 Area 重叠。
 const PLAYER_FOOTPRINT_RADIUS: float = 6.0
-## 草丛触发区物理层；Area 仅挂此层，不挡行走与互动。
-const FLORA_GRASS_PHYSICS_LAYER_INDEX: int = 2
-## 每丛 FLORA 一份圆形 Area，比半幅视觉略大。
+## 每丛 FLORA 触发圆半径，比半幅视觉略大。
 const FLORA_GRASS_TRIGGER_RADIUS: float = FLORA_SPRITE_SIZE * 0.5 * 1.35
 
 ## 火山 spritesheet：死火山变体在前，活火山在后（熔岩发光；烟雾由粒子绘制）。

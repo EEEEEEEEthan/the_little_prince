@@ -161,32 +161,6 @@ func move_player(direction: float, delta: float) -> void:
 	_sync_rotation()
 
 
-## 弧顶附近最近的可互动物体；超出 INTERACT_RANGE_PX 则返回 null。
-func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceProp:
-	var default_max_arc := WorldConstants.INTERACT_RANGE_PX / radius
-	var best: SurfaceProp = null
-	var best_diff := INF
-	for prop in surface_props:
-		if not prop.is_interactable():
-			continue
-		if should_accept.is_valid() and not should_accept.call(prop):
-			continue
-		var diff := absf(angle_difference(player_angle, prop.rotation))
-		var max_arc := default_max_arc
-		if audience_keep_away_arc > 0.0:
-			if prop.kind == SurfaceProp.Kind.KING:
-				max_arc = audience_keep_away_arc + 0.02
-			elif (
-					prop.kind == SurfaceProp.Kind.THRONE
-					or prop.kind == SurfaceProp.Kind.CAPE
-			):
-				max_arc = audience_keep_away_arc + 0.55
-		if diff <= max_arc and diff <= best_diff:
-			best_diff = diff
-			best = prop
-	return best
-
-
 func teleport_player(angle: float) -> void:
 	angular_velocity = 0.0
 	player_angle = fposmod(angle, TAU)

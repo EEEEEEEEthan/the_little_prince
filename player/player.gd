@@ -35,7 +35,34 @@ func _physics_process(delta: float) -> void:
 	_update_animation(direction, delta)
 
 func is_in_grass() -> bool:
-	return not %Footprint.get_overlapping_areas().is_empty()
+	return has_overlapping_trigger_kind(PlayerTrigger.Kind.GRASS)
+
+
+func has_overlapping_trigger_kind(kind: PlayerTrigger.Kind) -> bool:
+	for area in %Footprint.get_overlapping_areas():
+		var trigger := area as PlayerTrigger
+		if trigger != null and trigger.kind == kind:
+			return true
+	return false
+
+
+func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceProp:
+	var best: SurfaceProp = null
+	var best_distance_squared := INF
+	for area in %Footprint.get_overlapping_areas():
+		var trigger := area as PlayerTrigger
+		if trigger == null or trigger.kind != PlayerTrigger.Kind.INTERACT:
+			continue
+		var prop := trigger.hosted_surface_prop()
+		if prop == null or not prop.is_interactable():
+			continue
+		if should_accept.is_valid() and not should_accept.call(prop):
+			continue
+		var distance_squared := global_position.distance_squared_to(trigger.global_position)
+		if distance_squared <= best_distance_squared:
+			best_distance_squared = distance_squared
+			best = prop
+	return best
 
 
 func _update_animation(direction: float, delta: float) -> void:
