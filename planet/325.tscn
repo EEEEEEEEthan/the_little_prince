@@ -10,66 +10,6 @@
 [ext_resource type="PackedScene" uid="uid://csurfpropbase" path="res://planet/surface_prop.tscn" id="5_mouse_prop"]
 [ext_resource type="AudioStream" uid="uid://b5xo4yhua70tx" path="res://audio/thin_rat_squeak.wav" id="19_rat_squeak"]
 
-[sub_resource type="Shader" id="Shader_sky"]
-code = "shader_type canvas_item;
-// 统一天空 shader：按天空相位从 zenith_gradient 采样背景色，
-// 星空走 Sprite 自身 TEXTURE（starfield.png），夜空渐变控制星星透明度。
-
-uniform sampler2D zenith_gradient : filter_nearest;
-uniform sampler2D star_alpha_gradient : hint_default_white, filter_nearest;
-uniform sampler2D noise_texture : hint_default_white, filter_nearest;
-// phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
-uniform float phase : hint_range(0.0, 1.0) = 0.5;
-uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
-
-void fragment() {
-	// 量化到噪声纹理像素后取样，噪声附着在像素上而不是随帧跳动。
-	vec2 noise_size = vec2(textureSize(noise_texture, 0));
-	vec2 noise_uv = (floor(UV * noise_size) + 0.5) / max(noise_size, vec2(1.0));
-	float pixel_noise = (texture(noise_texture, noise_uv).r - 0.5) * noise_strength;
-	vec3 sky_color = texture(zenith_gradient, vec2(clamp(phase + pixel_noise, 0.0, 1.0), 0.5)).rgb;
-	vec4 stars = texture(TEXTURE, UV);
-	float star_alpha = texture(star_alpha_gradient, vec2(phase, 0.5)).r;
-	vec3 final_color = mix(sky_color, stars.rgb, stars.a * star_alpha);
-	COLOR = vec4(final_color, 1.0);
-}
-"
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_aiioy"]
-noise_type = 2
-frequency = 0.001
-fractal_octaves = 10
-fractal_lacunarity = 2.32
-fractal_gain = 1.065
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_sky"]
-width = 640
-height = 640
-noise = SubResource("FastNoiseLite_aiioy")
-
-[sub_resource type="Gradient" id="Gradient_night_sky"]
-offsets = PackedFloat32Array(0, 0.13454546, 0.7163636, 1)
-colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1)
-
-[sub_resource type="GradientTexture1D" id="GradientTexture1D_night_sky"]
-gradient = SubResource("Gradient_night_sky")
-
-[sub_resource type="Gradient" id="Gradient_zenith"]
-offsets = PackedFloat32Array(0.047272727, 0.21090908, 0.26909092, 0.6363636, 0.76, 0.8181818, 0.8909091)
-colors = PackedColorArray(0.1646875, 0.1178125, 0.136875, 1, 0.5411765, 0.56078434, 0.7176471, 1, 0.46000004, 0.615625, 0.9046875, 1, 0.45882353, 0.6156863, 0.90588236, 1, 0.34368372, 0.3283189, 0.41317907, 1, 0.3181154, 0.29822287, 0.3737613, 1, 0.16470589, 0.11764706, 0.13725491, 1)
-
-[sub_resource type="GradientTexture1D" id="GradientTexture1D_zenith"]
-gradient = SubResource("Gradient_zenith")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_q6x0b"]
-resource_local_to_scene = true
-shader = SubResource("Shader_sky")
-shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
-shader_parameter/star_alpha_gradient = SubResource("GradientTexture1D_night_sky")
-shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
-shader_parameter/phase = 0.5
-shader_parameter/noise_strength = 0.02
-
 [sub_resource type="Gradient" id="Gradient_king_zenith"]
 offsets = PackedFloat32Array(0, 0.18, 0.25, 0.5, 0.75, 0.82, 1)
 colors = PackedColorArray(0.0196078, 0.0313726, 0.0784314, 1, 0.156863, 0.447059, 0.266667, 1, 0.364706, 0.603922, 0.305882, 1, 0.364706, 0.603922, 0.305882, 1, 0.156863, 0.447059, 0.266667, 1, 0.0470588, 0.109804, 0.141176, 1, 0.0196078, 0.0313726, 0.0784314, 1)
@@ -288,7 +228,6 @@ radius = 104.832
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
-material = SubResource("ShaderMaterial_q6x0b")
 zenith_gradient = SubResource("GradientTexture1D_king_zenith")
 
 [node name="SunsetTrigger" parent="Sky" index="0" unique_id=1847000005]

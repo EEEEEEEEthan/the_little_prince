@@ -188,11 +188,11 @@ code = "shader_type canvas_item;
 // 统一天空 shader：按天空相位从 zenith_gradient 采样背景色，
 // 星空走 Sprite 自身 TEXTURE（starfield.png），夜空渐变控制星星透明度。
 
-uniform sampler2D zenith_gradient : filter_nearest;
+instance uniform sampler2D zenith_gradient : filter_nearest;
 uniform sampler2D star_alpha_gradient : hint_default_white, filter_nearest;
 uniform sampler2D noise_texture : hint_default_white, filter_nearest;
 // phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
-uniform float phase : hint_range(0.0, 1.0) = 0.5;
+instance uniform float phase : hint_range(0.0, 1.0) = 0.5;
 uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
 
 void fragment() {
@@ -235,12 +235,9 @@ colors = PackedColorArray(0.1646875, 0.1178125, 0.136875, 1, 0.5411765, 0.560784
 gradient = SubResource("Gradient_zenith")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
-resource_local_to_scene = true
 shader = SubResource("Shader_sky")
-shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
 shader_parameter/star_alpha_gradient = SubResource("GradientTexture1D_night_sky")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
-shader_parameter/phase = 0.5
 shader_parameter/noise_strength = 0.02
 
 [sub_resource type="Texture2D" id="EditableTexture_starfield"]
@@ -261,13 +258,9 @@ var planet_rotation: float = 0.0
 @export var zenith_gradient: Texture2D:
 	set(value):
 		zenith_gradient = value
-		if not is_node_ready():
-			await ready
 		if zenith_gradient == null:
 			return
-		(material as ShaderMaterial).set_shader_parameter(
-				\"zenith_gradient\", zenith_gradient
-		)
+		set_instance_shader_parameter(&\"zenith_gradient\", zenith_gradient)
 ## 酒鬼等锁死天光用：有值时天空相位不再跟经度走。
 var commanded_daylight_phase: float = NAN:
 	set(value):
@@ -297,10 +290,7 @@ func daylight_phase() -> float:
 
 
 func _update_daylight() -> void:
-	var mat := material as ShaderMaterial
-	if mat == null:
-		return
-	mat.set_shader_parameter(\"phase\", daylight_phase())
+	set_instance_shader_parameter(&\"phase\", daylight_phase())
 "
 
 [sub_resource type="GDScript" id="GDScript_clouds"]
@@ -515,6 +505,7 @@ texture_filter = 1
 material = SubResource("ShaderMaterial_sky")
 texture = SubResource("EditableTexture_starfield")
 script = SubResource("GDScript_sky")
+zenith_gradient = SubResource("GradientTexture1D_zenith")
 
 [node name="SunsetTrigger" parent="Sky" unique_id=1847000005 instance=ExtResource("16_player_trigger")]
 unique_name_in_owner = true
