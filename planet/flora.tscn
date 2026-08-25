@@ -1,16 +1,36 @@
 [gd_scene load_steps=6 format=3 uid="uid://cfloratscn001"]
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
-[ext_resource type="Script" uid="uid://cflorascript01" path="res://planet/flora.gd" id="1_flora"]
+[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="1_surface_prop"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="2_trigger"]
-[ext_resource type="Shader" uid="uid://dfloraswayshd" path="res://planet/flora_sway.gdshader" id="3_sway"]
+
+[sub_resource type="Shader" id="Shader_flora_sway"]
+code = "shader_type canvas_item;
+render_mode unshaded;
+// 相位取世界坐标，使邻近植株共乘同一阵风；位移沿局部横向以免拔出地表。
+
+uniform float sway_pixels = 1.8;
+uniform float sway_speed = 1.4;
+uniform float world_frequency = 0.08;
+
+void vertex() {
+	vec2 world_position = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
+	float height_mask = 1.0 - UV.y;
+	height_mask *= height_mask;
+	float wind_phase = (
+			world_position.x * world_frequency
+			+ world_position.y * world_frequency * 0.65
+	);
+	VERTEX.x += sin(TIME * sway_speed + wind_phase) * sway_pixels * height_mask;
+}
+"
 
 [sub_resource type="Texture2D" id="EditableTexture_flora"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAGAAAAAQCAYAAADpunr5AAAAAXNSR0IArs4c6QAAARtJREFUWIXtljsOgzAMhpNInXo3WFmYkLJzEnYkpiyszd2YGNLJknGb4ERUtMXfRENs/36hKiUIgiAIgiAI3007VuFsDf+GOVvA1dk04OgJb4Zp4+9qG0Tzx0AtTt0AjsBfoVSv4Rq2YxWc9bokyNGUJJtrk9peji9uvOQGpCY0N2BuAjmAv5xh+pQWAIZ1z/+hn6BYMDgHUetSZzU35pt7Rt/TTd6z2dMKPtuxCtTXutQvd/EdA4bvxNzuD1ZwldFxeD/3nZ77TtNzag+/IZHUtDvrNU6YUxCqG99vhik0wxTmvtPvCkyfaWNxfjEMiCj9xuMGQgFw0/BzrLj4bsl2xHSvS62c9ZrjjzZGoQLG7CGus17TQeb+A3wCwEnrAQMFPggAAAAASUVORK5CYII="
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_flora_sway"]
-shader = ExtResource("3_sway")
+shader = SubResource("Shader_flora_sway")
 shader_parameter/sway_pixels = 1.8
 shader_parameter/sway_speed = 1.4
 shader_parameter/world_frequency = 0.08
@@ -22,7 +42,7 @@ material = SubResource("ShaderMaterial_flora_sway")
 texture = SubResource("EditableTexture_flora")
 offset = Vector2(0, -8)
 hframes = 6
-script = ExtResource("1_flora")
+script = ExtResource("1_surface_prop")
 kind = 3
 
 [node name="PlayerTrigger" parent="." instance=ExtResource("2_trigger")]

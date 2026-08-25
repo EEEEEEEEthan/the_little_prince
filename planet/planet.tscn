@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
 [ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
-[ext_resource type="Texture2D" uid="uid://dah4k8m2v7xqw" path="res://planet/zenith_gradient.tres" id="10_zenith_gradient"]
 [ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
 [ext_resource type="Texture2D" uid="uid://cwlvnpufffrm" path="res://planet/white_lavender_puff_frames.png" id="14_cloud_tex"]
 [ext_resource type="Shader" uid="uid://bcloudframeshd" path="res://planet/cloud_frame.gdshader" id="15_cloud_shader"]
@@ -200,6 +199,13 @@ func _sync_transform() -> void:
 "
 
 
+[sub_resource type="Gradient" id="Gradient_zenith"]
+offsets = PackedFloat32Array(0.047272727, 0.21090908, 0.26909092, 0.6363636, 0.76, 0.8181818, 0.8909091)
+colors = PackedColorArray(0.1646875, 0.1178125, 0.136875, 1, 0.5411765, 0.56078434, 0.7176471, 1, 0.46000004, 0.615625, 0.9046875, 1, 0.45882353, 0.6156863, 0.90588236, 1, 0.34368372, 0.3283189, 0.41317907, 1, 0.3181154, 0.29822287, 0.3737613, 1, 0.16470589, 0.11764706, 0.13725491, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_zenith"]
+gradient = SubResource("Gradient_zenith")
+
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_aiioy"]
 noise_type = 2
 frequency = 0.001
@@ -214,7 +220,7 @@ noise = SubResource("FastNoiseLite_aiioy")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("10_sky_shader")
-shader_parameter/zenith_gradient = ExtResource("10_zenith_gradient")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
 shader_parameter/star_alpha_gradient = ExtResource("11_star_alpha_gradient")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
 shader_parameter/phase = 0.5
