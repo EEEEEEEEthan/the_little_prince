@@ -7,6 +7,8 @@
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="18_day_music"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="Texture2D" uid="uid://7h1iqfspyiuq" path="res://ui/king.png" id="king_portrait"]
+[ext_resource type="PackedScene" uid="uid://csurfpropbase" path="res://planet/surface_prop.tscn" id="5_mouse_prop"]
+[ext_resource type="AudioStream" uid="uid://b5xo4yhua70tx" path="res://audio/thin_rat_squeak.wav" id="19_rat_squeak"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -101,21 +103,109 @@ resource_name = ""
 script = ExtResource("editable_texture_script")
 _base64_data = "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"
 
+[sub_resource type="GDScript" id="GDScript_mouse"]
+script/source = "extends SurfaceProp
+
+const REST_OFFSET := Vector2(0, -7)
+const IDLE_FRAME_COUNT := 2
+const RUN_FRAME_START := 2
+const RUN_FRAME_COUNT := 2
+const IDLE_FRAMES_PER_SECOND := 2.0
+const RUN_FRAMES_PER_SECOND := 10.0
+const FLEE_ARC := 0.9
+const FLEE_DURATION_SECONDS := 0.45
+
+var _anim_time := 0.0
+var _is_fleeing := false
+var _motion_tween: Tween
+var _rest_rotation := 0.0
+
+
+func _ready() -> void:
+	_rest_rotation = rotation
+	offset = REST_OFFSET
+	hframes = 4
+	frame = 0
+
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	if _is_fleeing:
+		frame = RUN_FRAME_START + int(_anim_time * RUN_FRAMES_PER_SECOND) % RUN_FRAME_COUNT
+		return
+	flip_h = angle_difference(rotation, owner.player_angle) < 0.0
+	frame = int(_anim_time * IDLE_FRAMES_PER_SECOND) % IDLE_FRAME_COUNT
+
+
+func play_ambient_one_shot() -> void:
+	%Squeak.play()
+	if _motion_tween != null:
+		_motion_tween.kill()
+	offset = REST_OFFSET
+	_motion_tween = create_tween()
+	_motion_tween.tween_property(self, \"offset\", REST_OFFSET + Vector2(0, -3), 0.06)
+	_motion_tween.tween_property(self, \"offset\", REST_OFFSET, 0.10)
+
+
+func run_away() -> void:
+	_is_fleeing = true
+	_anim_time = 0.0
+	is_armed = false
+	flip_h = false
+	if _motion_tween != null:
+		_motion_tween.kill()
+	_motion_tween = create_tween()
+	_motion_tween.set_trans(Tween.TRANS_QUAD)
+	_motion_tween.set_ease(Tween.EASE_IN)
+	_motion_tween.tween_property(self, \"rotation\", rotation + FLEE_ARC, FLEE_DURATION_SECONDS)
+	_motion_tween.parallel().tween_property(self, \"modulate:a\", 0.0, FLEE_DURATION_SECONDS)
+	_motion_tween.tween_callback(func() -> void:
+		visible = false
+		is_consumed = true
+	)
+
+
+func restore_at_rest() -> void:
+	if _motion_tween != null:
+		_motion_tween.kill()
+		_motion_tween = null
+	_is_fleeing = false
+	_anim_time = 0.0
+	rotation = _rest_rotation
+	offset = REST_OFFSET
+	modulate.a = 1.0
+	visible = true
+	is_consumed = false
+	is_armed = true
+	frame = 0
+"
+
+[sub_resource type="Texture2D" id="EditableTexture_round_tan_mouse"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAMCAYAAADS87vJAAAAx0lEQVR42mNgoBOw0lL6D8MMAwAG1H6QpV+W7ADjgXAAVewnJQRBao4saUHBlMYAXe1HN4CUEMRmOToe1PbjMgBXCGLj47JYSkjgPwi8qJjwn1T9tLKfpBDEZsCGzgysDnh15wQcw/S/2bAC7hlC+mllP0Yg4gpBYj0AcwTMIdj0I8cetiSM7Aly7cenH9luUDbCaTm5HiCkH+YJUgowutpPKAYp9cBA6Uc2h1j9FDsAvcoitfqj2AMU2k8dA6jYahvoFuSwBwDtiPyD5jV7VAAAAABJRU5ErkJggg=="
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mouse_player_trigger"]
+radius = 20.0
+
 [sub_resource type="GDScript" id="GDScript_story"]
 script/source = "extends PlanetStory
 ## 325 号小行星：背面降落，路上可点环境；觐见时对上现有国王对话（无日落）。
 
 const KING_SPEAKER := \"国王\"
+const MOUSE_SPEAKER := \"小老鼠\"
 
 @export var king_portrait: Texture2D
 
 var has_overheard_distant_sentencing: bool = false
+var mouse_squeak_count: int = 0
 
 
 func _prepare_start() -> void:
 	player.move_speed_scale = 0.65
 	player.modulate.a = 1.0
 	has_overheard_distant_sentencing = false
+	mouse_squeak_count = 0
+	%Mouse.restore_at_rest()
 	set_process(false)
 
 
@@ -127,6 +217,40 @@ func _play_story() -> void:
 	is_blocking_input = false
 	has_finished_opening = true
 	await _await_king()
+
+
+func accepts_interact(prop: SurfaceProp) -> bool:
+	if not is_active or is_blocking_input or prop.is_consumed:
+		return false
+	if not _waiting_props.is_empty():
+		return _waiting_props.has(prop)
+	return prop == %Mouse
+
+
+func try_handle_interact(prop: SurfaceProp) -> bool:
+	if not _waiting_props.is_empty() and _waiting_props.has(prop):
+		return super.try_handle_interact(prop)
+	if not accepts_interact(prop):
+		return false
+	if prop == %Mouse:
+		_play_mouse_joke()
+		return true
+	return false
+
+
+func _play_mouse_joke() -> void:
+	_lock_input()
+	mouse_squeak_count += 1
+	%Mouse.play_ambient_one_shot()
+	await _line(MOUSE_SPEAKER, \"吱\", null)
+	if mouse_squeak_count < 4:
+		await _prince(\"吱\")
+		is_blocking_input = false
+		return
+	%Mouse.run_away()
+	await _prince(\"喵\")
+	await _overhead(\"小老鼠跑掉了\")
+	is_blocking_input = false
 
 func _await_king() -> void:
 	await %TriggerHello.player_entered
@@ -217,6 +341,26 @@ enabled = false
 
 [node name="CollisionShape2D" parent="Surface/King/AirWall" index="0" unique_id=70283118]
 disabled = true
+
+[node name="Mouse" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=410000060 instance=ExtResource("5_mouse_prop")]
+unique_name_in_owner = true
+z_index = 2
+texture_filter = 1
+position = Vector2(22.877448, -102.305281)
+rotation = 0.22
+texture = SubResource("EditableTexture_round_tan_mouse")
+offset = Vector2(0, -7)
+hframes = 4
+script = SubResource("GDScript_mouse")
+is_armed = true
+
+[node name="PlayerTrigger" parent="Surface/Mouse" index="0"]
+shape = SubResource("CircleShape2D_mouse_player_trigger")
+
+[node name="Squeak" type="AudioStreamPlayer" parent="Surface/Mouse" unique_id=410000061]
+unique_name_in_owner = true
+stream = ExtResource("19_rat_squeak")
+volume_db = -6.0
 
 [node name="Body" parent="." index="3" unique_id=1433111694]
 texture = SubResource("EditableTexture_blue_mottled_disk")
