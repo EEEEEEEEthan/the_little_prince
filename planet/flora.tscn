@@ -48,5 +48,5 @@ interact_kind = 0
 
 [node name="PlayerTrigger" parent="." index="0"]
 position = Vector2(0, -8)
-groups = PackedStringArray("grass")
+is_grass = true
 shape = SubResource("CircleShape2D_flora_player_trigger")

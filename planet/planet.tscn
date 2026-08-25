@@ -74,7 +74,7 @@ func bind_player_footprint(footprint: Area2D) -> void:
 
 func is_player_in_grass() -> bool:
 	for area in overlapping_player_triggers:
-		if area.is_in_group(&\"grass\"):
+		if area.is_grass:
 			return true
 	return false
 
