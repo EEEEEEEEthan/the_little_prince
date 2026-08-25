@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://cplanetstor01" path="res://planet/planet_story.gd" id="2_story"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="16_player_trigger"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
-[ext_resource type="Texture2D" uid="uid://cprincebust01" path="res://ui/prince.png" id="prince_portrait"]
 
 [sub_resource type="GDScript" id="GDScript_planet"]
 script/source = "extends Node2D
@@ -27,7 +26,7 @@ var volcano_angles: Array[float] = []
 var baobab_angles: Array[float] = []
 var flora_angles: Array[float] = []
 var surface_props: Array[SurfaceProp] = []
-var overlapping_player_triggers: Array[Area2D] = []
+var player_triggers: Array[Area2D] = []
 var focused_player_trigger: Area2D
 var air_walls: Array[Node] = []
 
@@ -49,7 +48,9 @@ func _ready() -> void:
 
 func _collect_surface_props() -> void:
 	air_walls.clear()
+	player_triggers.clear()
 	_collect_air_walls(surface)
+	_collect_player_triggers(self)
 	for child in surface.get_children():
 		if child.name == \"Rose\":
 			rose_angle = child.rotation
@@ -67,31 +68,11 @@ func _collect_surface_props() -> void:
 		surface_props.append(prop)
 
 
-func bind_player_footprint(footprint: Area2D) -> void:
-	footprint.area_entered.connect(_on_player_entered_area)
-	footprint.area_exited.connect(_on_player_exited_area)
-
-
 func is_player_in_grass() -> bool:
-	for area in overlapping_player_triggers:
-		if area.is_grass:
+	for area in player_triggers:
+		if area.player_is_inside and area.is_grass:
 			return true
 	return false
-
-
-func _on_player_entered_area(area: Area2D) -> void:
-	if not area.has_method(\"hosted_surface_prop\"):
-		return
-	overlapping_player_triggers.append(area)
-	area.notify_player_entered()
-	refresh_interact_focus()
-
-
-func _on_player_exited_area(area: Area2D) -> void:
-	overlapping_player_triggers.erase(area)
-	if area.has_method(\"notify_player_exited\"):
-		area.notify_player_exited()
-	refresh_interact_focus()
 
 
 func refresh_interact_focus() -> void:
@@ -99,11 +80,13 @@ func refresh_interact_focus() -> void:
 	var best: Area2D = null
 	var best_distance_squared := INF
 	if story.is_active and not story.is_blocking_player_input():
-		for area in overlapping_player_triggers:
+		for area in player_triggers:
+			if not area.player_is_inside:
+				continue
 			if not area.is_armed or area.interact_kind == WorldConstants.InteractKind.NONE:
 				continue
 			var prop := area.hosted_surface_prop() as SurfaceProp
-			if prop == null or not story.accepts_interact(prop):
+			if prop != null and not story.accepts_interact(prop):
 				continue
 			var distance_squared := apex_global_position().distance_squared_to(area.global_position)
 			if distance_squared <= best_distance_squared:
@@ -148,6 +131,13 @@ func _collect_air_walls(node: Node) -> void:
 			air_walls.append(child)
 		else:
 			_collect_air_walls(child)
+
+
+func _collect_player_triggers(node: Node) -> void:
+	for child in node.get_children():
+		if child.has_method(&\"hosted_surface_prop\"):
+			player_triggers.append(child)
+		_collect_player_triggers(child)
 
 
 func teleport_player(angle: float) -> void:
@@ -497,6 +487,13 @@ func _present_with_run_shell() -> void:
 	tree.current_scene = shell
 "
 
+[sub_resource type="Texture2D" id="Texture2D_v2ulb"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAANZJREFUWIVjZEADD1Z7oQtRFSiEbkPhs5Bhxn8C8oykGEaKAwhZjK6OKIcwkeAAmgBiQoBYn+PShzckhkQIYAXyBhEo/IcXVpBlzpAIAVgc/mdgwPQ5DMDEkUJi+OQCGEAJCSLUEQVICgFcwU+qGmSA07Wxs/xwSZEVAovTNmFVPKTSwH8GBgaGZsE/eBXVvmcZfnUBCqh9T3bhiRUMeAiMOmDUARh5lYISkKDZDAyYJeKAh8CoA0ZbxSQX7LcnX8Urr5qrTZJ5Qy8ESPUhNRxAUiOTVAAAnH0mdwUrK4QAAAAASUVORK5CYII="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
 [node name="Planet" type="Node2D" unique_id=1020592655]
 position = Vector2(128, 284.48)
 script = SubResource("GDScript_planet")
@@ -542,4 +539,4 @@ auto_start = false
 unique_name_in_owner = true
 process_mode = 4
 script = SubResource("GDScript_playable")
-prince_portrait = ExtResource("prince_portrait")
+prince_portrait = SubResource("Texture2D_v2ulb")

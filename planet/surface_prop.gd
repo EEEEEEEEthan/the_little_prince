@@ -25,7 +25,7 @@ var is_consumed: bool = false:
 		is_consumed = value
 		if not is_node_ready():
 			await ready
-		%PlayerTrigger.monitorable = not is_consumed
+		%PlayerTrigger.monitoring = not is_consumed
 		if is_consumed:
 			is_armed = false
 
