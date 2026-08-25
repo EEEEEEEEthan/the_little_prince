@@ -1,12 +1,70 @@
 [gd_scene format=3 uid="uid://dkingplanet01"]
 
-[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
 [ext_resource type="PackedScene" uid="uid://csurfpropbase" path="res://planet/surface_prop.tscn" id="4_prop_scene"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="18_day_music"]
-[ext_resource type="AudioStream" uid="uid://b5xo4yhua70tx" path="res://audio/thin_rat_squeak.wav" id="19_rat_squeak"]
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 
+[sub_resource type="Shader" id="Shader_sky"]
+code = "shader_type canvas_item;
+// 统一天空 shader：按天空相位从 zenith_gradient 采样背景色，
+// 星空走 Sprite 自身 TEXTURE（starfield.png），夜空渐变控制星星透明度。
+
+uniform sampler2D zenith_gradient : filter_nearest;
+uniform sampler2D star_alpha_gradient : hint_default_white, filter_nearest;
+uniform sampler2D noise_texture : hint_default_white, filter_nearest;
+// phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
+uniform float phase : hint_range(0.0, 1.0) = 0.5;
+uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
+
+void fragment() {
+	// 量化到噪声纹理像素后取样，噪声附着在像素上而不是随帧跳动。
+	vec2 noise_size = vec2(textureSize(noise_texture, 0));
+	vec2 noise_uv = (floor(UV * noise_size) + 0.5) / max(noise_size, vec2(1.0));
+	float pixel_noise = (texture(noise_texture, noise_uv).r - 0.5) * noise_strength;
+	vec3 sky_color = texture(zenith_gradient, vec2(clamp(phase + pixel_noise, 0.0, 1.0), 0.5)).rgb;
+	vec4 stars = texture(TEXTURE, UV);
+	float star_alpha = texture(star_alpha_gradient, vec2(phase, 0.5)).r;
+	vec3 final_color = mix(sky_color, stars.rgb, stars.a * star_alpha);
+	COLOR = vec4(final_color, 1.0);
+}
+"
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_aiioy"]
+noise_type = 2
+frequency = 0.001
+fractal_octaves = 10
+fractal_lacunarity = 2.32
+fractal_gain = 1.065
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_sky"]
+width = 640
+height = 640
+noise = SubResource("FastNoiseLite_aiioy")
+
+[sub_resource type="Gradient" id="Gradient_night_sky"]
+offsets = PackedFloat32Array(0, 0.13454546, 0.7163636, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_night_sky"]
+gradient = SubResource("Gradient_night_sky")
+
+[sub_resource type="Gradient" id="Gradient_zenith"]
+offsets = PackedFloat32Array(0.047272727, 0.21090908, 0.26909092, 0.6363636, 0.76, 0.8181818, 0.8909091)
+colors = PackedColorArray(0.1646875, 0.1178125, 0.136875, 1, 0.5411765, 0.56078434, 0.7176471, 1, 0.46000004, 0.615625, 0.9046875, 1, 0.45882353, 0.6156863, 0.90588236, 1, 0.34368372, 0.3283189, 0.41317907, 1, 0.3181154, 0.29822287, 0.3737613, 1, 0.16470589, 0.11764706, 0.13725491, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_zenith"]
+gradient = SubResource("Gradient_zenith")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_r860q"]
+resource_local_to_scene = true
+shader = SubResource("Shader_sky")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
+shader_parameter/star_alpha_gradient = SubResource("GradientTexture1D_night_sky")
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
+shader_parameter/phase = 0.5
+shader_parameter/noise_strength = 0.02
 
 [sub_resource type="Gradient" id="Gradient_king_zenith"]
 offsets = PackedFloat32Array(0, 0.18, 0.25, 0.5, 0.75, 0.82, 1)
@@ -16,100 +74,23 @@ colors = PackedColorArray(0.0196078, 0.0313726, 0.0784314, 1, 0.156863, 0.447059
 gradient = SubResource("Gradient_king_zenith")
 
 [sub_resource type="Texture2D" id="EditableTexture_king"]
+resource_local_to_scene = false
+resource_name = ""
 script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABQAAAAYCAYAAAD6S912AAAAsElEQVR42mNgwAM+HbP/j40mC4A048JkG3i7RxmM0dlku/LLmcX/0TFVDaPIUJjm/98vgg0A0RS7EmQIOqaqYWQbCtM4x8cTA5NsKC6DsBk8MAZi8x46hsmTbCAhTJKBIJfwCKlhpQfOhdHmPv8JhSGyPEg9QQOJdSWyeoIGgoCFrvJ/EEZXgyxOkoHEAKIMJNZQgmphCsjB9DEQBJwMvP+DMCEDYOqICmiYYkIYl34AbksIxsmxWWsAAAAASUVORK5CYII="
-
-[sub_resource type="Texture2D" id="EditableTexture_rat"]
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAYAAADA+m62AAAAOUlEQVR42mNgQAJOBt7/QZgBHwApePfuAhxj1QBTxCOkBsY4FaObRpSpeBUhewTZQwQ9RlIIoCsCAPXxVtWHf6ZFAAAAAElFTkSuQmCC"
-
-[sub_resource type="Texture2D" id="EditableTexture_blue_mottled_disk"]
-script = ExtResource("editable_texture_script")
-_base64_data = "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"
-
-[sub_resource type="Texture2D" id="EditableTexture_gold_spired_throne"]
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABwAAABICAYAAADlEpV1AAABEElEQVR4nGNkIAP831zwH8Zm9J3ASIpeJnIspAQMfguRgxMbn+oWUgpGLUQBuOKLlHhkIcVCBgYGhoc/bmGIyXOoEa2fJB/iyuSkZP7BHYejFo5aODIsxJlhH6z2IqnawQYUQrdhmE93HxIsS0kpJ2EAW3kLA8M/0QxiC3VtKZMn2cLLhymTJ9lCKoFRCwfQwtFUSiQYtXDUwlELRy2kPSDYTMTX5CMHwFvGpA7wkGWZ7wTG4R+HoxZSHTBSox9IChj+QTpqIdUBRuG9ZyH1E61LPGIwA2NYY46PJ9VtTNmyHW7P8I/DUQuHvoU4G1H3vjBTbLgSz18MMZzDl1UOPhTnx7YDWwZ++HLUwlELSQYAhw48XjHEDP4AAAAASUVORK5CYII="
-
-[sub_resource type="Texture2D" id="EditableTexture_crimson_cape_spread"]
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAADgAAAAYCAYAAACvKj4oAAABQklEQVR4nNWYSwrCMBCGx8dG6KIHEARP0GsIrjyD9/ECnqErwWu4FwShB3BR6Ep0ValJOpl/0sT6QTeheXzMNJOUKDHH7eaVcr5Jikk4qf3pHHUN0Qbvkyryhi6PhbNPDNlBB+QiVeSN1dYnSjScbPAgvm/KJWbCiRKFyao6SjYKiZiJT5QIlxW/LN39NGImElEimSz7Arql3+oZ7ZY10sVJWWW0zp5Qnz5Zq1EjZRIiWVaZ1RYiO9cswiUVk+58qOwUmaR9Qjhc7QghoOv4SlEuPVExTZq60pODi2abpuIIoqkRG+l6VN+gBDQasRBH0OQeXu6SjP8RRMvDSlaL1YSO3/pAEeTyPmVEkf0ALvSpa6ALn2C30MNHtbEKio9qLlL/ZkDwHbihq8eYRKXXJvVF8heymotv9Bv9EMT+MfXXvAGqaoj1RNtdTAAAAABJRU5ErkJggg=="
-
-[sub_resource type="Texture2D" id="EditableTexture_unrolled_parchment"]
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAKCAYAAACE2W/HAAAAW0lEQVR4nGNccHTtfwYoSLAOZmTAA8pXLYGrZUGWOHl3339M5Qiw7uwzOJsJn0J8gAVdwN2hFEPRzgPdhDViU0SWjbgMIttGjMBxdyjF6k+q2Yii0VzZiegEAAA3zh4PGq5r+QAAAABJRU5ErkJggg=="
-
-[sub_resource type="Texture2D" id="EditableTexture_scratched_border_lines"]
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABIAAAAICAYAAAD0g6+qAAAAbUlEQVR4nGNgoDYQkDX+LyBr/J9c/SzaQbXomv8zMDAwSJt6kWQQIwMDA4O8UTCGSz6+fsDAwMDAwC+qwPDw3FpGogzCB5C9yy+qgFXNw3NrGRnN8icSHS631i1iYGBgYFALiiNWC35AacTgBQAWjBlL3gZM/AAAAABJRU5ErkJggg=="
-
-[sub_resource type="Texture2D" id="EditableTexture_pale_paw_prints"]
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAICAYAAADJEc7MAAAAKUlEQVR4nGNgGDDAI6T2H5kmVg6nQQTlnAy8/2NjE5KDC2KVICBHHwAAsMUVcwBauMMAAAAASUVORK5CYII="
-
-[sub_resource type="Texture2D" id="EditableTexture_dark_soil_burrow"]
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAICAYAAADN5B7xAAAAXklEQVR42mNgoARICHBJAPEaA3nR/yAMYoPEsClM0pUV/q8hKfhfVVzgv7IYPxiD2CAxkBxIDdxUkICahMB/RVG+/3LCvP9lhXjAGMQGiYHkoJokSNdAspPI8jQpAADemTwt2iLbgwAAAABJRU5ErkJggg=="
-
-[sub_resource type="GDScript" id="GDScript_cape_hem"]
-script/source = "extends SurfaceProp
-var _rest_offset := Vector2.ZERO
-var _motion_tween: Tween
-
-
-func _ready() -> void:
-	_rest_offset = offset
-
-
-func play_ambient_one_shot() -> void:
-	if _motion_tween != null:
-		_motion_tween.kill()
-	offset = _rest_offset
-	_motion_tween = create_tween()
-	_motion_tween.set_trans(Tween.TRANS_BACK)
-	_motion_tween.set_ease(Tween.EASE_OUT)
-	_motion_tween.tween_property(self, \"offset\", _rest_offset + Vector2(3, -5), 0.12)
-	_motion_tween.tween_property(self, \"offset\", _rest_offset, 0.22)
-"
-
-[sub_resource type="GDScript" id="GDScript_border_jitter"]
-script/source = "extends SurfaceProp
-var _rest_offset := Vector2.ZERO
-var _motion_tween: Tween
-
-
-func _ready() -> void:
-	_rest_offset = offset
-
-
-func play_ambient_one_shot() -> void:
-	if _motion_tween != null:
-		_motion_tween.kill()
-	offset = _rest_offset
-	_motion_tween = create_tween()
-	_motion_tween.tween_property(self, \"offset\", _rest_offset + Vector2(2, 1), 0.05)
-	_motion_tween.tween_property(self, \"offset\", _rest_offset + Vector2(-2, 0), 0.07)
-	_motion_tween.tween_property(self, \"offset\", _rest_offset, 0.08)
-"
-
-[sub_resource type="GDScript" id="GDScript_rat_hole"]
-script/source = "extends SurfaceProp
-
-
-func play_ambient_one_shot() -> void:
-	$Squeak.play()
-	var punch := create_tween()
-	punch.tween_property(self, \"offset\", Vector2(0, -6), 0.04)
-	punch.tween_property(self, \"offset\", Vector2(0, -4), 0.08)
-"
-
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAkCAYAAAB15jFqAAAAAXNSR0IArs4c6QAAAW1JREFUWIXl1LFKxDAcBvDvL1WL8yGCQyf7AIc4dHJzFxx9B1cfQHyGG9xu1EGczq2r+ABHB+GGAwdxcDpOIQ5tQ5JL2iQmh+i39Bpy/fG1SQgBwx4utMPNldqBjZCobWKjTPf7Tzb9PyjNFhVmiwoQVi+Z59vl8+NIuk/KAgBaCFC2TJbm/qiKiZlPBuLt79inzk27Gopp2jJlmIA4TSUoS3NkaS5NCIlK2P7Jm9oyCirCRjAUyldnUhZIygI7uy9Ax3pJAqD1g5r9uXU2xnI6At4B4CYaSvPJgAEVHZw/YTkd4e70CgDY4eVeeFQ5BESwM16oiqH+fswGBDwW0v3xF56vX13/JsX6RLodDvumrGwTzTclIODqNSBqGADqRX0a9sWIWmA8Fg1XURdAiHNDCfWNa0OOerT0bshRH8y3YR/64zZdIcPr5ejj9mZwVHcMRm1pQnlitNSh0VvqUJ5YLVV0LS2BesusDWvzDRHpXZFBsB1IAAAAAElFTkSuQmCC"
 
 [sub_resource type="GDScript" id="GDScript_king_face"]
 script/source = "extends SurfaceProp
 
 func _process(_delta: float) -> void:
-	flip_h = angle_difference(rotation, owner.player_angle) < 0.0
+	flip_h = angle_difference(rotation, owner.player_angle) > 0.0
 "
+
+[sub_resource type="Texture2D" id="EditableTexture_blue_mottled_disk"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("editable_texture_script")
+_base64_data = "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"
 
 [sub_resource type="GDScript" id="GDScript_story"]
 script/source = "extends PlanetStory
@@ -128,375 +109,47 @@ func _prepare_start() -> void:
 
 func _play_story() -> void:
 	await _fade_in_from_black()
-	await _overhead(\"下一颗星球上，住着一位国王。\")
+	await _overhead(\"325\")
 	player.can_move_left = true
 	player.can_move_right = true
 	is_blocking_input = false
 	has_finished_opening = true
-	_watch_rat_overhear()
-	await _await_distant_king_voice()
-	await _await_audience_keep_away()
-	await _king(\"过来。这是命令。\")
-	await _king(\"啊！来了一个臣民！\")
-	await _overhead(\"小王子打了个哈欠。\")
-	await _king(\"在国王面前打哈欠是违反礼节的。\")
-	await _king(\"我禁止你打哈欠。\")
-	await _prince(\"我忍不住。\")
-	await _prince(\"我走了很远，一直没睡觉。\")
-	await _king(\"那我命令你打哈欠。\")
-	await _king(\"好几年来我都没见人打哈欠了。\")
-	await _king(\"对我来说，打哈欠是新鲜事。\")
-	await _king(\"来！再打一个。这是命令。\")
-	await _prince(\"这叫我很为难...我打不出来了。\")
-	await _king(\"嗯！嗯！\")
-	await _overhead(\"国王有点难堪。\")
-	await _king(\"那么我命令你...\")
-	await _king(\"有时候打哈欠，有时候不打。\")
-	await _king(\"我是绝对的君主。\")
-	await _prince(\"陛下统治什么呢？\")
-	await _king(\"统治一切。\")
-	await _prince(\"一切？\")
-	await _king(\"一切。\")
-	await _overhead(\"他轻轻比了个手势，把所有星球都划进他的王国。\")
-	await _prince(\"那些星星都服从您吗？\")
-	await _king(\"当然。我不容许无纪律。\")
-	await _king(\"如果我命令一位将军变成海鸟，\")
-	await _king(\"而他不服从，那是我的错。\")
-	await _king(\"我的命令必须通情达理。\")
-	player.move_speed_scale = 1.0
-	is_blocking_input = false
-	var king := await _interact(%King as SurfaceProp)
-	await _king(\"我任命你为司法大臣。\")
-	await _prince(\"可是这儿没有人可以审判。\")
-	await _king(\"那可难说。\")
-	await _king(\"我很老了，这地方又小，我懒得走动。\")
-	await _king(\"我记得有一只老耗子。\")
-	await _king(\"夜里我听见它。\")
-	await _king(\"你可以审判它。\")
-	await _prince(\"我不想判任何人死刑。\")
-	await _king(\"你可以赦免它。\")
-	await _king(\"我可以下令让你赦免它。\")
-	await _prince(\"我要走了。\")
-	await _king(\"不许。\")
-	await _overhead(\"小王子犹豫了一下。\")
-	await _king(\"我任命你为我的大使。\")
-	await _prince(\"再见。\")
-	await _overhead(\"国王的权威得到了尊重。\")
-	await _overhead(\"因为他的命令都是通情达理的。\")
-	king.is_consumed = true
-	await _depart(\"325。\")
-
-
-func accepts_interact(prop: SurfaceProp) -> bool:
-	if not is_active or is_blocking_input or prop.is_consumed:
-		return false
-	if not _waiting_props.is_empty():
-		return _waiting_props.has(prop)
-	return _is_ambient_prop(prop)
-
-
-func try_handle_interact(prop: SurfaceProp) -> bool:
-	if not _waiting_props.is_empty() and _waiting_props.has(prop):
-		return super.try_handle_interact(prop)
-	if not accepts_interact(prop):
-		return false
-	if prop.name.begins_with(\"Edict\"):
-		overhead.play_queued(\"诏上什么也没写。\")
-	elif prop.name == \"Throne\":
-		_glance_up_at_empty_throne()
-	elif prop.name.begins_with(\"Border\") or prop.name == \"Cape\" or prop.name == \"RatHole\":
-		prop.play_ambient_one_shot()
-	else:
-		return false
-	return true
-
-
-func _king(text: String) -> void:
-	await _line(DialogueCatalog.KING_SPEAKER, text, DialogueCatalog.KING_PORTRAIT)
-
-
-func _await_distant_king_voice() -> void:
-	var generation := _story_generation
-	if skip_cinematics:
-		await _halt_if_stale(generation)
-		return
-	while (
-			is_inside_tree()
-			and generation == _story_generation
-			and not planet.is_in_distant_king_voice_range()
-	):
-		await get_tree().process_frame
-	await _overhead(\"「……听着。」\")
-	await _halt_if_stale(generation)
-
-
-func _await_audience_keep_away() -> void:
-	var generation := _story_generation
-	while (
-			is_inside_tree()
-			and generation == _story_generation
-			and not planet.has_contacted_audience_keep_away
-	):
-		await get_tree().process_frame
-	await _halt_if_stale(generation)
-
-
-func _watch_rat_overhear() -> void:
-	var generation := _story_generation
-	var rat: SurfaceProp = planet.get_node(\"Surface/Rat\") as SurfaceProp
-	var overhear_arc: float = WorldConstants.INTERACT_RANGE_PX * 2.0 / planet.radius
-	while (
-			is_inside_tree()
-			and generation == _story_generation
-			and not has_overheard_distant_sentencing
-	):
-		if (
-				has_finished_opening
-				and not is_blocking_input
-				and absf(angle_difference(planet.player_angle, rat.rotation)) <= overhear_arc
-		):
-			has_overheard_distant_sentencing = true
-			if not skip_cinematics:
-				overhead.play_queued(\"「判你死刑。」\")
-				overhead.play_queued(\"「我赦免你。」\")
-			return
-		await get_tree().process_frame
-
-
-func _is_ambient_prop(prop: SurfaceProp) -> bool:
-	return (
-			prop.name == \"Cape\"
-			or prop.name == \"Throne\"
-			or prop.name == \"RatHole\"
-			or prop.name.begins_with(\"Edict\")
-			or prop.name.begins_with(\"Border\")
-	)
-
-
-func _glance_up_at_empty_throne() -> void:
-	if skip_cinematics:
-		return
-	var game_camera := _shell_node(&\"GameCamera\") as Camera2D
-	var glance := game_camera.create_tween()
-	glance.set_trans(Tween.TRANS_CUBIC)
-	glance.set_ease(Tween.EASE_IN_OUT)
-	glance.tween_property(game_camera, \"offset:y\", -16.0, 0.45)
-	glance.tween_property(game_camera, \"offset:y\", 0.0, 0.55)
 "
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_cape_player_trigger"]
-radius = 116.67
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_throne_player_trigger"]
-radius = 116.67
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_king_player_trigger"]
-radius = 67.86
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 position = Vector2(128, 301.952)
 radius = 104.832
-audience_keep_away_arc = 0.70
-
-[node name="Config" parent="." index="5"]
-process_mode = 4
-metadata/run_shell_scene = ExtResource("16_run_shell")
-metadata/day_music = ExtResource("18_day_music")
+audience_keep_away_arc = 0.7
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
+material = SubResource("ShaderMaterial_r860q")
 star_rotation_speed = 0.0
 zenith_gradient = SubResource("GradientTexture1D_king_zenith")
 
-[node name="SunsetTrigger" parent="Sky" index="0"]
-position = Vector2(93.405996, 47.592732)
+[node name="SunsetTrigger" parent="Sky" index="0" unique_id=1847000005]
+position = Vector2(93.406, 47.59273)
 
-[node name="Clouds" parent="." index="1"]
+[node name="Clouds" parent="." index="1" unique_id=1847000001]
 modulate = Color(0.55, 0.78, 0.92, 1)
 
-[node name="Body" parent="." index="3"]
-texture = SubResource("EditableTexture_blue_mottled_disk")
-
-[node name="Cape" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=410000010 instance=ExtResource("4_prop_scene")]
-z_index = -2
-texture_filter = 1
-position = Vector2(0, -104.832)
-rotation = 0.22
-texture = SubResource("EditableTexture_crimson_cape_spread")
-offset = Vector2(0, -6)
-script = SubResource("GDScript_cape_hem")
-is_armed = true
-
-[node name="PlayerTrigger" parent="Surface/Cape" index="0"]
-shape = SubResource("CircleShape2D_cape_player_trigger")
-[node name="Throne" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=410000011 instance=ExtResource("4_prop_scene")]
-z_index = -1
-texture_filter = 1
-position = Vector2(0, -104.832)
-texture = SubResource("EditableTexture_gold_spired_throne")
-offset = Vector2(0, -36)
-is_armed = true
-
-[node name="PlayerTrigger" parent="Surface/Throne" index="0"]
-shape = SubResource("CircleShape2D_throne_player_trigger")
-[node name="King" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=410000001 instance=ExtResource("4_prop_scene")]
+[node name="King" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=410000001 instance=ExtResource("4_prop_scene")]
 unique_name_in_owner = true
 z_index = 1
 texture_filter = 1
-position = Vector2(0, -104.832)
+position = Vector2(-1, 103.048004)
+rotation = 3.1415927
 texture = SubResource("EditableTexture_king")
-offset = Vector2(0, -52)
+offset = Vector2(0, -18.305)
 script = SubResource("GDScript_king_face")
 
-[node name="PlayerTrigger" parent="Surface/King" index="0"]
-shape = SubResource("CircleShape2D_king_player_trigger")
-[node name="Rat" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=410000002 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(0, 104.832)
-rotation = 3.1415927
-texture = SubResource("EditableTexture_rat")
-offset = Vector2(0, -5)
+[node name="Body" parent="." index="3" unique_id=1433111694]
+texture = SubResource("EditableTexture_blue_mottled_disk")
 
-[node name="RatTrace1" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=410000020 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(-22.877448, 102.305281)
-rotation = 3.3615927
-texture = SubResource("EditableTexture_pale_paw_prints")
-offset = Vector2(0, -3)
-
-[node name="RatTrace2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=410000021 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(28.970915, 100.749364)
-rotation = 2.8615927
-texture = SubResource("EditableTexture_pale_paw_prints")
-offset = Vector2(0, -3)
-
-[node name="RatTrace3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=410000022 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(-48.409235, 92.985452)
-rotation = 3.6215927
-texture = SubResource("EditableTexture_pale_paw_prints")
-offset = Vector2(0, -3)
-
-[node name="EdictL" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=410000030 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(-95.686869, -42.822555)
-rotation = -1.15
-texture = SubResource("EditableTexture_unrolled_parchment")
-offset = Vector2(0, -5)
-is_armed = true
-
-[node name="EdictR" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="8" unique_id=410000031 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(98.447664, -36.025071)
-rotation = 1.22
-texture = SubResource("EditableTexture_unrolled_parchment")
-offset = Vector2(0, -5)
-is_armed = true
-
-[node name="EdictL2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="9" unique_id=410000032 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(-93.023972, 48.335172)
-rotation = -2.05
-texture = SubResource("EditableTexture_unrolled_parchment")
-offset = Vector2(0, -5)
-is_armed = true
-
-[node name="EdictR2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=410000033 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(89.415457, 54.723161)
-rotation = 2.12
-texture = SubResource("EditableTexture_unrolled_parchment")
-offset = Vector2(0, -5)
-is_armed = true
-
-[node name="Border1" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=410000040 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(85.271974, -60.979002)
-rotation = 0.95
-texture = SubResource("EditableTexture_scratched_border_lines")
-offset = Vector2(0, -2)
-script = SubResource("GDScript_border_jitter")
-is_armed = true
-
-[node name="Border2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=410000041 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(89.328188, -54.865499)
-rotation = 1.02
-texture = SubResource("EditableTexture_scratched_border_lines")
-offset = Vector2(0, -3)
-script = SubResource("GDScript_border_jitter")
-is_armed = true
-
-[node name="Border3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=410000042 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(-83.404509, -63.509339)
-rotation = -0.92
-texture = SubResource("EditableTexture_scratched_border_lines")
-offset = Vector2(0, -2)
-script = SubResource("GDScript_border_jitter")
-is_armed = true
-
-[node name="Border4" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=410000043 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(-88.213086, -56.640971)
-rotation = -1.0
-texture = SubResource("EditableTexture_scratched_border_lines")
-offset = Vector2(0, -3)
-script = SubResource("GDScript_border_jitter")
-is_armed = true
-
-[node name="Border5" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=410000044 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(100.772402, 28.890677)
-rotation = 1.85
-texture = SubResource("EditableTexture_scratched_border_lines")
-offset = Vector2(0, -2)
-script = SubResource("GDScript_border_jitter")
-is_armed = true
-
-[node name="Border6" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=410000045 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(98.504914, 35.868232)
-rotation = 1.92
-texture = SubResource("EditableTexture_scratched_border_lines")
-offset = Vector2(0, -3)
-script = SubResource("GDScript_border_jitter")
-is_armed = true
-
-[node name="Border7" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=410000046 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(-99.860468, 31.900396)
-rotation = -1.88
-texture = SubResource("EditableTexture_scratched_border_lines")
-offset = Vector2(0, -2)
-script = SubResource("GDScript_border_jitter")
-is_armed = true
-
-[node name="Border8" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="18" unique_id=410000047 instance=ExtResource("4_prop_scene")]
-texture_filter = 1
-position = Vector2(-96.991774, 39.778687)
-rotation = -1.96
-texture = SubResource("EditableTexture_scratched_border_lines")
-offset = Vector2(0, -3)
-script = SubResource("GDScript_border_jitter")
-is_armed = true
-
-[node name="RatHole" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="19" unique_id=410000050 instance=ExtResource("4_prop_scene")]
-z_index = -1
-texture_filter = 1
-position = Vector2(0, 104.832)
-rotation = 3.1415927
-texture = SubResource("EditableTexture_dark_soil_burrow")
-offset = Vector2(0, -4)
-script = SubResource("GDScript_rat_hole")
-is_armed = true
-
-[node name="Squeak" type="AudioStreamPlayer" parent="Surface/RatHole" unique_id=410000051]
-stream = ExtResource("19_rat_squeak")
-volume_db = -6.0
-
-
-[node name="Story" parent="." index="4"]
+[node name="Story" parent="." index="4" unique_id=1847000004]
 script = SubResource("GDScript_story")
 auto_start = true
+
+[node name="Config" parent="." index="5" unique_id=1313635981]
+metadata/run_shell_scene = ExtResource("16_run_shell")
+metadata/day_music = ExtResource("18_day_music")
