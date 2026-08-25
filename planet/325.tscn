@@ -228,7 +228,7 @@ radius = 104.832
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
-instance_shader_parameters/zenith_gradient = SubResource("GradientTexture1D_king_zenith")
+texture:specular_texture = SubResource("GradientTexture1D_king_zenith")
 
 [node name="SunsetTrigger" parent="Sky" index="0" unique_id=1847000005]
 position = Vector2(93.406, 47.59273)
