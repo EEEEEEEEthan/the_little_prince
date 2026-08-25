@@ -185,22 +185,23 @@ func _sync_rotation() -> void:
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
-// 统一天空 shader：天顶色从节点 TEXTURE（渐变）采样，星空走共享 starfield。
+// 统一天空 shader：按天空相位从 zenith_gradient 采样背景色，
+// 星空走 Sprite 自身 TEXTURE（starfield.png），夜空渐变控制星星透明度。
 // phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
 
 instance uniform float phase : hint_range(0.0, 1.0) = 0.5;
 uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
+uniform sampler2D zenith_gradient : filter_nearest;
 uniform sampler2D star_alpha_gradient : hint_default_white, filter_nearest;
 uniform sampler2D noise_texture : hint_default_white, filter_nearest;
-uniform sampler2D starfield : filter_nearest;
 
 void fragment() {
 	// 量化到噪声纹理像素后取样，噪声附着在像素上而不是随帧跳动。
 	vec2 noise_size = vec2(textureSize(noise_texture, 0));
 	vec2 noise_uv = (floor(UV * noise_size) + 0.5) / max(noise_size, vec2(1.0));
 	float pixel_noise = (texture(noise_texture, noise_uv).r - 0.5) * noise_strength;
-	vec3 sky_color = texture(TEXTURE, vec2(clamp(phase + pixel_noise, 0.0, 1.0), 0.5)).rgb;
-	vec4 stars = texture(starfield, UV);
+	vec3 sky_color = texture(zenith_gradient, vec2(clamp(phase + pixel_noise, 0.0, 1.0), 0.5)).rgb;
+	vec4 stars = texture(TEXTURE, UV);
 	float star_alpha = texture(star_alpha_gradient, vec2(phase, 0.5)).r;
 	vec3 final_color = mix(sky_color, stars.rgb, stars.a * star_alpha);
 	COLOR = vec4(final_color, 1.0);
@@ -241,18 +242,15 @@ _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAoAAAAKACAYAAAAMzckjAAAZCUlEQVR42u3d55dV
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = SubResource("Shader_sky")
+shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
 shader_parameter/star_alpha_gradient = SubResource("GradientTexture1D_night_sky")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
-shader_parameter/starfield = SubResource("EditableTexture_starfield")
 shader_parameter/noise_strength = 0.02
 
-[sub_resource type="QuadMesh" id="QuadMesh_sky"]
-size = Vector2(640, 640)
-
 [sub_resource type="GDScript" id="GDScript_sky"]
-script/source = "extends MeshInstance2D
-## 统一天空背景：天顶渐变走节点 TEXTURE，星空贴图走共享材质。
-## 整体绕球心旋转（星球旋转 + 自转），相位按星空相对角度写入 instance uniform。
+script/source = "extends Sprite2D
+## 统一天空背景：星空贴图走 Sprite TEXTURE，天顶渐变与相位按实例写入。
+## 整体绕球心旋转（星球旋转 + 自转），相位走 instance uniform，避免派生复制材质。
 
 ## 星球旋转分量，由 Planet 同步写入。
 var planet_rotation: float = 0.0
@@ -262,7 +260,9 @@ var planet_rotation: float = 0.0
 		zenith_gradient = value
 		if zenith_gradient == null:
 			return
-		texture = zenith_gradient
+		(material as ShaderMaterial).set_shader_parameter(
+				&\"zenith_gradient\", zenith_gradient
+		)
 ## 酒鬼等锁死天光用：有值时天空相位不再跟经度走。
 var commanded_daylight_phase: float = NAN:
 	set(value):
@@ -500,13 +500,12 @@ func _present_with_run_shell() -> void:
 position = Vector2(128, 284.48)
 script = SubResource("GDScript_planet")
 
-[node name="Sky" type="MeshInstance2D" parent="." unique_id=852054590]
+[node name="Sky" type="Sprite2D" parent="." unique_id=852054590]
 unique_name_in_owner = true
 z_index = -100
 texture_filter = 1
 material = SubResource("ShaderMaterial_sky")
-mesh = SubResource("QuadMesh_sky")
-texture = SubResource("GradientTexture1D_zenith")
+texture = SubResource("EditableTexture_starfield")
 script = SubResource("GDScript_sky")
 zenith_gradient = SubResource("GradientTexture1D_zenith")
 
