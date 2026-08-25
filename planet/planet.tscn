@@ -15,14 +15,10 @@ script/source = "extends Node2D
 	set(value):
 		radius = value
 
-## 觐见禁区半宽；0 表示不限制。
-@export var audience_keep_away_arc: float = 0.0
-
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0
 ## 出生角固定为 0：星球本地 y 最小处（未旋转时的弧顶）。
 var spawn_angle: float = 0.0
-var has_contacted_audience_keep_away: bool = false
 ## 地表地物数据（静态场景内收集，供测试断言）。
 var rose_angle: float = 0.0
 var king_angle: float = 0.0
@@ -132,21 +128,7 @@ func move_player(direction: float, delta: float) -> void:
 	var target_velocity := direction * max_angular_speed
 	var smoothing := 1.0 - exp(-WorldConstants.PLAYER_DAMPING * delta)
 	angular_velocity = lerp(angular_velocity, target_velocity, smoothing)
-	var next_angle := fposmod(player_angle + angular_velocity * delta, TAU)
-	if audience_keep_away_arc > 0.0:
-		var current_offset := angle_difference(king_angle, player_angle)
-		var next_offset := angle_difference(king_angle, next_angle)
-		if absf(next_offset) < audience_keep_away_arc:
-			var keep_away_side := current_offset
-			if is_zero_approx(keep_away_side):
-				keep_away_side = 1.0 if angular_velocity >= 0.0 else -1.0
-			has_contacted_audience_keep_away = true
-			angular_velocity = 0.0
-			next_angle = fposmod(
-					king_angle + signf(keep_away_side) * audience_keep_away_arc,
-					TAU
-			)
-	player_angle = next_angle
+	player_angle = fposmod(player_angle + angular_velocity * delta, TAU)
 	_sync_rotation()
 
 
