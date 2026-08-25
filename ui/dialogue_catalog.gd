@@ -41,9 +41,9 @@ static var _character_busts: Array[Texture2D] = []
 static func _character_bust(character_bust: CharacterBust) -> Texture2D:
 	var character_bust_count := CharacterBust.GRAY_BEARD_PARCHMENT_SCHOLAR + 1
 	if _character_busts.size() != character_bust_count:
+		const character_bust_frame_size := 32
 		_character_busts.clear()
 		for frame_index in character_bust_count:
-			const character_bust_frame_size := 32
 			var atlas := AtlasTexture.new()
 			atlas.atlas = CHARACTER_BUST_FRAMES
 			atlas.region = Rect2(
