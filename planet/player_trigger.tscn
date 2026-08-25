@@ -157,7 +157,7 @@ shader = SubResource("Shader_prompt_fill")
 shader_parameter/fill_ratio = 0.0
 
 [node name="PlayerTrigger" type="Area2D" unique_id=308360173]
-collision_layer = 0
+collision_layer = 2
 collision_mask = 1
 monitorable = false
 input_pickable = false
