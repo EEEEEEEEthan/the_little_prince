@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cplanetstor01" path="res://planet/planet_story.gd" id="2_story"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="16_player_trigger"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
+[ext_resource type="Texture2D" uid="uid://cprincebust01" path="res://ui/prince.png" id="prince_portrait"]
 
 [sub_resource type="GDScript" id="GDScript_planet"]
 script/source = "extends Node2D
@@ -15,14 +16,10 @@ script/source = "extends Node2D
 	set(value):
 		radius = value
 
-## 觐见禁区半宽；0 表示不限制。
-@export var audience_keep_away_arc: float = 0.0
-
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0
 ## 出生角固定为 0：星球本地 y 最小处（未旋转时的弧顶）。
 var spawn_angle: float = 0.0
-var has_contacted_audience_keep_away: bool = false
 ## 地表地物数据（静态场景内收集，供测试断言）。
 var rose_angle: float = 0.0
 var king_angle: float = 0.0
@@ -32,6 +29,7 @@ var flora_angles: Array[float] = []
 var surface_props: Array[SurfaceProp] = []
 var overlapping_player_triggers: Array[Area2D] = []
 var focused_player_trigger: Area2D
+var air_walls: Array[Node] = []
 
 ## 当前角速度（弧度/秒），经阻尼向目标速度平滑逼近。正值表示向右走。
 var angular_velocity: float = 0.0
@@ -50,6 +48,8 @@ func _ready() -> void:
 
 
 func _collect_surface_props() -> void:
+	air_walls.clear()
+	_collect_air_walls(surface)
 	for child in surface.get_children():
 		if child.name == \"Rose\":
 			rose_angle = child.rotation
@@ -133,21 +133,21 @@ func move_player(direction: float, delta: float) -> void:
 	var smoothing := 1.0 - exp(-WorldConstants.PLAYER_DAMPING * delta)
 	angular_velocity = lerp(angular_velocity, target_velocity, smoothing)
 	var next_angle := fposmod(player_angle + angular_velocity * delta, TAU)
-	if audience_keep_away_arc > 0.0:
-		var current_offset := angle_difference(king_angle, player_angle)
-		var next_offset := angle_difference(king_angle, next_angle)
-		if absf(next_offset) < audience_keep_away_arc:
-			var keep_away_side := current_offset
-			if is_zero_approx(keep_away_side):
-				keep_away_side = 1.0 if angular_velocity >= 0.0 else -1.0
-			has_contacted_audience_keep_away = true
+	for wall in air_walls:
+		if wall.blocks_player_entry(self, player_angle, next_angle):
 			angular_velocity = 0.0
-			next_angle = fposmod(
-					king_angle + signf(keep_away_side) * audience_keep_away_arc,
-					TAU
-			)
+			next_angle = player_angle
+			break
 	player_angle = next_angle
 	_sync_rotation()
+
+
+func _collect_air_walls(node: Node) -> void:
+	for child in node.get_children():
+		if child.has_method(&\"blocks_player_entry\"):
+			air_walls.append(child)
+		else:
+			_collect_air_walls(child)
 
 
 func teleport_player(angle: float) -> void:
@@ -268,7 +268,6 @@ var planet_rotation: float = 0.0
 		(material as ShaderMaterial).set_shader_parameter(
 				\"zenith_gradient\", zenith_gradient
 		)
-var is_self_rotating: bool = true
 ## 酒鬼等锁死天光用：有值时天空相位不再跟经度走。
 var commanded_daylight_phase: float = NAN:
 	set(value):
@@ -284,10 +283,9 @@ func set_planet_rotation(value: float) -> void:
 
 
 func _process(delta: float) -> void:
-	if is_self_rotating:
-		_self_rotation = fposmod(
-				_self_rotation - star_rotation_speed * delta, TAU
-		)
+	_self_rotation = fposmod(
+		_self_rotation - star_rotation_speed * delta, TAU
+	)
 	rotation = planet_rotation + _self_rotation
 	_update_daylight()
 
@@ -473,6 +471,8 @@ const META_RUN_SHELL_SCENE := \"run_shell_scene\"
 const META_DAY_MUSIC := \"day_music\"
 const META_OPENING_DAY_MUSIC := \"opening_day_music\"
 
+@export var prince_portrait: Texture2D
+
 
 func _ready() -> void:
 	if owner.get_parent() != get_tree().root:
@@ -546,5 +546,7 @@ script = ExtResource("2_story")
 auto_start = false
 
 [node name="Config" type="Node" parent="." unique_id=1313635981]
+unique_name_in_owner = true
 process_mode = 4
 script = SubResource("GDScript_playable")
+prince_portrait = ExtResource("prince_portrait")

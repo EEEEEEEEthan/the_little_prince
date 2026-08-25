@@ -11,6 +11,7 @@ const EPILOGUE_HOLD_SECONDS := 1.8
 const LIFT_DURATION_SECONDS := 2.4
 const LIFT_HALFWAY_OVERHEAD_EXTRA_SECONDS := 0.5
 const DEPARTURE_BLACKOUT_SECONDS := 1.2
+const PRINCE_SPEAKER := "小王子"
 
 @export var auto_start: bool = true
 
@@ -38,7 +39,6 @@ var flock:
 
 var _story_generation: int = 0
 var _waiting_props: Array[SurfaceProp] = []
-var _dialogue_closed_early: bool = false
 var _story_tween: Tween
 
 
@@ -71,7 +71,6 @@ func start() -> void:
 	has_finished_opening = false
 	has_crossed_sunset = false
 	_waiting_props.clear()
-	_dialogue_closed_early = false
 	player.can_move_left = false
 	player.can_move_right = false
 	player.move_speed_scale = 1.0
@@ -121,12 +120,11 @@ func _fade_in_from_black() -> void:
 
 
 func _prince(text: String) -> void:
-	await _line(DialogueCatalog.PRINCE_SPEAKER, text, DialogueCatalog.PRINCE_PORTRAIT)
+	await _line(PRINCE_SPEAKER, text, %Config.prince_portrait)
 
 
 func _overhead(display_text: String) -> void:
 	var generation := _story_generation
-	_end_dialogue()
 	if skip_cinematics or display_text.is_empty():
 		await _halt_if_stale(generation)
 		return
@@ -136,7 +134,6 @@ func _overhead(display_text: String) -> void:
 
 func _wait(duration_seconds: float) -> void:
 	var generation := _story_generation
-	_end_dialogue()
 	if skip_cinematics:
 		await _halt_if_stale(generation)
 		return
@@ -161,17 +158,12 @@ func _camera_down() -> void:
 
 func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 	var generation := _story_generation
-	if skip_cinematics or _dialogue_closed_early:
+	if skip_cinematics:
 		await _halt_if_stale(generation)
 		return
 	_lock_input()
-	var already_open: bool = dialogue.is_open()
 	dialogue.play_line(DialogueLine.new(speaker, text, portrait))
-	if dialogue.is_open() and not already_open and Input.is_action_pressed(&"interact"):
-		dialogue.mark_holding(true)
-	await dialogue.line_advanced
-	if not dialogue.is_open():
-		_dialogue_closed_early = true
+	await dialogue.closed
 	await _halt_if_stale(generation)
 
 
@@ -183,7 +175,6 @@ func _interact(prop: SurfaceProp) -> SurfaceProp:
 
 func _interact_any(props: Array[SurfaceProp]) -> SurfaceProp:
 	var generation := _story_generation
-	_end_dialogue()
 	_waiting_props = props.duplicate()
 	for prop in props:
 		prop.is_armed = true
@@ -216,7 +207,6 @@ func _depart(
 		lift_halfway_overhead_texts: PackedStringArray = PackedStringArray(),
 ) -> void:
 	var generation := _story_generation
-	_end_dialogue()
 	if skip_cinematics:
 		player.modulate.a = 0.0
 		_shell_node(&"Dim").color = Color(0, 0, 0, 1)
@@ -258,12 +248,6 @@ func _depart(
 	await _wait(EPILOGUE_HOLD_SECONDS)
 	departed.emit()
 	await _halt_if_stale(generation)
-
-
-func _end_dialogue() -> void:
-	_dialogue_closed_early = false
-	if dialogue.is_open():
-		dialogue.close()
 
 
 func _halt_if_stale(generation: int) -> void:

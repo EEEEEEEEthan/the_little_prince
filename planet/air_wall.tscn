@@ -1,0 +1,81 @@
+[gd_scene format=3 uid="uid://cairwallscn01"]
+
+[sub_resource type="GDScript" id="GDScript_air_wall"]
+script/source = "@tool
+extends Area2D
+
+@export var shape: Shape2D:
+	set(value):
+		shape = value
+		if not is_node_ready():
+			await ready
+		%CollisionShape2D.shape = shape
+
+@export var enabled: bool = true:
+	set(value):
+		enabled = value
+		if not is_node_ready():
+			await ready
+		%CollisionShape2D.disabled = !enabled
+
+func set_enabled(value: bool) -> void:
+	enabled = value
+
+func blocks_player_entry(
+		planet: Node2D,
+		current_player_angle: float,
+		next_player_angle: float
+) -> bool:
+	if not is_visible_in_tree():
+		return false
+	if overlaps_player_at(planet, current_player_angle):
+		return false
+	return overlaps_player_at(planet, next_player_angle)
+
+func overlaps_player_at(planet: Node2D, at_player_angle: float) -> bool:
+	var surface: Node2D = planet.surface
+	var saved_rotation := surface.rotation
+	surface.rotation = -at_player_angle
+	var overlaps := _overlaps_apex_circle(
+			planet.apex_global_position(),
+			WorldConstants.PLAYER_FOOTPRINT_RADIUS,
+	)
+	surface.rotation = saved_rotation
+	return overlaps
+
+func _overlaps_apex_circle(apex_global_position: Vector2, footprint_radius: float) -> bool:
+	var collision_shape := %CollisionShape2D
+	if collision_shape.disabled:
+		return false
+	var local_apex: Vector2 = (
+			collision_shape.global_transform.affine_inverse() * apex_global_position
+	)
+	var placed_shape: Shape2D = collision_shape.shape
+	var rectangle := placed_shape as RectangleShape2D
+	if rectangle != null:
+		var half_extents := rectangle.size * 0.5
+		var closest_local_point: Vector2 = local_apex.clamp(-half_extents, half_extents)
+		return closest_local_point.distance_to(local_apex) <= footprint_radius
+	var circle := placed_shape as CircleShape2D
+	if circle != null:
+		return local_apex.length() <= circle.radius + footprint_radius
+	return placed_shape.get_rect().grow(footprint_radius).has_point(local_apex)
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_air_wall"]
+size = Vector2(16, 48)
+
+[node name="AirWall" type="Area2D" unique_id=1586006984]
+collision_layer = 0
+collision_mask = 0
+input_pickable = false
+monitoring = false
+monitorable = false
+script = SubResource("GDScript_air_wall")
+shape = SubResource("RectangleShape2D_air_wall")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=70283118]
+unique_name_in_owner = true
+position = Vector2(0, -24)
+shape = SubResource("RectangleShape2D_air_wall")
+debug_color = Color(0.2, 0.85, 1, 0.42)

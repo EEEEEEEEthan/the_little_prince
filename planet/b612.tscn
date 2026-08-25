@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://cfloratscn001" path="res://planet/flora.tscn" id="21_flora"]
 [ext_resource type="AudioStream" uid="uid://b7a21m4k1j5fq" path="res://audio/light_glass_rim_clink.wav" id="23_glass_rim_clink"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
+[ext_resource type="Texture2D" uid="uid://crosebust0001" path="res://ui/rose.png" id="rose_portrait"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -61,7 +62,7 @@ colors = PackedColorArray(0.1646875, 0.1178125, 0.136875, 1, 0.5411765, 0.560784
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_zenith"]
 gradient = SubResource("Gradient_zenith")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_1xele"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dmvea"]
 resource_local_to_scene = true
 shader = SubResource("Shader_sky")
 shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
@@ -103,6 +104,9 @@ script/source = "extends PlanetStory
 ## B612 故乡剧情：一条协程串起对白、侧写、交互与离星。
 
 const UPROOT_A: AudioStream = preload(\"res://audio/sfx_exp_short_hard10.wav\")
+const ROSE_SPEAKER := \"玫瑰\"
+
+@export var rose_portrait: Texture2D
 
 var _uproot_count: int = 0
 
@@ -119,13 +123,14 @@ func _ready() -> void:
 
 func _prepare_start() -> void:
 	_glass_globe().visible = false
-	planet.sky.is_self_rotating = false
 	player.move_speed_scale = 0.8
 	player.flip_h = true
 	_shell_node(&\"Scarf\").settle_hang_to_facing()
 
 
 func _play_story() -> void:
+	var rotation_speed = %Sky.star_rotation_speed
+	%Sky.star_rotation_speed = 0
 	await _fade_in_from_black()
 	await _rose(\"我刚刚睡醒，真对不起，我的头发还是乱蓬蓬的。。。\")
 	await _prince(\"可你还是很美丽\")
@@ -154,8 +159,8 @@ func _play_story() -> void:
 	if not skip_cinematics:
 		var opening_guide = planet.get_node(\"%Butterfly3\")
 		opening_guide.begin_guide_flight()
-	planet.sky.is_self_rotating = true
 	await _wait_move_right()
+	%Sky.star_rotation_speed = rotation_speed
 	await _wait(3.0)
 	await _overhead(\"小王子很喜欢玫瑰花\")
 	await _overhead(\"可是她的无理取闹，总是让他恼火\")
@@ -237,12 +242,11 @@ func try_handle_interact(prop: SurfaceProp) -> bool:
 
 
 func _rose(text: String) -> void:
-	await _line(DialogueCatalog.ROSE_SPEAKER, text, DialogueCatalog.ROSE_PORTRAIT)
+	await _line(ROSE_SPEAKER, text, rose_portrait)
 
 
 func _wait_move_right() -> void:
 	var generation := _story_generation
-	_end_dialogue()
 	if skip_cinematics:
 		await _halt_if_stale(generation)
 		return
@@ -375,7 +379,7 @@ func _glass_globe() -> Sprite2D:
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
-material = SubResource("ShaderMaterial_1xele")
+material = SubResource("ShaderMaterial_dmvea")
 
 [node name="Volcano" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
@@ -440,7 +444,7 @@ texture_filter = 1
 texture = SubResource("EditableTexture_glass_globe")
 offset = Vector2(0, -11)
 
-[node name="RimClink" type="AudioStreamPlayer" parent="Surface/Rose/GlassGlobe" unique_id=410000612]
+[node name="RimClink" type="AudioStreamPlayer" parent="Surface/Rose/GlassGlobe" index="0" unique_id=410000612]
 stream = ExtResource("23_glass_rim_clink")
 volume_db = -24.0
 
@@ -924,6 +928,7 @@ autoplay = "default"
 
 [node name="Story" parent="." index="4" unique_id=1847000004]
 script = SubResource("GDScript_story")
+rose_portrait = ExtResource("rose_portrait")
 auto_start = true
 
 [node name="Config" parent="." index="5" unique_id=1313635981]

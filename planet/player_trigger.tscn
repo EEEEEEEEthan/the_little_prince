@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://cplyrtrgscn1"]
 
 [sub_resource type="GDScript" id="GDScript_player_trigger"]
-script/source = "extends Area2D
+script/source = "@tool
+extends Area2D
 ## 玩家邻近检测。InteractKind 只描述按键方式；头顶 A 键由本节点自己显示。
 
 signal player_entered
@@ -128,6 +129,28 @@ func _planet_story() -> PlanetStory:
 [sub_resource type="CircleShape2D" id="CircleShape2D_trigger"]
 radius = 6.0
 
+[sub_resource type="Shader" id="Shader_prompt_fill"]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+uniform float fill_ratio : hint_range(0.0, 1.0) = 0.0;
+
+void fragment() {
+	vec4 texel = texture(TEXTURE, UV);
+	vec2 from_center = UV * 2.0 - 1.0;
+	float angle_turns = atan(-from_center.x, -from_center.y) / TAU + 0.5;
+	float filled = step(angle_turns, fill_ratio);
+	float holding = 1.0 - step(fill_ratio, 0.0);
+	float brightness = mix(1.0, mix(0.35, 1.0, filled), holding);
+	COLOR = vec4(texel.rgb * brightness, texel.a);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cugj7"]
+resource_local_to_scene = true
+shader = SubResource("Shader_prompt_fill")
+shader_parameter/fill_ratio = 0.0
+
 [node name="PlayerTrigger" type="Area2D" unique_id=308360173]
 collision_layer = 2
 collision_mask = 0
@@ -142,3 +165,4 @@ shape = SubResource("CircleShape2D_trigger")
 
 [node name="Prompt" parent="." unique_id=814833572 instance_placeholder="res://planet/interact_prompt.tscn"]
 unique_name_in_owner = true
+material = SubResource("ShaderMaterial_cugj7")
