@@ -129,8 +129,22 @@ func move_player(direction: float, delta: float) -> void:
 	var target_velocity := direction * max_angular_speed
 	var smoothing := 1.0 - exp(-WorldConstants.PLAYER_DAMPING * delta)
 	angular_velocity = lerp(angular_velocity, target_velocity, smoothing)
-	player_angle = fposmod(player_angle + angular_velocity * delta, TAU)
+	var next_angle := fposmod(player_angle + angular_velocity * delta, TAU)
+	if _any_air_wall_blocks_entry(surface, next_angle):
+		angular_velocity = 0.0
+		next_angle = player_angle
+	player_angle = next_angle
 	_sync_rotation()
+
+
+func _any_air_wall_blocks_entry(node: Node, next_angle: float) -> bool:
+	for child in node.get_children():
+		if child.has_method(&\"blocks_player_entry\"):
+			if child.blocks_player_entry(self, player_angle, next_angle):
+				return true
+		elif _any_air_wall_blocks_entry(child, next_angle):
+			return true
+	return false
 
 
 func teleport_player(angle: float) -> void:
