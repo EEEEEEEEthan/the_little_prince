@@ -51,7 +51,7 @@ func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceP
 	for area in %Footprint.get_overlapping_areas():
 		if not area.has_method("hosted_surface_prop") or area.kind != WorldConstants.TriggerKind.INTERACT:
 			continue
-		var prop := area.hosted_surface_prop()
+		var prop := area.hosted_surface_prop() as SurfaceProp
 		if prop == null or not prop.is_interactable():
 			continue
 		if should_accept.is_valid() and not should_accept.call(prop):
