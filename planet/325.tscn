@@ -274,10 +274,8 @@ func _glance_up_at_empty_throne() -> void:
 "
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
+position = Vector2(128, 301.952)
 radius = 104.832
-body_texture = SubResource("EditableTexture_blue_mottled_disk")
-star_rotation_speed = 0.0
-zenith_gradient = SubResource("GradientTexture1D_king_zenith")
 spawn_on_opposite_side = true
 audience_keep_away_arc = 0.70
 
@@ -288,6 +286,11 @@ metadata/day_music = ExtResource("18_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
+star_rotation_speed = 0.0
+zenith_gradient = SubResource("GradientTexture1D_king_zenith")
+
+[node name="SunsetTrigger" parent="Sky" index="0"]
+position = Vector2(93.405996, 47.592732)
 
 [node name="Clouds" parent="." index="1"]
 modulate = Color(0.55, 0.78, 0.92, 1)

@@ -66,8 +66,6 @@ func _geographer(text: String) -> void:
 "
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
-body_texture = SubResource("EditableTexture_cream_ink_parchment_disk")
-zenith_gradient = SubResource("GradientTexture1D_parchment_study_zenith")
 
 [node name="Config" parent="." index="5"]
 process_mode = 4
@@ -76,6 +74,7 @@ metadata/day_music = ExtResource("18_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
+zenith_gradient = SubResource("GradientTexture1D_parchment_study_zenith")
 
 [node name="Clouds" parent="." index="1"]
 modulate = Color(0.72, 0.62, 0.45, 0.45)
