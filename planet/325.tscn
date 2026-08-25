@@ -275,6 +275,7 @@ func _await_king() -> void:
 	await _overhead(\"他是一位绝对的君主\")
 	await _overhead(\"与此同时，他又是理智的\")
 	is_blocking_input = false
+	%TriggerSleepy.interact_kind = WorldConstants.InteractKind.PRESS
 	%TriggerSleepy.is_armed = true
 	planet.refresh_interact_focus()
 	await %TriggerSleepy.interacted
