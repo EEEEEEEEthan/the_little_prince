@@ -221,7 +221,7 @@ func _play_story() -> void:
 
 
 func accepts_interact(prop: SurfaceProp) -> bool:
-	if not is_active or is_blocking_input or prop.is_consumed:
+	if not is_active or is_blocking_player_input() or prop.is_consumed:
 		return false
 	if not _waiting_props.is_empty():
 		return _waiting_props.has(prop)
@@ -256,11 +256,13 @@ func _play_mouse_joke() -> void:
 
 func _await_king() -> void:
 	await %TriggerHello.player_entered
+	_lock_input()
 	await _king(\"啊，来了一个臣民\")
 	await _overhead(\"小王子愣了一下\")
 	await _king(\"靠近些，让我好好看看你。\")
 	is_blocking_input = false
 	await %TriggerSleepy.player_entered
+	_lock_input()
 	await _prince(\"陛下~~哈~哈~~啊~下\")
 	await _overhead(\"小王子不小心打了个哈欠\")
 	await _king(\"在一个国王面前打哈欠是违反礼节的。我禁止你打哈欠。\")
