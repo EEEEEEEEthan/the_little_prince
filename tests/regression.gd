@@ -93,7 +93,7 @@ class RegressionDriver extends Node:
 		if focused_prop != null:
 			_set_action(&"move_left", false)
 			_set_action(&"move_right", false)
-			if story.interact_hold_seconds(focused_prop) > 0.0:
+			if planet.focused_player_trigger.interact_kind == WorldConstants.InteractKind.LONG_PRESS:
 				_set_action(&"interact", true)
 			elif _interact_pressed:
 				_set_action(&"interact", false)

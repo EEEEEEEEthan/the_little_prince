@@ -30,9 +30,14 @@ var volcano_angles: Array[float] = []
 var baobab_angles: Array[float] = []
 var flora_angles: Array[float] = []
 var surface_props: Array[SurfaceProp] = []
+var overlapping_player_triggers: Array[Area2D] = []
+var focused_player_trigger: Area2D
 
 ## 当前角速度（弧度/秒），经阻尼向目标速度平滑逼近。正值表示向右走。
 var angular_velocity: float = 0.0
+var is_interact_holding: bool:
+	get:
+		return focused_player_trigger != null and focused_player_trigger.is_holding
 
 @onready var body: Sprite2D = %Body
 @onready var surface: Node2D = %Surface
@@ -50,17 +55,67 @@ func _collect_surface_props() -> void:
 		if prop == null:
 			continue
 		surface_props.append(prop)
-		match prop.kind:
-			SurfaceProp.Kind.ROSE:
-				rose_angle = prop.rotation
-			SurfaceProp.Kind.KING:
-				king_angle = prop.rotation
-			SurfaceProp.Kind.VOLCANO:
-				volcano_angles.append(prop.rotation)
-			SurfaceProp.Kind.BAOBAB:
-				baobab_angles.append(prop.rotation)
-			SurfaceProp.Kind.FLORA:
-				flora_angles.append(prop.rotation)
+		if child.name == \"Rose\":
+			rose_angle = prop.rotation
+		elif child.name == \"King\":
+			king_angle = prop.rotation
+		elif child.name.begins_with(\"Volcano\"):
+			volcano_angles.append(prop.rotation)
+		elif child.name.begins_with(\"Baobab\"):
+			baobab_angles.append(prop.rotation)
+		elif child.name.begins_with(\"Flora\"):
+			flora_angles.append(prop.rotation)
+
+
+func bind_player_footprint(footprint: Area2D) -> void:
+	footprint.area_entered.connect(_on_player_entered_area)
+	footprint.area_exited.connect(_on_player_exited_area)
+
+
+func is_player_in_grass() -> bool:
+	for area in overlapping_player_triggers:
+		if area.is_in_group(&\"grass\"):
+			return true
+	return false
+
+
+func _on_player_entered_area(area: Area2D) -> void:
+	if not area.has_method(\"hosted_surface_prop\"):
+		return
+	overlapping_player_triggers.append(area)
+	area.notify_player_entered()
+	refresh_interact_focus()
+
+
+func _on_player_exited_area(area: Area2D) -> void:
+	overlapping_player_triggers.erase(area)
+	if area.has_method(\"notify_player_exited\"):
+		area.notify_player_exited()
+	refresh_interact_focus()
+
+
+func refresh_interact_focus() -> void:
+	var story := get_node(\"%Story\") as PlanetStory
+	var best: Area2D = null
+	var best_distance_squared := INF
+	if story.is_active and not story.is_blocking_input:
+		for area in overlapping_player_triggers:
+			if not area.is_armed or area.interact_kind == WorldConstants.InteractKind.NONE:
+				continue
+			var prop := area.hosted_surface_prop() as SurfaceProp
+			if prop == null or not story.accepts_interact(prop):
+				continue
+			var distance_squared := apex_global_position().distance_squared_to(area.global_position)
+			if distance_squared <= best_distance_squared:
+				best_distance_squared = distance_squared
+				best = area
+	if focused_player_trigger == best:
+		return
+	if focused_player_trigger != null:
+		focused_player_trigger.is_focused = false
+	focused_player_trigger = best
+	if focused_player_trigger != null:
+		focused_player_trigger.is_focused = true
 
 
 func apex_global_position() -> Vector2:
@@ -126,8 +181,6 @@ func _sync_rotation() -> void:
 	surface.rotation = rotation_value
 	sky.set_planet_rotation(rotation_value)
 	clouds.set_planet_rotation(rotation_value)
-	for prop in surface_props:
-		prop.update_visibility(player_angle)
 "
 
 [sub_resource type="Shader" id="Shader_sky"]
@@ -466,7 +519,7 @@ script = SubResource("GDScript_sky")
 [node name="SunsetTrigger" parent="Sky" unique_id=1847000005 instance=ExtResource("16_player_trigger")]
 unique_name_in_owner = true
 position = Vector2(68, 56.51999)
-kind = 2
+interact_kind = 0
 
 [node name="Clouds" type="Node2D" parent="." unique_id=1847000001]
 unique_name_in_owner = true
