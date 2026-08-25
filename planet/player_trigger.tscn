@@ -126,17 +126,8 @@ func _planet_story() -> PlanetStory:
 	return _planet().get_node(\"%Story\") as PlanetStory
 "
 
-[sub_resource type="GDScript" id="GDScript_prompt"]
-script/source = "extends Sprite2D
-## 手柄 A 键提示：跟随触发器头顶，自身保持屏幕朝向。
-
-var hold_fill_ratio: float = 0.0:
-	set(value):
-		hold_fill_ratio = clampf(value, 0.0, 1.0)
-		if not is_node_ready():
-			await ready
-		(material as ShaderMaterial).set_shader_parameter(&\"fill_ratio\", hold_fill_ratio)
-"
+[sub_resource type="CircleShape2D" id="CircleShape2D_trigger"]
+radius = 6.0
 
 [sub_resource type="Shader" id="Shader_prompt_fill"]
 code = "shader_type canvas_item;
@@ -160,26 +151,36 @@ shader = SubResource("Shader_prompt_fill")
 shader_parameter/fill_ratio = 0.0
 
 [sub_resource type="Texture2D" id="EditableTexture_prompt_a"]
+resource_local_to_scene = false
+resource_name = ""
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAMAAABFNRROAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURQwSJqDFrV2aTv///wAAALPe/UYAAAAFdFJOU/////8A+7YOUwAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAOElEQVQYV3WOAQoAIAgD5/T/b461IiE8EDwGOlQHGmNDGK2FIJkkA8dSek1JTiam7Jlf7JN/l8YCiNsBhMUXzYkAAAAASUVORK5CYII="
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_trigger"]
-radius = 16.0
+[sub_resource type="GDScript" id="GDScript_prompt"]
+script/source = "extends Sprite2D
+## 手柄 A 键提示：跟随触发器头顶，自身保持屏幕朝向。
 
-[node name="PlayerTrigger" type="Area2D"]
+var hold_fill_ratio: float = 0.0:
+	set(value):
+		hold_fill_ratio = clampf(value, 0.0, 1.0)
+		if not is_node_ready():
+			await ready
+		(material as ShaderMaterial).set_shader_parameter(&\"fill_ratio\", hold_fill_ratio)
+"
+
+[node name="PlayerTrigger" type="Area2D" unique_id=308360173]
 collision_layer = 2
 collision_mask = 0
-monitoring = false
-monitorable = true
 input_pickable = false
+monitoring = false
 script = SubResource("GDScript_player_trigger")
 shape = SubResource("CircleShape2D_trigger")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=781647774]
 unique_name_in_owner = true
 shape = SubResource("CircleShape2D_trigger")
 
-[node name="Prompt" type="Sprite2D" parent="."]
+[node name="Prompt" type="Sprite2D" parent="." unique_id=814833572]
 unique_name_in_owner = true
 z_index = 250
 z_as_relative = false
@@ -187,4 +188,3 @@ texture_filter = 1
 material = SubResource("ShaderMaterial_prompt_fill")
 texture = SubResource("EditableTexture_prompt_a")
 script = SubResource("GDScript_prompt")
-visible = false
