@@ -62,3 +62,9 @@ https://creativecommons.org/publicdomain/zero/1.0/
 许可：CC0 1.0（可商用）
 页面：https://opengameart.org/content/512-sound-effects-8-bit-style
 说明：短 one-shot a/b 交替，B612 拔猴面包树苗时播放
+
+文件：light_glass_rim_clink.wav
+标题：轻玻璃边沿磕落
+作者：本仓库原创（generate_footsteps.py 生成）
+许可：CC0 1.0（可商用）
+说明：短 one-shot，B612 罩上玻璃罩时播放
