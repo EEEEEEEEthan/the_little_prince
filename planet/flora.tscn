@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://cfloratscn001"]
 
-[ext_resource type="PackedScene" uid="uid://csurfproptscn1" path="res://planet/surface_prop.tscn" id="1_surface_prop"]
+[ext_resource type="PackedScene" uid="uid://csurfprop001" path="res://planet/surface_prop.tscn" id="1_surface_prop"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 
 [sub_resource type="Shader" id="Shader_flora_sway"]
