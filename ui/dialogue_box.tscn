@@ -2,7 +2,11 @@
 
 [ext_resource type="FontFile" uid="uid://b8w2t37l8urid" path="res://ui/fonts/fusion-pixel-10px-zh_hans.woff2" id="2_font"]
 [ext_resource type="AudioStream" uid="uid://cednuam573usk" path="res://ui/typewriter.wav" id="3_blip"]
-[ext_resource type="Texture2D" uid="uid://c0k7tc4gwunhx" path="res://ui/portraits/prince.png" id="4_prince"]
+[ext_resource type="Texture2D" uid="uid://ccharbustfrm01" path="res://ui/prince_rose_king_slumped_wine_drinker_hunched_ledger_merchant_black_coat_lamplighter_gray_beard_parchment_scholar_frames.png" id="4_character_busts"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_prince"]
+atlas = ExtResource("4_character_busts")
+region = Rect2(0, 0, 32, 32)
 
 [sub_resource type="GDScript" id="GDScript_dialogue"]
 script/source = "extends CanvasLayer
@@ -271,7 +275,7 @@ texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 0
-texture = ExtResource("4_prince")
+texture = SubResource("AtlasTexture_prince")
 expand_mode = 1
 stretch_mode = 5
 
