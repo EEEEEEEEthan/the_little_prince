@@ -377,9 +377,27 @@ func _await_king() -> void:
 	await _overhead(\"小王子先是犹豫了一下，接着叹了口气，动身走了。\")
 	await _king(\"我任命你为大使！\")
 	await _overhead(\"国王急忙在他身后喊道，神气很是威严。\")
-	is_blocking_input = false
 	%TriggerSleepy.interact_kind = WorldConstants.InteractKind.NONE
 	planet.refresh_interact_focus()
+	_lock_input()
+	if skip_cinematics:
+		player.modulate.a = 0.0
+		_shell_node(&\"Dim\").color = Color(0, 0, 0, 1)
+	else:
+		var shrink_tween := create_tween()
+		shrink_tween.set_parallel(true)
+		shrink_tween.tween_property(planet, \"scale\", Vector2(0.12, 0.12), LIFT_DURATION_SECONDS)
+		shrink_tween.tween_property(player, \"modulate:a\", 0.0, LIFT_DURATION_SECONDS)
+		await shrink_tween.finished
+		var dim_tween := create_tween()
+		dim_tween.tween_property(
+				_shell_node(&\"Dim\"), \"color:a\", 1.0, DEPARTURE_BLACKOUT_SECONDS
+		)
+		_shell_node(&\"Music\").fade_out(DEPARTURE_BLACKOUT_SECONDS)
+		await dim_tween.finished
+	_shell_node(&\"Epilogue\").text = \"325。\"
+	await _wait(EPILOGUE_HOLD_SECONDS)
+	departed.emit()
 
 
 func _king(text: String) -> void:
