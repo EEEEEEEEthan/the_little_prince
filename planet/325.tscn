@@ -138,12 +138,15 @@ const MOUSE_SPEAKER := \"小老鼠\"
 @export var king_portrait: Texture2D
 
 var has_overheard_distant_sentencing: bool = false
+var last_king_facing_order_text: String = \"\"
+var _last_player_facing_king: bool = false
 
 
 func _prepare_start() -> void:
 	player.move_speed_scale = 0.65
 	player.modulate.a = 1.0
 	has_overheard_distant_sentencing = false
+	last_king_facing_order_text = \"\"
 	%Mouse.restore_at_rest()
 	set_process(false)
 
@@ -201,6 +204,8 @@ func _await_king() -> void:
 	await _king(\"靠近些，让我好好看看你。\")
 	is_blocking_input = false
 	await %TriggerSleepy.player_entered
+	_last_player_facing_king = _player_is_facing_king()
+	set_process(true)
 	_lock_input()
 	await _prince(\"陛下~~哈~哈~~啊~下\")
 	await _overhead(\"小王子不小心打了个哈欠\")
@@ -340,6 +345,26 @@ func _await_king() -> void:
 	_shell_node(&\"Epilogue\").text = \"325。\"
 	await _wait(EPILOGUE_HOLD_SECONDS)
 	departed.emit()
+
+
+func _process(_delta: float) -> void:
+	if is_blocking_player_input():
+		return
+	var player_is_facing_king := _player_is_facing_king()
+	if player_is_facing_king == _last_player_facing_king:
+		return
+	_last_player_facing_king = player_is_facing_king
+	_lock_input()
+	last_king_facing_order_text = (
+			\"我命令你靠近我！\" if player_is_facing_king else \"我命令你走向远处！\"
+	)
+	await _king(last_king_facing_order_text)
+	is_blocking_input = false
+
+
+func _player_is_facing_king() -> bool:
+	var king_is_to_the_left := %King.global_position.x < player.global_position.x
+	return player.flip_h == king_is_to_the_left
 
 
 func _king(text: String) -> void:
