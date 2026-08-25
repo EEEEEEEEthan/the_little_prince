@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://cplyrprmtscn1"]
+
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
+
+[sub_resource type="GDScript" id="GDScript_prompt"]
+script/source = "extends Sprite2D
+## 手柄 A 键提示：跟随触发器头顶，自身保持屏幕朝向。
+
+var hold_fill_ratio: float = 0.0:
+	set(value):
+		hold_fill_ratio = clampf(value, 0.0, 1.0)
+		if not is_node_ready():
+			await ready
+		(material as ShaderMaterial).set_shader_parameter(&\"fill_ratio\", hold_fill_ratio)
+"
+
+[sub_resource type="Shader" id="Shader_prompt_fill"]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+uniform float fill_ratio : hint_range(0.0, 1.0) = 0.0;
+
+void fragment() {
+	vec4 texel = texture(TEXTURE, UV);
+	vec2 from_center = UV * 2.0 - 1.0;
+	float angle_turns = atan(-from_center.x, -from_center.y) / TAU + 0.5;
+	float filled = step(angle_turns, fill_ratio);
+	float holding = 1.0 - step(fill_ratio, 0.0);
+	float brightness = mix(1.0, mix(0.35, 1.0, filled), holding);
+	COLOR = vec4(texel.rgb * brightness, texel.a);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
+resource_local_to_scene = true
+shader = SubResource("Shader_prompt_fill")
+shader_parameter/fill_ratio = 0.0
+
+[sub_resource type="Texture2D" id="EditableTexture_prompt_a"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAMAAABFNRROAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURQwSJqDFrV2aTv///wAAALPe/UYAAAAFdFJOU/////8A+7YOUwAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAOElEQVQYV3WOAQoAIAgD5/T/b461IiE8EDwGOlQHGmNDGK2FIJkkA8dSek1JTiam7Jlf7JN/l8YCiNsBhMUXzYkAAAAASUVORK5CYII="
+
+[node name="Prompt" type="Sprite2D"]
+top_level = true
+z_index = 250
+z_as_relative = false
+texture_filter = 1
+material = SubResource("ShaderMaterial_prompt_fill")
+texture = SubResource("EditableTexture_prompt_a")
+script = SubResource("GDScript_prompt")

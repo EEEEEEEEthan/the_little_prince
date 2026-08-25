@@ -1,7 +1,5 @@
 [gd_scene format=3 uid="uid://cplyrtrgscn1"]
 
-[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
-
 [sub_resource type="GDScript" id="GDScript_player_trigger"]
 script/source = "extends Area2D
 ## 玩家邻近检测。InteractKind 只描述按键方式；头顶 A 键由本节点自己显示。
@@ -35,6 +33,7 @@ var is_focused: bool = false:
 
 var _hold_elapsed_seconds: float = 0.0
 var _player_is_inside: bool = false
+var _prompt: Sprite2D
 
 
 func hosted_surface_prop() -> SurfaceProp:
@@ -53,7 +52,6 @@ func notify_player_exited() -> void:
 
 
 func _ready() -> void:
-	%Prompt.visible = false
 	set_process(false)
 
 
@@ -75,7 +73,7 @@ func _process(delta: float) -> void:
 				_planet().angular_velocity = 0.0
 			is_holding = true
 			_hold_elapsed_seconds += delta
-			%Prompt.hold_fill_ratio = _hold_elapsed_seconds / required_hold_seconds
+			_prompt.hold_fill_ratio = _hold_elapsed_seconds / required_hold_seconds
 			if _hold_elapsed_seconds >= required_hold_seconds:
 				_clear_hold()
 				interacted.emit()
@@ -88,31 +86,32 @@ func _process(delta: float) -> void:
 
 
 func _show_prompt() -> void:
-	%Prompt.hold_fill_ratio = 0.0
-	%Prompt.visible = true
+	if not is_instance_valid(_prompt):
+		_prompt = (%Prompt as InstancePlaceholder).create_instance() as Sprite2D
+	_prompt.hold_fill_ratio = 0.0
 	_sync_prompt()
 
 
 func _hide_prompt() -> void:
-	%Prompt.visible = false
-	%Prompt.hold_fill_ratio = 0.0
+	if is_instance_valid(_prompt):
+		_prompt.queue_free()
+		_prompt = null
 	_clear_hold()
 
 
 func _clear_hold() -> void:
 	is_holding = false
 	_hold_elapsed_seconds = 0.0
-	if is_node_ready():
-		%Prompt.hold_fill_ratio = 0.0
+	if is_instance_valid(_prompt):
+		_prompt.hold_fill_ratio = 0.0
 
 
 func _sync_prompt() -> void:
-	%Prompt.global_position = to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
-	%Prompt.global_rotation = 0.0
-	if %Prompt.hold_fill_ratio > 0.0:
-		%Prompt.offset = Vector2.ZERO
+	_prompt.global_position = to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+	if _prompt.hold_fill_ratio > 0.0:
+		_prompt.offset = Vector2.ZERO
 	else:
-		%Prompt.offset = Vector2(0.0, sin(Time.get_ticks_msec() * 0.006) * 1.5)
+		_prompt.offset = Vector2(0.0, sin(Time.get_ticks_msec() * 0.006) * 1.5)
 
 
 func _planet() -> Node:
@@ -129,45 +128,6 @@ func _planet_story() -> PlanetStory:
 [sub_resource type="CircleShape2D" id="CircleShape2D_trigger"]
 radius = 6.0
 
-[sub_resource type="Shader" id="Shader_prompt_fill"]
-code = "shader_type canvas_item;
-render_mode unshaded;
-
-uniform float fill_ratio : hint_range(0.0, 1.0) = 0.0;
-
-void fragment() {
-	vec4 texel = texture(TEXTURE, UV);
-	vec2 from_center = UV * 2.0 - 1.0;
-	float angle_turns = atan(-from_center.x, -from_center.y) / TAU + 0.5;
-	float filled = step(angle_turns, fill_ratio);
-	float holding = 1.0 - step(fill_ratio, 0.0);
-	float brightness = mix(1.0, mix(0.35, 1.0, filled), holding);
-	COLOR = vec4(texel.rgb * brightness, texel.a);
-}
-"
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
-shader = SubResource("Shader_prompt_fill")
-shader_parameter/fill_ratio = 0.0
-
-[sub_resource type="Texture2D" id="EditableTexture_prompt_a"]
-resource_local_to_scene = false
-resource_name = ""
-script = ExtResource("editable_texture_script")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAMAAABFNRROAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURQwSJqDFrV2aTv///wAAALPe/UYAAAAFdFJOU/////8A+7YOUwAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAOElEQVQYV3WOAQoAIAgD5/T/b461IiE8EDwGOlQHGmNDGK2FIJkkA8dSek1JTiam7Jlf7JN/l8YCiNsBhMUXzYkAAAAASUVORK5CYII="
-
-[sub_resource type="GDScript" id="GDScript_prompt"]
-script/source = "extends Sprite2D
-## 手柄 A 键提示：跟随触发器头顶，自身保持屏幕朝向。
-
-var hold_fill_ratio: float = 0.0:
-	set(value):
-		hold_fill_ratio = clampf(value, 0.0, 1.0)
-		if not is_node_ready():
-			await ready
-		(material as ShaderMaterial).set_shader_parameter(&\"fill_ratio\", hold_fill_ratio)
-"
-
 [node name="PlayerTrigger" type="Area2D" unique_id=308360173]
 collision_layer = 2
 collision_mask = 0
@@ -180,11 +140,5 @@ shape = SubResource("CircleShape2D_trigger")
 unique_name_in_owner = true
 shape = SubResource("CircleShape2D_trigger")
 
-[node name="Prompt" type="Sprite2D" parent="." unique_id=814833572]
+[node name="Prompt" parent="." unique_id=814833572 instance_placeholder="res://planet/interact_prompt.tscn"]
 unique_name_in_owner = true
-z_index = 250
-z_as_relative = false
-texture_filter = 1
-material = SubResource("ShaderMaterial_prompt_fill")
-texture = SubResource("EditableTexture_prompt_a")
-script = SubResource("GDScript_prompt")
