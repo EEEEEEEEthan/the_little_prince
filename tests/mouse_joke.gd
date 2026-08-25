@@ -17,8 +17,8 @@ func _begin() -> void:
 	shell.get_node("GameView/GameViewport").add_child(planet)
 	planet.owner = shell
 	root.add_child(shell)
-	await process_frame
-	await process_frame
+	while not story.has_finished_opening or story.is_blocking_input:
+		await process_frame
 	var mouse: SurfaceProp = planet.get_node("%Mouse")
 	planet.teleport_player(mouse.rotation)
 	await process_frame
@@ -39,4 +39,5 @@ func _begin() -> void:
 		quit(1)
 		return
 	print("[mouse_joke] 通过")
+	shell.free()
 	quit(0)
