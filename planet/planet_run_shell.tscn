@@ -96,7 +96,10 @@ func _input(event: InputEvent) -> void:
 	var control_key := event as InputEventKey
 	if OS.is_debug_build() and control_key != null and not control_key.is_echo() and control_key.physical_keycode == KEY_CTRL and control_key.location == KEY_LOCATION_LEFT:
 		Engine.time_scale = WorldConstants.FAST_FORWARD_TIME_SCALE if control_key.pressed else 1.0
-	if not dialogue.is_open() or event.is_echo():
+	if not dialogue.is_open():
+		return
+	get_viewport().set_input_as_handled()
+	if event.is_echo():
 		return
 	if not (
 			event is InputEventKey
@@ -138,7 +141,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var direction := 0.0
-	if not is_busy():
+	if is_busy():
+		planet.angular_velocity = 0.0
+	else:
 		if can_move_right:
 			direction += Input.get_action_strength(\"move_right\")
 		if can_move_left:
@@ -150,7 +155,7 @@ func _physics_process(delta: float) -> void:
 
 func is_busy() -> bool:
 	var story := planet.get_node(\"%Story\") as PlanetStory
-	return %DialogueBox.is_open() or story.is_blocking_input or planet.is_interact_holding
+	return story.is_blocking_player_input() or planet.is_interact_holding
 
 func is_in_grass() -> bool:
 	return planet.is_player_in_grass()

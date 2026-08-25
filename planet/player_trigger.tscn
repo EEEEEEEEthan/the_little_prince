@@ -69,6 +69,9 @@ func _process(delta: float) -> void:
 	_sync_prompt()
 	if interact_kind == WorldConstants.InteractKind.NONE:
 		return
+	if _planet_story().is_blocking_player_input():
+		_clear_hold()
+		return
 	var required_hold_seconds := 0.0
 	if interact_kind == WorldConstants.InteractKind.LONG_PRESS:
 		required_hold_seconds = long_press_seconds
