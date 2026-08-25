@@ -1,12 +1,288 @@
 [gd_scene format=3 uid="uid://cc3nptocfdk0k"]
 
-[ext_resource type="Script" uid="uid://bkphckiepbgmj" path="res://planet/planet.gd" id="1_planet"]
 [ext_resource type="Script" uid="uid://cplanetstor01" path="res://story/planet_story.gd" id="2_story"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
-[ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="5_starfield"]
-[ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="10_sky_shader"]
-[ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="11_star_alpha_gradient"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="16_player_trigger"]
+
+[sub_resource type="Shader" id="Shader_sky"]
+code = "shader_type canvas_item;
+// 统一天空 shader：按天空相位从 zenith_gradient 采样背景色，
+// 星空走 Sprite 自身 TEXTURE（starfield.png），夜空渐变控制星星透明度。
+
+uniform sampler2D zenith_gradient : filter_nearest;
+uniform sampler2D star_alpha_gradient : hint_default_white, filter_nearest;
+uniform sampler2D noise_texture : hint_default_white, filter_nearest;
+// phase: 0=午夜, 0.25=日出, 0.5=正午, 0.75=日落, 1=午夜
+uniform float phase : hint_range(0.0, 1.0) = 0.5;
+uniform float noise_strength : hint_range(0.0, 0.1) = 0.02;
+
+void fragment() {
+	// 量化到噪声纹理像素后取样，噪声附着在像素上而不是随帧跳动。
+	vec2 noise_size = vec2(textureSize(noise_texture, 0));
+	vec2 noise_uv = (floor(UV * noise_size) + 0.5) / max(noise_size, vec2(1.0));
+	float pixel_noise = (texture(noise_texture, noise_uv).r - 0.5) * noise_strength;
+	vec3 sky_color = texture(zenith_gradient, vec2(clamp(phase + pixel_noise, 0.0, 1.0), 0.5)).rgb;
+	vec4 stars = texture(TEXTURE, UV);
+	float star_alpha = texture(star_alpha_gradient, vec2(phase, 0.5)).r;
+	vec3 final_color = mix(sky_color, stars.rgb, stars.a * star_alpha);
+	COLOR = vec4(final_color, 1.0);
+}
+"
+
+[sub_resource type="Texture2D" id="EditableTexture_starfield"]
+script = ExtResource("editable_texture_script")
+_base64_data = "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"
+
+[sub_resource type="Gradient" id="Gradient_night_sky"]
+offsets = PackedFloat32Array(0, 0.13454546, 0.7163636, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_night_sky"]
+gradient = SubResource("Gradient_night_sky")
+
+[sub_resource type="GDScript" id="GDScript_planet"]
+script/source = "extends Node2D
+## 可复用 2D 圆弧星球：Body / Surface / Sky / Clouds 统一绕球心旋转。
+## 用法：改半径、贴图、自转等参数；地物拖到 Surface 下即可。
+## Body 贴图按显示直径原尺寸绘制，不使用 scale。
+## 小王子视觉上始终停在弧顶，实际由地表与星空反向旋转模拟行走。
+
+@export var radius: float = WorldConstants.PLANET_RADIUS:
+	set(value):
+		radius = value
+
+@export var body_texture: Texture2D:
+	set(value):
+		body_texture = value
+		if not is_node_ready():
+			await ready
+		%Body.texture = body_texture
+
+@export var starfield_texture: Texture2D:
+	set(value):
+		starfield_texture = value
+		if not is_node_ready():
+			await ready
+		%Sky.texture = starfield_texture
+
+@export var star_rotation_speed: float = WorldConstants.STAR_ROTATION_SPEED:
+	set(value):
+		star_rotation_speed = value
+		if not is_node_ready():
+			await ready
+		%Sky.star_rotation_speed = star_rotation_speed
+
+@export var cloud_texture: Texture2D:
+	set(value):
+		cloud_texture = value
+		if not is_node_ready():
+			await ready
+		%CloudSprites.texture = cloud_texture
+
+@export var cloud_drift_speed: float = WorldConstants.CLOUD_DRIFT_SPEED:
+	set(value):
+		cloud_drift_speed = value
+		if not is_node_ready():
+			await ready
+		%Clouds.drift_speed = cloud_drift_speed
+
+@export var cloud_orbit_min_radius: float = WorldConstants.CLOUD_ORBIT_MIN_RADIUS:
+	set(value):
+		cloud_orbit_min_radius = value
+		if not is_node_ready():
+			await ready
+		_apply_cloud_orbits()
+
+@export var cloud_orbit_max_radius: float = WorldConstants.CLOUD_ORBIT_MAX_RADIUS:
+	set(value):
+		cloud_orbit_max_radius = value
+		if not is_node_ready():
+			await ready
+		_apply_cloud_orbits()
+
+@export var zenith_gradient: Texture2D:
+	set(value):
+		zenith_gradient = value
+		if not is_node_ready():
+			await ready
+		if zenith_gradient == null:
+			return
+		(%Sky.material as ShaderMaterial).set_shader_parameter(
+				\"zenith_gradient\", zenith_gradient
+		)
+
+## 出生在锚点对面（国王星球背面降落）。
+@export var spawn_on_opposite_side: bool = false
+## 觐见禁区半宽；0 表示不限制。
+@export var audience_keep_away_arc: float = 0.0
+
+## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
+var player_angle: float = 0.0
+## 玩家出生角（靠近玫瑰或国王）。
+var spawn_angle: float = 0.0
+var has_contacted_audience_keep_away: bool = false
+## 地表地物数据（静态场景内收集，供测试断言）。
+var rose_angle: float = 0.0
+var king_angle: float = 0.0
+var volcano_angles: Array[float] = []
+var baobab_angles: Array[float] = []
+var flora_angles: Array[float] = []
+var surface_props: Array[SurfaceProp] = []
+
+## 当前角速度（弧度/秒），经阻尼向目标速度平滑逼近。正值表示向右走。
+var angular_velocity: float = 0.0
+
+@onready var body: Sprite2D = %Body
+@onready var surface: Node2D = %Surface
+@onready var sky = %Sky
+@onready var clouds = %Clouds
+
+
+func _ready() -> void:
+	# 星球贴图按显示直径原尺寸绘制，禁止用 scale 放大。
+	body.scale = Vector2.ONE
+	_collect_surface_props()
+
+
+func _collect_surface_props() -> void:
+	var spawn_anchor_angle := rose_angle
+	for child in surface.get_children():
+		var prop := child as SurfaceProp
+		if prop == null:
+			continue
+		surface_props.append(prop)
+		match prop.kind:
+			SurfaceProp.Kind.ROSE:
+				rose_angle = prop.rotation
+				spawn_anchor_angle = rose_angle
+			SurfaceProp.Kind.KING:
+				king_angle = prop.rotation
+				spawn_anchor_angle = king_angle
+				if spawn_on_opposite_side:
+					spawn_anchor_angle = fposmod(king_angle + PI, TAU)
+			SurfaceProp.Kind.DRUNKARD, SurfaceProp.Kind.MERCHANT, SurfaceProp.Kind.LAMPLIGHTER, SurfaceProp.Kind.GEOGRAPHER:
+				spawn_anchor_angle = prop.rotation
+			SurfaceProp.Kind.VOLCANO:
+				volcano_angles.append(prop.rotation)
+			SurfaceProp.Kind.BAOBAB:
+				baobab_angles.append(prop.rotation)
+			SurfaceProp.Kind.FLORA:
+				flora_angles.append(prop.rotation)
+	spawn_angle = fposmod(spawn_anchor_angle + WorldConstants.SPAWN_ANGLE_OFFSET, TAU)
+
+
+func apex_global_position() -> Vector2:
+	return global_position + Vector2(0.0, -radius)
+
+
+func is_moving() -> bool:
+	return absf(angular_velocity) > 0.02
+
+
+## 玩家沿线移动 direction 方向，角速度带阻尼平滑逼近目标，驱动星球反向旋转。
+func move_player(direction: float, delta: float) -> void:
+	var max_angular_speed := WorldConstants.PLAYER_SPEED / radius
+	var target_velocity := direction * max_angular_speed
+	var smoothing := 1.0 - exp(-WorldConstants.PLAYER_DAMPING * delta)
+	angular_velocity = lerp(angular_velocity, target_velocity, smoothing)
+	var next_angle := fposmod(player_angle + angular_velocity * delta, TAU)
+	if audience_keep_away_arc > 0.0:
+		var current_offset := angle_difference(king_angle, player_angle)
+		var next_offset := angle_difference(king_angle, next_angle)
+		if absf(next_offset) < audience_keep_away_arc:
+			var keep_away_side := current_offset
+			if is_zero_approx(keep_away_side):
+				keep_away_side = 1.0 if angular_velocity >= 0.0 else -1.0
+			has_contacted_audience_keep_away = true
+			angular_velocity = 0.0
+			next_angle = fposmod(
+					king_angle + signf(keep_away_side) * audience_keep_away_arc,
+					TAU
+			)
+	player_angle = next_angle
+	_sync_rotation()
+
+
+func teleport_player(angle: float) -> void:
+	angular_velocity = 0.0
+	player_angle = fposmod(angle, TAU)
+	_sync_rotation()
+
+
+func is_king_visible_from_player() -> bool:
+	return (
+			absf(angle_difference(player_angle, king_angle))
+			<= WorldConstants.VISIBLE_HALF_ARC
+	)
+
+
+func is_in_distant_king_voice_range() -> bool:
+	var distance_from_king := absf(angle_difference(player_angle, king_angle))
+	return (
+			distance_from_king <= WorldConstants.KING_DISTANT_VOICE_ARC
+			and not is_king_visible_from_player()
+	)
+
+
+func signed_angle_from_king() -> float:
+	return angle_difference(king_angle, player_angle)
+
+
+func _sync_rotation() -> void:
+	var rotation_value := -player_angle
+	body.rotation = rotation_value
+	surface.rotation = rotation_value
+	sky.set_planet_rotation(rotation_value)
+	clouds.set_planet_rotation(rotation_value)
+	for prop in surface_props:
+		prop.update_visibility(player_angle)
+
+
+func _apply_cloud_orbits() -> void:
+	%Clouds.orbit_min_radius = cloud_orbit_min_radius
+	%Clouds.orbit_max_radius = cloud_orbit_max_radius
+	%Clouds.rebuild_instances()
+"
+
+[sub_resource type="GDScript" id="GDScript_playable"]
+script/source = "extends Node
+## 星球作为当前场景运行时，套上可复用运行壳并启动该星故事。
+
+const META_RUN_SHELL_SCENE := \"run_shell_scene\"
+const META_DAY_MUSIC := \"day_music\"
+const META_OPENING_DAY_MUSIC := \"opening_day_music\"
+
+
+func _ready() -> void:
+	if owner.get_parent() != get_tree().root:
+		return
+	call_deferred(&\"_present_with_run_shell\")
+
+
+func _present_with_run_shell() -> void:
+	var standalone_planet := owner
+	var tree := standalone_planet.get_tree()
+	var scene_root := standalone_planet.get_parent()
+	if scene_root != tree.root:
+		return
+	var shell := (get_meta(META_RUN_SHELL_SCENE) as PackedScene).instantiate()
+	var day_music: AudioStream = null
+	if has_meta(META_DAY_MUSIC):
+		day_music = get_meta(META_DAY_MUSIC) as AudioStream
+	if day_music != null:
+		shell.get_node(\"Config\").set_meta(META_OPENING_DAY_MUSIC, day_music)
+	var viewport := shell.get_node(\"GameView/GameViewport\") as SubViewport
+	var camera := viewport.get_node(\"GameCamera\")
+	scene_root.remove_child(standalone_planet)
+	standalone_planet.name = \"Planet\"
+	standalone_planet.unique_name_in_owner = true
+	viewport.add_child(standalone_planet)
+	viewport.move_child(standalone_planet, camera.get_index() + 1)
+	standalone_planet.owner = shell
+	scene_root.add_child(shell)
+	tree.current_scene = shell
+"
+
 
 
 
@@ -79,7 +355,7 @@ func daylight_phase() -> float:
 
 
 func _ready() -> void:
-	var planet_radius := (owner as Planet).radius
+	var planet_radius := owner.radius
 	var sunset_angle := SkyPhase.phase_to_angle(SkyPhase.SUNSET_PHASE)
 	%SunsetTrigger.position = Vector2(
 			-planet_radius * sin(sunset_angle),
@@ -111,7 +387,7 @@ var _instance_colors: PackedColorArray
 
 
 func _ready() -> void:
-	var planet := owner as Planet
+	var planet := owner
 	drift_speed = planet.cloud_drift_speed
 	orbit_min_radius = planet.cloud_orbit_min_radius
 	orbit_max_radius = planet.cloud_orbit_max_radius
@@ -242,9 +518,9 @@ height = 640
 noise = SubResource("FastNoiseLite_aiioy")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
-shader = ExtResource("10_sky_shader")
+shader = SubResource("Shader_sky")
 shader_parameter/zenith_gradient = SubResource("GradientTexture1D_zenith")
-shader_parameter/star_alpha_gradient = ExtResource("11_star_alpha_gradient")
+shader_parameter/star_alpha_gradient = SubResource("GradientTexture1D_night_sky")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_sky")
 shader_parameter/phase = 0.5
 shader_parameter/noise_strength = 0.02
@@ -253,9 +529,9 @@ shader_parameter/noise_strength = 0.02
 shader = SubResource("Shader_cloud_frame")
 
 [node name="Planet" type="Node2D" unique_id=1020592655]
-script = ExtResource("1_planet")
+script = SubResource("GDScript_planet")
 body_texture = SubResource("EditableTexture_body")
-starfield_texture = ExtResource("5_starfield")
+starfield_texture = SubResource("EditableTexture_starfield")
 cloud_texture = SubResource("EditableTexture_white_lavender_puff_frames")
 
 [node name="Sky" type="Sprite2D" parent="." unique_id=852054590]
@@ -263,7 +539,7 @@ unique_name_in_owner = true
 z_index = -100
 texture_filter = 1
 material = SubResource("ShaderMaterial_sky")
-texture = ExtResource("5_starfield")
+texture = SubResource("EditableTexture_starfield")
 script = SubResource("GDScript_sky")
 
 [node name="SunsetTrigger" parent="Sky" unique_id=1847000005 instance=ExtResource("16_player_trigger")]
@@ -295,3 +571,8 @@ texture = SubResource("EditableTexture_body")
 unique_name_in_owner = true
 script = ExtResource("2_story")
 auto_start = false
+
+[node name="Config" type="Node" parent="." unique_id=1313635981]
+process_mode = 4
+script = SubResource("GDScript_playable")
+

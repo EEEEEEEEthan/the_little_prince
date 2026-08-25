@@ -25,7 +25,7 @@ Godot **禁止** builtin 脚本写 `class_name`。跨文件类型用已有工具
 
 ## 继续留独立文件的
 
-- 被多个场景各自挂载，或 `preload` / `load` / `extends "res://...gd"` 的脚本（如 `planet_run_shell.gd`、`surface_prop.gd`）
+- 被多个场景各自挂载，或 `preload` / `load` / `extends "res://...gd"` 的脚本（如 `surface_prop.gd`）
 - 多星球共用的 shader / 贴图 / 音频
 - 无场景挂载的工具类（`WorldConstants`、`SkyPhase`、`DialogueCatalog`）
 - `addons/` 插件

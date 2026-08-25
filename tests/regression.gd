@@ -18,7 +18,7 @@ func _begin() -> void:
 	AudioServer.set_bus_mute(AudioServer.get_bus_index(&"Master"), true)
 	var packed_scene := load("res://journey/main.tscn") as PackedScene
 	var shell := packed_scene.instantiate()
-	shell.travel_to_next_planet = false
+	shell.get_node("Journey").travel_to_next_planet = false
 	var story := shell.get_node(STORY_PATH) as PlanetStory
 	story.departed.connect(_on_planet_departed.bind(requested_planet_ids), CONNECT_ONE_SHOT)
 	root.add_child(shell)
@@ -69,8 +69,8 @@ class RegressionDriver extends Node:
 
 	func _process(_delta: float) -> void:
 		var story := shell.get_node("GameView/GameViewport/Planet/%Story") as PlanetStory
-		var player := shell.get_node("%Player") as Player
-		var planet := shell.get_node("%Planet") as Planet
+		var player := shell.get_node("%Player")
+		var planet := shell.get_node("%Planet")
 		var dialogue := story.dialogue
 		if _should_release_interact:
 			_set_action(&"interact", false)
@@ -116,7 +116,7 @@ class RegressionDriver extends Node:
 		_set_action(&"move_right", walk_right)
 
 
-	func _nearest_accepted_prop(planet: Planet, story: PlanetStory) -> SurfaceProp:
+	func _nearest_accepted_prop(planet, story: PlanetStory) -> SurfaceProp:
 		var nearest_prop: SurfaceProp = null
 		var nearest_offset := INF
 		for prop in planet.surface_props:

@@ -19,7 +19,7 @@
 [ext_resource type="AudioStream" uid="uid://dbh8gq5hbhl0i" path="res://audio/dry_folio_rest.ogg" id="24_geographer_music"]
 
 [sub_resource type="GDScript" id="GDScript_main"]
-script/source = "extends \"res://planet/planet_run_shell.gd\"
+script/source = "extends Node
 ## 旅程入口：开局 B612，离星后国王，再酒鬼，再商人，再点灯人，再地理学家。
 
 const META_KING_PLANET_SCENE := \"king_planet_scene\"
@@ -32,11 +32,10 @@ var travel_to_next_planet: bool = true
 
 
 func _ready() -> void:
-	planet.get_node(\"%Story\").departed.connect(
+	owner.planet.get_node(\"%Story\").departed.connect(
 			travel_to_king_planet,
 			CONNECT_ONE_SHOT | CONNECT_DEFERRED
 	)
-	super._ready()
 
 
 func travel_to_king_planet(start_story := true) -> void:
@@ -115,15 +114,15 @@ func _swap_journey_planet(
 		play_day_music: Callable,
 		start_story: bool
 ) -> PlanetStory:
-	var previous_story := interaction.story as PlanetStory
+	var previous_story := owner.interaction.story as PlanetStory
 	previous_story.is_active = false
 	previous_story.set_process(false)
 	var next_planet := (
-			$Config.get_meta(planet_scene_meta_name) as PackedScene
-	).instantiate() as Planet
+			owner.get_node(\"Config\").get_meta(planet_scene_meta_name) as PackedScene
+	).instantiate()
 	var next_story := next_planet.get_node(\"%Story\") as PlanetStory
 	next_story.skip_cinematics = previous_story.skip_cinematics
-	replace_planet(next_planet)
+	owner.replace_planet(next_planet)
 	play_day_music.call()
 	if start_story:
 		next_story.start()
@@ -131,9 +130,11 @@ func _swap_journey_planet(
 "
 
 [node name="Main" unique_id=134579991 instance=ExtResource("1_shell")]
+
+[node name="Journey" type="Node" parent="." index="0"]
 script = SubResource("GDScript_main")
 
-[node name="Config" parent="." index="0"]
+[node name="Config" parent="." index="1"]
 metadata/king_planet_scene = ExtResource("4_king")
 metadata/drunkard_planet_scene = ExtResource("13_drunkard")
 metadata/merchant_planet_scene = ExtResource("16_merchant")

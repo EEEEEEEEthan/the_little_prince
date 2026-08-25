@@ -1,15 +1,8 @@
 [gd_scene format=3 uid="uid://cprshellscn01"]
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
-[ext_resource type="Script" uid="uid://cprshellgd001" path="res://planet/planet_run_shell.gd" id="1_shell"]
-[ext_resource type="Script" uid="uid://0ptsjbts1756" path="res://player/player.gd" id="3_player"]
-[ext_resource type="Shader" uid="uid://bahfecy4eixc3" path="res://visual/palette.gdshader" id="5_palette_shader"]
-[ext_resource type="Texture2D" uid="uid://cop81vwashvr5" path="res://visual/palette.png" id="6_palette"]
-[ext_resource type="Script" uid="uid://cr35jjjk4jfxm" path="res://ui/interact_prompt.gd" id="7_prompt"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="9_dialogue"]
-[ext_resource type="Script" uid="uid://pqblm1m4kgms" path="res://player/scarf.gd" id="11_scarf"]
 [ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
-[ext_resource type="Script" uid="uid://wt1e4t3x7gyv" path="res://story/migratory_flock.gd" id="14_flock"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="19_home_day_music"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="21_king_day_music"]
@@ -18,19 +11,524 @@
 [ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="24_grass_a"]
 [ext_resource type="AudioStream" uid="uid://cuivhluijhgxn" path="res://audio/dry_grass_rustle_b.wav" id="25_grass_b"]
 
+[sub_resource type="Shader" id="Shader_palette"]
+code = "shader_type canvas_item;
+
+uniform sampler2D palette : source_color, filter_nearest;
+
+void fragment() {
+	vec4 source = texture(TEXTURE, UV);
+	if (source.a > 0.0) {
+		float closest_distance = 4.0; // Greater than the maximum squared RGB distance (3.0).
+		vec3 closest_color = source.rgb;
+		ivec2 palette_size = textureSize(palette, 0);
+		int palette_width = palette_size.x;
+		int palette_height = palette_size.y;
+		for (int y = 0; y < palette_height; y++)
+		{
+			float palette_v = (float(y) + 0.5) / float(palette_height);
+			for (int x = 0; x < palette_width; x++) {
+				float palette_u = (float(x) + 0.5) / float(palette_width);
+				vec3 palette_color = texture(palette, vec2(palette_u, palette_v)).rgb;
+				float dis = distance(source.rgb, palette_color);
+				if (dis < closest_distance) {
+					closest_distance = dis;
+					closest_color = palette_color;
+				}
+			}
+		}
+		COLOR = vec4(closest_color, source.a);
+	} else {
+		COLOR = source;
+	}
+}
+"
+
+[sub_resource type="Texture2D" id="EditableTexture_palette"]
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAADCAMAAACtb39mAAAAAXNSR0IArs4c6QAAAGZQTFRFAAAAAAAAAQEEBQgUChMkDBImEB0zGBw2FydCHzJTKydEQjBLWzdMJkFqK1J9ekBM/00f/30+nExJzFxAzUlRXZpO4KtK/7NwNm+RWI+dd6qkoMWtyd2+/+Ct7u7Q//fR////KHJEoPmGmAAAACJ0Uk5TAP///////////////////////////////////////////y79k78AAAAvSURBVAiZY2BgZGJmYWVj5+Dk4ubh5eNnEBAUEhYRFROXkJSSlpGVk2dQUGRAAQA62gIy0/dRZwAAAABJRU5ErkJggg=="
+
+[sub_resource type="GDScript" id="GDScript_shell"]
+script/source = "extends Control
+## 星球运行壳：256×224 视口、玩家、UI、输入与配乐。
+## 视口拉伸、像素过滤等静态配置写在 planet_run_shell.tscn。
+
+const META_OPENING_DAY_MUSIC := \"opening_day_music\"
+
+@onready var game_viewport: SubViewport = $GameView/GameViewport
+@onready var planet = $GameView/GameViewport/Planet
+@onready var player = $GameView/GameViewport/Player
+@onready var dialogue = %DialogueBox
+@onready var interaction = %Interaction
+
+
+func _ready() -> void:
+	_layout_world()
+	planet.teleport_player(planet.spawn_angle)
+	var story := planet.get_node(\"%Story\") as PlanetStory
+	if story.auto_start:
+		story.start()
+
+
+func replace_planet(next_planet: Node2D) -> void:
+	var previous_planet := planet
+	next_planet.name = \"Planet\"
+	next_planet.unique_name_in_owner = true
+	var planet_index := previous_planet.get_index()
+	previous_planet.unique_name_in_owner = false
+	previous_planet.name = \"LeavingPlanet\"
+	game_viewport.add_child(next_planet)
+	next_planet.owner = self
+	game_viewport.move_child(next_planet, planet_index)
+	planet = next_planet
+	player.planet = next_planet
+	player.get_node(\"Scarf\").planet = next_planet
+	interaction.planet = next_planet
+	game_viewport.remove_child(previous_planet)
+	previous_planet.free()
+	_layout_world()
+	next_planet.teleport_player(next_planet.spawn_angle)
+	player.modulate.a = 1.0
+	%GameCamera.offset = Vector2.ZERO
+	%Epilogue.text = \"\"
+	%MigratoryFlock.visible = false
+	%MigratoryFlock.set_process(false)
+
+
+func _input(event: InputEvent) -> void:
+	if not dialogue.is_open() or event.is_echo() or not event.is_action(&\"interact\"):
+		return
+	if event.is_pressed():
+		dialogue.mark_holding(true)
+		return
+	var key := event as InputEventKey
+	if key != null and key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
+		return
+	var joy_button := event as InputEventJoypadButton
+	if joy_button != null and Input.is_joy_button_pressed(joy_button.device, joy_button.button_index):
+		return
+	dialogue.mark_holding(false)
+
+
+func _layout_world() -> void:
+	var viewport_size := Vector2(game_viewport.size)
+	var apex_y := viewport_size.y * WorldConstants.APEX_Y_RATIO
+	planet.global_position = Vector2(
+		viewport_size.x * 0.5, apex_y + planet.radius
+	)
+	player.global_position = planet.apex_global_position()
+
+"
+
+[sub_resource type="GDScript" id="GDScript_player"]
+script/source = "extends Sprite2D
+## 小王子：左右输入驱动星球旋转，自身钉在弧顶。
+## 贴图为 idle+walk 横拼 spritesheet，按角速度切帧；左右用 flip_h。
+
+@onready var planet = %Planet
+@onready var interaction = %Interaction
+
+var can_move_left: bool = true
+var can_move_right: bool = true
+var move_speed_scale: float = 1.0
+var _anim_time: float = 0.0
+var _was_moving: bool = false
+var _last_walk_frame_index: int = -1
+
+func _ready() -> void:
+	hframes = WorldConstants.PLAYER_SPRITE_FRAME_COUNT
+	vframes = 1
+	scale = Vector2.ONE
+	offset = Vector2(
+		0.0,
+		-float(WorldConstants.PLAYER_SPRITE_HEIGHT) * 0.5 + WorldConstants.PLAYER_VISUAL_Y_OFFSET
+	)
+	frame = 0
+
+func _physics_process(delta: float) -> void:
+	var direction := 0.0
+	if not interaction.is_busy():
+		if can_move_right:
+			direction += Input.get_action_strength(\"move_right\")
+		if can_move_left:
+			direction -= Input.get_action_strength(\"move_left\")
+		direction *= move_speed_scale
+	planet.move_player(direction, delta)
+	_update_animation(direction, delta)
+
+func is_in_grass() -> bool:
+	return has_overlapping_trigger_kind(WorldConstants.TriggerKind.GRASS)
+
+
+func has_overlapping_trigger_kind(kind: WorldConstants.TriggerKind) -> bool:
+	for area in %Footprint.get_overlapping_areas():
+		if area.has_method(\"hosted_surface_prop\") and area.kind == kind:
+			return true
+	return false
+
+
+func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceProp:
+	var best: SurfaceProp = null
+	var best_distance_squared := INF
+	for area in %Footprint.get_overlapping_areas():
+		if not area.has_method(\"hosted_surface_prop\") or area.kind != WorldConstants.TriggerKind.INTERACT:
+			continue
+		var prop := area.hosted_surface_prop() as SurfaceProp
+		if prop == null or not prop.is_interactable():
+			continue
+		if should_accept.is_valid() and not should_accept.call(prop):
+			continue
+		var distance_squared := global_position.distance_squared_to(area.global_position)
+		if distance_squared <= best_distance_squared:
+			best_distance_squared = distance_squared
+			best = prop
+	return best
+
+
+func _update_animation(direction: float, delta: float) -> void:
+	if absf(direction) > 0.01:
+		flip_h = direction < 0.0
+	var moving := planet.is_moving()
+	if moving != _was_moving:
+		_anim_time = 0.0
+		_last_walk_frame_index = -1
+		if not moving:
+			%Footstep.stop()
+		_was_moving = moving
+	_anim_time += delta
+	if moving:
+		var walk_count := WorldConstants.PLAYER_WALK_FRAME_COUNT
+		var walk_index := int(_anim_time * WorldConstants.PLAYER_WALK_FPS) % walk_count
+		frame = WorldConstants.PLAYER_IDLE_FRAME_COUNT + walk_index
+		if walk_index != _last_walk_frame_index:
+			_last_walk_frame_index = walk_index
+			if walk_index % 2 == 0 and not interaction.is_busy():
+				%Footstep.play_step()
+	else:
+		var idle_count := WorldConstants.PLAYER_IDLE_FRAME_COUNT
+		var idx := int(_anim_time * WorldConstants.PLAYER_IDLE_FPS) % idle_count
+		frame = idx
+"
+
+[sub_resource type="GDScript" id="GDScript_scarf"]
+script/source = "extends Sprite2D
+## 小王子围巾：在玩家本地空间做 Verlet 绳。
+## 人钉在弧顶、行走靠星球反转，引擎刚体没有表观惯性，所以不用物理体。
+## 模拟每物理帧更新，显示烘焙成小贴图并取整，做成像素抽帧。
+
+const POINT_COUNT: int = 7
+const SEGMENT_LENGTH: float = 1.7
+const GRAVITY: float = 180.0
+const DAMPING: float = 0.86
+const WIND_PER_WALK_SPEED: float = 22.0
+const IDLE_SWAY: float = 36.0
+const CONSTRAINT_ITERATIONS: int = 5
+const DISPLAY_FPS: float = 8.0
+const NECK_SIDE_OFFSET: float = 2.0
+const NECK_LOCAL_Y: float = -9.0
+const MIN_LOCAL_Y: float = -15.0
+const MAX_LOCAL_Y: float = -3.0
+const FRAME_WIDTH: int = 32
+const FRAME_HEIGHT: int = 24
+const FRAME_ORIGIN := Vector2i(-16, -16)
+const COLOR := Color8(224, 171, 74)
+const SHADOW_COLOR := Color8(224, 171, 74)
+
+@onready var planet = %Planet
+@onready var player = %Player
+
+var simulated_positions: PackedVector2Array
+var previous_positions: PackedVector2Array
+var display_positions: PackedVector2Array
+var _display_accumulator: float = 0.0
+var _frame_image: Image
+var _frame_texture: ImageTexture
+
+
+func _ready() -> void:
+	centered = false
+	offset = Vector2(FRAME_ORIGIN)
+	texture_filter = TEXTURE_FILTER_NEAREST
+	_frame_image = Image.create(FRAME_WIDTH, FRAME_HEIGHT, false, Image.FORMAT_RGBA8)
+	_frame_texture = ImageTexture.create_from_image(_frame_image)
+	texture = _frame_texture
+	settle_hang_to_facing()
+
+
+func _physics_process(delta: float) -> void:
+	_simulate(delta)
+	_display_accumulator += delta
+	var display_interval := 1.0 / DISPLAY_FPS
+	if _display_accumulator >= display_interval:
+		_display_accumulator = fmod(_display_accumulator, display_interval)
+		_capture_display()
+
+
+func settle_hang_to_facing() -> void:
+	var neck := _neck_local_position()
+	var hang_direction := Vector2(-_facing_sign(), 1.2).normalized()
+	simulated_positions.resize(POINT_COUNT)
+	previous_positions.resize(POINT_COUNT)
+	display_positions.resize(POINT_COUNT)
+	for point_index in POINT_COUNT:
+		var point := neck + hang_direction * SEGMENT_LENGTH * float(point_index)
+		simulated_positions[point_index] = point
+		previous_positions[point_index] = point
+	for _settle_step in 24:
+		_simulate(1.0 / 60.0)
+	_capture_display()
+
+
+func _simulate(delta: float) -> void:
+	_pin_neck()
+	var walk_speed := planet.angular_velocity * planet.radius
+	var motion_weight := clampf(absf(walk_speed) / WorldConstants.PLAYER_SPEED, 0.0, 1.0)
+	var wind_x := lerpf(
+			-_facing_sign() * IDLE_SWAY,
+			-walk_speed * WIND_PER_WALK_SPEED,
+			motion_weight
+	)
+	var acceleration := Vector2(wind_x, GRAVITY)
+	var delta_squared := delta * delta
+	for point_index in range(1, POINT_COUNT):
+		var current_position := simulated_positions[point_index]
+		var previous_position := previous_positions[point_index]
+		var next_position := (
+				current_position
+				+ (current_position - previous_position) * DAMPING
+				+ acceleration * delta_squared
+		)
+		previous_positions[point_index] = current_position
+		simulated_positions[point_index] = next_position
+	for _constraint_pass in CONSTRAINT_ITERATIONS:
+		for point_index in range(1, POINT_COUNT):
+			var from_position := simulated_positions[point_index - 1]
+			var to_position := simulated_positions[point_index]
+			var segment_offset := to_position - from_position
+			var distance := segment_offset.length()
+			if distance < 0.001:
+				segment_offset = Vector2(0.0, 1.0)
+				distance = 1.0
+			var correction := segment_offset * (1.0 - SEGMENT_LENGTH / distance)
+			if point_index == 1:
+				simulated_positions[point_index] = to_position - correction
+			else:
+				simulated_positions[point_index - 1] = from_position + correction * 0.5
+				simulated_positions[point_index] = to_position - correction * 0.5
+		_pin_neck()
+		for point_index in range(1, POINT_COUNT):
+			var clamped := simulated_positions[point_index]
+			clamped.y = clampf(clamped.y, MIN_LOCAL_Y, MAX_LOCAL_Y)
+			simulated_positions[point_index] = clamped
+
+
+func _capture_display() -> void:
+	display_positions.resize(POINT_COUNT)
+	for point_index in POINT_COUNT:
+		display_positions[point_index] = simulated_positions[point_index].round()
+	_frame_image.fill(Color(0, 0, 0, 0))
+	var knot := Vector2i(display_positions[0]) - FRAME_ORIGIN
+	_plot_dot(knot + Vector2i(0, 1), SHADOW_COLOR, 2)
+	_plot_dot(knot, COLOR, 2)
+	for point_index in range(display_positions.size() - 1):
+		var thickness := 2 if point_index < 3 else 1
+		_plot_line(
+				Vector2i(display_positions[point_index]) - FRAME_ORIGIN,
+				Vector2i(display_positions[point_index + 1]) - FRAME_ORIGIN,
+				thickness
+		)
+	_frame_texture.update(_frame_image)
+
+
+func _pin_neck() -> void:
+	var neck := _neck_local_position()
+	simulated_positions[0] = neck
+	previous_positions[0] = neck
+
+
+func _neck_local_position() -> Vector2:
+	var walk_index := player.frame - WorldConstants.PLAYER_IDLE_FRAME_COUNT
+	var body_bob := 1.0 if walk_index >= 0 and walk_index % 2 == 0 else 0.0
+	return Vector2(NECK_SIDE_OFFSET * -_facing_sign(), NECK_LOCAL_Y + body_bob)
+
+
+func _facing_sign() -> float:
+	return -1.0 if player.flip_h else 1.0
+
+
+func _plot_line(from_pixel: Vector2i, to_pixel: Vector2i, thickness: int) -> void:
+	var delta_x := absi(to_pixel.x - from_pixel.x)
+	var delta_y := absi(to_pixel.y - from_pixel.y)
+	var step_x := 1 if from_pixel.x < to_pixel.x else -1
+	var step_y := 1 if from_pixel.y < to_pixel.y else -1
+	var error := delta_x - delta_y
+	var pixel := from_pixel
+	while true:
+		_plot_dot(pixel + Vector2i(0, 1), SHADOW_COLOR, thickness)
+		_plot_dot(pixel, COLOR, thickness)
+		if pixel == to_pixel:
+			break
+		var doubled_error := error * 2
+		if doubled_error > -delta_y:
+			error -= delta_y
+			pixel.x += step_x
+		if doubled_error < delta_x:
+			error += delta_x
+			pixel.y += step_y
+
+
+func _plot_dot(pixel: Vector2i, color: Color, thickness: int) -> void:
+	for offset_x in thickness:
+		var image_x := pixel.x + offset_x
+		if image_x < 0 or pixel.y < 0 or image_x >= FRAME_WIDTH or pixel.y >= FRAME_HEIGHT:
+			continue
+		_frame_image.set_pixel(image_x, pixel.y, color)
+"
+
+[sub_resource type="GDScript" id="GDScript_prompt"]
+script/source = "extends Sprite2D
+## 手柄 A 键提示：跟随目标头顶移动，自身保持屏幕朝向，不继承星球旋转。
+## 长按交互时按钮本身按填充比例做进度渲染。
+
+var hold_fill_ratio: float = 0.0:
+	set(value):
+		hold_fill_ratio = clampf(value, 0.0, 1.0)
+		if not is_node_ready():
+			await ready
+		(material as ShaderMaterial).set_shader_parameter(&\"fill_ratio\", hold_fill_ratio)
+
+var _target: SurfaceProp
+
+
+func _ready() -> void:
+	# tscn 保持可见便于编辑；开局再关。
+	visible = false
+	set_process(false)
+
+
+func show_on(prop: SurfaceProp) -> void:
+	_target = prop
+	rotation = 0.0
+	offset = Vector2.ZERO
+	hold_fill_ratio = 0.0
+	visible = true
+	set_process(true)
+	_sync_to_target()
+
+
+func hide_prompt() -> void:
+	_target = null
+	hold_fill_ratio = 0.0
+	visible = false
+	set_process(false)
+	offset = Vector2.ZERO
+
+
+func _process(_delta: float) -> void:
+	_sync_to_target()
+	if not visible:
+		return
+	if hold_fill_ratio > 0.0:
+		offset = Vector2.ZERO
+		return
+	offset = Vector2(0.0, sin(Time.get_ticks_msec() * 0.006) * 1.5)
+
+
+func _sync_to_target() -> void:
+	if _target == null or not is_instance_valid(_target):
+		hide_prompt()
+		return
+	global_position = _target.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+	global_rotation = 0.0
+"
+
+[sub_resource type="GDScript" id="GDScript_flock"]
+script/source = "extends Node2D
+## 候鸟：离星时从屏幕外飞到弧顶，再向上带走小王子。
+
+const BIRD_COUNT := 7
+const ARRIVE_SECONDS := 1.4
+const WING_FRAME_MILLISECONDS := 140
+
+@export var bird_texture: Texture2D
+
+var _birds: Array[Sprite2D] = []
+
+
+func _ready() -> void:
+	visible = false
+	set_process(false)
+	for bird_index in BIRD_COUNT:
+		var bird := Sprite2D.new()
+		bird.texture = bird_texture
+		bird.hframes = 2
+		bird.texture_filter = TEXTURE_FILTER_NEAREST
+		bird.z_index = 180
+		add_child(bird)
+		_birds.append(bird)
+
+
+func arrive_from_offscreen(apex_global_position: Vector2) -> void:
+	visible = true
+	set_process(true)
+	var viewport_rect := get_viewport().get_visible_rect()
+	const offscreen_margin := 28.0
+	for bird_index in _birds.size():
+		var from_left := bird_index % 2 == 0
+		var bird := _birds[bird_index]
+		var spawn_x := (
+				viewport_rect.position.x - offscreen_margin - float(bird_index) * 10.0
+				if from_left
+				else viewport_rect.end.x + offscreen_margin + float(bird_index) * 10.0
+		)
+		bird.global_position = Vector2(
+				spawn_x,
+				viewport_rect.position.y - offscreen_margin - float(bird_index) * 8.0
+		)
+		bird.flip_h = not from_left
+	var gather_tween := create_tween().set_parallel(true)
+	for bird_index in _birds.size():
+		var scatter := Vector2.from_angle(float(bird_index) * 0.9) * 12.0
+		gather_tween.tween_property(
+				_birds[bird_index],
+				\"global_position\",
+				apex_global_position + scatter,
+				ARRIVE_SECONDS
+		)
+	await gather_tween.finished
+
+
+func lift(distance_pixels: float, duration_seconds: float) -> void:
+	var lift_tween := create_tween().set_parallel(true)
+	for bird in _birds:
+		lift_tween.tween_property(
+				bird,
+				\"global_position:y\",
+				bird.global_position.y - distance_pixels,
+				duration_seconds
+		)
+
+
+func _process(_delta: float) -> void:
+	var wing_frame := int(Time.get_ticks_msec() / WING_FRAME_MILLISECONDS) % 2
+	for bird in _birds:
+		bird.frame = wing_frame
+"
+
+
 
 [sub_resource type="GDScript" id="GDScript_interaction"]
 script/source = "extends Node
 ## 靠近可互动物体时显示 A 提示；点按或长按 interact（键盘 Submit / 手柄 A）交互。
 
 var story: PlanetStory
-var planet: Planet:
+var planet:
 	set(value):
 		planet = value
 		story = value.get_node(\"%Story\") as PlanetStory
-@onready var dialogue: DialogueBox = %DialogueBox
-@onready var prompt: InteractPrompt = %InteractPrompt
-@onready var player: Player = %Player
+@onready var dialogue = %DialogueBox
+@onready var prompt = %InteractPrompt
+@onready var player = %Player
 
 var _focus: SurfaceProp
 var _hold_elapsed_seconds: float = 0.0
@@ -151,7 +649,7 @@ var last_step_was_grass: bool = false
 func play_step() -> void:
 	var variant_is_first := (played_step_count % 2) == 0
 	played_step_count += 1
-	var use_grass := (%Player as Player).is_in_grass()
+	var use_grass := %Player.is_in_grass()
 	var meta_name: String
 	if use_grass:
 		meta_name = META_GRASS_FOOTSTEP_A if variant_is_first else META_GRASS_FOOTSTEP_B
@@ -279,8 +777,8 @@ func _config_music(meta_name: String) -> AudioStream:
 "
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_palette"]
-shader = ExtResource("5_palette_shader")
-shader_parameter/palette = ExtResource("6_palette")
+shader = SubResource("Shader_palette")
+shader_parameter/palette = SubResource("EditableTexture_palette")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_prompt_fill"]
 shader = SubResource("Shader_prompt_fill")
@@ -296,7 +794,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_shell")
+script = SubResource("GDScript_shell")
 
 [node name="Config" type="Node" parent="."]
 process_mode = 4
@@ -347,7 +845,7 @@ texture_filter = 1
 texture = SubResource("EditableTexture_prince")
 flip_h = true
 hframes = 6
-script = ExtResource("3_player")
+script = SubResource("GDScript_player")
 
 [node name="Footprint" type="Area2D" parent="GameView/GameViewport/Player"]
 unique_name_in_owner = true
@@ -369,7 +867,7 @@ unique_name_in_owner = true
 z_index = 1
 texture_filter = 1
 centered = false
-script = ExtResource("11_scarf")
+script = SubResource("GDScript_scarf")
 
 [node name="InteractPrompt" type="Sprite2D" parent="GameView/GameViewport" unique_id=1871861395]
 unique_name_in_owner = true
@@ -378,7 +876,7 @@ z_as_relative = false
 texture_filter = 1
 material = SubResource("ShaderMaterial_prompt_fill")
 texture = SubResource("EditableTexture_prompt_a")
-script = ExtResource("7_prompt")
+script = SubResource("GDScript_prompt")
 
 [node name="DialogueBox" parent="GameView/GameViewport" unique_id=1685094322 instance=ExtResource("9_dialogue")]
 unique_name_in_owner = true
@@ -393,7 +891,7 @@ script = SubResource("GDScript_interaction")
 [node name="MigratoryFlock" type="Node2D" parent="GameView/GameViewport" unique_id=515559498]
 unique_name_in_owner = true
 z_index = 180
-script = ExtResource("14_flock")
+script = SubResource("GDScript_flock")
 bird_texture = SubResource("EditableTexture_migratory_bird")
 
 [node name="FadeLayer" type="CanvasLayer" parent="GameView/GameViewport" unique_id=1234713668]

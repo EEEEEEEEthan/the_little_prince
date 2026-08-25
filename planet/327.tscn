@@ -3,10 +3,6 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
-[ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="11_starfield"]
-[ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="12_sky_shader"]
-[ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
-[ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://04l4uya0khhs" path="res://audio/i_want_to_go_home.ogg" id="18_day_music"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="19_trigger"]
@@ -31,27 +27,6 @@ _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAWCAYAAADJqhx8AAAAwklEQVR4nGNgoBAw
 [sub_resource type="Texture2D" id="EditableTexture_brown_glass_bottle"]
 script = ExtResource("editable_texture_script")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAASCAYAAABit09LAAAAmklEQVR4nGNgQAMbqqz+b6iy+o8uzoSuCBsbK4gxkPkfYyCD30QPGSG4gkvTosgzkRHZND0JLlRNSXYMelnLGDGsRgdL5h3C7kYMZyTZwdksyBIPHv3CqQmriTUNLsRZ3dKwB7/Vk9ZloWh4dekWfhNhANlqlHDk+4ViAUNNgwtx4YgMiLYaxa5PbH9QFF568QdT4YNvqIrQAQAZtDkDZxcXKgAAAABJRU5ErkJggg=="
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_drunkard_sky"]
-noise_type = 2
-frequency = 0.001
-fractal_octaves = 10
-fractal_lacunarity = 2.32
-fractal_gain = 1.065
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_drunkard_sky"]
-width = 640
-height = 640
-noise = SubResource("FastNoiseLite_drunkard_sky")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_drunkard_sky"]
-shader = ExtResource("12_sky_shader")
-shader_parameter/zenith_gradient = SubResource("GradientTexture1D_amber_evening_zenith")
-shader_parameter/star_alpha_gradient = ExtResource("14_star_alpha")
-shader_parameter/noise_texture = SubResource("NoiseTexture2D_drunkard_sky")
-shader_parameter/phase = 0.75
-shader_parameter/noise_strength = 0.02
-
 
 [sub_resource type="GDScript" id="GDScript_story"]
 script/source = "extends PlanetStory
@@ -87,16 +62,13 @@ body_texture = SubResource("EditableTexture_amber_mottled_disk")
 star_rotation_speed = 0.0
 zenith_gradient = SubResource("GradientTexture1D_amber_evening_zenith")
 
-[node name="Config" type="Node" parent="."]
+[node name="Config" parent="." index="5"]
 process_mode = 4
-script = ExtResource("15_playable")
 metadata/run_shell_scene = ExtResource("16_run_shell")
 metadata/day_music = ExtResource("18_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
-material = SubResource("ShaderMaterial_drunkard_sky")
-texture = ExtResource("11_starfield")
 
 [node name="Clouds" parent="." index="1"]
 modulate = Color(0.82, 0.48, 0.22, 1)

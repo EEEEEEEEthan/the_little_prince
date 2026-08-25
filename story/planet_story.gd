@@ -20,21 +20,21 @@ var is_blocking_input: bool = false
 var has_finished_opening: bool = false
 var has_crossed_sunset: bool = false
 
-var planet: Planet:
+var planet:
 	get:
-		return owner as Planet
-var player: Player:
+		return owner
+var player:
 	get:
-		return _shell_node(&"Player") as Player
-var dialogue: DialogueBox:
+		return _shell_node(&"Player")
+var dialogue:
 	get:
-		return _shell_node(&"DialogueBox") as DialogueBox
-var overhead: OverheadTypewriter:
+		return _shell_node(&"DialogueBox")
+var overhead:
 	get:
-		return _shell_node(&"OverheadTypewriter") as OverheadTypewriter
-var flock: MigratoryFlock:
+		return _shell_node(&"OverheadTypewriter")
+var flock:
 	get:
-		return _shell_node(&"MigratoryFlock") as MigratoryFlock
+		return _shell_node(&"MigratoryFlock")
 
 var _story_generation: int = 0
 var _waiting_interact_kind: int = -1
