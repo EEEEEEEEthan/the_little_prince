@@ -504,6 +504,13 @@ func _present_with_run_shell() -> void:
 	tree.current_scene = shell
 "
 
+[sub_resource type="Texture2D" id="Texture2D_v2ulb"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("editable_texture_script")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAANZJREFUWIVjZEADD1Z7oQtRFSiEbkPhs5Bhxn8C8oykGEaKAwhZjK6OKIcwkeAAmgBiQoBYn+PShzckhkQIYAXyBhEo/IcXVpBlzpAIAVgc/mdgwPQ5DMDEkUJi+OQCGEAJCSLUEQVICgFcwU+qGmSA07Wxs/xwSZEVAovTNmFVPKTSwH8GBgaGZsE/eBXVvmcZfnUBCqh9T3bhiRUMeAiMOmDUARh5lYISkKDZDAyYJeKAh8CoA0ZbxSQX7LcnX8Urr5qrTZJ5Qy8ESPUhNRxAUiOTVAAAnH0mdwUrK4QAAAAASUVORK5CYII="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
 [node name="Planet" type="Node2D" unique_id=1020592655]
 position = Vector2(128, 284.48)
 script = SubResource("GDScript_planet")
@@ -549,4 +556,4 @@ auto_start = false
 unique_name_in_owner = true
 process_mode = 4
 script = SubResource("GDScript_playable")
-prince_portrait = ExtResource("prince_portrait")
+prince_portrait = SubResource("Texture2D_v2ulb")
