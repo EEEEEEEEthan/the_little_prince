@@ -380,7 +380,7 @@ offset = Vector2(0, -11)
 
 [node name="RimClink" type="AudioStreamPlayer" parent="Surface/Rose/GlassGlobe" unique_id=410000612]
 stream = ExtResource("23_glass_rim_clink")
-volume_db = -4.0
+volume_db = -24.0
 
 [node name="PlayerTrigger" parent="Surface/Rose" index="1" unique_id=171176172 instance=ExtResource("22_trigger")]
 
