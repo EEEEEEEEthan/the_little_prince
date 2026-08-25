@@ -42,8 +42,8 @@ material = SubResource("ShaderMaterial_flora_sway")
 texture = SubResource("EditableTexture_flora")
 offset = Vector2(0, -8)
 hframes = 6
+groups = ["flora"]
 script = ExtResource("1_surface_prop")
-kind = 3
 
 [node name="PlayerTrigger" parent="." instance=ExtResource("2_trigger")]
 position = Vector2(0, -8)

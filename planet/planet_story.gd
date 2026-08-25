@@ -37,7 +37,7 @@ var flock:
 		return _shell_node(&"MigratoryFlock")
 
 var _story_generation: int = 0
-var _waiting_interact_kind: int = -1
+var _waiting_props: Array[SurfaceProp] = []
 var _dialogue_closed_early: bool = false
 var _story_tween: Tween
 
@@ -76,7 +76,7 @@ func start() -> void:
 	is_active = true
 	has_finished_opening = false
 	has_crossed_sunset = false
-	_waiting_interact_kind = -1
+	_waiting_props.clear()
 	_dialogue_closed_early = false
 	player.can_move_left = false
 	player.can_move_right = false
@@ -90,20 +90,11 @@ func start() -> void:
 func accepts_interact(prop: SurfaceProp) -> bool:
 	if not is_active or is_blocking_input or prop.is_consumed:
 		return false
-	return int(prop.kind) == _waiting_interact_kind
+	return _waiting_props.has(prop)
 
 
 func interact_hold_seconds(_prop: SurfaceProp) -> float:
 	return 0.0
-
-
-func try_handle_interact(prop: SurfaceProp) -> bool:
-	if not accepts_interact(prop):
-		return false
-	_lock_input()
-	_waiting_interact_kind = -1
-	prop_interacted.emit(prop)
-	return true
 
 
 func try_first_sunset_narration() -> void:
@@ -189,14 +180,35 @@ func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 	await _halt_if_stale(generation)
 
 
-func _interact(kind: SurfaceProp.Kind) -> SurfaceProp:
+func _interact(prop: SurfaceProp) -> SurfaceProp:
+	var waiting_props: Array[SurfaceProp] = [prop]
+	return await _interact_any(waiting_props)
+
+
+func _interact_any(props: Array[SurfaceProp]) -> SurfaceProp:
 	var generation := _story_generation
 	_end_dialogue()
-	_waiting_interact_kind = int(kind)
-	var prop: SurfaceProp = await prop_interacted
-	_waiting_interact_kind = -1
+	_waiting_props = props.duplicate()
+	var received_holder: Array = [null]
+	var callbacks: Dictionary = {}
+	for waiting_prop in props:
+		var callback := func() -> void:
+			if received_holder[0] != null:
+				return
+			received_holder[0] = waiting_prop
+			prop_interacted.emit(waiting_prop)
+		callbacks[waiting_prop] = callback
+		waiting_prop.interacted.connect(callback)
+	var received: SurfaceProp = await prop_interacted
+	for waiting_prop in props:
+		var callback: Callable = callbacks[waiting_prop]
+		if waiting_prop.interacted.is_connected(callback):
+			waiting_prop.interacted.disconnect(callback)
+	_waiting_props.clear()
+	if received != null:
+		_lock_input()
 	await _halt_if_stale(generation)
-	return prop
+	return received
 
 
 func _tween_game_camera_offset_y(target_offset_y: float, duration_seconds: float) -> void:

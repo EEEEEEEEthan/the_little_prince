@@ -51,7 +51,7 @@ func _ready() -> void:
 func interact_hold_seconds(prop: SurfaceProp) -> float:
 	if skip_cinematics or not accepts_interact(prop):
 		return 0.0
-	if prop.kind == SurfaceProp.Kind.BAOBAB:
+	if prop.is_in_group(&\"baobab\"):
 		return PULL_SHOOT_HOLD_SECONDS
 	if _is_glass_interact:
 		return GLASS_GLOBE_HOLD_SECONDS
@@ -168,14 +168,16 @@ func _play_story() -> void:
 	)
 
 
-func try_handle_interact(prop: SurfaceProp) -> bool:
-	if not accepts_interact(prop):
-		return false
-	if not super.try_handle_interact(prop):
-		return false
-	if prop.kind == SurfaceProp.Kind.BAOBAB:
-		prop.emit_baobab_fragment_burst()
-	return true
+func _interact_rose() -> SurfaceProp:
+	return await _interact(%Rose)
+
+
+func _interact_baobab() -> SurfaceProp:
+	var waiting_baobabs: Array[SurfaceProp] = []
+	for prop in planet.surface_props:
+		if prop.is_in_group(&\"baobab\") and not prop.is_consumed:
+			waiting_baobabs.append(prop)
+	return await _interact_any(waiting_baobabs)
 
 
 func _rose(text: String) -> void:
@@ -194,14 +196,6 @@ func _wait_move_right() -> void:
 			await _halt
 			return
 	await _halt_if_stale(generation)
-
-
-func _interact_rose() -> SurfaceProp:
-	return await _interact(SurfaceProp.Kind.ROSE)
-
-
-func _interact_baobab() -> SurfaceProp:
-	return await _interact(SurfaceProp.Kind.BAOBAB)
 
 
 func _play_uproot() -> void:
@@ -224,7 +218,7 @@ func _hide_glass() -> void:
 
 
 func _rose_prop() -> SurfaceProp:
-	return planet.get_node(\"Surface/Rose\") as SurfaceProp
+	return %Rose
 
 
 func _glass_globe() -> Sprite2D:
@@ -242,6 +236,7 @@ metadata/day_music = ExtResource("20_day_music")
 z_index = -4096
 
 [node name="Volcano" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320]
+groups = ["volcano"]
 texture_filter = 1
 position = Vector2(-67.00001, 54.000008)
 rotation = 4.07983
@@ -250,7 +245,6 @@ offset = Vector2(0, -12.96)
 hframes = 3
 frame = 2
 script = ExtResource("3_surface_prop")
-kind = 1
 variant = 2
 
 [node name="VolcanoSmoke" type="CPUParticles2D" parent="Surface/Volcano" index="0" unique_id=1938475620]
@@ -278,6 +272,7 @@ scale_amount_min = 0.5
 color_ramp = SubResource("Gradient_volcano_smoke")
 
 [node name="Volcano2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=1280196619]
+groups = ["volcano"]
 texture_filter = 1
 position = Vector2(-28.8, 76.8)
 rotation = -2.7793012
@@ -285,9 +280,9 @@ texture = SubResource("EditableTexture_volcano")
 offset = Vector2(0, -12.96)
 hframes = 3
 script = ExtResource("3_surface_prop")
-kind = 1
 
 [node name="Volcano3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147]
+groups = ["volcano"]
 texture_filter = 1
 position = Vector2(-80.924164, -32.90971)
 rotation = -1.18455
@@ -296,15 +291,17 @@ offset = Vector2(0, -14.4)
 hframes = 3
 frame = 1
 script = ExtResource("3_surface_prop")
-kind = 1
 variant = 1
 
 [node name="Rose" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=240828752]
+unique_name_in_owner = true
+groups = ["rose", "player_spawn_anchor"]
 texture_filter = 1
 position = Vector2(0, -87.36)
 texture = SubResource("EditableTexture_rose")
 offset = Vector2(0, -9.2)
 script = ExtResource("3_surface_prop")
+interaction_enabled = true
 
 [node name="GlassGlobe" type="Sprite2D" parent="Surface/Rose" index="0" unique_id=1266538314]
 z_index = 2

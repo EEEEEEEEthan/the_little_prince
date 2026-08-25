@@ -62,7 +62,7 @@ func _play_story() -> void:
 	player.can_move_right = true
 	is_blocking_input = false
 	has_finished_opening = true
-	var star_jar := await _interact(SurfaceProp.Kind.STAR_JAR)
+	var star_jar := await _interact(%StarJar)
 	await _overhead(\"他把它们锁进玻璃罐，自己从不抬头。\")
 	star_jar.is_consumed = true
 	await _depart(\"328。\")
@@ -87,13 +87,13 @@ texture = SubResource("EditableTexture_ink_gold_ledger_disk")
 
 [node name="Merchant" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=770000001]
 unique_name_in_owner = true
+groups = ["player_spawn_anchor"]
 z_index = 1
 texture_filter = 1
 position = Vector2(0, -87.36)
 texture = SubResource("EditableTexture_hunched_ledger_merchant")
 offset = Vector2(0, -11)
 script = ExtResource("3_surface_prop")
-kind = 13
 
 [node name="StarJar" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=770000002]
 unique_name_in_owner = true
@@ -104,8 +104,7 @@ rotation = 0.42
 texture = SubResource("EditableTexture_gold_star_glass_jar")
 offset = Vector2(0, -8)
 script = ExtResource("3_surface_prop")
-kind = 14
-dialogue_id = &"star_jar"
+interaction_enabled = true
 
 [node name="PlayerTrigger" parent="Surface/StarJar" instance=ExtResource("19_trigger")]
 

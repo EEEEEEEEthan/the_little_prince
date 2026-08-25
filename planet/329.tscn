@@ -69,7 +69,7 @@ func _play_story() -> void:
 			if is_night and not was_night:
 				completed_round_count += 1
 			was_night = is_night
-	var street_lamp := await _interact(SurfaceProp.Kind.STREET_LAMP)
+	var street_lamp := await _interact(%StreetLamp)
 	await _overhead(\"他让我帮着点了一次。\")
 	street_lamp.is_consumed = true
 	await _overhead(\"这颗太小了，两个人站不下。\")
@@ -101,13 +101,13 @@ texture = SubResource("EditableTexture_ash_gray_mottled_disk")
 
 [node name="Lamplighter" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=780000001]
 unique_name_in_owner = true
+groups = ["player_spawn_anchor"]
 z_index = 1
 texture_filter = 1
 position = Vector2(0, -48.048)
 texture = SubResource("EditableTexture_black_coat_lamplighter")
 offset = Vector2(0, -11)
 script = ExtResource("3_surface_prop")
-kind = 15
 
 [node name="StreetLamp" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=780000002]
 unique_name_in_owner = true
@@ -119,8 +119,7 @@ texture = SubResource("EditableTexture_black_post_street_lamp")
 offset = Vector2(0, -12)
 hframes = 2
 script = ExtResource("3_surface_prop")
-kind = 16
-dialogue_id = &"street_lamp"
+interaction_enabled = true
 
 [node name="PlayerTrigger" parent="Surface/StreetLamp" instance=ExtResource("19_trigger")]
 

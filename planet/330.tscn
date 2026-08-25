@@ -47,7 +47,7 @@ func _play_story() -> void:
 	player.can_move_right = true
 	is_blocking_input = false
 	has_finished_opening = true
-	var geographer := await _interact(SurfaceProp.Kind.GEOGRAPHER)
+	var geographer := await _interact(%Geographer)
 	await _geographer(\"我只记下别人的报告。\")
 	await _prince(\"我的玫瑰呢？\")
 	await _geographer(\"花存在得太短。我不记。\")
@@ -84,13 +84,14 @@ texture = SubResource("EditableTexture_cream_ink_parchment_disk")
 
 [node name="Geographer" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=790000001]
 unique_name_in_owner = true
+groups = ["player_spawn_anchor"]
 z_index = 1
 texture_filter = 1
 position = Vector2(0, -87.36)
 texture = SubResource("EditableTexture_gray_beard_parchment_scholar")
 offset = Vector2(0, -11)
 script = ExtResource("3_surface_prop")
-kind = 17
+interaction_enabled = true
 
 [node name="PlayerTrigger" parent="Surface/Geographer" instance=ExtResource("19_trigger")]
 
@@ -103,7 +104,6 @@ rotation = 0.28
 texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
 script = ExtResource("3_surface_prop")
-kind = 18
 
 [node name="ReportStackB" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=790000003]
 unique_name_in_owner = true
@@ -114,7 +114,6 @@ rotation = -0.32
 texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
 script = ExtResource("3_surface_prop")
-kind = 18
 
 [node name="ReportStackC" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=790000004]
 unique_name_in_owner = true
@@ -125,7 +124,6 @@ rotation = 0.5
 texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
 script = ExtResource("3_surface_prop")
-kind = 18
 
 
 [node name="Story" parent="." index="4"]

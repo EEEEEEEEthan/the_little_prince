@@ -549,15 +549,7 @@ func _process(delta: float) -> void:
 func _on_interact() -> void:
 	if _focus == null:
 		return
-	if story.try_handle_interact(_focus):
-		_set_focus(null)
-		return
-	var lines := DialogueCatalog.lines_for_id(_focus.get_dialogue_id())
-	if lines.is_empty():
-		return
-	dialogue.play(lines)
-	if dialogue.is_open() and Input.is_action_pressed(&\"interact\"):
-		dialogue.mark_holding(true)
+	_focus.interact()
 	_set_focus(null)
 
 
