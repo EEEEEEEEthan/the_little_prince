@@ -80,7 +80,7 @@ func refresh_interact_focus() -> void:
 	var story := get_node(\"%Story\") as PlanetStory
 	var best: Area2D = null
 	var best_distance_squared := INF
-	if story.is_active and not story.is_blocking_input:
+	if story.is_active and not story.is_blocking_player_input():
 		for area in player_triggers:
 			if not area.player_is_inside:
 				continue

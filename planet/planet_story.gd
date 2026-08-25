@@ -80,8 +80,12 @@ func start() -> void:
 		await get_tree().process_frame
 
 
+func is_blocking_player_input() -> bool:
+	return is_blocking_input or dialogue.is_open()
+
+
 func accepts_interact(prop: SurfaceProp) -> bool:
-	if not is_active or is_blocking_input or prop.is_consumed:
+	if not is_active or is_blocking_player_input() or prop.is_consumed:
 		return false
 	return _waiting_props.has(prop)
 
@@ -161,7 +165,6 @@ func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 	if skip_cinematics:
 		await _halt_if_stale(generation)
 		return
-	_lock_input()
 	dialogue.play_line(DialogueLine.new(speaker, text, portrait))
 	await dialogue.closed
 	await _halt_if_stale(generation)

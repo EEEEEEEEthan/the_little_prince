@@ -39,7 +39,7 @@ func _prepare_start() -> void:
 
 
 func _process(_delta: float) -> void:
-	if not has_finished_opening or is_blocking_input:
+	if not has_finished_opening or is_blocking_player_input():
 		return
 	var look_up_amount := Input.get_action_strength(&\"move_up\")
 	var game_camera := _shell_node(&\"GameCamera\") as Camera2D

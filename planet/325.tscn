@@ -123,6 +123,7 @@ var _rest_rotation := 0.0
 
 func _ready() -> void:
 	super._ready()
+	interacted.connect(play_ambient_one_shot)
 	_rest_rotation = rotation
 	offset = REST_OFFSET
 	hframes = 4
@@ -198,14 +199,12 @@ const MOUSE_SPEAKER := \"小老鼠\"
 @export var king_portrait: Texture2D
 
 var has_overheard_distant_sentencing: bool = false
-var mouse_squeak_count: int = 0
 
 
 func _prepare_start() -> void:
 	player.move_speed_scale = 0.65
 	player.modulate.a = 1.0
 	has_overheard_distant_sentencing = false
-	mouse_squeak_count = 0
 	%Mouse.restore_at_rest()
 	set_process(false)
 
@@ -217,11 +216,12 @@ func _play_story() -> void:
 	player.can_move_right = true
 	is_blocking_input = false
 	has_finished_opening = true
+	_talk_with_mouse()
 	await _await_king()
 
 
 func accepts_interact(prop: SurfaceProp) -> bool:
-	if not is_active or is_blocking_input or prop.is_consumed:
+	if not is_active or is_blocking_player_input() or prop.is_consumed:
 		return false
 	if not _waiting_props.is_empty():
 		return _waiting_props.has(prop)
@@ -231,36 +231,38 @@ func accepts_interact(prop: SurfaceProp) -> bool:
 func try_handle_interact(prop: SurfaceProp) -> bool:
 	if not _waiting_props.is_empty() and _waiting_props.has(prop):
 		return super.try_handle_interact(prop)
-	if not accepts_interact(prop):
+	if not accepts_interact(prop) or prop != %Mouse:
 		return false
-	if prop == %Mouse:
-		_play_mouse_joke()
-		return true
-	return false
-
-
-func _play_mouse_joke() -> void:
 	_lock_input()
-	mouse_squeak_count += 1
-	%Mouse.play_ambient_one_shot()
-	await _line(MOUSE_SPEAKER, \"吱\", null)
-	if mouse_squeak_count < 4:
-		await _prince(\"吱\")
-		is_blocking_input = false
-		return
+	return true
+
+
+func _talk_with_mouse() -> void:
+	await %Mouse.interacted
+	await _line(MOUSE_SPEAKER, \"吱~吱吱？\", null)
+	await _prince(\"吱吱吱吱。\")
+	is_blocking_input = false
+	await %Mouse.interacted
+	await _line(MOUSE_SPEAKER, \"吱吱吱？\", null)
+	await _prince(\"吱吱吱！\")
+	is_blocking_input = false
+	await %Mouse.interacted
+	await _line(MOUSE_SPEAKER, \"吱吱！\", null)
+	await _prince(\"喵~~~~~喵~~~！\")
 	%Mouse.run_away()
-	await _prince(\"喵\")
 	await _overhead(\"小老鼠跑掉了\")
 	is_blocking_input = false
 
 
 func _await_king() -> void:
 	await %TriggerHello.player_entered
+	_lock_input()
 	await _king(\"啊，来了一个臣民\")
 	await _overhead(\"小王子愣了一下\")
 	await _king(\"靠近些，让我好好看看你。\")
 	is_blocking_input = false
 	await %TriggerSleepy.player_entered
+	_lock_input()
 	await _prince(\"陛下~~哈~哈~~啊~下\")
 	await _overhead(\"小王子不小心打了个哈欠\")
 	await _king(\"在一个国王面前打哈欠是违反礼节的。我禁止你打哈欠。\")
