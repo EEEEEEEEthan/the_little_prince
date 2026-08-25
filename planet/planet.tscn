@@ -267,9 +267,9 @@ var _self_rotation: float = 0.0
 
 
 func _enter_tree() -> void:
-	var zenith: Variant = get_meta(&\"zenith_gradient\", null)
-	if zenith != null:
-		(texture as CanvasTexture).specular_texture = zenith
+	if not has_meta(&\"zenith_gradient\"):
+		return
+	(texture as CanvasTexture).specular_texture = get_meta(&\"zenith_gradient\")
 
 
 func set_planet_rotation(value: float) -> void:
