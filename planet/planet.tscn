@@ -27,7 +27,7 @@ var volcano_angles: Array[float] = []
 var baobab_angles: Array[float] = []
 var flora_angles: Array[float] = []
 var surface_props: Array[SurfaceProp] = []
-var overlapping_player_triggers: Array[Area2D] = []
+var player_triggers: Array[Area2D] = []
 var focused_player_trigger: Area2D
 var air_walls: Array[Node] = []
 
@@ -49,7 +49,9 @@ func _ready() -> void:
 
 func _collect_surface_props() -> void:
 	air_walls.clear()
+	player_triggers.clear()
 	_collect_air_walls(surface)
+	_collect_player_triggers(self)
 	for child in surface.get_children():
 		if child.name == \"Rose\":
 			rose_angle = child.rotation
@@ -67,31 +69,11 @@ func _collect_surface_props() -> void:
 		surface_props.append(prop)
 
 
-func bind_player_footprint(footprint: Area2D) -> void:
-	footprint.area_entered.connect(_on_player_entered_area)
-	footprint.area_exited.connect(_on_player_exited_area)
-
-
 func is_player_in_grass() -> bool:
-	for area in overlapping_player_triggers:
-		if area.is_grass:
+	for area in player_triggers:
+		if area.player_is_inside and area.is_grass:
 			return true
 	return false
-
-
-func _on_player_entered_area(area: Area2D) -> void:
-	if not area.has_method(\"hosted_surface_prop\"):
-		return
-	overlapping_player_triggers.append(area)
-	area.notify_player_entered()
-	refresh_interact_focus()
-
-
-func _on_player_exited_area(area: Area2D) -> void:
-	overlapping_player_triggers.erase(area)
-	if area.has_method(\"notify_player_exited\"):
-		area.notify_player_exited()
-	refresh_interact_focus()
 
 
 func refresh_interact_focus() -> void:
@@ -99,7 +81,9 @@ func refresh_interact_focus() -> void:
 	var best: Area2D = null
 	var best_distance_squared := INF
 	if story.is_active and not story.is_blocking_input:
-		for area in overlapping_player_triggers:
+		for area in player_triggers:
+			if not area.player_is_inside:
+				continue
 			if not area.is_armed or area.interact_kind == WorldConstants.InteractKind.NONE:
 				continue
 			var prop := area.hosted_surface_prop() as SurfaceProp
@@ -148,6 +132,13 @@ func _collect_air_walls(node: Node) -> void:
 			air_walls.append(child)
 		else:
 			_collect_air_walls(child)
+
+
+func _collect_player_triggers(node: Node) -> void:
+	for child in node.get_children():
+		if child.has_method(&\"hosted_surface_prop\"):
+			player_triggers.append(child)
+		_collect_player_triggers(child)
 
 
 func teleport_player(angle: float) -> void:

@@ -27,6 +27,7 @@ signal interacted
 
 var is_armed: bool = false
 var is_holding: bool = false
+var player_is_inside: bool = false
 var is_focused: bool = false:
 	set(value):
 		is_focused = value
@@ -40,7 +41,6 @@ var is_focused: bool = false:
 			set_process(false)
 
 var _hold_elapsed_seconds: float = 0.0
-var _player_is_inside: bool = false
 var _prompt: Sprite2D
 
 
@@ -48,19 +48,17 @@ func hosted_surface_prop() -> SurfaceProp:
 	return owner as SurfaceProp
 
 
-func notify_player_entered() -> void:
-	_player_is_inside = true
-	player_entered.emit()
-
-
-func notify_player_exited() -> void:
-	_player_is_inside = false
-	_clear_hold()
-	player_exited.emit()
-
-
 func _ready() -> void:
 	set_process(false)
+	area_entered.connect(func(_area: Area2D) -> void:
+		player_is_inside = true
+		player_entered.emit()
+	)
+	area_exited.connect(func(_area: Area2D) -> void:
+		player_is_inside = false
+		_clear_hold()
+		player_exited.emit()
+	)
 
 
 func _process(delta: float) -> void:
@@ -159,10 +157,10 @@ shader = SubResource("Shader_prompt_fill")
 shader_parameter/fill_ratio = 0.0
 
 [node name="PlayerTrigger" type="Area2D" unique_id=308360173]
-collision_layer = 2
-collision_mask = 0
+collision_layer = 0
+collision_mask = 1
+monitorable = false
 input_pickable = false
-monitoring = false
 script = SubResource("GDScript_player_trigger")
 shape = SubResource("CircleShape2D_trigger")
 
