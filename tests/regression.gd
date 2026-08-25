@@ -63,6 +63,10 @@ class RegressionDriver extends Node:
 	var _interact_pressed: bool = false
 	var _should_release_interact: bool = false
 
+	func _ready() -> void:
+		process_priority = -128
+
+
 	func _process(_delta: float) -> void:
 		var story := shell.get_node("GameView/GameViewport/Planet/%Story") as PlanetStory
 		var player := shell.get_node("%Player") as Player
