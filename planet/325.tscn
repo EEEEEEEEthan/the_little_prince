@@ -449,8 +449,8 @@ position = Vector2(-90.999985, 101.00003)
 rotation = -1.5049326
 enabled = false
 
-[node name="CollisionShape2D" parent="Surface/King/AirWall" index="0" unique_id=70283118]
-disabled = true
+[node name="AirWall2" parent="Surface/King" index="7" unique_id=1586006984 instance=ExtResource("4_q6x0b")]
+position = Vector2(-11.999996, 15.999989)
 
 [node name="Mouse" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=410000060 instance=ExtResource("5_mouse_prop")]
 unique_name_in_owner = true
@@ -482,5 +482,3 @@ metadata/day_music = ExtResource("18_day_music")
 
 [connection signal="player_entered" from="Surface/King/TriggerHello" to="Surface/King/AirWall" method="set_enabled" flags=7 binds= [true]]
 [connection signal="player_entered" from="Surface/King/TriggerSleepy" to="Surface/King/AirWall" method="set_enabled" flags=6 binds= [true]]
-
-[editable path="Surface/King/AirWall"]
