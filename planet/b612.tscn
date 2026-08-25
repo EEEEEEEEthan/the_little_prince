@@ -1,13 +1,12 @@
 [gd_scene format=3 uid="uid://6a4gvsyrkrea"]
 
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
-[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
+[ext_resource type="PackedScene" uid="uid://csurfproptscn1" path="res://planet/surface_prop.tscn" id="4_prop_scene"]
 [ext_resource type="PackedScene" uid="uid://cq8yj7f7g7sj1" path="res://planet/butterfly.tscn" id="16_butterfly"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="18_run_shell"]
 [ext_resource type="PackedScene" uid="uid://cbaobabtscn01" path="res://planet/baobab.tscn" id="19_baobab"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="20_day_music"]
 [ext_resource type="PackedScene" uid="uid://cfloratscn001" path="res://planet/flora.tscn" id="21_flora"]
-[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="22_trigger"]
 [ext_resource type="AudioStream" uid="uid://b7a21m4k1j5fq" path="res://audio/light_glass_rim_clink.wav" id="23_glass_rim_clink"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 
@@ -378,7 +377,7 @@ func _glass_globe() -> Sprite2D:
 z_index = -4096
 material = SubResource("ShaderMaterial_1xele")
 
-[node name="Volcano" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320]
+[node name="Volcano" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=67520320 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-60.053726, 61.632393)
 rotation = 3.95983
@@ -411,7 +410,7 @@ angular_velocity_max = 4.0
 scale_amount_min = 0.5
 color_ramp = SubResource("Gradient_volcano_smoke")
 
-[node name="Volcano2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=1280196619]
+[node name="Volcano2" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=1280196619 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-19.39899, 79.69541)
 rotation = -2.899301
@@ -419,7 +418,7 @@ texture = SubResource("EditableTexture_volcano")
 offset = Vector2(0, -12.96)
 hframes = 3
 
-[node name="Volcano3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147]
+[node name="Volcano3" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-84.281906, -22.985434)
 rotation = -1.30455
@@ -428,13 +427,12 @@ offset = Vector2(0, -14.4)
 hframes = 3
 frame = 1
 
-[node name="Rose" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=240828752]
+[node name="Rose" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=240828752 instance=ExtResource("4_prop_scene")]
 texture_filter = 1
 position = Vector2(-10.458058, -86.731766)
 rotation = -0.12
 texture = SubResource("EditableTexture_rose")
 offset = Vector2(0, -9.2)
-script = ExtResource("3_surface_prop")
 
 [node name="GlassGlobe" type="Sprite2D" parent="Surface/Rose" index="0" unique_id=1266538314]
 z_index = 2
@@ -445,8 +443,6 @@ offset = Vector2(0, -11)
 [node name="RimClink" type="AudioStreamPlayer" parent="Surface/Rose/GlassGlobe" unique_id=410000612]
 stream = ExtResource("23_glass_rim_clink")
 volume_db = -24.0
-
-[node name="PlayerTrigger" parent="Surface/Rose" index="1" unique_id=171176172 instance=ExtResource("22_trigger")]
 
 [node name="Baobab" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=1796814090 instance=ExtResource("19_baobab")]
 position = Vector2(48.69076, 69.67216)

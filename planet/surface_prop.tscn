@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://csurfproptscn1"]
+
+[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="1_surface_prop"]
+[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="2_player_trigger"]
+
+[node name="SurfaceProp" type="Sprite2D"]
+script = ExtResource("1_surface_prop")
+
+[node name="PlayerTrigger" parent="." instance=ExtResource("2_player_trigger")]
+unique_name_in_owner = true

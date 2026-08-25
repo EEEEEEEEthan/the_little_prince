@@ -2,10 +2,9 @@
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
-[ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
+[ext_resource type="PackedScene" uid="uid://csurfproptscn1" path="res://planet/surface_prop.tscn" id="4_prop_scene"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://cqwx6juhnepo3" path="res://audio/sparse_ledger_tally.ogg" id="18_day_music"]
-[ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://planet/player_trigger.tscn" id="19_trigger"]
 
 
 
@@ -83,7 +82,7 @@ modulate = Color(0.22, 0.17, 0.1, 0.55)
 [node name="Body" parent="." index="3"]
 texture = SubResource("EditableTexture_ink_gold_ledger_disk")
 
-[node name="Merchant" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=770000001]
+[node name="Merchant" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="0" unique_id=770000001 instance=ExtResource("4_prop_scene")]
 unique_name_in_owner = true
 z_index = 1
 texture_filter = 1
@@ -91,7 +90,7 @@ position = Vector2(0, -87.36)
 texture = SubResource("EditableTexture_hunched_ledger_merchant")
 offset = Vector2(0, -11)
 
-[node name="StarJar" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=770000002]
+[node name="StarJar" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=770000002 instance=ExtResource("4_prop_scene")]
 unique_name_in_owner = true
 z_index = 1
 texture_filter = 1
@@ -99,10 +98,6 @@ position = Vector2(35.62195, -79.76745)
 rotation = 0.42
 texture = SubResource("EditableTexture_gold_star_glass_jar")
 offset = Vector2(0, -8)
-script = ExtResource("3_surface_prop")
-
-[node name="PlayerTrigger" parent="Surface/StarJar" instance=ExtResource("19_trigger")]
-
 
 [node name="Story" parent="." index="4"]
 script = SubResource("GDScript_story")

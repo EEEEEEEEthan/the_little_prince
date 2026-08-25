@@ -38,7 +38,7 @@ var _player_is_inside: bool = false
 
 
 func hosted_surface_prop() -> SurfaceProp:
-	return get_parent() as SurfaceProp
+	return owner as SurfaceProp
 
 
 func notify_player_entered() -> void:
