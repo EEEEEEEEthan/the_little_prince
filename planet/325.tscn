@@ -273,6 +273,15 @@ func _glance_up_at_empty_throne() -> void:
 	glance.tween_property(game_camera, \"offset:y\", 0.0, 0.55)
 "
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_cape_player_trigger"]
+radius = 116.67
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_throne_player_trigger"]
+radius = 116.67
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_king_player_trigger"]
+radius = 67.86
+
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 position = Vector2(128, 301.952)
 radius = 104.832
@@ -309,7 +318,7 @@ script = SubResource("GDScript_cape_hem")
 kind = 10
 
 [node name="PlayerTrigger" parent="Surface/Cape" instance=ExtResource("20_trigger")]
-radius = 116.67
+shape = SubResource("CircleShape2D_cape_player_trigger")
 
 [node name="Throne" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=410000011]
 z_index = -1
@@ -321,7 +330,7 @@ script = ExtResource("3_surface_prop")
 kind = 9
 
 [node name="PlayerTrigger" parent="Surface/Throne" instance=ExtResource("20_trigger")]
-radius = 116.67
+shape = SubResource("CircleShape2D_throne_player_trigger")
 
 [node name="King" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=410000001]
 unique_name_in_owner = true
@@ -335,7 +344,7 @@ kind = 4
 dialogue_id = &"king"
 
 [node name="PlayerTrigger" parent="Surface/King" instance=ExtResource("20_trigger")]
-radius = 67.86
+shape = SubResource("CircleShape2D_king_player_trigger")
 
 [node name="Rat" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=410000002]
 texture_filter = 1

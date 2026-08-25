@@ -5,12 +5,12 @@ script/source = "extends Area2D
 ## 玩家邻近检测：脚底 Area 与本触发器重叠即视为进入草地、可交互范围或日落。
 
 @export var kind: WorldConstants.TriggerKind = WorldConstants.TriggerKind.INTERACT
-@export var radius: float = WorldConstants.INTERACT_RANGE_PX:
+@export var shape: Shape2D:
 	set(value):
-		radius = value
+		shape = value
 		if not is_node_ready():
 			await ready
-		(%CollisionShape2D.shape as CircleShape2D).radius = radius
+		%CollisionShape2D.shape = shape
 
 
 func hosted_surface_prop() -> SurfaceProp:
@@ -18,7 +18,6 @@ func hosted_surface_prop() -> SurfaceProp:
 "
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_trigger"]
-resource_local_to_scene = true
 radius = 16.0
 
 [node name="PlayerTrigger" type="Area2D"]
@@ -28,6 +27,7 @@ monitoring = false
 monitorable = true
 input_pickable = false
 script = SubResource("GDScript_player_trigger")
+shape = SubResource("CircleShape2D_trigger")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 unique_name_in_owner = true

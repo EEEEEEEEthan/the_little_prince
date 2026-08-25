@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://cfloratscn001"]
+[gd_scene load_steps=7 format=3 uid="uid://cfloratscn001"]
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="1_surface_prop"]
@@ -35,6 +35,9 @@ shader_parameter/sway_pixels = 1.8
 shader_parameter/sway_speed = 1.4
 shader_parameter/world_frequency = 0.08
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_flora_player_trigger"]
+radius = 10.8
+
 [node name="Flora" type="Sprite2D"]
 z_index = 5
 texture_filter = 1
@@ -48,4 +51,4 @@ kind = 3
 [node name="PlayerTrigger" parent="." instance=ExtResource("2_trigger")]
 position = Vector2(0, -8)
 kind = 0
-radius = 10.8
+shape = SubResource("CircleShape2D_flora_player_trigger")
