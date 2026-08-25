@@ -100,7 +100,6 @@ position = Vector2(24.18, -83.95)
 rotation = 0.28
 texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
-script = ExtResource("3_surface_prop")
 
 [node name="ReportStackB" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=790000003]
 unique_name_in_owner = true
@@ -110,7 +109,6 @@ position = Vector2(-27.52, -82.94)
 rotation = -0.32
 texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
-script = ExtResource("3_surface_prop")
 
 [node name="ReportStackC" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=790000004]
 unique_name_in_owner = true
@@ -120,7 +118,6 @@ position = Vector2(41.83, -76.69)
 rotation = 0.5
 texture = SubResource("EditableTexture_stacked_cream_ink_pages")
 offset = Vector2(0, -7)
-script = ExtResource("3_surface_prop")
 
 
 [node name="Story" parent="." index="4"]

@@ -105,7 +105,6 @@ texture_filter = 1
 position = Vector2(0, -48.048)
 texture = SubResource("EditableTexture_black_coat_lamplighter")
 offset = Vector2(0, -11)
-script = ExtResource("3_surface_prop")
 
 [node name="StreetLamp" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=780000002]
 unique_name_in_owner = true

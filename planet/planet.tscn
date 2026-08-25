@@ -51,20 +51,20 @@ func _ready() -> void:
 
 func _collect_surface_props() -> void:
 	for child in surface.get_children():
+		if child.name == \"Rose\":
+			rose_angle = child.rotation
+		elif child.name == \"King\":
+			king_angle = child.rotation
+		elif child.name.begins_with(\"Volcano\"):
+			volcano_angles.append(child.rotation)
+		elif child.name.begins_with(\"Baobab\"):
+			baobab_angles.append(child.rotation)
+		elif child.name.begins_with(\"Flora\"):
+			flora_angles.append(child.rotation)
 		var prop := child as SurfaceProp
 		if prop == null:
 			continue
 		surface_props.append(prop)
-		if child.name == \"Rose\":
-			rose_angle = prop.rotation
-		elif child.name == \"King\":
-			king_angle = prop.rotation
-		elif child.name.begins_with(\"Volcano\"):
-			volcano_angles.append(prop.rotation)
-		elif child.name.begins_with(\"Baobab\"):
-			baobab_angles.append(prop.rotation)
-		elif child.name.begins_with(\"Flora\"):
-			flora_angles.append(prop.rotation)
 
 
 func bind_player_footprint(footprint: Area2D) -> void:

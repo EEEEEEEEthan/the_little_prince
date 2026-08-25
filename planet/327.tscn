@@ -92,7 +92,6 @@ position = Vector2(29.87888, -82.091545)
 rotation = 0.3490659
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=760000102]
 texture_filter = 1
@@ -100,7 +99,6 @@ position = Vector2(56.153927, -66.921646)
 rotation = 0.6981317
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=760000103]
 texture_filter = 1
@@ -108,7 +106,6 @@ position = Vector2(75.655975, -43.68)
 rotation = 1.0471976
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle4" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=760000104]
 texture_filter = 1
@@ -116,7 +113,6 @@ position = Vector2(86.03281, -15.169905)
 rotation = 1.3962634
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle5" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=760000105]
 texture_filter = 1
@@ -124,7 +120,6 @@ position = Vector2(86.03281, 15.169905)
 rotation = 1.7453293
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle6" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=760000106]
 texture_filter = 1
@@ -132,7 +127,6 @@ position = Vector2(75.655975, 43.68)
 rotation = 2.0943951
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle7" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=760000107]
 texture_filter = 1
@@ -140,7 +134,6 @@ position = Vector2(56.153927, 66.921646)
 rotation = 2.443461
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle8" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="8" unique_id=760000108]
 texture_filter = 1
@@ -148,7 +141,6 @@ position = Vector2(29.87888, 82.091545)
 rotation = 2.7925268
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle9" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="9" unique_id=760000109]
 texture_filter = 1
@@ -156,7 +148,6 @@ position = Vector2(0, 87.36)
 rotation = 3.1415927
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle10" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="10" unique_id=760000110]
 texture_filter = 1
@@ -164,7 +155,6 @@ position = Vector2(-29.87888, 82.091545)
 rotation = 3.4906585
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle11" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="11" unique_id=760000111]
 texture_filter = 1
@@ -172,7 +162,6 @@ position = Vector2(-56.153927, 66.921646)
 rotation = 3.8397244
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle12" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="12" unique_id=760000112]
 texture_filter = 1
@@ -180,7 +169,6 @@ position = Vector2(-75.655975, 43.68)
 rotation = 4.1887902
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle13" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="13" unique_id=760000113]
 texture_filter = 1
@@ -188,7 +176,6 @@ position = Vector2(-86.03281, 15.169905)
 rotation = 4.5378561
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle14" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="14" unique_id=760000114]
 texture_filter = 1
@@ -196,7 +183,6 @@ position = Vector2(-86.03281, -15.169905)
 rotation = 4.8869219
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle15" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="15" unique_id=760000115]
 texture_filter = 1
@@ -204,7 +190,6 @@ position = Vector2(-75.655975, -43.68)
 rotation = 5.2359878
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle16" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="16" unique_id=760000116]
 texture_filter = 1
@@ -212,7 +197,6 @@ position = Vector2(-56.153927, -66.921646)
 rotation = 5.5850536
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 [node name="Bottle17" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="17" unique_id=760000117]
 texture_filter = 1
@@ -220,7 +204,6 @@ position = Vector2(-29.87888, -82.091545)
 rotation = 5.9341195
 texture = SubResource("EditableTexture_brown_glass_bottle")
 offset = Vector2(0, -9)
-script = ExtResource("3_surface_prop")
 
 
 [node name="Story" parent="." index="4"]

@@ -386,7 +386,6 @@ texture = SubResource("EditableTexture_volcano")
 offset = Vector2(0, -12.96)
 hframes = 3
 frame = 2
-script = ExtResource("3_surface_prop")
 
 [node name="VolcanoSmoke" type="CPUParticles2D" parent="Surface/Volcano" index="0" unique_id=1938475620]
 unique_name_in_owner = true
@@ -419,7 +418,6 @@ rotation = -2.899301
 texture = SubResource("EditableTexture_volcano")
 offset = Vector2(0, -12.96)
 hframes = 3
-script = ExtResource("3_surface_prop")
 
 [node name="Volcano3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="2" unique_id=1036392147]
 texture_filter = 1
@@ -429,7 +427,6 @@ texture = SubResource("EditableTexture_volcano")
 offset = Vector2(0, -14.4)
 hframes = 3
 frame = 1
-script = ExtResource("3_surface_prop")
 
 [node name="Rose" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="3" unique_id=240828752]
 texture_filter = 1

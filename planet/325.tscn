@@ -361,7 +361,6 @@ position = Vector2(0, 104.832)
 rotation = 3.1415927
 texture = SubResource("EditableTexture_rat")
 offset = Vector2(0, -5)
-script = ExtResource("3_surface_prop")
 
 [node name="RatTrace1" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="4" unique_id=410000020]
 texture_filter = 1
@@ -369,7 +368,6 @@ position = Vector2(-22.877448, 102.305281)
 rotation = 3.3615927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
-script = ExtResource("3_surface_prop")
 
 [node name="RatTrace2" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="5" unique_id=410000021]
 texture_filter = 1
@@ -377,7 +375,6 @@ position = Vector2(28.970915, 100.749364)
 rotation = 2.8615927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
-script = ExtResource("3_surface_prop")
 
 [node name="RatTrace3" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="6" unique_id=410000022]
 texture_filter = 1
@@ -385,7 +382,6 @@ position = Vector2(-48.409235, 92.985452)
 rotation = 3.6215927
 texture = SubResource("EditableTexture_pale_paw_prints")
 offset = Vector2(0, -3)
-script = ExtResource("3_surface_prop")
 
 [node name="EdictL" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="7" unique_id=410000030]
 texture_filter = 1

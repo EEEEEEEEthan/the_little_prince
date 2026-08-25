@@ -11,46 +11,30 @@ signal interacted
 		is_armed = value
 		if not is_node_ready():
 			await ready
-		var trigger := _player_trigger()
-		if trigger == null:
-			return
-		trigger.is_armed = is_armed
+		$PlayerTrigger.is_armed = is_armed
 
 @export var interact_kind: WorldConstants.InteractKind = WorldConstants.InteractKind.PRESS:
 	set(value):
 		interact_kind = value
 		if not is_node_ready():
 			await ready
-		var trigger := _player_trigger()
-		if trigger == null:
-			return
-		trigger.interact_kind = interact_kind
+		$PlayerTrigger.interact_kind = interact_kind
 
 var is_consumed: bool = false:
 	set(value):
 		is_consumed = value
 		if not is_node_ready():
 			await ready
-		var trigger := _player_trigger()
-		if trigger == null:
-			return
-		trigger.monitorable = not is_consumed
+		$PlayerTrigger.monitorable = not is_consumed
 		if is_consumed:
 			is_armed = false
 
 
 func _ready() -> void:
-	var trigger := _player_trigger()
-	if trigger == null:
-		return
-	trigger.player_entered.connect(player_entered.emit)
-	trigger.player_exited.connect(player_exited.emit)
-	trigger.interacted.connect(interacted.emit)
+	$PlayerTrigger.player_entered.connect(player_entered.emit)
+	$PlayerTrigger.player_exited.connect(player_exited.emit)
+	$PlayerTrigger.interacted.connect(interacted.emit)
 
 
 func play_ambient_one_shot() -> void:
 	pass
-
-
-func _player_trigger() -> Area2D:
-	return get_node_or_null("PlayerTrigger") as Area2D

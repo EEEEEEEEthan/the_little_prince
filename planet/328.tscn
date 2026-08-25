@@ -90,7 +90,6 @@ texture_filter = 1
 position = Vector2(0, -87.36)
 texture = SubResource("EditableTexture_hunched_ledger_merchant")
 offset = Vector2(0, -11)
-script = ExtResource("3_surface_prop")
 
 [node name="StarJar" type="Sprite2D" parent="Surface" parent_id_path=PackedInt32Array(1169720567) index="1" unique_id=770000002]
 unique_name_in_owner = true
