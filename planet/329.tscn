@@ -3,10 +3,6 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
-[ext_resource type="Texture2D" uid="uid://iv5817y5gutj" path="res://planet/starfield.png" id="11_starfield"]
-[ext_resource type="Shader" uid="uid://dqj1m2p5n8srv" path="res://planet/sky.gdshader" id="12_sky_shader"]
-[ext_resource type="Texture2D" uid="uid://c7wn4h6q2gv8k" path="res://planet/night_sky_gradient.tres" id="14_star_alpha"]
-[ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="15_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
 [ext_resource type="AudioStream" uid="uid://cciq03byi16e0" path="res://audio/rapid_lamp_duty_tick.ogg" id="18_day_music"]
 [ext_resource type="PackedScene" uid="uid://cplyrtrgscn1" path="res://player/player_trigger.tscn" id="19_trigger"]
@@ -36,30 +32,9 @@ script/source = "extends Node
 ## 按昼夜点灭这一盏灯；帮点一次也不停。
 
 func _process(_delta: float) -> void:
-	var phase: float = (owner as Planet).sky.daylight_phase()
+	var phase: float = owner.sky.daylight_phase()
 	%StreetLamp.frame = 1 if SkyPhase.is_night_phase(phase) else 0
 "
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_lamplighter_sky"]
-noise_type = 2
-frequency = 0.001
-fractal_octaves = 10
-fractal_lacunarity = 2.32
-fractal_gain = 1.065
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_lamplighter_sky"]
-width = 640
-height = 640
-noise = SubResource("FastNoiseLite_lamplighter_sky")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_lamplighter_sky"]
-shader = ExtResource("12_sky_shader")
-shader_parameter/zenith_gradient = SubResource("GradientTexture1D_gray_day_night_zenith")
-shader_parameter/star_alpha_gradient = ExtResource("14_star_alpha")
-shader_parameter/noise_texture = SubResource("NoiseTexture2D_lamplighter_sky")
-shader_parameter/phase = 0.5
-shader_parameter/noise_strength = 0.02
-
 
 [sub_resource type="GDScript" id="GDScript_story"]
 script/source = "extends PlanetStory
@@ -107,16 +82,13 @@ body_texture = SubResource("EditableTexture_ash_gray_mottled_disk")
 star_rotation_speed = 1.2
 zenith_gradient = SubResource("GradientTexture1D_gray_day_night_zenith")
 
-[node name="Config" type="Node" parent="."]
+[node name="Config" parent="." index="5"]
 process_mode = 4
-script = ExtResource("15_playable")
 metadata/run_shell_scene = ExtResource("16_run_shell")
 metadata/day_music = ExtResource("18_day_music")
 
 [node name="Sky" parent="." index="0" unique_id=852054590]
 z_index = -4096
-material = SubResource("ShaderMaterial_lamplighter_sky")
-texture = ExtResource("11_starfield")
 
 [node name="Clouds" parent="." index="1"]
 modulate = Color(0.55, 0.55, 0.55, 0.4)

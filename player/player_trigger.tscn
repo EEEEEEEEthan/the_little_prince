@@ -1,6 +1,21 @@
-[gd_scene load_steps=3 format=3 uid="uid://cplyrtrgscn1"]
+[gd_scene format=3 uid="uid://cplyrtrgscn1"]
 
-[ext_resource type="Script" uid="uid://cplyrtrigg01" path="res://player/player_trigger.gd" id="1_script"]
+[sub_resource type="GDScript" id="GDScript_player_trigger"]
+script/source = "extends Area2D
+## 玩家邻近检测：脚底 Area 与本触发器重叠即视为进入草地、可交互范围或日落。
+
+@export var kind: WorldConstants.TriggerKind = WorldConstants.TriggerKind.INTERACT
+@export var radius: float = WorldConstants.INTERACT_RANGE_PX:
+	set(value):
+		radius = value
+		if not is_node_ready():
+			await ready
+		(%CollisionShape2D.shape as CircleShape2D).radius = radius
+
+
+func hosted_surface_prop() -> SurfaceProp:
+	return get_parent() as SurfaceProp
+"
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_trigger"]
 resource_local_to_scene = true
@@ -12,7 +27,7 @@ collision_mask = 0
 monitoring = false
 monitorable = true
 input_pickable = false
-script = ExtResource("1_script")
+script = SubResource("GDScript_player_trigger")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 unique_name_in_owner = true

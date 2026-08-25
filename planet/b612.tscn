@@ -4,7 +4,6 @@
 [ext_resource type="PackedScene" uid="uid://cc3nptocfdk0k" path="res://planet/planet.tscn" id="1_planet"]
 [ext_resource type="Script" uid="uid://bnhcjlkacfomg" path="res://planet/surface_prop.gd" id="3_surface_prop"]
 [ext_resource type="PackedScene" uid="uid://cq8yj7f7g7sj1" path="res://planet/butterfly.tscn" id="16_butterfly"]
-[ext_resource type="Script" uid="uid://cplayablegd01" path="res://planet/planet_playable.gd" id="17_playable"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="18_run_shell"]
 [ext_resource type="PackedScene" uid="uid://cbaobabtscn01" path="res://planet/baobab.tscn" id="19_baobab"]
 [ext_resource type="PackedScene" uid="uid://cfloratscn001" path="res://planet/flora.tscn" id="21_flora"]
@@ -65,7 +64,7 @@ func _prepare_start() -> void:
 	planet.sky.is_self_rotating = false
 	player.move_speed_scale = 0.8
 	player.flip_h = true
-	(_shell_node(&\"Scarf\") as Scarf).settle_hang_to_facing()
+	_shell_node(&\"Scarf\").settle_hang_to_facing()
 
 
 func _play_story() -> void:
@@ -234,9 +233,8 @@ func _glass_globe() -> Sprite2D:
 
 [node name="Planet" unique_id=1020592655 instance=ExtResource("1_planet")]
 
-[node name="Config" type="Node" parent="."]
+[node name="Config" parent="." index="5"]
 process_mode = 4
-script = ExtResource("17_playable")
 metadata/run_shell_scene = ExtResource("18_run_shell")
 metadata/day_music = ExtResource("20_day_music")
 

@@ -1,13 +1,155 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" uid="uid://lbxe62rq56ta" path="res://ui/overhead_typewriter.gd" id="1_overhead"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="2_font"]
 [ext_resource type="AudioStream" uid="uid://cednuam573usk" path="res://ui/typewriter.wav" id="3_blip"]
+
+[sub_resource type="GDScript" id="GDScript_overhead"]
+script/source = "extends Node2D
+## 弧顶头顶打字机：纯白居中逐字出现，停留后渐隐。
+
+const TYPEWRITER_INTERVAL := 0.08
+const HOLD_DURATION_SECONDS := 1.6
+const FADE_DURATION_SECONDS := 0.9
+const QUEUE_GAP_SECONDS := 1.0
+const AMBIENT_START_DELAY_SECONDS := 1.2
+const AMBIENT_GAP_SECONDS := 1.0
+const TYPEWRITER_VOLUME_DB := -20.0
+
+const AMBIENT_LINES: PackedStringArray = [
+	\"风从沙上走过。\",
+	\"很轻。\",
+	\"天，低了一点。\",
+	\"有一颗星，没有眨眼。\",
+]
+
+@export var play_on_ready: bool = false
+
+var _play_generation: int = 0
+var _fade_tween: Tween
+var _queued_plays: Array[QueuedOverheadPlay] = []
+var _is_draining_queued_plays: bool = false
+var _last_queued_play_finished_msec: int = -1
+
+
+func _ready() -> void:
+	visible = false
+	global_position = _head_global_position()
+	%Typewriter.volume_db = TYPEWRITER_VOLUME_DB
+	if play_on_ready:
+		_play_ambient_loop()
+
+
+func play(display_text: String) -> void:
+	_play_generation += 1
+	var play_generation := _play_generation
+	if _fade_tween != null:
+		_fade_tween.kill()
+		_fade_tween = null
+	if display_text.is_empty():
+		visible = false
+		modulate = Color.WHITE
+		return
+	global_position = _head_global_position()
+	modulate = Color.WHITE
+	var body := %Body
+	var typewriter := %Typewriter
+	var skip_blip := DisplayServer.get_name() == \"headless\"
+	body.text = display_text
+	body.visible_characters = 0
+	visible = true
+	var play_blip := func() -> void:
+		var shown: int = body.visible_characters
+		if skip_blip or shown <= 0 or shown > body.text.length():
+			return
+		var character: String = body.text[shown - 1]
+		if character == \" \" or character == \"\\n\" or character == \"　\":
+			return
+		typewriter.stop()
+		typewriter.pitch_scale = randf_range(0.94, 1.08)
+		typewriter.play()
+	var total_characters := display_text.length()
+	while body.visible_characters < total_characters:
+		body.visible_characters += 1
+		play_blip.call()
+		if body.visible_characters >= total_characters:
+			break
+		await get_tree().create_timer(TYPEWRITER_INTERVAL).timeout
+		if play_generation != _play_generation or not is_inside_tree():
+			return
+	await get_tree().create_timer(HOLD_DURATION_SECONDS).timeout
+	if play_generation != _play_generation or not is_inside_tree():
+		return
+	if _fade_tween != null:
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(self, \"modulate:a\", 0.0, FADE_DURATION_SECONDS)
+	await get_tree().create_timer(FADE_DURATION_SECONDS).timeout
+	if play_generation != _play_generation or not is_inside_tree():
+		return
+	visible = false
+	modulate = Color.WHITE
+	_fade_tween = null
+
+
+func play_queued(display_text: String) -> void:
+	if display_text.is_empty():
+		return
+	var queued_play := QueuedOverheadPlay.new(display_text)
+	_queued_plays.append(queued_play)
+	if not _is_draining_queued_plays:
+		_drain_queued_plays()
+	await queued_play.finished
+
+
+func _play_ambient_loop() -> void:
+	await get_tree().create_timer(AMBIENT_START_DELAY_SECONDS).timeout
+	while is_inside_tree() and play_on_ready:
+		for line in AMBIENT_LINES:
+			if not play_on_ready or not is_inside_tree():
+				return
+			await play(line)
+			await get_tree().create_timer(AMBIENT_GAP_SECONDS).timeout
+
+
+func _drain_queued_plays() -> void:
+	if _is_draining_queued_plays:
+		return
+	_is_draining_queued_plays = true
+	while not _queued_plays.is_empty():
+		if _last_queued_play_finished_msec >= 0:
+			var remaining_gap_seconds := QUEUE_GAP_SECONDS - (
+					float(Time.get_ticks_msec() - _last_queued_play_finished_msec) / 1000.0
+			)
+			if remaining_gap_seconds > 0.0:
+				await get_tree().create_timer(remaining_gap_seconds).timeout
+		var queued_play: QueuedOverheadPlay = _queued_plays.pop_front()
+		await play(queued_play.display_text)
+		_last_queued_play_finished_msec = Time.get_ticks_msec()
+		queued_play.finished.emit()
+	_is_draining_queued_plays = false
+
+
+func _head_global_position() -> Vector2:
+	var viewport_size := get_viewport().get_visible_rect().size
+	return Vector2(
+			viewport_size.x * 0.5,
+			viewport_size.y * WorldConstants.APEX_Y_RATIO
+			+ WorldConstants.OVERHEAD_TYPEWRITER_LOCAL_Y,
+	).round()
+
+
+class QueuedOverheadPlay extends RefCounted:
+	signal finished
+	var display_text: String
+
+	func _init(p_display_text: String) -> void:
+		display_text = p_display_text
+"
 
 [node name="OverheadTypewriter" type="Node2D"]
 z_index = 260
 z_as_relative = false
-script = ExtResource("1_overhead")
+script = SubResource("GDScript_overhead")
 
 [node name="Body" type="Label" parent="."]
 unique_name_in_owner = true

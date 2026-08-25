@@ -20,21 +20,21 @@ var is_blocking_input: bool = false
 var has_finished_opening: bool = false
 var has_crossed_sunset: bool = false
 
-var planet: Planet:
+var planet:
 	get:
-		return owner as Planet
-var player: Player:
+		return owner
+var player:
 	get:
-		return _shell_node(&"Player") as Player
-var dialogue: DialogueBox:
+		return _shell_node(&"Player")
+var dialogue:
 	get:
-		return _shell_node(&"DialogueBox") as DialogueBox
-var overhead: OverheadTypewriter:
+		return _shell_node(&"DialogueBox")
+var overhead:
 	get:
-		return _shell_node(&"OverheadTypewriter") as OverheadTypewriter
-var flock: MigratoryFlock:
+		return _shell_node(&"OverheadTypewriter")
+var flock:
 	get:
-		return _shell_node(&"MigratoryFlock") as MigratoryFlock
+		return _shell_node(&"MigratoryFlock")
 
 var _story_generation: int = 0
 var _waiting_interact_kind: int = -1
@@ -109,7 +109,7 @@ func try_handle_interact(prop: SurfaceProp) -> bool:
 func try_first_sunset_narration() -> void:
 	if has_crossed_sunset:
 		return
-	if player.has_overlapping_trigger_kind(PlayerTrigger.Kind.SUNSET):
+	if player.has_overlapping_trigger_kind(WorldConstants.TriggerKind.SUNSET):
 		has_crossed_sunset = true
 		sunset_crossed.emit()
 
@@ -179,7 +179,7 @@ func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 		await _halt_if_stale(generation)
 		return
 	_lock_input()
-	var already_open := dialogue.is_open()
+	var already_open: bool = dialogue.is_open()
 	dialogue.play_line(DialogueLine.new(speaker, text, portrait))
 	if dialogue.is_open() and not already_open and Input.is_action_pressed(&"interact"):
 		dialogue.mark_holding(true)
@@ -225,7 +225,7 @@ func _depart(
 		player.modulate.a = 0.0
 		_shell_node(&"Dim").color = Color(0, 0, 0, 1)
 	else:
-		var lift_distance_pixels := (
+		var lift_distance_pixels: float = (
 				player.global_position.y
 				- get_viewport().get_visible_rect().position.y
 				+ float(WorldConstants.PLAYER_SPRITE_HEIGHT)
