@@ -71,7 +71,7 @@ func _ready() -> void:
 
 
 func replace_planet(next_planet: Node2D) -> void:
-	var previous_planet := planet
+	var previous_planet: Node2D = planet
 	next_planet.name = \"Planet\"
 	next_planet.unique_name_in_owner = true
 	var planet_index := previous_planet.get_index()
@@ -188,7 +188,7 @@ func find_nearest_interactable(should_accept: Callable = Callable()) -> SurfaceP
 func _update_animation(direction: float, delta: float) -> void:
 	if absf(direction) > 0.01:
 		flip_h = direction < 0.0
-	var moving := planet.is_moving()
+	var moving: bool = planet.is_moving()
 	if moving != _was_moving:
 		_anim_time = 0.0
 		_last_walk_frame_index = -1
@@ -281,7 +281,7 @@ func settle_hang_to_facing() -> void:
 
 func _simulate(delta: float) -> void:
 	_pin_neck()
-	var walk_speed := planet.angular_velocity * planet.radius
+	var walk_speed: float = planet.angular_velocity * planet.radius
 	var motion_weight := clampf(absf(walk_speed) / WorldConstants.PLAYER_SPEED, 0.0, 1.0)
 	var wind_x := lerpf(
 			-_facing_sign() * IDLE_SWAY,
@@ -347,7 +347,7 @@ func _pin_neck() -> void:
 
 
 func _neck_local_position() -> Vector2:
-	var walk_index := player.frame - WorldConstants.PLAYER_IDLE_FRAME_COUNT
+	var walk_index: int = player.frame - WorldConstants.PLAYER_IDLE_FRAME_COUNT
 	var body_bob := 1.0 if walk_index >= 0 and walk_index % 2 == 0 else 0.0
 	return Vector2(NECK_SIDE_OFFSET * -_facing_sign(), NECK_LOCAL_Y + body_bob)
 
@@ -649,7 +649,7 @@ var last_step_was_grass: bool = false
 func play_step() -> void:
 	var variant_is_first := (played_step_count % 2) == 0
 	played_step_count += 1
-	var use_grass := %Player.is_in_grass()
+	var use_grass: bool = %Player.is_in_grass()
 	var meta_name: String
 	if use_grass:
 		meta_name = META_GRASS_FOOTSTEP_A if variant_is_first else META_GRASS_FOOTSTEP_B

@@ -179,7 +179,7 @@ func _line(speaker: String, text: String, portrait: Texture2D) -> void:
 		await _halt_if_stale(generation)
 		return
 	_lock_input()
-	var already_open := dialogue.is_open()
+	var already_open: bool = dialogue.is_open()
 	dialogue.play_line(DialogueLine.new(speaker, text, portrait))
 	if dialogue.is_open() and not already_open and Input.is_action_pressed(&"interact"):
 		dialogue.mark_holding(true)
@@ -225,7 +225,7 @@ func _depart(
 		player.modulate.a = 0.0
 		_shell_node(&"Dim").color = Color(0, 0, 0, 1)
 	else:
-		var lift_distance_pixels := (
+		var lift_distance_pixels: float = (
 				player.global_position.y
 				- get_viewport().get_visible_rect().position.y
 				+ float(WorldConstants.PLAYER_SPRITE_HEIGHT)

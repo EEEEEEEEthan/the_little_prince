@@ -71,7 +71,7 @@ class RegressionDriver extends Node:
 		var story := shell.get_node("GameView/GameViewport/Planet/%Story") as PlanetStory
 		var player := shell.get_node("%Player")
 		var planet := shell.get_node("%Planet")
-		var dialogue := story.dialogue
+		var dialogue: CanvasLayer = story.dialogue
 		if _should_release_interact:
 			_set_action(&"interact", false)
 			_should_release_interact = false
@@ -90,7 +90,7 @@ class RegressionDriver extends Node:
 		if story.is_blocking_input:
 			_release_all()
 			return
-		var focused_prop := player.find_nearest_interactable(story.accepts_interact)
+		var focused_prop: SurfaceProp = player.find_nearest_interactable(story.accepts_interact)
 		if focused_prop != null:
 			_set_action(&"move_left", false)
 			_set_action(&"move_right", false)

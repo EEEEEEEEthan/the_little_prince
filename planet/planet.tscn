@@ -355,7 +355,7 @@ func daylight_phase() -> float:
 
 
 func _ready() -> void:
-	var planet_radius := owner.radius
+	var planet_radius: float = owner.radius
 	var sunset_angle := SkyPhase.phase_to_angle(SkyPhase.SUNSET_PHASE)
 	%SunsetTrigger.position = Vector2(
 			-planet_radius * sin(sunset_angle),

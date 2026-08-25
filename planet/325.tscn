@@ -243,7 +243,7 @@ func _watch_rat_overhear() -> void:
 		if prop.kind == SurfaceProp.Kind.RAT:
 			rat = prop
 			break
-	var overhear_arc := WorldConstants.INTERACT_RANGE_PX * 2.0 / planet.radius
+	var overhear_arc: float = WorldConstants.INTERACT_RANGE_PX * 2.0 / planet.radius
 	while (
 			is_inside_tree()
 			and generation == _story_generation

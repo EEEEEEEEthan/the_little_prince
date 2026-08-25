@@ -32,7 +32,7 @@ var travel_to_next_planet: bool = true
 
 
 func _ready() -> void:
-	owner.planet.get_node(\"%Story\").departed.connect(
+	%Planet.get_node(\"%Story\").departed.connect(
 			travel_to_king_planet,
 			CONNECT_ONE_SHOT | CONNECT_DEFERRED
 	)
