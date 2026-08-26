@@ -5,7 +5,8 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 
 [sub_resource type="GDScript" id="GDScript_planet"]
-script/source = "extends Node2D
+script/source = "@tool
+extends Node2D
 ## 可复用 2D 圆弧星球：Body / Surface / Sky / Clouds 统一绕球心旋转。
 ## 用法：改半径、贴图、自转等参数；地物拖到 Surface 下即可。
 ## Body 贴图按显示直径原尺寸绘制，不使用 scale。
@@ -14,6 +15,7 @@ script/source = "extends Node2D
 @export var radius: float = WorldConstants.PLANET_RADIUS:
 	set(value):
 		radius = value
+		queue_redraw()
 
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0
@@ -171,6 +173,12 @@ func _sync_rotation() -> void:
 	surface.rotation = rotation_value
 	sky.set_planet_rotation(rotation_value)
 	clouds.set_planet_rotation(rotation_value)
+
+
+func _draw() -> void:
+	if not Engine.is_editor_hint():
+		return
+	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 64, Color(0.35, 0.85, 1.0), 1.0, true)
 "
 
 [sub_resource type="Shader" id="Shader_sky"]
