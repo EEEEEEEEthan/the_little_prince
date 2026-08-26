@@ -486,4 +486,4 @@ metadata/run_shell_scene = ExtResource("16_run_shell")
 metadata/day_music = ExtResource("18_day_music")
 
 [connection signal="player_entered" from="Surface/King/TriggerHello" to="Surface/King/AirWall" method="set_enabled" flags=7 binds= [true]]
-[connection signal="player_entered" from="Surface/King/TriggerSleepy" to="Surface/King/AirWall" method="set_enabled" flags=6 binds= [true]]
+[connection signal="player_entered" from="Surface/King/TriggerSleepy" to="Surface/King/AirWall" method="set_enabled" flags=6 binds= [false]]

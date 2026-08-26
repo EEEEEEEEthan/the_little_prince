@@ -1,5 +1,5 @@
 extends SceneTree
-## 325：走进国王 TriggerHello 时应自行进入并打开空气墙，且无 flushing queries。
+## 325：TriggerHello 打开空气墙；TriggerSleepy 后空气墙关闭。且无 flushing queries。
 
 
 func _init() -> void:
@@ -38,6 +38,22 @@ func _begin() -> void:
 		return
 	if not air_wall.enabled:
 		push_error("[player_trigger] 进入 TriggerHello 后空气墙应打开")
+		quit(1)
+		return
+	var sleepy: Area2D = planet.get_node("%TriggerSleepy")
+	for _sleepy_step in 1800:
+		planet.move_player(walk_direction, delta)
+		await physics_frame
+		if sleepy.player_is_inside:
+			await process_frame
+			await process_frame
+			break
+	if not sleepy.player_is_inside:
+		push_error("[player_trigger] 走近国王后 TriggerSleepy 应自行判定进入")
+		quit(1)
+		return
+	if air_wall.enabled:
+		push_error("[player_trigger] 进入 TriggerSleepy 后空气墙应关闭")
 		quit(1)
 		return
 	print("[player_trigger] 通过")
