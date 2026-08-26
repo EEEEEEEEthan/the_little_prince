@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://cairwallscn01" path="res://planet/air_wall.tscn" id="4_q6x0b"]
 [ext_resource type="PackedScene" uid="uid://csurfpropbase" path="res://planet/surface_prop.tscn" id="5_mouse_prop"]
 [ext_resource type="PackedScene" uid="uid://cprshellscn01" path="res://planet/planet_run_shell.tscn" id="16_run_shell"]
-[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/kings_feast.ogg" id="18_day_music"]
+[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/lords_court.ogg" id="18_day_music"]
 [ext_resource type="AudioStream" uid="uid://b5xo4yhua70tx" path="res://audio/thin_rat_squeak.wav" id="19_rat_squeak"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="Texture2D" uid="uid://7h1iqfspyiuq" path="res://ui/king.png" id="king_portrait"]
