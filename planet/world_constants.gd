@@ -46,7 +46,7 @@ const PLAYER_SPEED: float = 16.0
 ## 移动阻尼系数（1/秒）：越大起步/刹车越干脆，越小越绵软。
 const PLAYER_DAMPING: float = 12.0
 
-const STARFIELD_SIZE: int = 640
+const STARFIELD_SIZE: int = 800
 const STAR_ROTATION_SPEED: float = 0.01
 const CLOUD_DRIFT_SPEED: float = 0.006
 const CLOUD_INSTANCE_COUNT: int = 192
