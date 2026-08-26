@@ -140,6 +140,7 @@ const MOUSE_SPEAKER := \"小老鼠\"
 var has_overheard_distant_sentencing: bool = false
 var last_king_facing_order_text: String = \"\"
 var _last_player_facing_king: bool = false
+var _mouse_verdict_count := -1
 
 
 func _prepare_start() -> void:
@@ -147,6 +148,7 @@ func _prepare_start() -> void:
 	player.modulate.a = 1.0
 	has_overheard_distant_sentencing = false
 	last_king_facing_order_text = \"\"
+	_mouse_verdict_count = -1
 	%Mouse.restore_at_rest()
 	set_process(false)
 
@@ -185,20 +187,32 @@ func try_handle_interact(prop: SurfaceProp) -> bool:
 
 
 func _talk_with_mouse() -> void:
-	await %Mouse.interacted
-	await _line(MOUSE_SPEAKER, \"吱~吱吱？\", null)
-	await _prince(\"吱吱吱吱。\")
-	is_blocking_input = false
-	await %Mouse.interacted
-	await _line(MOUSE_SPEAKER, \"吱吱吱？\", null)
-	await _prince(\"吱吱吱！\")
-	is_blocking_input = false
-	await %Mouse.interacted
-	await _line(MOUSE_SPEAKER, \"吱吱！\", null)
-	await _prince(\"喵~~~~~喵~~~！\")
-	%Mouse.run_away()
-	await _overhead(\"小老鼠跑掉了\")
-	is_blocking_input = false
+	var mouse_squeak_count := 0
+	while true:
+		await %Mouse.interacted
+		if _mouse_verdict_count >= 0:
+			if _mouse_verdict_count % 2 == 0:
+				await _prince(\"我，B612星王子，325星大臣，代表325国王，宣判你死刑\")
+			else:
+				await _prince(\"我，B612星王子，325星大臣，代表325国王，赦免你的死罪\")
+			_mouse_verdict_count += 1
+			is_blocking_input = false
+			continue
+		if %Mouse.is_consumed:
+			continue
+		mouse_squeak_count += 1
+		if mouse_squeak_count == 1:
+			await _line(MOUSE_SPEAKER, \"吱~吱吱？\", null)
+			await _prince(\"吱吱吱吱。\")
+		elif mouse_squeak_count == 2:
+			await _line(MOUSE_SPEAKER, \"吱吱吱？\", null)
+			await _prince(\"吱吱吱！\")
+		else:
+			await _line(MOUSE_SPEAKER, \"吱吱！\", null)
+			await _prince(\"喵~~~~~喵~~~！\")
+			%Mouse.run_away()
+			await _overhead(\"小老鼠跑掉了\")
+		is_blocking_input = false
 
 
 func _await_king() -> void:
@@ -310,6 +324,8 @@ func _await_king() -> void:
 	await _king(\"你可以不时地判处它死刑，这样它的生命就取决于你的审判。\")
 	await _king(\"但为了节约，你每次都要赦免它。\")
 	await _king(\"这里只有一只耗子。\")
+	_mouse_verdict_count = 0
+	%Mouse.restore_at_rest()
 	is_blocking_input = false
 	%TriggerSleepy.is_armed = true
 	planet.refresh_interact_focus()
@@ -470,4 +486,4 @@ metadata/run_shell_scene = ExtResource("16_run_shell")
 metadata/day_music = ExtResource("18_day_music")
 
 [connection signal="player_entered" from="Surface/King/TriggerHello" to="Surface/King/AirWall" method="set_enabled" flags=7 binds= [true]]
-[connection signal="player_entered" from="Surface/King/TriggerSleepy" to="Surface/King/AirWall" method="set_enabled" flags=6 binds= [true]]
+[connection signal="player_entered" from="Surface/King/TriggerSleepy" to="Surface/King/AirWall" method="set_enabled" flags=6 binds= [false]]
