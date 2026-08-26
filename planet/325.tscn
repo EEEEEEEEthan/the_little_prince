@@ -405,6 +405,7 @@ func speak_approach_order() -> void:
 
 func _process(_delta: float) -> void:
 	if is_blocking_player_input() or not %TriggerKingOrder.player_is_inside:
+		_last_player_facing_king = _player_is_facing_king()
 		return
 	var player_is_facing_king: bool = _player_is_facing_king()
 	if player_is_facing_king == _last_player_facing_king:
