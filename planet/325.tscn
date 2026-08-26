@@ -96,7 +96,7 @@ func _process(delta: float) -> void:
 	if _is_fleeing:
 		frame = RUN_FRAME_START + int(_anim_time * RUN_FRAMES_PER_SECOND) % RUN_FRAME_COUNT
 		return
-	flip_h = angle_difference(rotation, owner.player_angle) < 0.0
+	flip_h = global_position.x > owner.apex_global_position().x
 	frame = int(_anim_time * IDLE_FRAMES_PER_SECOND) % IDLE_FRAME_COUNT
 
 
@@ -142,6 +142,9 @@ func restore_at_rest() -> void:
 	is_armed = true
 	frame = 0
 "
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_v2ulb"]
+radius = 20.0
 
 [sub_resource type="Texture2D" id="EditableTexture_blue_mottled_disk"]
 resource_local_to_scene = false
@@ -509,6 +512,9 @@ hframes = 4
 script = SubResource("GDScript_mouse")
 is_armed = true
 
+[node name="PlayerTrigger" parent="Surface/Mouse" index="0" unique_id=1830046024]
+shape = SubResource("CircleShape2D_v2ulb")
+
 [node name="Squeak" type="AudioStreamPlayer" parent="Surface/Mouse" index="1" unique_id=410000061]
 stream = ExtResource("19_rat_squeak")
 volume_db = -6.0
@@ -529,3 +535,5 @@ metadata/day_music = ExtResource("18_day_music")
 [connection signal="player_entered" from="Surface/King/TriggerHello" to="Surface/King/AirWall" method="set_enabled" flags=7 binds= [true]]
 [connection signal="player_entered" from="Surface/King/TriggerSleepy" to="Surface/King/AirWall" method="set_enabled" flags=6 binds= [false]]
 [connection signal="player_entered" from="Surface/King/TriggerKingOrder" to="Story" method="speak_approach_order"]
+
+[editable path="Surface/Mouse"]
