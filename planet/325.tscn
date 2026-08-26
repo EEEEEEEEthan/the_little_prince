@@ -96,7 +96,7 @@ func _process(delta: float) -> void:
 	if _is_fleeing:
 		frame = RUN_FRAME_START + int(_anim_time * RUN_FRAMES_PER_SECOND) % RUN_FRAME_COUNT
 		return
-	flip_h = angle_difference(rotation, owner.player_angle) < 0.0
+	flip_h = global_position.x > owner.apex_global_position().x
 	frame = int(_anim_time * IDLE_FRAMES_PER_SECOND) % IDLE_FRAME_COUNT
 
 

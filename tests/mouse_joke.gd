@@ -21,6 +21,24 @@ func _begin() -> void:
 		await process_frame
 	var mouse: SurfaceProp = planet.get_node("%Mouse")
 	var mouse_instance_id := mouse.get_instance_id()
+	var mouse_faces_player := func() -> bool:
+		var player_is_to_the_left := planet.apex_global_position().x < mouse.global_position.x
+		if mouse.flip_h != player_is_to_the_left:
+			push_error("老鼠应朝向玩家所在一侧")
+			return false
+		return true
+	planet.teleport_player(mouse.rotation)
+	await process_frame
+	await process_frame
+	if not mouse_faces_player.call():
+		quit(1)
+		return
+	planet.teleport_player(fposmod(mouse.rotation + 0.6, TAU))
+	await process_frame
+	await process_frame
+	if not mouse_faces_player.call():
+		quit(1)
+		return
 	planet.teleport_player(mouse.rotation)
 	await process_frame
 	await process_frame
