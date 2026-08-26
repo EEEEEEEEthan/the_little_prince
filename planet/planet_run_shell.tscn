@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="19_home_day_music"]
-[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/lords_court.ogg" id="21_king_day_music"]
+[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/courtroom.ogg" id="21_king_day_music"]
 [ext_resource type="AudioStream" uid="uid://o7js72pawqgm" path="res://audio/muffled_dirt_thud_a.wav" id="22_dirt_a"]
 [ext_resource type="AudioStream" uid="uid://cb5s0bvsmamf5" path="res://audio/muffled_dirt_thud_b.wav" id="23_dirt_b"]
 [ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="24_grass_a"]
