@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://6a4gvsyrkrea" path="res://planet/b612.tscn" id="3_b612"]
 [ext_resource type="PackedScene" uid="uid://dkingplanet01" path="res://planet/325.tscn" id="4_king"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="7_home_day_music"]
-[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/narrow_cpenta_toy_waltz.ogg" id="8_king_day_music"]
+[ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/hollow_fifth_processional_stumble.ogg" id="8_king_day_music"]
 [ext_resource type="AudioStream" uid="uid://o7js72pawqgm" path="res://audio/muffled_dirt_thud_a.wav" id="9_dirt_a"]
 [ext_resource type="AudioStream" uid="uid://cb5s0bvsmamf5" path="res://audio/muffled_dirt_thud_b.wav" id="10_dirt_b"]
 [ext_resource type="AudioStream" uid="uid://vcbguj00jy2s" path="res://audio/dry_grass_rustle_a.wav" id="11_grass_a"]

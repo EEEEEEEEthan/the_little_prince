@@ -15,8 +15,8 @@ A4_MIDI = 69
 A4_HERTZ = 440.0
 
 C3, G3, A3 = 48, 55, 57
-C4, D4, E4, G4, A4 = 60, 62, 64, 67, 69
-D3, F3 = 50, 53
+C4, D4, E4, G4, A4, Bb4, C5 = 60, 62, 64, 67, 69, 70, 72
+D3, F3, Bb3 = 50, 53, 58
 
 
 def midi_to_hertz(midi_note: int) -> float:
@@ -48,6 +48,14 @@ def music_box_tine(midi_note: int, sample_count: int, sample_rate: int) -> np.nd
 	return fundamental + 0.16 * octave
 
 
+def herald_partial(midi_note: int, sample_count: int, sample_rate: int) -> np.ndarray:
+	frequency = midi_to_hertz(midi_note)
+	time_seconds = np.arange(sample_count, dtype=np.float64) / sample_rate
+	fundamental = np.sin(2.0 * math.pi * frequency * time_seconds)
+	odd_third = np.sin(2.0 * math.pi * frequency * 3.0 * time_seconds)
+	return fundamental + 0.28 * odd_third
+
+
 def mix_tine(
 		buffer: np.ndarray,
 		events: list[tuple[float, int, float]],
@@ -55,6 +63,7 @@ def mix_tine(
 		beats_per_minute: float,
 		volume: float,
 		decay_seconds: float,
+		tone_function=music_box_tine,
 ) -> None:
 	samples_per_beat = sample_rate * 60.0 / beats_per_minute
 	strike_seconds = 0.008
@@ -70,7 +79,7 @@ def mix_tine(
 		attack = np.ones(sample_count)
 		attack[:strike_samples] = np.linspace(0.0, 1.0, strike_samples)
 		envelope = attack * np.exp(-time_seconds / decay_seconds)
-		wave = music_box_tine(midi_note, sample_count, sample_rate)
+		wave = tone_function(midi_note, sample_count, sample_rate)
 		buffer[start_index:start_index + sample_count] += wave * envelope * volume
 
 
@@ -128,54 +137,74 @@ def write_ogg(samples: np.ndarray, ogg_path: Path) -> None:
 	)
 
 
-def render_king_toy_waltz() -> np.ndarray:
-	beats_per_minute = 56.0
-	melody_bars = [
-		[(E4, 1.0), (G4, 1.0), (E4, 1.0)],
-		[(D4, 2.0), (C4, 1.0)],
-		[(C4, 2.0), (None, 1.0)],
-		[(None, 3.0)],
-		[(E4, 1.0), (G4, 1.0), (E4, 1.0)],
-		[(A4, 2.0), (G4, 1.0)],
-		[(E4, 1.0), (D4, 1.0), (C4, 1.0)],
-		[(C4, 2.0), (None, 1.0)],
-		[(G4, 1.0), (E4, 1.0), (D4, 1.0)],
-		[(C4, 2.0), (G3, 1.0)],
-		[(G3, 2.0), (None, 1.0)],
-		[(C4, 2.0), (None, 1.0)],
-		[(E4, 1.0), (G4, 1.0), (E4, 1.0)],
-		[(D4, 2.0), (C4, 1.0)],
-		[(C4, 1.0), (E4, 1.0), (C4, 1.0)],
-		[(C4, 2.0), (None, 1.0)],
-		[(None, 3.0)],
+def render_hollow_fifth_processional_stumble() -> np.ndarray:
+	beats_per_minute = 48.0
+	herald_bars = [
+		[(C4, 1.0), (G4, 1.0), (C5, 2.0)],
+		[(G4, 3.0), (None, 1.0)],
+		[(E4, 1.0), (G4, 1.0), (C5, 1.0), (G4, 1.0)],
+		[(None, 4.0)],
+		[(C5, 1.0), (G4, 1.0), (E4, 1.0), (C4, 1.0)],
+		[(Bb3, 2.0), (None, 2.0)],
+		[(None, 4.0)],
+		[(None, 4.0)],
+		[(C4, 1.0), (G4, 1.0), (E4, 2.0)],
+		[(D4, 1.0), (C4, 1.0), (None, 2.0)],
+		[(None, 4.0)],
+		[(C4, 1.0), (None, 3.0)],
+		[(None, 4.0)],
+		[(None, 4.0)],
+		[(C5, 2.0), (None, 2.0)],
+		[(None, 4.0)],
 	]
-	throne_bars = [
-		[(C3, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(C3, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(C3, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
+	toy_stumble_bars = [
+		[(None, 4.0)],
+		[(None, 4.0)],
+		[(None, 4.0)],
+		[(None, 4.0)],
+		[(None, 4.0)],
+		[(None, 4.0)],
+		[(G4, 0.5), (E4, 0.5), (G4, 0.5), (E4, 0.5), (C4, 1.0), (None, 1.0)],
+		[(C4, 2.0), (None, 2.0)],
+		[(None, 4.0)],
+		[(None, 4.0)],
+		[(G3, 2.0), (None, 2.0)],
+		[(None, 4.0)],
+		[(E4, 1.0), (None, 1.0), (G4, 1.0), (None, 1.0)],
+		[(Bb4, 0.5), (G4, 1.5), (None, 2.0)],
+		[(None, 4.0)],
+		[(None, 4.0)],
 	]
-	buffer = allocate_buffer(len(melody_bars), 3.0, beats_per_minute)
+	fifth_drone_bars = [
+		[(C3, 4.0)],
+		[(G3, 4.0)],
+		[(C3, 4.0)],
+		[(None, 4.0)],
+		[(C3, 4.0)],
+		[(G3, 2.0), (None, 2.0)],
+		[(None, 4.0)],
+		[(C3, 4.0)],
+		[(C3, 4.0)],
+		[(None, 4.0)],
+		[(G3, 4.0)],
+		[(C3, 2.0), (None, 2.0)],
+		[(None, 4.0)],
+		[(G3, 2.0), (None, 2.0)],
+		[(C3, 4.0)],
+		[(None, 4.0)],
+	]
+	buffer = allocate_buffer(len(herald_bars), 4.0, beats_per_minute)
 	mix_tine(
-			buffer, expand_bars(melody_bars), SAMPLE_RATE, beats_per_minute,
-			0.24, 0.72,
+			buffer, expand_bars(herald_bars), SAMPLE_RATE, beats_per_minute,
+			0.22, 0.95, herald_partial,
 	)
 	mix_tine(
-			buffer, expand_bars(throne_bars), SAMPLE_RATE, beats_per_minute,
-			0.09, 1.2,
+			buffer, expand_bars(toy_stumble_bars), SAMPLE_RATE, beats_per_minute,
+			0.20, 0.62,
+	)
+	mix_tine(
+			buffer, expand_bars(fifth_drone_bars), SAMPLE_RATE, beats_per_minute,
+			0.08, 1.5, herald_partial,
 	)
 	return finalize(buffer)
 
@@ -266,7 +295,10 @@ def render_dry_folio_rest() -> np.ndarray:
 
 def main() -> None:
 	output_directory = Path(__file__).resolve().parent
-	write_ogg(render_king_toy_waltz(), output_directory / "narrow_cpenta_toy_waltz.ogg")
+	write_ogg(
+			render_hollow_fifth_processional_stumble(),
+			output_directory / "hollow_fifth_processional_stumble.ogg",
+	)
 	write_ogg(render_sparse_ledger_tally(), output_directory / "sparse_ledger_tally.ogg")
 	write_ogg(render_rapid_lamp_duty_tick(), output_directory / "rapid_lamp_duty_tick.ogg")
 	write_ogg(render_dry_folio_rest(), output_directory / "dry_folio_rest.ogg")
