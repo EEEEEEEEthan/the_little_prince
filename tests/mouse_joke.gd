@@ -22,7 +22,7 @@ func _begin() -> void:
 	var mouse: SurfaceProp = planet.get_node("%Mouse")
 	var mouse_instance_id := mouse.get_instance_id()
 	var mouse_faces_player := func() -> bool:
-		var player_is_to_the_left := planet.apex_global_position().x < mouse.global_position.x
+		var player_is_to_the_left: bool = mouse.global_position.x > planet.apex_global_position().x
 		if mouse.flip_h != player_is_to_the_left:
 			push_error("老鼠应朝向玩家所在一侧")
 			return false
