@@ -36,8 +36,8 @@ const INTERACT_RANGE_PX: float = 16.0
 const KING_AUDIENCE_TRIGGER_RADIUS: float = 67.86
 ## 王座与披风：从禁区边缘仍能点到。
 const KING_FURNITURE_TRIGGER_RADIUS: float = 116.67
-## A 键提示跟随点：地物本地坐标 Y（沿半径向外为负），提示本身不继承旋转。
-const INTERACT_PROMPT_LOCAL_Y: float = -38.0
+## A 键提示跟随点：相对 trigger 世界坐标向上（Y 负方向），提示本身不继承旋转。
+const INTERACT_PROMPT_WORLD_Y: float = -38.0
 ## 头顶打字机：相对弧顶的本地 Y（向上为负），Label 底边对齐此点。
 const OVERHEAD_TYPEWRITER_LOCAL_Y: float = -24.0
 

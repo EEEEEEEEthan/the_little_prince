@@ -116,7 +116,7 @@ func _clear_hold() -> void:
 
 
 func _sync_prompt() -> void:
-	_prompt.global_position = to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_LOCAL_Y))
+	_prompt.global_position = global_position + Vector2(0.0, WorldConstants.INTERACT_PROMPT_WORLD_Y)
 	if _prompt.hold_fill_ratio > 0.0:
 		_prompt.offset = Vector2.ZERO
 	else:
