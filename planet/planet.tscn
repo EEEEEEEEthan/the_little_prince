@@ -15,7 +15,9 @@ extends Node2D
 @export var radius: float = WorldConstants.PLANET_RADIUS:
 	set(value):
 		radius = value
-		queue_redraw()
+		if not is_node_ready():
+			return
+		%EditorRadiusPreview.queue_redraw()
 
 ## 当前玩家角（弧顶处的地表角度），是旋转状态的唯一来源。
 var player_angle: float = 0.0
@@ -173,12 +175,17 @@ func _sync_rotation() -> void:
 	surface.rotation = rotation_value
 	sky.set_planet_rotation(rotation_value)
 	clouds.set_planet_rotation(rotation_value)
+"
+
+[sub_resource type="GDScript" id="GDScript_editor_radius_preview"]
+script/source = "@tool
+extends Node2D
 
 
 func _draw() -> void:
 	if not Engine.is_editor_hint():
 		return
-	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 64, Color(0.35, 0.85, 1.0), 1.0, true)
+	draw_arc(Vector2.ZERO, owner.radius, 0.0, TAU, 64, Color(1.0, 0.2, 0.45), 2.0, true)
 "
 
 [sub_resource type="Shader" id="Shader_sky"]
@@ -548,3 +555,8 @@ unique_name_in_owner = true
 process_mode = 4
 script = SubResource("GDScript_playable")
 prince_portrait = SubResource("Texture2D_v2ulb")
+
+[node name="EditorRadiusPreview" type="Node2D" parent="." unique_id=1847000006]
+unique_name_in_owner = true
+z_index = 4096
+script = SubResource("GDScript_editor_radius_preview")
