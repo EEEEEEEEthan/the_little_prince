@@ -27,7 +27,16 @@ https://creativecommons.org/publicdomain/zero/1.0/
 许可全文：https://creativecommons.org/publicdomain/zero/1.0/
 页面：https://opengameart.org/content/8-bit-jester-theme
 直链：https://opengameart.org/sites/default/files/10._jester_theme_0.mp3
-说明：由 mp3 经 ffmpeg libvorbis 转码；GBA/掌机年代角色主题，当前 325 开场循环（king_day_music）
+说明：由 mp3 经 ffmpeg libvorbis 转码；GBA/掌机年代角色主题，保留备用，当前未接线
+
+文件：rejoicing.ogg
+标题：Rejoicing (Loop)
+作者：RandomMind
+许可：CC0 1.0 Universal（公有领域；可免费商用、修改、再分发；署名非必须）
+许可全文：https://creativecommons.org/publicdomain/zero/1.0/
+页面：https://opengameart.org/content/medieval-rejoicing
+直链：https://opengameart.org/sites/default/files/Loop_Rejoicing.wav
+说明：由 wav 经 ffmpeg libvorbis 转码；王国庆典循环，当前 325 开场循环（king_day_music）
 
 文件：sparse_ledger_tally.ogg
 标题：稀疏金拨计数
