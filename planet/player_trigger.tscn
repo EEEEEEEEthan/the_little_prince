@@ -80,6 +80,7 @@ func _process(delta: float) -> void:
 		if Input.is_action_pressed(&\"interact\"):
 			if _hold_elapsed_seconds <= 0.0:
 				_planet().angular_velocity = 0.0
+				_face_player_toward_hosted()
 			is_holding = true
 			_hold_elapsed_seconds += delta
 			_prompt.hold_fill_ratio = _hold_elapsed_seconds / required_hold_seconds
@@ -91,6 +92,7 @@ func _process(delta: float) -> void:
 		return
 	_clear_hold()
 	if Input.is_action_just_pressed(&\"interact\"):
+		_face_player_toward_hosted()
 		interacted.emit()
 
 
@@ -121,6 +123,17 @@ func _sync_prompt() -> void:
 		_prompt.offset = Vector2.ZERO
 	else:
 		_prompt.offset = Vector2(0.0, sin(Time.get_ticks_msec() * 0.006) * 1.5)
+
+
+func _face_player_toward_hosted() -> void:
+	var target: Node2D = hosted_surface_prop()
+	if target == null:
+		target = self
+	var player: Node2D = _planet().owner.get_node(\"%Player\")
+	var offset_x := target.global_position.x - player.global_position.x
+	if is_zero_approx(offset_x):
+		return
+	player.flip_h = offset_x < 0.0
 
 
 func _planet() -> Node:
