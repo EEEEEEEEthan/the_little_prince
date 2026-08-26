@@ -8,6 +8,8 @@ func _init() -> void:
 
 func _begin() -> void:
 	AudioServer.set_bus_mute(AudioServer.get_bus_index(&"Master"), true)
+	if not await _prompt_follows_world_up():
+		return
 	var shell: Node = (load("res://planet/planet_run_shell.tscn") as PackedScene).instantiate()
 	var planet: Node2D = (load("res://planet/325.tscn") as PackedScene).instantiate()
 	planet.name = "Planet"
@@ -59,3 +61,33 @@ func _begin() -> void:
 	print("[player_trigger] 通过")
 	shell.free()
 	quit(0)
+
+
+func _prompt_follows_world_up() -> bool:
+	var trigger: Area2D = (load("res://planet/player_trigger.tscn") as PackedScene).instantiate()
+	root.add_child(trigger)
+	trigger.global_position = Vector2(80.0, 120.0)
+	trigger.rotation = TAU * 0.25
+	trigger.is_focused = true
+	await process_frame
+	var prompt: Sprite2D
+	for child in trigger.get_children():
+		if child is Sprite2D:
+			prompt = child
+			break
+	var expected_global_position := trigger.global_position + Vector2(0.0, WorldConstants.INTERACT_PROMPT_WORLD_Y)
+	var local_up_global_position := trigger.to_global(Vector2(0.0, WorldConstants.INTERACT_PROMPT_WORLD_Y))
+	var passed := true
+	if prompt == null:
+		push_error("[player_trigger] 聚焦后应生成提示")
+		passed = false
+	elif not prompt.global_position.is_equal_approx(expected_global_position):
+		push_error("[player_trigger] 提示应在 trigger 世界坐标向上，实际 %s 期望 %s" % [prompt.global_position, expected_global_position])
+		passed = false
+	elif prompt.global_position.is_equal_approx(local_up_global_position):
+		push_error("[player_trigger] 旋转后世界向上与本地向上应不同")
+		passed = false
+	trigger.free()
+	if not passed:
+		quit(1)
+	return passed
