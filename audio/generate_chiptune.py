@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成国王/商人/点灯人/地理学家星球循环配乐（CC0）。故乡/日落曲改用 OpenGameArt。运行：python3 audio/generate_chiptune.py"""
+"""生成商人/点灯人/地理学家星球循环配乐（CC0）。故乡/日落/国王曲用 OpenGameArt。运行：python3 audio/generate_chiptune.py"""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ A4_MIDI = 69
 A4_HERTZ = 440.0
 
 C3, G3, A3 = 48, 55, 57
-C4, D4, E4, G4, A4 = 60, 62, 64, 67, 69
+C4 = 60
 D3, F3 = 50, 53
 
 
@@ -128,58 +128,6 @@ def write_ogg(samples: np.ndarray, ogg_path: Path) -> None:
 	)
 
 
-def render_king_toy_waltz() -> np.ndarray:
-	beats_per_minute = 56.0
-	melody_bars = [
-		[(E4, 1.0), (G4, 1.0), (E4, 1.0)],
-		[(D4, 2.0), (C4, 1.0)],
-		[(C4, 2.0), (None, 1.0)],
-		[(None, 3.0)],
-		[(E4, 1.0), (G4, 1.0), (E4, 1.0)],
-		[(A4, 2.0), (G4, 1.0)],
-		[(E4, 1.0), (D4, 1.0), (C4, 1.0)],
-		[(C4, 2.0), (None, 1.0)],
-		[(G4, 1.0), (E4, 1.0), (D4, 1.0)],
-		[(C4, 2.0), (G3, 1.0)],
-		[(G3, 2.0), (None, 1.0)],
-		[(C4, 2.0), (None, 1.0)],
-		[(E4, 1.0), (G4, 1.0), (E4, 1.0)],
-		[(D4, 2.0), (C4, 1.0)],
-		[(C4, 1.0), (E4, 1.0), (C4, 1.0)],
-		[(C4, 2.0), (None, 1.0)],
-		[(None, 3.0)],
-	]
-	throne_bars = [
-		[(C3, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(C3, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(C3, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-		[(None, 3.0)],
-	]
-	buffer = allocate_buffer(len(melody_bars), 3.0, beats_per_minute)
-	mix_tine(
-			buffer, expand_bars(melody_bars), SAMPLE_RATE, beats_per_minute,
-			0.24, 0.72,
-	)
-	mix_tine(
-			buffer, expand_bars(throne_bars), SAMPLE_RATE, beats_per_minute,
-			0.09, 1.2,
-	)
-	return finalize(buffer)
-
-
 def render_sparse_ledger_tally() -> np.ndarray:
 	beats_per_minute = 48.0
 	tally_bars = [
@@ -266,7 +214,6 @@ def render_dry_folio_rest() -> np.ndarray:
 
 def main() -> None:
 	output_directory = Path(__file__).resolve().parent
-	write_ogg(render_king_toy_waltz(), output_directory / "narrow_cpenta_toy_waltz.ogg")
 	write_ogg(render_sparse_ledger_tally(), output_directory / "sparse_ledger_tally.ogg")
 	write_ogg(render_rapid_lamp_duty_tick(), output_directory / "rapid_lamp_duty_tick.ogg")
 	write_ogg(render_dry_folio_rest(), output_directory / "dry_folio_rest.ogg")
