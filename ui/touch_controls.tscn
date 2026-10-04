@@ -1,0 +1,122 @@
+[gd_scene format=3 uid="uid://ctouchctrlscn1"]
+
+[sub_resource type="GDScript" id="GDScript_touch_controls"]
+script/source = "extends Control
+## 全屏隐形触控：明显横向拖动=左右；其余按住/点按=A（含长按）。
+
+const DRAG_THRESHOLD_PIXELS := 28.0
+
+var _pointer_index: int = -1
+var _press_position := Vector2.ZERO
+var _is_dragging: bool = false
+var _is_interact_pressed: bool = false
+var _move_axis_x: float = 0.0
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		_handle_screen_event(event)
+		return
+	if DisplayServer.is_touchscreen_available():
+		return
+	var mouse_button := event as InputEventMouseButton
+	if mouse_button != null and mouse_button.button_index == MOUSE_BUTTON_LEFT:
+		if mouse_button.pressed:
+			_begin_pointer(0, mouse_button.position)
+		elif _pointer_index == 0:
+			_end_pointer()
+		accept_event()
+		return
+	var mouse_motion := event as InputEventMouseMotion
+	if mouse_motion != null and _pointer_index == 0 and (mouse_motion.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		_update_pointer(mouse_motion.position)
+		accept_event()
+
+
+func _handle_screen_event(event: InputEvent) -> void:
+	var press := event as InputEventScreenTouch
+	if press != null:
+		if press.pressed and _pointer_index < 0:
+			_begin_pointer(press.index, press.position)
+		elif not press.pressed and press.index == _pointer_index:
+			_end_pointer()
+		accept_event()
+		return
+	var drag := event as InputEventScreenDrag
+	if drag != null and drag.index == _pointer_index:
+		_update_pointer(drag.position)
+		accept_event()
+
+
+func _begin_pointer(pointer_index: int, local_position: Vector2) -> void:
+	_pointer_index = pointer_index
+	_press_position = local_position
+	_is_dragging = false
+	_set_move_axis_x(0.0)
+	_set_interact_pressed(true)
+
+
+func _update_pointer(local_position: Vector2) -> void:
+	var offset := local_position - _press_position
+	if not _is_dragging:
+		if absf(offset.x) < DRAG_THRESHOLD_PIXELS:
+			return
+		if absf(offset.x) <= absf(offset.y):
+			return
+		_is_dragging = true
+		_set_interact_pressed(false)
+	_set_move_axis_x(signf(offset.x))
+
+
+func _end_pointer() -> void:
+	_pointer_index = -1
+	_is_dragging = false
+	_press_position = Vector2.ZERO
+	_set_move_axis_x(0.0)
+	_set_interact_pressed(false)
+
+
+func _set_move_axis_x(axis_x: float) -> void:
+	if is_equal_approx(axis_x, _move_axis_x):
+		return
+	var previous_axis_x := _move_axis_x
+	_move_axis_x = axis_x
+	if previous_axis_x < 0.0:
+		Input.action_release(&\"move_left\")
+	elif previous_axis_x > 0.0:
+		Input.action_release(&\"move_right\")
+	if axis_x < 0.0:
+		Input.action_press(&\"move_left\", 1.0)
+	elif axis_x > 0.0:
+		Input.action_press(&\"move_right\", 1.0)
+
+
+func _set_interact_pressed(pressed: bool) -> void:
+	if pressed == _is_interact_pressed:
+		return
+	_is_interact_pressed = pressed
+	if pressed:
+		Input.action_press(&\"interact\")
+	else:
+		Input.action_release(&\"interact\")
+	var action_event := InputEventAction.new()
+	action_event.action = &\"interact\"
+	action_event.pressed = pressed
+	action_event.strength = 1.0 if pressed else 0.0
+	Input.parse_input_event(action_event)
+"
+
+[node name="TouchControls" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = SubResource("GDScript_touch_controls")

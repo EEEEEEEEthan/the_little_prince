@@ -1,0 +1,59 @@
+name: Deploy Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Export and deploy Web
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot engine
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/godot-engines
+          key: godot-4.8-dev3-standard
+
+      - name: Cache export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/4.8.dev3
+          key: godot-4.8-dev3-web-templates
+
+      - name: Prepare Godot engine
+        run: bash .engine-prepare.sh
+
+      - name: Install web export templates
+        run: |
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.8.dev3"
+          if [[ ! -f "$TEMPLATE_DIR/web_nothreads_release.zip" ]]; then
+            mkdir -p /tmp/godot-templates "$TEMPLATE_DIR"
+            curl -fL --http1.1 -o /tmp/godot-templates/templates.tpz \
+              "https://github.com/godotengine/godot-builds/releases/download/4.8-dev3/Godot_v4.8-dev3_export_templates.tpz"
+            unzip -jo /tmp/godot-templates/templates.tpz \
+              'templates/web_debug.zip' \
+              'templates/web_release.zip' \
+              'templates/web_nothreads_debug.zip' \
+              'templates/web_nothreads_release.zip' \
+              'templates/version.txt' \
+              -d "$TEMPLATE_DIR"
+          fi
+
+      - name: Import and export Web
+        run: |
+          .engine/.engine --headless --path . --import --quit
+          bash export/web.sh
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy docs --project-name=the-little-prince --commit-dirty=true
