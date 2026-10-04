@@ -1,0 +1,14 @@
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  X-Content-Type-Options: nosniff
+
+/*.wasm
+  Content-Type: application/wasm
+  Content-Encoding: gzip
+  Cache-Control: public, max-age=3600, no-transform
+
+/*.pck
+  Content-Type: application/octet-stream
+  Content-Encoding: gzip
+  Cache-Control: public, max-age=3600, no-transform

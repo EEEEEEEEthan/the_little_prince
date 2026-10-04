@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="editable_texture_script"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="9_dialogue"]
 [ext_resource type="PackedScene" path="res://ui/overhead_typewriter.tscn" id="12_overhead"]
+[ext_resource type="PackedScene" path="res://ui/touch_controls.tscn" id="13_touch"]
 [ext_resource type="FontFile" uid="uid://bajmgrsnfc8be" path="res://ui/fonts/fusion-pixel-8px-zh_hans.woff2" id="15_font"]
 [ext_resource type="AudioStream" uid="uid://ob7skrbgnusm" path="res://audio/the_one_who_stands_distant.ogg" id="19_home_day_music"]
 [ext_resource type="AudioStream" uid="uid://c86wv21js45cy" path="res://audio/lords_court.ogg" id="21_king_day_music"]
@@ -636,6 +637,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
+mouse_filter = 2
 
 [node name="GameViewport" type="SubViewport" parent="GameView" unique_id=877318439]
 handle_input_locally = false
@@ -722,3 +724,13 @@ theme_override_fonts/font = ExtResource("15_font")
 theme_override_font_sizes/font_size = 8
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="TouchControls" parent="." instance=ExtResource("13_touch")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+

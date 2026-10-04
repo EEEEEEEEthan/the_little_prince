@@ -1,0 +1,212 @@
+[gd_scene format=3 uid="uid://ctouchctrlscn1"]
+
+[sub_resource type="GDScript" id="GDScript_touch_controls"]
+script/source = "extends Control
+## 触屏虚拟摇杆（左）与交互键（右）；通过虚拟手柄事件注入 InputMap。
+
+const VIRTUAL_JOY_DEVICE := 32
+const JOYSTICK_PAD_SIZE := Vector2(72, 72)
+const INTERACT_BUTTON_SIZE := Vector2(40, 40)
+const JOYSTICK_BASE_RADIUS := 26.0
+const JOYSTICK_KNOB_RADIUS := 10.0
+const JOYSTICK_DEADZONE := 0.18
+const BASE_FILL := Color(0.08, 0.12, 0.2, 0.55)
+const BASE_RING := Color(0.72, 0.78, 0.86, 0.75)
+const KNOB_FILL := Color(0.88, 0.67, 0.29, 0.9)
+const BUTTON_FILL := Color(0.2, 0.45, 0.28, 0.7)
+const BUTTON_RING := Color(0.63, 0.6, 0.31, 0.95)
+const BUTTON_PRESSED_FILL := Color(0.35, 0.65, 0.4, 0.85)
+
+var joystick_axis := Vector2.ZERO
+var is_interact_pressed: bool = false
+var _joystick_pointer_index: int = -1
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	%JoystickPad.gui_input.connect(_on_joystick_gui_input)
+	%InteractButton.gui_input.connect(_on_interact_gui_input)
+	%InteractButton.mouse_exited.connect(func() -> void:
+		if is_interact_pressed:
+			_set_interact_pressed(false)
+	)
+
+
+func _on_joystick_gui_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		var press := event as InputEventScreenTouch
+		if press != null:
+			if press.pressed and _joystick_pointer_index < 0:
+				_joystick_pointer_index = press.index
+				_update_joystick_from_local_position(press.position)
+			elif not press.pressed and press.index == _joystick_pointer_index:
+				_clear_joystick()
+			return
+		var drag := event as InputEventScreenDrag
+		if drag != null and drag.index == _joystick_pointer_index:
+			_update_joystick_from_local_position(drag.position)
+		return
+	if DisplayServer.is_touchscreen_available():
+		return
+	var mouse_button := event as InputEventMouseButton
+	if mouse_button != null and mouse_button.button_index == MOUSE_BUTTON_LEFT:
+		if mouse_button.pressed and _joystick_pointer_index < 0:
+			_joystick_pointer_index = 0
+			_update_joystick_from_local_position(mouse_button.position)
+		elif not mouse_button.pressed and _joystick_pointer_index == 0:
+			_clear_joystick()
+		return
+	var mouse_motion := event as InputEventMouseMotion
+	if mouse_motion != null and _joystick_pointer_index == 0 and (mouse_motion.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		_update_joystick_from_local_position(mouse_motion.position)
+
+
+func _on_interact_gui_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		_set_interact_pressed((event as InputEventScreenTouch).pressed)
+		return
+	if DisplayServer.is_touchscreen_available():
+		return
+	var mouse_button := event as InputEventMouseButton
+	if mouse_button != null and mouse_button.button_index == MOUSE_BUTTON_LEFT:
+		_set_interact_pressed(mouse_button.pressed)
+
+
+func _update_joystick_from_local_position(local_position: Vector2) -> void:
+	var center := JOYSTICK_PAD_SIZE * 0.5
+	var offset := local_position - center
+	var max_knob_travel := JOYSTICK_BASE_RADIUS - JOYSTICK_KNOB_RADIUS
+	if offset.length() > max_knob_travel:
+		offset = offset.normalized() * max_knob_travel
+	var axis := offset / max_knob_travel
+	if axis.length() < JOYSTICK_DEADZONE:
+		axis = Vector2.ZERO
+	else:
+		axis = axis.normalized() * inverse_lerp(JOYSTICK_DEADZONE, 1.0, axis.length())
+	joystick_axis = axis
+	_emit_joystick_axis()
+	%JoystickPad.queue_redraw()
+
+
+func _clear_joystick() -> void:
+	_joystick_pointer_index = -1
+	joystick_axis = Vector2.ZERO
+	_emit_joystick_axis()
+	%JoystickPad.queue_redraw()
+
+
+func _emit_joystick_axis() -> void:
+	_parse_joy_axis(JOY_AXIS_LEFT_X, joystick_axis.x)
+	_parse_joy_axis(JOY_AXIS_LEFT_Y, joystick_axis.y)
+
+
+func _parse_joy_axis(axis: int, axis_value: float) -> void:
+	var motion := InputEventJoypadMotion.new()
+	motion.device = VIRTUAL_JOY_DEVICE
+	motion.axis = axis as JoyAxis
+	motion.axis_value = axis_value
+	Input.parse_input_event(motion)
+
+
+func _set_interact_pressed(pressed: bool) -> void:
+	if pressed == is_interact_pressed:
+		return
+	is_interact_pressed = pressed
+	var button := InputEventJoypadButton.new()
+	button.device = VIRTUAL_JOY_DEVICE
+	button.button_index = JOY_BUTTON_A
+	button.pressed = pressed
+	button.pressure = 1.0 if pressed else 0.0
+	Input.parse_input_event(button)
+	%InteractButton.queue_redraw()
+"
+
+[sub_resource type="GDScript" id="GDScript_joystick_pad"]
+script/source = "extends Control
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+
+
+func _draw() -> void:
+	var controls := owner
+	var center := size * 0.5
+	var base_radius: float = controls.JOYSTICK_BASE_RADIUS
+	var knob_radius: float = controls.JOYSTICK_KNOB_RADIUS
+	draw_circle(center, base_radius, controls.BASE_FILL)
+	draw_arc(center, base_radius, 0.0, TAU, 48, controls.BASE_RING, 1.5, true)
+	var max_knob_travel := base_radius - knob_radius
+	var knob_center: Vector2 = center + controls.joystick_axis * max_knob_travel
+	draw_circle(knob_center, knob_radius, controls.KNOB_FILL)
+	draw_arc(knob_center, knob_radius, 0.0, TAU, 32, controls.BASE_RING, 1.0, true)
+"
+
+[sub_resource type="GDScript" id="GDScript_interact_button"]
+script/source = "extends Control
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+
+
+func _draw() -> void:
+	var controls := owner
+	var center := size * 0.5
+	var radius := minf(size.x, size.y) * 0.5 - 1.0
+	var fill: Color = controls.BUTTON_PRESSED_FILL if controls.is_interact_pressed else controls.BUTTON_FILL
+	draw_circle(center, radius, fill)
+	draw_arc(center, radius, 0.0, TAU, 40, controls.BUTTON_RING, 1.5, true)
+	var font := ThemeDB.fallback_font
+	var label := \"A\"
+	var font_size := 14
+	var text_size := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+	draw_string(
+			font,
+			center - text_size * 0.5 + Vector2(0, text_size.y * 0.35),
+			label,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1,
+			font_size,
+			controls.BUTTON_RING
+	)
+"
+
+[node name="TouchControls" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = SubResource("GDScript_touch_controls")
+
+[node name="JoystickPad" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -80.0
+offset_right = 80.0
+offset_bottom = -8.0
+grow_vertical = 0
+script = SubResource("GDScript_joystick_pad")
+
+[node name="InteractButton" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -48.0
+offset_top = -52.0
+offset_right = -8.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 0
+script = SubResource("GDScript_interact_button")
