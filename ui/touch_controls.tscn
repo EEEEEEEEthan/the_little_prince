@@ -2,10 +2,9 @@
 
 [sub_resource type="GDScript" id="GDScript_touch_controls"]
 script/source = "extends Control
-## 全屏隐形触控：拖动水平轴向左右走；未拖动的按住/点按注入 A。
+## 全屏隐形触控：明显横向拖动=左右；其余按住/点按=A（含长按）。
 
-const VIRTUAL_JOY_DEVICE := 32
-const DRAG_THRESHOLD_PIXELS := 10.0
+const DRAG_THRESHOLD_PIXELS := 28.0
 
 var _pointer_index: int = -1
 var _press_position := Vector2.ZERO
@@ -17,12 +16,6 @@ var _move_axis_x: float = 0.0
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	set_process(true)
-
-
-func _process(_delta: float) -> void:
-	if _pointer_index >= 0 and not _is_dragging:
-		_set_interact_pressed(true)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -65,54 +58,57 @@ func _begin_pointer(pointer_index: int, local_position: Vector2) -> void:
 	_press_position = local_position
 	_is_dragging = false
 	_set_move_axis_x(0.0)
+	_set_interact_pressed(true)
 
 
 func _update_pointer(local_position: Vector2) -> void:
 	var offset := local_position - _press_position
-	if not _is_dragging and offset.length() >= DRAG_THRESHOLD_PIXELS:
+	if not _is_dragging:
+		if absf(offset.x) < DRAG_THRESHOLD_PIXELS:
+			return
+		if absf(offset.x) <= absf(offset.y):
+			return
 		_is_dragging = true
 		_set_interact_pressed(false)
-	if not _is_dragging:
-		return
-	var axis_x := 0.0
-	if absf(offset.x) >= DRAG_THRESHOLD_PIXELS:
-		axis_x = signf(offset.x)
-	_set_move_axis_x(axis_x)
+	_set_move_axis_x(signf(offset.x))
 
 
 func _end_pointer() -> void:
-	var was_dragging := _is_dragging
-	var had_interact := _is_interact_pressed
 	_pointer_index = -1
 	_is_dragging = false
 	_press_position = Vector2.ZERO
 	_set_move_axis_x(0.0)
-	if not was_dragging and not had_interact:
-		_set_interact_pressed(true)
 	_set_interact_pressed(false)
 
 
 func _set_move_axis_x(axis_x: float) -> void:
 	if is_equal_approx(axis_x, _move_axis_x):
 		return
+	var previous_axis_x := _move_axis_x
 	_move_axis_x = axis_x
-	var motion := InputEventJoypadMotion.new()
-	motion.device = VIRTUAL_JOY_DEVICE
-	motion.axis = JOY_AXIS_LEFT_X
-	motion.axis_value = axis_x
-	Input.parse_input_event(motion)
+	if previous_axis_x < 0.0:
+		Input.action_release(&\"move_left\")
+	elif previous_axis_x > 0.0:
+		Input.action_release(&\"move_right\")
+	if axis_x < 0.0:
+		Input.action_press(&\"move_left\", 1.0)
+	elif axis_x > 0.0:
+		Input.action_press(&\"move_right\", 1.0)
 
 
 func _set_interact_pressed(pressed: bool) -> void:
 	if pressed == _is_interact_pressed:
 		return
 	_is_interact_pressed = pressed
-	var button := InputEventJoypadButton.new()
-	button.device = VIRTUAL_JOY_DEVICE
-	button.button_index = JOY_BUTTON_A
-	button.pressed = pressed
-	button.pressure = 1.0 if pressed else 0.0
-	Input.parse_input_event(button)
+	if pressed:
+		Input.action_press(&\"interact\")
+	else:
+		Input.action_release(&\"interact\")
+	var action_event := InputEventAction.new()
+	action_event.action = &\"interact\"
+	action_event.pressed = pressed
+	action_event.strength = 1.0 if pressed else 0.0
+	Input.parse_input_event(action_event)
 "
 
 [node name="TouchControls" type="Control"]
